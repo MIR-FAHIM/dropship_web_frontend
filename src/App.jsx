@@ -7,6 +7,7 @@ import {
 import { Link, Outlet } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import { PiUsers } from "react-icons/pi";
+import CustomNavbar from "./components/shared/CustomNavbar";
 const menuLinks = [
   {
     path: "/",
@@ -29,7 +30,7 @@ const App = () => {
   return (
     <>
       {/* collapse button */}
-      <div className="relative">
+      <div className="relative z-[9999]">
         <button
           onClick={() => setCollapse(!isCollapse)}
           className={`absolute top-[25px] border p-1 rounded-full text-xl text-text-300 bg-background/50 ${
@@ -123,6 +124,7 @@ const App = () => {
             isCollapse ? "w-[95%]" : "w-[80%]"
           } max-h-screen overflow-y-scroll`}
         >
+          <CustomNavbar />
           <Outlet />
         </div>
       </div>
