@@ -3,12 +3,17 @@ import { createBrowserRouter } from "react-router-dom";
 // import { routeGenerator } from "../utils/routeGenerator";
 import App from "../App";
 import Login from "../pages/auth/Login";
+import PrivateRoute from "./PrivateRoute";
 // import { pagePaths } from "./pages.routes";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: (
+      <PrivateRoute>
+        <App />
+      </PrivateRoute>
+    ),
     // children: routeGenerator(pagePaths),
   },
   {

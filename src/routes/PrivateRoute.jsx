@@ -1,16 +1,16 @@
-import { logout, useCurrentUser } from "@/redux/features/auth/authSlice";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import { Navigate } from "react-router-dom";
 import { toast } from "sonner";
+import { logout, useCurrentToken } from "../redux/slices/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const PrivateRoute = ({ children }) => {
-  const dispatch = useAppDispatch();
-  const user = useAppSelector(useCurrentUser);
+  const dispatch = useDispatch();
+  const token = useSelector(useCurrentToken);
 
-  if (user.token) {
-    toast.error("Please sign in", { duration: 2000 });
+  if (!token) {
+    toast.error("Please login", { duration: 2000 });
     dispatch(logout());
-    return <Navigate to="/sign-in" replace={true} />;
+    return <Navigate to="/login" replace={true} />;
   }
   return children;
 };
