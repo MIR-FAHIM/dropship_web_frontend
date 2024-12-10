@@ -1,8 +1,10 @@
 import React from "react";
-import { Navbar, Collapse, IconButton } from "@material-tailwind/react";
+import { Navbar, Collapse, IconButton, Button } from "@material-tailwind/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import { Link } from "react-router-dom";
 import { LuBell } from "react-icons/lu";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../redux/slices/authSlice";
 
 const navLinks = [
   { path: "/", label: "Account" },
@@ -28,9 +30,14 @@ function NavList() {
 
 const CustomNavbar = () => {
   const [openNav, setOpenNav] = React.useState(false);
+  const dispatch = useDispatch();
 
   const handleWindowResize = () =>
     window.innerWidth >= 960 && setOpenNav(false);
+
+  const handleLogout = () => {
+    dispatch(setToken({ token: null }));
+  };
 
   React.useEffect(() => {
     window.addEventListener("resize", handleWindowResize);
@@ -45,8 +52,9 @@ const CustomNavbar = () => {
         <Link to={"/"} className="cursor-pointer font-bold">
           Dashboard
         </Link>
-        <div className="hidden lg:block">
+        <div className="hidden lg:flex items-center gap-x-5">
           <NavList />
+          <Button onClick={() => handleLogout()}>Logout</Button>
         </div>
         <IconButton
           variant="text"
