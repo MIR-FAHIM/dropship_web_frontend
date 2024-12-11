@@ -9,9 +9,6 @@ const userApi = baseApi.injectEndpoints({
         body: userInfo,
       }),
     }),
-    getAllRequest: builder.query({
-      query: () => `/requests/user`,
-    }),
   }),
 });
 

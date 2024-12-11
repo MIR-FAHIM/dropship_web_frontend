@@ -10,7 +10,7 @@ const requestApi = baseApi.injectEndpoints({
       }),
     }),
     getAllRequest: builder.query({
-      query: () => `/requests/user`,
+      query: () => `/admin/requests`,
     }),
   }),
 });

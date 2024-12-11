@@ -1,11 +1,13 @@
+import Requests from "../pages/request/Requests";
+
 export const pagePaths = [
   {
     path: "/",
     element: "",
     children: [
       {
-        path: "/",
-        element: "",
+        path: "/requests",
+        element: <Requests />,
       },
     ],
   },

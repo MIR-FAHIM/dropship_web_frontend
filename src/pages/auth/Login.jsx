@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
+import { saveToLocalstorage } from "../../utils/localstorage.utils";
 
 const initialValues = {
   email: "jayga@gmail.com",
@@ -22,6 +23,7 @@ const Login = () => {
       const res = await loginFunc(values).unwrap();
       toast.success(res?.message, { id: toastId, duration: 2000 });
       dispatch(setToken({ token: res?.token }));
+      saveToLocalstorage("token", res?.token);
       navigate("/");
     } catch (error) {
       console.log("error:", error);

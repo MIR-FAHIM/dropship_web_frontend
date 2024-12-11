@@ -15,7 +15,7 @@ const menuLinks = [
     icon: <HiOutlineSquares2X2 />,
   },
   {
-    path: "/",
+    path: "/requests",
     label: "Requests",
     icon: <HiOutlineClipboardDocumentCheck />,
   },
@@ -120,12 +120,14 @@ const App = () => {
         )}
         {/* content */}
         <div
-          className={`bg-yellow-500 ${
+          className={`bg-background ${
             isCollapse ? "w-[95%]" : "w-[80%]"
           } max-h-screen overflow-y-scroll`}
         >
           <CustomNavbar />
-          <Outlet />
+          <div className="bg-white m-5">
+            <Outlet />
+          </div>
         </div>
       </div>
     </>

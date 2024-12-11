@@ -4,6 +4,8 @@ import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Login from "../pages/auth/Login";
 import PrivateRoute from "./PrivateRoute";
+import { routeGenerator } from "../utils/routeGenerator";
+import { pagePaths } from "./pages.routes";
 // import { pagePaths } from "./pages.routes";
 
 export const router = createBrowserRouter([
@@ -14,7 +16,7 @@ export const router = createBrowserRouter([
         <App />
       </PrivateRoute>
     ),
-    // children: routeGenerator(pagePaths),
+    children: routeGenerator(pagePaths),
   },
   {
     path: "/login",
