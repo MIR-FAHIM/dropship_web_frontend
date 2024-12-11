@@ -1,5 +1,6 @@
 {
   "name": "storage-admin",
+  "homepage": "https://storage.jayga.io/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
