@@ -4,16 +4,16 @@ const requestApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createRequest: builder.mutation({
       query: (requestInfo) => ({
-        url: "/create-order-request/user",
+        url: "/warehouses",
         method: "POST",
         body: requestInfo,
       }),
     }),
     getAllRequest: builder.query({
-      query: () => `/admin/requests`,
+      query: () => `/warehouses`,
     }),
    
   }),
 });
 
-export const { useGetAllRequestQuery } = requestApi;
+export const { useGetAllWarehouseQuery } = requestApi;
