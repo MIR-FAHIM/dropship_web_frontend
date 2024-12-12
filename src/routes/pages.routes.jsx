@@ -6,6 +6,7 @@ import Orders from "../pages/orders/Orders";
 import Overview from "../pages/overview/Overview";
 import Requests from "../pages/requests/Requests";
 import Users from "../pages/users/Users";
+import Warehouse from "../pages/warehouse/Warehouse";
 
 export const pagePaths = [
   {
@@ -39,6 +40,10 @@ export const pagePaths = [
       {
         path: "/activity",
         element: <Activity />,
+      },
+      {
+        path: "/warehouse",
+        element: <Warehouse />,
       },
     ],
   },

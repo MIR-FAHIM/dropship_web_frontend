@@ -11,6 +11,7 @@ import { IoIosArrowBack } from "react-icons/io";
 import { IoCalendarOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { BiTransferAlt } from "react-icons/bi";
+import { MdOutlineWarehouse } from "react-icons/md";
 // menu links
 const menuLinks = [
   {
@@ -52,6 +53,11 @@ const menuLinks = [
     path: "/activity",
     label: "Activity",
     icon: <BiTransferAlt />,
+  },
+  {
+    path: "/warehouse",
+    label: "Warehouse",
+    icon: <MdOutlineWarehouse />,
   },
 ];
 const App = () => {
