@@ -1,3 +1,5 @@
+import Activity from "../pages/activity/Activity";
+import Billing from "../pages/billing/Billing";
 import Grids from "../pages/grids/Grids";
 import Items from "../pages/items/Items";
 import Orders from "../pages/orders/Orders";
@@ -29,6 +31,14 @@ export const pagePaths = [
       {
         path: "/items",
         element: <Items />,
+      },
+      {
+        path: "/billing",
+        element: <Billing />,
+      },
+      {
+        path: "/activity",
+        element: <Activity />,
       },
     ],
   },

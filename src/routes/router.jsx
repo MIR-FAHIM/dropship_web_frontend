@@ -1,12 +1,10 @@
 import { createBrowserRouter } from "react-router-dom";
-// route generator func
-// import { routeGenerator } from "../utils/routeGenerator";
 import App from "../App";
 import Login from "../pages/auth/Login";
 import PrivateRoute from "./PrivateRoute";
-import { routeGenerator } from "../utils/routeGenerator";
 import { pagePaths } from "./pages.routes";
-// import { pagePaths } from "./pages.routes";
+// route generator func
+import { routeGenerator } from "../utils/routeGenerator";
 
 export const router = createBrowserRouter([
   {
