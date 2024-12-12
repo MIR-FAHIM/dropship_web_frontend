@@ -1,13 +1,11 @@
 import CustomTable from "../../components/ui/CustomTable";
 import { useGetAllRequestQuery } from "../../redux/features/request";
 import { format, parseISO } from "date-fns";
-import { getOrderStatus } from "../../utils/statusMeaning";
 
 const tableHead = ["Date", "User", "Items", "Quantity", "Status"];
 
 const Requests = () => {
   const { data } = useGetAllRequestQuery();
-  console.log({ data });
   return (
     <div className="">
       <div className="p-5">
@@ -32,9 +30,6 @@ const Requests = () => {
                 {item?.items?.map((item) => (
                   <p key={item?.id}>{item?.request_quatity}</p>
                 ))}
-              </td>
-              <td className="px-5 py-3 border">
-                {getOrderStatus(item?.status)}
               </td>
             </tr>
           );
