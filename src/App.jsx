@@ -7,7 +7,9 @@ import {
 import { Link, Outlet } from "react-router-dom";
 import { IoIosArrowBack } from "react-icons/io";
 import { PiUsers } from "react-icons/pi";
+import { IoCalendarOutline } from "react-icons/io5";
 import CustomNavbar from "./components/shared/CustomNavbar";
+import { LuArchive } from "react-icons/lu";
 const menuLinks = [
   {
     path: "/",
@@ -20,9 +22,24 @@ const menuLinks = [
     icon: <HiOutlineClipboardDocumentCheck />,
   },
   {
-    path: "/",
+    path: "/grids",
     label: "Grids",
     icon: <PiUsers />,
+  },
+  {
+    path: "/orders",
+    label: "Orders",
+    icon: <IoCalendarOutline />,
+  },
+  {
+    path: "/users",
+    label: "Users",
+    icon: <PiUsers />,
+  },
+  {
+    path: "/items",
+    label: "Items",
+    icon: <LuArchive />,
   },
 ];
 const App = () => {
