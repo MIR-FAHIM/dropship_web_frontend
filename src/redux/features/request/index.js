@@ -12,8 +12,14 @@ const requestApi = baseApi.injectEndpoints({
     getAllRequest: builder.query({
       query: () => `/admin/requests`,
     }),
-   
+    getOrderRequestById: builder.query({
+      query: (id) => `/admin/requests/${id}`,
+    }),
   }),
 });
 
-export const { useGetAllRequestQuery } = requestApi;
+export const {
+  useGetAllRequestQuery,
+  useGetOrderRequestByIdQuery,
+  useCreateRequestMutation,
+} = requestApi;

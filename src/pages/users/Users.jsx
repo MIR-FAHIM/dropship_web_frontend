@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import { useGetAllClientQuery } from "../../redux/features/client";
 
 const Users = () => {
-  // Sample users data
-  const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', company_name: '', industry: '', phone: '123456789' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', company_name: '', industry: '', phone: '987654321' },
-  ]);
-
+  const { data, isLoading, error } = useGetAllClientQuery(); // Fetch users using the API
+  const [users, setUsers] = useState([]);
   const [isEditing, setIsEditing] = useState(null); // Track which user is being edited
   const [editedUser, setEditedUser] = useState({}); // Store edited user data
 
   // List of industries for the select dropdown
-  const industries = ['Technology', 'Healthcare', 'Finance', 'Retail', 'Manufacturing'];
+  const industries = ["Technology", "Healthcare", "Finance", "Retail", "Manufacturing"];
+
+  // Update the local users state when API data changes
+  useEffect(() => {
+    if (data && data.data) {
+      setUsers(data.data.data); // API's `data.data` contains the list of users
+    }
+  }, [data]);
 
   // Handle field change for the edit form
   const handleEditChange = (e) => {
@@ -28,7 +32,7 @@ const Users = () => {
     setEditedUser({ ...user });
   };
 
-  // Save changes to the user data
+  // Save changes to the user data (for now, only update local state)
   const saveChanges = () => {
     setUsers((prevUsers) =>
       prevUsers.map((user) =>
@@ -38,15 +42,23 @@ const Users = () => {
     setIsEditing(null); // Exit editing mode
   };
 
-  // Cancel the editing
+  // Cancel editing
   const cancelEditing = () => {
     setIsEditing(null); // Exit editing mode
   };
 
+  if (isLoading) {
+    return <p>Loading users...</p>;
+  }
+
+  if (error) {
+    return <p>Error fetching users: {error.message}</p>;
+  }
+
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Users</h2>
-      
+
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead>
           <tr>
@@ -97,14 +109,14 @@ const Users = () => {
                     className="border px-2 py-1 w-full"
                   />
                 ) : (
-                  user.company_name || 'N/A'
+                  user.company_name || "N/A"
                 )}
               </td>
               <td className="border p-2">
                 {isEditing === user.id ? (
                   <select
-                    name="industry"
-                    value={editedUser.industry}
+                    name="industry_type"
+                    value={editedUser.industry_type || ""}
                     onChange={handleEditChange}
                     className="border px-2 py-1 w-full"
                   >
@@ -116,10 +128,10 @@ const Users = () => {
                     ))}
                   </select>
                 ) : (
-                  user.industry || 'N/A'
+                  user.industry_type || "N/A"
                 )}
               </td>
-              <td className="border p-2">{user.phone}</td>
+              <td className="border p-2">{user.phone || "N/A"}</td>
               <td className="border p-2">
                 {isEditing === user.id ? (
                   <>
