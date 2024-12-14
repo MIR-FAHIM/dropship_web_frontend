@@ -1,19 +1,25 @@
 import baseApi from "../../api/baseApi";
 
-const requestApi = baseApi.injectEndpoints({
+const warehouseApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createRequest: builder.mutation({
-      query: (requestInfo) => ({
+    createWarehouse: builder.mutation({
+      query: (wareInfo) => ({
         url: "/warehouses",
         method: "POST",
-        body: requestInfo,
+        body: wareInfo,
       }),
     }),
-    getAllRequest: builder.query({
+    getAllWarehouse: builder.query({
       query: () => `/warehouses`,
     }),
-   
+    getWarehouseTypes: builder.query({
+      query: () => `/admin/warehouse-types`,
+    }),
   }),
 });
 
-export const { useGetAllWarehouseQuery } = requestApi;
+export const {
+  useGetAllWarehouseQuery,
+  useGetWarehouseTypesQuery,
+  useCreateWarehouseMutation,
+} = warehouseApi;
