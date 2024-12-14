@@ -4,6 +4,7 @@ import Grids from "../pages/grids/Grids";
 import Items from "../pages/items/Items";
 import Orders from "../pages/orders/Orders";
 import Overview from "../pages/overview/Overview";
+import RequestDetails from "../pages/requests/RequestDetails";
 import Requests from "../pages/requests/Requests";
 import Users from "../pages/users/Users";
 import Warehouse from "../pages/warehouse/Warehouse";
@@ -16,6 +17,10 @@ export const pagePaths = [
       {
         path: "/requests",
         element: <Requests />,
+      },
+      {
+        path: "/request-details/:id",
+        element: <RequestDetails />,
       },
       {
         path: "/grids",
