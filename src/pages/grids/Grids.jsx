@@ -1,20 +1,31 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useGetAllWarehouseQuery } from "../../redux/features/warehouse"; // Assuming you have a warehouse API
 import { useGetAllGridQuery } from "../../redux/features/grid"; // Assuming you have an API for grids
+import CreateGrid from "./components/CreateGrid";
 
 const GridStatusPage = () => {
-  const { data: warehouses, isLoading: warehouseLoading, error: warehouseError } = useGetAllWarehouseQuery();
+  const {
+    data: warehouses,
+    isLoading: warehouseLoading,
+    error: warehouseError,
+  } = useGetAllWarehouseQuery();
   const [selectedWarehouse, setSelectedWarehouse] = useState(null); // Store selected warehouse
   const [gridData, setGridData] = useState([]);
-  
+
   // Fetch all grids initially
-  const { data: grids, isLoading: gridLoading, error: gridError } = useGetAllGridQuery(); // Fetch all grids
-  
+  const {
+    data: grids,
+    isLoading: gridLoading,
+    error: gridError,
+  } = useGetAllGridQuery(); // Fetch all grids
+
   useEffect(() => {
     // Ensure the warehouse data and grids data are available
     if (grids?.grids && selectedWarehouse) {
       // Filter the grids for the selected warehouse by matching warehouse_id
-      const filteredGrids = grids.grids.filter(grid => grid.warehouse_id === parseInt(selectedWarehouse));
+      const filteredGrids = grids.grids.filter(
+        (grid) => grid.warehouse_id === parseInt(selectedWarehouse)
+      );
       setGridData(filteredGrids); // Update grid data when it is fetched and filtered
     }
   }, [grids, selectedWarehouse]); // Re-run when either grids or selected warehouse changes
@@ -38,8 +49,11 @@ const GridStatusPage = () => {
   }
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Grid Status</h2>
+    <div className="p-5">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold mb-4">Grid Status</h2>
+        <CreateGrid />
+      </div>
 
       {/* Warehouse selection dropdown */}
       <div className="mb-4">
@@ -68,27 +82,30 @@ const GridStatusPage = () => {
               <p>Loading grid data...</p>
             ) : gridError ? (
               <p>Error fetching grid data: {gridError.message}</p>
-            ) : (
-              // If no grids, show a message
-              gridData.length > 0 ? (
-                gridData.map((grid) => (
-                  <div key={grid.id} className="border p-4 text-center">
-                    <div className="font-semibold">{grid.grid_code}</div>
-                    <div className="text-sm">
-                      <p>Status: {grid.is_occupied === "1" ? "Occupied" : "Available"}</p>
-                      <p>Rack: {grid.has_rack === "1" ? "Yes" : "No"}</p>
-                    </div>
-                    {/* Grid color based on occupancy */}
-                    <div
-                      className={`mt-2 p-2 rounded ${getGridColor(grid.is_occupied)}`}
-                    >
+            ) : // If no grids, show a message
+            gridData.length > 0 ? (
+              gridData.map((grid) => (
+                <div key={grid.id} className="border p-4 text-center">
+                  <div className="font-semibold">{grid.grid_code}</div>
+                  <div className="text-sm">
+                    <p>
+                      Status:{" "}
                       {grid.is_occupied === "1" ? "Occupied" : "Available"}
-                    </div>
+                    </p>
+                    <p>Rack: {grid.has_rack === "1" ? "Yes" : "No"}</p>
                   </div>
-                ))
-              ) : (
-                <p>No grids available for this warehouse.</p>
-              )
+                  {/* Grid color based on occupancy */}
+                  <div
+                    className={`mt-2 p-2 rounded ${getGridColor(
+                      grid.is_occupied
+                    )}`}
+                  >
+                    {grid.is_occupied === "1" ? "Occupied" : "Available"}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>No grids available for this warehouse.</p>
             )}
           </div>
         </div>
