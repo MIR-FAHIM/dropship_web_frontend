@@ -53,11 +53,11 @@ const Requests = () => {
     <div className="">
       <div className="p-5">
         <h3 className="text-xl font-semibold">
-          Requests <span className="font-bold">{requestData?.data?.length}</span>
+          Total Requests: <span className="font-bold">{requestData?.data?.data.length}</span>
         </h3>
       </div>
       <CustomTable tableHead={tableHead}>
-        {requestData?.data?.map((item) => (
+        {requestData?.data?.data.map((item) => (
           <tr key={item?.id}>
             <td className="px-5 py-3 border">
               {format(parseISO(item?.created_at), "dd-MMM',' hh:mm a")}
@@ -103,7 +103,7 @@ const Requests = () => {
             </td>
             <td className="px-5 py-3 border">
               <button>
-                View Details
+                View
               </button>
             </td>
           </tr>
