@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.formikSwitch div {
+  width: 100%;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+}
