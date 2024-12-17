@@ -22,6 +22,9 @@ export default withMT({
         },
       },
     },
+    fontFamily: {
+      plex: ["IBM Plex Sans", "sans-serif"],
+    },
   },
   plugins: [],
 });

@@ -1,6 +1,12 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+  font-family: "IBM Plex Sans", sans-serif;
+}
 
 .formikSwitch div {
   width: 100%;
@@ -9,5 +15,5 @@
 }
 
 .requestActions {
-  @apply py-1 px-2 hover:bg-primary-400 w-full text-start text-black font-medium;
+  @apply py-1 px-2 hover:bg-primary-400 w-full text-start text-black font-medium font-plex;
 }

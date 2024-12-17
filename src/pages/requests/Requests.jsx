@@ -5,6 +5,7 @@ import { useGetAllWarehouseQuery } from "../../redux/features/warehouse";
 import { format, parseISO } from "date-fns";
 import CustomPopover from "../../components/ui/CustomPopover";
 import { PiDotsThreeOutlineVerticalBold } from "react-icons/pi";
+import { useNavigate } from "react-router-dom";
 
 const tableHead = [
   "Date",
@@ -19,6 +20,7 @@ const tableHead = [
 ];
 
 const Requests = () => {
+  const navigate = useNavigate();
   const { data: requestData } = useGetAllRequestQuery();
   const { data: warehouseData, isLoading: warehouseLoading } =
     useGetAllWarehouseQuery();
@@ -108,7 +110,12 @@ const Requests = () => {
               <CustomPopover icon={<PiDotsThreeOutlineVerticalBold />}>
                 <div className="flex flex-col items-start">
                   <button className="requestActions">View Memo</button>
-                  <button className="requestActions">Create Order</button>
+                  <button
+                    onClick={() => navigate(`/request-details/${item?.id}`)}
+                    className="requestActions"
+                  >
+                    Create Order
+                  </button>
                   <button className="requestActions">Change status</button>
                   <button className="requestActions">Split Quantity</button>
                   <button className="requestActions">Contact Guest</button>
