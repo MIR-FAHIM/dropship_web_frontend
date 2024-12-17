@@ -7,3 +7,7 @@
   flex-direction: row-reverse;
   justify-content: space-between;
 }
+
+.requestActions {
+  @apply py-1 px-2 hover:bg-primary-400 w-full text-start text-black font-medium;
+}
