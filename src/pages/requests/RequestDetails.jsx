@@ -5,6 +5,8 @@ import SecondStep from "./components/SecondStep";
 // icons
 import { LuUserRoundCheck } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
+import { PiCalendarCheck, PiCheckSquareOffset } from "react-icons/pi";
+import { PiStorefront } from "react-icons/pi";
 import {
   Tab,
   TabPanel,
@@ -13,6 +15,10 @@ import {
   TabsHeader,
 } from "@material-tailwind/react";
 import React, { useState } from "react";
+import ThirdStep from "./components/ThirdStep";
+import FourthStep from "./components/FourthStep";
+import FifthStep from "./components/FifthStep";
+import SixthStep from "./components/SixthStep";
 
 const RequestDetails = () => {
   const { id } = useParams();
@@ -30,6 +36,36 @@ const RequestDetails = () => {
       value: "2ndStep",
       icon: BsBoxSeam,
       content: <SecondStep />,
+    },
+    {
+      label: "Duration",
+      value: "3rdStep",
+      icon: PiCalendarCheck,
+      content: <ThirdStep />,
+    },
+    {
+      label: "Challan",
+      value: "4thStep",
+      icon: PiStorefront,
+      content: <FourthStep />,
+    },
+    {
+      label: "Payment",
+      value: "5thStep",
+      icon: PiCheckSquareOffset,
+      content: <FifthStep />,
+    },
+    {
+      label: "Assign grids",
+      value: "6thStep",
+      icon: PiStorefront,
+      content: <SixthStep />,
+    },
+    {
+      label: "Place order",
+      value: "7thStep",
+      icon: PiStorefront,
+      content: <SixthStep />,
     },
   ];
   return (
