@@ -18,6 +18,7 @@ export default withMT({
         },
         text: {
           DEFAULT: "#F2F2F2",
+          100: "#262626",
           300: "#838383",
         },
       },
