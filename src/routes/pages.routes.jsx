@@ -1,5 +1,7 @@
 import Activity from "../pages/activity/Activity";
-import Billing from "../pages/billing/Billing";
+// import Billing from "../pages/billing/Billing";
+import Payments from "../pages/billing/pages/Payments";
+import Transactions from "../pages/billing/pages/Transactions";
 import Grids from "../pages/grids/Grids";
 import Items from "../pages/items/Items";
 import Orders from "../pages/orders/Orders";
@@ -40,7 +42,15 @@ export const pagePaths = [
       },
       {
         path: "/billing",
-        element: <Billing />,
+        element: <Payments />,
+      },
+      {
+        path: "/billing/payments",
+        element: <Payments />,
+      },
+      {
+        path: "/billing/transactions",
+        element: <Transactions />,
       },
       {
         path: "/activity",
