@@ -14,7 +14,7 @@ import {
   TabsBody,
   TabsHeader,
 } from "@material-tailwind/react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";
 import FifthStep from "./components/FifthStep";
@@ -24,12 +24,15 @@ const RequestDetails = () => {
   const { id } = useParams();
   const { data } = useGetOrderRequestByIdQuery(id);
   const [activeTab, setActiveTab] = useState("1stStep");
+  useEffect(() => {
+    setActiveTab(activeTab);
+  }, [activeTab]);
   const requestTabs = [
     {
       label: "User Details",
       value: "1stStep",
       icon: LuUserRoundCheck,
-      content: <FirstStep />,
+      content: <FirstStep setActiveTab={setActiveTab} />,
     },
     {
       label: "Add Items",
@@ -104,13 +107,15 @@ const RequestDetails = () => {
             );
           })}
         </TabsHeader>
-        <TabsBody className="">
-          {requestTabs?.map(({ value, content }) => (
-            <TabPanel className="p-0" key={value} value={value}>
-              {content}
-            </TabPanel>
-          ))}
-        </TabsBody>
+        <div className="w-full">
+          {requestTabs?.map(({ value, content }) => {
+            return (
+              <TabPanel key={value} value={value} className="p-0">
+                {value === activeTab && <>{content}</>}
+              </TabPanel>
+            );
+          })}
+        </div>
       </Tabs>
     </div>
   );
