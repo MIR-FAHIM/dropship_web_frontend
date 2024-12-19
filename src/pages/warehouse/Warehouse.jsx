@@ -19,8 +19,8 @@ const Warehouse = () => {
   const [details, setDetails] = useState({});
   //   const [isDetailsModalOpen, setDetailsModalOpen]=useState(false);
   return (
-    <div>
-      <div>
+    <div className="p-5">
+      <div className="flex justify-end">
         <CreateWarehouse />
       </div>
       <CustomTable tableHead={tableHead}>
