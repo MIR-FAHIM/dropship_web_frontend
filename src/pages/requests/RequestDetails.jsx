@@ -7,13 +7,7 @@ import { LuUserRoundCheck } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
 import { PiCalendarCheck, PiCheckSquareOffset } from "react-icons/pi";
 import { PiStorefront } from "react-icons/pi";
-import {
-  Tab,
-  TabPanel,
-  Tabs,
-  TabsBody,
-  TabsHeader,
-} from "@material-tailwind/react";
+import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import React, { useEffect, useState } from "react";
 import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";

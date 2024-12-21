@@ -32,8 +32,7 @@ const initialValues = {
 
 const CreateWarehouse = () => {
   const { data } = useGetWarehouseTypesQuery();
-  const [CreateWarehouseFunc, { error }] = useCreateWarehouseMutation();
-  console.log({ error });
+  const [CreateWarehouseFunc] = useCreateWarehouseMutation();
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const warehouseOptions = data?.warehouse_types?.map((item) => ({

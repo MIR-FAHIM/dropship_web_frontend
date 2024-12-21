@@ -28,7 +28,7 @@ const FirstStep = ({ setActiveTab }) => {
     console.log(values);
   };
   return (
-    <div className="w-full">
+    <div className="w-full p-5">
       <TabHeading
         title="Details"
         subTitle="Enter user details and select warehouse"
