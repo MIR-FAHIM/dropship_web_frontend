@@ -29,7 +29,7 @@ const RequestDetails = () => {
       content: <FirstStep setActiveTab={setActiveTab} />,
     },
     {
-      label: "Add Items",
+      label: "Warehouse",
       value: "2ndStep",
       icon: BsBoxSeam,
       content: <SecondStep />,

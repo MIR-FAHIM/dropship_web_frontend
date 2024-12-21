@@ -22,9 +22,9 @@ const SecondStep = () => {
     console.log(items);
   };
   return (
-    <div>
+    <div className="p-5">
       <TabHeading
-        title="Add Items"
+        title="Warehouse Details"
         subTitle="Add items or update items after receiving. Items added here can only be assigned"
       />
       <div>
@@ -35,6 +35,10 @@ const SecondStep = () => {
               <Form className="space-y-6">
                 <FormikInput name="size" label="Size" />
                 <WarehouseTypes />
+                <TabHeading
+                  title="Add Items"
+                  subTitle="Add items or update items after receiving. Items added here can only be assigned"
+                />
                 <FieldArray name="items">
                   {(fieldArrayProps) => {
                     const { push, remove } = fieldArrayProps;
@@ -72,6 +76,7 @@ const SecondStep = () => {
                             {/* Remove Button */}
                             {index > 0 && (
                               <Button
+                                size="sm"
                                 type="button"
                                 onClick={() => remove(index)}
                                 className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
