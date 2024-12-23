@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { Button } from "@material-tailwind/react";
 import CustomButton from "../../../components/ui/CustomButton";
 import TabHeading from "./TabHeading";
@@ -5,13 +6,13 @@ import FormikInput from "../../../components/formik/FormikInput";
 import { FieldArray, Form, Formik } from "formik";
 import FormikDate from "../../../components/formik/FormikDate";
 import WarehouseTypes from "../../../components/formik/WarehouseTypes";
-const SecondStep = () => {
+const SecondStep = ({ details }) => {
   const initialValues = {
     items: [{ item_name: "", quantity: "" }],
-    start_date: "25-12-2024",
-    end_date: "30-12-2024",
-    size: "",
-    warehouseType_id: "",
+    start_date: details?.start_date,
+    end_date: details?.end_date,
+    size: details?.size,
+    warehouseType_id: details?.warehouseType_id,
   };
   const handleSubmit = (values) => {
     const items = values.items.map((item) => ({

@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { Formik } from "formik";
 import TabHeading from "./TabHeading";
 import { Form } from "react-router-dom";
@@ -8,21 +9,20 @@ import { industryTypes } from "../../../constants";
 import CustomButton from "../../../components/ui/CustomButton";
 // import { useGetWarehouseTypesQuery } from "../../../redux/features/warehouse";
 
-const FirstStep = ({ setActiveTab }) => {
+const FirstStep = ({ setActiveTab, user }) => {
+  // console.log("user", user);
   // const { data } = useGetWarehouseTypesQuery();
   // const warehouseTypes = data?.warehouse_types?.map((item) => ({
   //   label: item?.type_name,
   //   value: String(item?.id),
   // }));
   const initialValues = {
-    userName: "",
-    businessName: "",
-    sizeInSqFt: "",
-    phoneNumber: "",
-    email: "",
-    industry_type: "Electronics & Appliances",
-    warehouse: "",
-    businessLocation: "",
+    name: user?.name,
+    company_name: user?.company_name,
+    phone: user?.phone,
+    email: user?.email,
+    industry_type: user?.industry_type,
+    address: user?.address,
   };
   const handleSubmit = async (values) => {
     console.log(values);
@@ -38,9 +38,9 @@ const FirstStep = ({ setActiveTab }) => {
           return (
             <Form className="space-y-5 font-dmSans">
               <div className="grid grid-cols-2 gap-10">
-                <FormikInput name="userName" label={"User name"} />
-                <FormikInput name="businessName" label={"Business name"} />
-                <FormikInput name="phoneNumber" label={"Phone number"} />
+                <FormikInput name="name" label={"User name"} />
+                <FormikInput name="company_name" label={"Business name"} />
+                <FormikInput name="phone" label={"Phone number"} />
                 <FormikInput name="email" label={"Email"} />
                 <FormikDropdown
                   options={transformArrayOfStringsIntoLabelAndValueArray(

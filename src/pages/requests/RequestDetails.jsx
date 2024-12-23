@@ -16,23 +16,31 @@ import SixthStep from "./components/SixthStep";
 
 const RequestDetails = () => {
   const { id } = useParams();
-  const { data } = useGetOrderRequestByIdQuery(id);
+  const { data, isLoading } = useGetOrderRequestByIdQuery(id);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
   }, [activeTab]);
+  if (isLoading) {
+    return <p>Loading</p>;
+  }
   const requestTabs = [
     {
       label: "User Details",
       value: "1stStep",
       icon: LuUserRoundCheck,
-      content: <FirstStep setActiveTab={setActiveTab} />,
+      content: (
+        <FirstStep
+          setActiveTab={setActiveTab}
+          user={data?.data?.order_request?.user}
+        />
+      ),
     },
     {
       label: "Warehouse",
       value: "2ndStep",
       icon: BsBoxSeam,
-      content: <SecondStep />,
+      content: <SecondStep details={data?.data?.order_request} />,
     },
     {
       label: "Duration",
