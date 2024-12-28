@@ -17,7 +17,7 @@ import SixthStep from "./components/SixthStep";
 const RequestDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderRequestByIdQuery(id);
-  // console.log(data);
+  console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
@@ -53,7 +53,12 @@ const RequestDetails = () => {
       label: "Challan",
       value: "4thStep",
       icon: PiStorefront,
-      content: <FourthStep requestId={data?.data?.order_request?.id} />,
+      content: (
+        <FourthStep
+          requestId={data?.data?.order_request?.id}
+          files={data?.data?.related_files}
+        />
+      ),
     },
     {
       label: "Payment",

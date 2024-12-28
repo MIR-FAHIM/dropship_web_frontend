@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
 import CustomButton from "../../../components/ui/CustomButton";
 
-const FourthStep = ({ requestId }) => {
+const FourthStep = ({ requestId, files }) => {
+  console.log(files);
   const [uploadChallanFn] = useUploadChallanMutation();
   const handleSubmit = async (values) => {
     const toastId = toast.loading("Challan updating...!");
@@ -39,11 +40,32 @@ const FourthStep = ({ requestId }) => {
         title="Challan"
         subTitle="Uploaded challan will show up here. You can also add a challan given by the user"
       />
+      {files?.length > 0 && (
+        <div className="mb-5">
+          <p>
+            <span className="Text-medium">Total files: </span>
+            {files?.length}
+          </p>
+          <div className="flex flex-col">
+            {files?.map((item) => (
+              <a
+                key={item?.id}
+                href={"https://adminwarehouse.jayga.io/" + item?.file}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-500 underline"
+              >
+                View/Download
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <p className="font-medium font-DMSans">Upload your delivery challan</p>
 
       <Formik initialValues={{ file: "" }} onSubmit={handleSubmit}>
         {({ values, setFieldValue }) => {
-          console.log(values);
           return (
             <Form className="space-y-5 font-dmSans">
               <label

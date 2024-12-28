@@ -8,6 +8,7 @@ const requestApi = baseApi.injectEndpoints({
         method: "POST",
         body: requestInfo,
       }),
+      invalidatesTags: ["Request"],
     }),
     uploadChallan: builder.mutation({
       query: (requestInfo) => ({
@@ -18,9 +19,11 @@ const requestApi = baseApi.injectEndpoints({
     }),
     getAllRequest: builder.query({
       query: () => `/admin/requests`,
+      providesTags: ["Request"],
     }),
     getOrderRequestById: builder.query({
       query: (id) => `/admin/requests/${id}`,
+      providesTags: ["Request"],
     }),
   }),
 });
