@@ -9,6 +9,13 @@ const requestApi = baseApi.injectEndpoints({
         body: requestInfo,
       }),
     }),
+    uploadChallan: builder.mutation({
+      query: (requestInfo) => ({
+        url: "/request-files/user",
+        method: "POST",
+        body: requestInfo,
+      }),
+    }),
     getAllRequest: builder.query({
       query: () => `/admin/requests`,
     }),
@@ -22,4 +29,5 @@ export const {
   useGetAllRequestQuery,
   useGetOrderRequestByIdQuery,
   useCreateRequestMutation,
+  useUploadChallanMutation,
 } = requestApi;

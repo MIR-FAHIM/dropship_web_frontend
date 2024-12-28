@@ -1,10 +1,37 @@
 import { Form, Formik } from "formik";
 import TabHeading from "./TabHeading";
 import { LuCirclePlus } from "react-icons/lu";
+import { useUploadChallanMutation } from "../../../redux/features/request";
+import { toast } from "sonner";
+import { getFirstErrorMessage } from "../../../utils/error.utils";
+import CustomButton from "../../../components/ui/CustomButton";
 
-const FourthStep = () => {
-  const handleSubmit = (values) => {
-    console.log(values);
+const FourthStep = ({ requestId }) => {
+  const [uploadChallanFn] = useUploadChallanMutation();
+  const handleSubmit = async (values) => {
+    const toastId = toast.loading("Challan updating...!");
+    const data = {
+      relatable_id: requestId,
+      type: "challan request",
+      file: values?.file,
+    };
+    const formdata = new FormData();
+    Object.keys(data).forEach((key) => {
+      formdata.append(key, data[key]);
+    });
+    try {
+      const res = await uploadChallanFn(formdata).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
   };
   return (
     <div>
@@ -48,6 +75,7 @@ const FourthStep = () => {
                   setFieldValue("file", event.target.files[0])
                 }
               />
+              <CustomButton className="mt-10" type="submit" label="Submit" />
             </Form>
           );
         }}
