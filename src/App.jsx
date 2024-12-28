@@ -87,7 +87,7 @@ const App = () => {
   return (
     <>
       {/* collapse button */}
-      <div className="relative z-[9999]">
+      <div className="relative z-[10000]">
         <button
           onClick={() => setCollapse(!isCollapse)}
           className={`absolute top-[25px] border p-1 rounded-full text-xl text-text-300 bg-background/50 ${

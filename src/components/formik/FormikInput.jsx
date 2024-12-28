@@ -2,9 +2,15 @@ import PropTypes from "prop-types";
 import { Input } from "@material-tailwind/react";
 import { ErrorMessage, Field } from "formik";
 
-const FormikInput = ({ name, label, type = "text", required = false }) => {
+const FormikInput = ({
+  name,
+  label,
+  className,
+  type = "text",
+  required = false,
+}) => {
   return (
-    <div>
+    <div className={className && className}>
       <Field name={name}>
         {({ field }) => (
           <Input
@@ -28,6 +34,7 @@ const FormikInput = ({ name, label, type = "text", required = false }) => {
 FormikInput.propTypes = {
   name: PropTypes.string.isRequired,
   label: PropTypes.string,
+  className: PropTypes.string,
   type: PropTypes.string,
   required: PropTypes.bool,
 };

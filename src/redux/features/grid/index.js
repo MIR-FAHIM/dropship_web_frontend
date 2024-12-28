@@ -9,9 +9,20 @@ const gridApi = baseApi.injectEndpoints({
     getGridById: builder.query({
       query: (id) => `/grids/${id}`,
     }),
+    getGridsByWarehouseId: builder.query({
+      query: (id) => `/warehouses/grids/${id}`,
+    }),
     createGrid: builder.mutation({
       query: (gridInfo) => ({
         url: "/grids",
+        method: "POST",
+        body: gridInfo,
+      }),
+      invalidatesTags: ["Grid"],
+    }),
+    assignGrid: builder.mutation({
+      query: (gridInfo) => ({
+        url: "/assign-grids",
         method: "POST",
         body: gridInfo,
       }),
@@ -24,4 +35,6 @@ export const {
   useGetAllGridQuery,
   useGetGridByIdQuery,
   useCreateGridMutation,
+  useGetGridsByWarehouseIdQuery,
+  useAssignGridMutation,
 } = gridApi;
