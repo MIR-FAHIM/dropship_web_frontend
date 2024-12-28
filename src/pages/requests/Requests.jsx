@@ -1,8 +1,11 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import CustomTable from "../../components/ui/CustomTable";
 import { useGetAllRequestQuery } from "../../redux/features/request";
 import { useGetAllWarehouseQuery } from "../../redux/features/warehouse";
 import { format, parseISO } from "date-fns";
+import CustomPopover from "../../components/ui/CustomPopover";
+import { PiDotsThreeOutlineVerticalBold } from "react-icons/pi";
+import { useNavigate } from "react-router-dom";
 
 const tableHead = [
   "Date",
@@ -17,6 +20,7 @@ const tableHead = [
 ];
 
 const Requests = () => {
+  const navigate = useNavigate();
   const { data: requestData } = useGetAllRequestQuery();
   const { data: warehouseData, isLoading: warehouseLoading } =
     useGetAllWarehouseQuery();
@@ -53,7 +57,8 @@ const Requests = () => {
     <div className="">
       <div className="p-5">
         <h3 className="text-xl font-semibold">
-          Total Requests: <span className="font-bold">{requestData?.data?.data.length}</span>
+          Total Requests:{" "}
+          <span className="font-bold">{requestData?.data?.data.length}</span>
         </h3>
       </div>
       <CustomTable tableHead={tableHead}>
@@ -101,10 +106,22 @@ const Requests = () => {
                 ))}
               </select>
             </td>
-            <td className="px-5 py-3 border">
-              <button>
-                View
-              </button>
+            <td className="px-5 py-3 border flex justify-center">
+              <CustomPopover icon={<PiDotsThreeOutlineVerticalBold />}>
+                <div className="flex flex-col items-start">
+                  <button className="requestActions">View Memo</button>
+                  <button
+                    onClick={() => navigate(`/request-details/${item?.id}`)}
+                    className="requestActions"
+                  >
+                    Create Order
+                  </button>
+                  <button className="requestActions">Change status</button>
+                  <button className="requestActions">Split Quantity</button>
+                  <button className="requestActions">Contact Guest</button>
+                  <button className="requestActions">Delete</button>
+                </div>
+              </CustomPopover>
             </td>
           </tr>
         ))}

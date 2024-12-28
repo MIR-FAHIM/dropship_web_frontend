@@ -8,6 +8,8 @@ const FormikDropdown = ({ name, label, options }) => {
       <Field name={name}>
         {({ field, form }) => (
           <Select
+            containerProps={{ className: "custom-dropdown" }}
+            className=""
             variant="standard"
             label={label}
             value={field.value}

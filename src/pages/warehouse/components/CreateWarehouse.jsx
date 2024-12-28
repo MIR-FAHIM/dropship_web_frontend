@@ -10,6 +10,7 @@ import {
 import FormikDropdown from "../../../components/formik/FormikDropdown";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
+import CustomButton from "../../../components/ui/CustomButton";
 
 const initialValues = {
   location: "",
@@ -31,8 +32,7 @@ const initialValues = {
 
 const CreateWarehouse = () => {
   const { data } = useGetWarehouseTypesQuery();
-  const [CreateWarehouseFunc, { error }] = useCreateWarehouseMutation();
-  console.log({ error });
+  const [CreateWarehouseFunc] = useCreateWarehouseMutation();
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
 
   const warehouseOptions = data?.warehouse_types?.map((item) => ({
@@ -41,9 +41,8 @@ const CreateWarehouse = () => {
   }));
 
   const handleCreateWarehouse = async (values) => {
-    console.log(values);
+    setCreateModalOpen(false);
     const toastId = toast.loading("Creating warehouse...");
-
     // Prepare FormData
     const formData = new FormData();
     formData.append("location", values.location);
@@ -65,11 +64,10 @@ const CreateWarehouse = () => {
     try {
       const response = await CreateWarehouseFunc(formData).unwrap();
       console.log({ response });
-      //   toast.success("Warehouse created successfully!", {
-      //     id: toastId,
-      //     duration: 2000,
-      //   });
-      //   setCreateModalOpen(false);
+      toast.success("Warehouse created successfully!", {
+        id: toastId,
+        duration: 2000,
+      });
     } catch (error) {
       console.log(getFirstErrorMessage(error));
       toast.error(getFirstErrorMessage(error), {
@@ -81,7 +79,10 @@ const CreateWarehouse = () => {
 
   return (
     <div>
-      <button onClick={() => setCreateModalOpen(true)}>Create Warehouse</button>
+      <CustomButton
+        onClick={() => setCreateModalOpen(true)}
+        label="Create warehouse"
+      />
       <CustomModal open={isCreateModalOpen} setOpen={setCreateModalOpen}>
         <Formik initialValues={initialValues} onSubmit={handleCreateWarehouse}>
           {({ setFieldValue }) => {
@@ -113,12 +114,7 @@ const CreateWarehouse = () => {
                   options={warehouseOptions}
                   label="Select Warehouse Type"
                 />
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white py-2 px-4 rounded"
-                >
-                  Create
-                </button>
+                <CustomButton type="submit" label="Create" />
               </Form>
             );
           }}
