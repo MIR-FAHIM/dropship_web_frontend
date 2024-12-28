@@ -8,11 +8,15 @@ import FormikDate from "../../../components/formik/FormikDate";
 import WarehouseTypes from "../../../components/formik/WarehouseTypes";
 const SecondStep = ({ details }) => {
   const initialValues = {
-    items: [{ item_name: "", quantity: "" }],
-    start_date: details?.start_date,
-    end_date: details?.end_date,
-    size: details?.size,
-    warehouseType_id: details?.warehouseType_id,
+    items: details?.items?.map((item) => ({
+      item_name: item.name || "",
+      quantity: item.request_quatity || 0,
+      type: item.type || "box",
+    })) || [{ item_name: "", quantity: "", type: "box" }],
+    start_date: details?.start_date || "",
+    end_date: details?.end_date || "",
+    size: details?.size || "",
+    warehouseType_id: String(details?.warehouseType_id) || "",
   };
   const handleSubmit = (values) => {
     const items = values.items.map((item) => ({
@@ -31,7 +35,6 @@ const SecondStep = ({ details }) => {
       <div>
         <Formik initialValues={initialValues} onSubmit={handleSubmit}>
           {({ values }) => {
-            console.log(values);
             return (
               <Form className="space-y-6">
                 <FormikInput name="size" label="Size" />
@@ -70,7 +73,6 @@ const SecondStep = ({ details }) => {
                             <FormikInput
                               name={`items[${index}].type`}
                               label="Type"
-                              type="number"
                               className=""
                             />
 

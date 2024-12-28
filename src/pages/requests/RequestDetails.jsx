@@ -17,7 +17,7 @@ import SixthStep from "./components/SixthStep";
 const RequestDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderRequestByIdQuery(id);
-  console.log(data);
+  // console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
