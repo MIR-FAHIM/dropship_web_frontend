@@ -7,7 +7,6 @@ import { getFirstErrorMessage } from "../../../utils/error.utils";
 import CustomButton from "../../../components/ui/CustomButton";
 
 const FourthStep = ({ requestId, files }) => {
-  console.log(files);
   const [uploadChallanFn] = useUploadChallanMutation();
   const handleSubmit = async (values) => {
     const toastId = toast.loading("Challan updating...!");
@@ -50,7 +49,9 @@ const FourthStep = ({ requestId, files }) => {
             {files?.map((item) => (
               <a
                 key={item?.id}
-                href={"https://adminwarehouse.jayga.io/" + item?.file}
+                href={
+                  "https://adminwarehouse.jayga.io/public/storage/" + item?.file
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary-500 underline"

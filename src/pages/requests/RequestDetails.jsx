@@ -17,7 +17,7 @@ import SixthStep from "./components/SixthStep";
 const RequestDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderRequestByIdQuery(id);
-  // console.log(data);
+  console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
@@ -64,7 +64,13 @@ const RequestDetails = () => {
       label: "Payment",
       value: "5thStep",
       icon: PiCheckSquareOffset,
-      content: <FifthStep />,
+      content: (
+        <FifthStep
+          setActiveTab={setActiveTab}
+          requestId={data?.data?.order_request?.id}
+          user={data?.data?.order_request?.user}
+        />
+      ),
     },
     {
       label: "Assign grids",
