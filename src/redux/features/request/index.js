@@ -10,6 +10,14 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    addMultipleItems: builder.mutation({
+      query: (requestInfo) => ({
+        url: "/addmultipleitems",
+        method: "POST",
+        body: requestInfo,
+      }),
+      invalidatesTags: ["Request"],
+    }),
     uploadChallan: builder.mutation({
       query: (requestInfo) => ({
         url: "/request-files/user",
@@ -33,4 +41,5 @@ export const {
   useGetOrderRequestByIdQuery,
   useCreateRequestMutation,
   useUploadChallanMutation,
+  useAddMultipleItemsMutation,
 } = requestApi;
