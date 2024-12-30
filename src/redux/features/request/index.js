@@ -18,12 +18,20 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
-    
+
     addMultipleItems: builder.mutation({
       query: (requestInfo) => ({
         url: "/addmultipleitems",
         method: "POST",
         body: requestInfo,
+      }),
+      invalidatesTags: ["Request"],
+    }),
+    updateItem: builder.mutation({
+      query: ({ itemInfo, id }) => ({
+        url: `/items/${id}`,
+        method: "PUT",
+        body: itemInfo,
       }),
       invalidatesTags: ["Request"],
     }),
@@ -52,4 +60,5 @@ export const {
   useUploadChallanMutation,
   useAddMultipleItemsMutation,
   useAssignWarehouseMutation,
+  useUpdateItemMutation,
 } = requestApi;
