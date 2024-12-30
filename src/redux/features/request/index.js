@@ -10,6 +10,15 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    assignWarehouse: builder.mutation({
+      query: (requestInfo) => ({
+        url: `/requests/warehouse/${requestInfo.warehouse_id}`,
+        method: "PATCH",
+        body: { warehouse_id: requestInfo.warehouse_id },
+      }),
+      invalidatesTags: ["Request"],
+    }),
+    
     addMultipleItems: builder.mutation({
       query: (requestInfo) => ({
         url: "/addmultipleitems",
@@ -42,4 +51,5 @@ export const {
   useCreateRequestMutation,
   useUploadChallanMutation,
   useAddMultipleItemsMutation,
+  useAssignWarehouseMutation,
 } = requestApi;
