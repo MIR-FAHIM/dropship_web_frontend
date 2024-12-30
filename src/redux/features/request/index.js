@@ -11,11 +11,13 @@ const requestApi = baseApi.injectEndpoints({
       invalidatesTags: ["Request"],
     }),
     assignWarehouse: builder.mutation({
-      query: (requestInfo) => ({
-        url: `/requests/warehouse/${requestInfo.warehouse_id}`,
-        method: "PATCH",
-        body: { warehouse_id: requestInfo.warehouse_id },
-      }),
+      query: ({ warehouseInfo, requestId }) => {
+        return {
+          url: `/requests/warehouse/${requestId}`,
+          method: "PATCH",
+          body: warehouseInfo,
+        };
+      },
       invalidatesTags: ["Request"],
     }),
 

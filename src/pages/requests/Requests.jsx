@@ -1,6 +1,9 @@
 import { useState } from "react";
 import CustomTable from "../../components/ui/CustomTable";
-import { useGetAllRequestQuery, useAssignWarehouseMutation } from "../../redux/features/request";
+import {
+  useGetAllRequestQuery,
+  useAssignWarehouseMutation,
+} from "../../redux/features/request";
 import { useGetAllWarehouseQuery } from "../../redux/features/warehouse";
 import { format, parseISO } from "date-fns";
 import CustomPopover from "../../components/ui/CustomPopover";
@@ -40,7 +43,8 @@ const Modal = ({ isOpen, title, children, onClose }) => {
 const Requests = () => {
   const navigate = useNavigate();
   const { data: requestData } = useGetAllRequestQuery();
-  const { data: warehouseData, isLoading: warehouseLoading } = useGetAllWarehouseQuery();
+  const { data: warehouseData, isLoading: warehouseLoading } =
+    useGetAllWarehouseQuery();
   const [assignWarehouse] = useAssignWarehouseMutation();
 
   const [selectedItems, setSelectedItems] = useState(null);
@@ -60,7 +64,12 @@ const Requests = () => {
     }));
 
     try {
-      await assignWarehouse({ warehouse_id: warehouseId }).unwrap();
+      await assignWarehouse({
+        warehouseInfo: {
+          warehouse_id: warehouseId,
+        },
+        requestId: requestId,
+      }).unwrap();
       setError(null); // Clear any previous errors
       console.log("Warehouse assigned successfully");
     } catch (err) {
@@ -74,13 +83,13 @@ const Requests = () => {
       <div className="p-5">
         <h3 className="text-xl font-semibold">
           Total Requests:{" "}
-          <span className="font-bold">{requestData?.data?.data.length || 0}</span>
+          <span className="font-bold">
+            {requestData?.data?.data.length || 0}
+          </span>
         </h3>
       </div>
       {error && (
-        <div className="bg-red-500 text-white p-3 rounded mb-4">
-          {error}
-        </div>
+        <div className="bg-red-500 text-white p-3 rounded mb-4">{error}</div>
       )}
       <CustomTable tableHead={tableHead}>
         {requestData?.data?.data.map((item) => (
@@ -109,21 +118,23 @@ const Requests = () => {
             </td>
             <td className="px-5 py-3 border">{item?.status}</td>
             <td className="px-5 py-3 border">
-            <select
-  value={selectedWarehouse[item?.id] || item?.warehouse_id || ""}
-  onChange={(e) => handleWarehouseChange(item?.id, e.target.value)}
-  className="px-4 py-2 border rounded"
-  disabled={warehouseLoading}
->
-  <option value="" disabled>
-    {warehouseLoading ? "Loading..." : "Select Warehouse"}
-  </option>
-  {warehouseData?.warehouses?.map((warehouse) => (
-    <option key={warehouse.id} value={warehouse.id}>
-      {warehouse.location} ({warehouse.warehouse_type?.type_name})
-    </option>
-  ))}
-</select>
+              <select
+                value={selectedWarehouse[item?.id] || item?.warehouse_id || ""}
+                onChange={(e) =>
+                  handleWarehouseChange(item?.id, e.target.value)
+                }
+                className="px-4 py-2 border rounded"
+                disabled={warehouseLoading}
+              >
+                <option value="" disabled>
+                  {warehouseLoading ? "Loading..." : "Select Warehouse"}
+                </option>
+                {warehouseData?.warehouses?.map((warehouse) => (
+                  <option key={warehouse.id} value={warehouse.id}>
+                    {warehouse.location} ({warehouse.warehouse_type?.type_name})
+                  </option>
+                ))}
+              </select>
             </td>
             <td className="px-5 py-3 border flex justify-center">
               <CustomPopover icon={<PiDotsThreeOutlineVerticalBold />}>
@@ -154,7 +165,8 @@ const Requests = () => {
         <ul>
           {selectedItems?.map((item) => (
             <li key={item?.id} className="mb-2">
-              <span className="font-bold">{item?.name}:</span> {item?.request_quatity}
+              <span className="font-bold">{item?.name}:</span>{" "}
+              {item?.request_quatity}
             </li>
           ))}
         </ul>
@@ -167,7 +179,8 @@ const Requests = () => {
       >
         <div className="mb-4">
           <p>
-            <strong>Name:</strong> <span className="font-bold">{selectedUsers?.name}</span>
+            <strong>Name:</strong>{" "}
+            <span className="font-bold">{selectedUsers?.name}</span>
           </p>
           <p>
             <strong>Mobile Number:</strong> {selectedUsers?.phone}
