@@ -49,6 +49,7 @@ const Payments = () => {
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead>
           <tr>
+            <th className="border p-2">Payment ID</th>
             <th className="border p-2">Req ID</th>
             <th className="border p-2">Type</th>
             <th className="border p-2">Amount</th>
@@ -62,6 +63,7 @@ const Payments = () => {
           {/* Check if logs data is available */}
           {data.data?.map((log) => (
             <tr key={log.id}>
+              <td className="border p-2">{log.id}</td>
               <td className="border p-2">{log.relatable_id}</td>
               <td className="border p-2">{log.type}</td>
               <td className="border p-2">{log.amount}</td>
