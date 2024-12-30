@@ -13,17 +13,19 @@ import {
 } from "../../../redux/features/request";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
+import { useState } from "react";
 const SecondStep = ({ details }) => {
   const [addItemFn] = useAddMultipleItemsMutation();
   const [updateItemFn] = useUpdateItemMutation();
   const [deleteItemFn] = useDeleteItemMutation();
+  const [itemQuantity, setItemQuantity] = useState({
+    value: 0,
+    index: 0,
+  });
+  const items = details?.items;
+  console.log(items);
   const initialValues = {
-    items: details?.items?.map((item) => ({
-      item_name: item.name || "",
-      quantity: item.request_quatity || 0,
-      type: item.type || "box",
-      id: item?.id || "",
-    })) || [{ item_name: "", quantity: "", type: "box" }],
+    items: [{ item_name: "", quantity: "", type: "box" }],
     start_date: details?.start_date || "",
     end_date: details?.end_date || "",
     size: details?.size || "",
@@ -56,7 +58,7 @@ const SecondStep = ({ details }) => {
   const handleUpdateItem = async (values) => {
     const toastId = toast.loading("Items updating please wait...");
     const data = {
-      request_quatity: values?.quantity,
+      request_quatity: itemQuantity.value,
     };
     try {
       const res = await updateItemFn({
@@ -66,6 +68,10 @@ const SecondStep = ({ details }) => {
       toast.success(res.message, {
         id: toastId,
         duration: 2000,
+      });
+      setItemQuantity({
+        value: 0,
+        index: 0,
       });
     } catch (error) {
       console.log("error:", error);
@@ -145,14 +151,69 @@ const SecondStep = ({ details }) => {
         >
           {({ values, dirty }) => {
             return (
-              <Form className="space-y-6 mt-10">
+              <Form className="mt-10">
                 <TabHeading
                   title="Add Items"
                   subTitle="Add items or update items after receiving. Items added here can only be assigned"
                 />
+                <div>
+                  <h3 className="text-lg font-semibold">Added items:</h3>
+                  <div className="space-y-3">
+                    {items?.map((item, index) => {
+                      return (
+                        <div
+                          key={index}
+                          className="flex items-center gap-5 font-semibold "
+                        >
+                          <p>{index + 1}/</p>
+                          <p>
+                            <span className="text-base font-normal me-1">
+                              Name:
+                            </span>
+                            {item?.name}
+                          </p>
+                          <input
+                            type="text"
+                            className="outline-gray-200 border border-gray-400 focus-visible:outline-gray-300 w-20 px-1"
+                            defaultValue={item?.request_quatity}
+                            onChange={(e) =>
+                              setItemQuantity({
+                                value: e.target.value,
+                                index: index,
+                              })
+                            }
+                          />
+                          <p>
+                            <span className="text-base font-normal me-1">
+                              Type:
+                            </span>
+                            {item?.type}
+                          </p>
+                          {itemQuantity.value > 0 &&
+                            itemQuantity.index === index && (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateItem(item)}
+                              >
+                                Update
+                              </button>
+                            )}
+                          <button
+                            type="button"
+                            className="text-red-400"
+                            onClick={() => handleDeleteItem(item?.id)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <p className="text-lg font-bold mt-5">Add new items:</p>
                 <FieldArray name="items">
                   {(fieldArrayProps) => {
-                    const { push, remove, dirty } = fieldArrayProps;
+                    const { push, remove } = fieldArrayProps;
                     const { items } = values;
 
                     return (
@@ -184,33 +245,13 @@ const SecondStep = ({ details }) => {
                             />
 
                             {/* Remove Button */}
-                            {index >= details?.items?.length && (
-                              <Button
-                                size="sm"
-                                type="button"
-                                onClick={() => remove(index)}
-                                className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
-                              >
-                                Remove
-                              </Button>
-                            )}
-                            {dirty && (
-                              <Button
-                                size="sm"
-                                type="button"
-                                onClick={() => handleUpdateItem(item)}
-                                className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
-                              >
-                                Update
-                              </Button>
-                            )}
                             <Button
                               size="sm"
                               type="button"
-                              onClick={() => handleDeleteItem(item?.id)}
+                              onClick={() => remove(index)}
                               className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
                             >
-                              Delete
+                              Remove
                             </Button>
                           </div>
                         ))}
@@ -220,7 +261,7 @@ const SecondStep = ({ details }) => {
                           type="button"
                           onClick={() => push({ item_name: "", quantity: "" })}
                           size="lg"
-                          className="flex items-center gap-2 text-primary p-2 mt-10"
+                          className="flex items-center gap-2 text-primary p-2 mt-5"
                         >
                           + Add New Item
                         </button>

@@ -59,7 +59,7 @@ const FirstStep = ({ setActiveTab, user }) => {
         onSubmit={handleSubmit}
         enableReinitialize
       >
-        {() => {
+        {({ dirty }) => {
           return (
             <Form className="space-y-5 font-dmSans">
               <div className="grid grid-cols-2 gap-10">
@@ -75,7 +75,9 @@ const FirstStep = ({ setActiveTab, user }) => {
                   label="Industry"
                 />
               </div>
-              <CustomButton className="mt-10" type="submit" label="Save" />
+              {dirty && (
+                <CustomButton className="mt-10" type="submit" label="Save" />
+              )}
             </Form>
           );
         }}
