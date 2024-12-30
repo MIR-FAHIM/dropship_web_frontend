@@ -35,6 +35,14 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    deleteItem: builder.mutation({
+      query: ({ id }) => ({
+        url: `/items/${id}`,
+        method: "DELETE",
+        body: "",
+      }),
+      invalidatesTags: ["Request"],
+    }),
     uploadChallan: builder.mutation({
       query: (requestInfo) => ({
         url: "/request-files/user",
@@ -61,4 +69,5 @@ export const {
   useAddMultipleItemsMutation,
   useAssignWarehouseMutation,
   useUpdateItemMutation,
+  useDeleteItemMutation,
 } = requestApi;

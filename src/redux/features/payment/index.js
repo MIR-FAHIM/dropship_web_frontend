@@ -4,6 +4,7 @@ const paymentApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllPayment: builder.query({
       query: () => `/payments`,
+      providesTags: ["Payment"],
     }),
     getPaymentById: builder.query({
       query: (id) => `/payments/${id}`,
@@ -16,6 +17,14 @@ const paymentApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    updatePaymentStatus: builder.mutation({
+      query: ({ paymentInfo, id }) => ({
+        url: `/payment/status/${id}`,
+        method: "PUT",
+        body: paymentInfo,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
   }),
 });
 
@@ -23,4 +32,5 @@ export const {
   useGetAllPaymentQuery,
   useGetPaymentByIdQuery,
   useAdvancePaymentMutation,
+  useUpdatePaymentStatusMutation,
 } = paymentApi;

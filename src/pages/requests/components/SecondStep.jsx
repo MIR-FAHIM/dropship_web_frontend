@@ -8,6 +8,7 @@ import FormikDate from "../../../components/formik/FormikDate";
 import WarehouseTypes from "../../../components/formik/WarehouseTypes";
 import {
   useAddMultipleItemsMutation,
+  useDeleteItemMutation,
   useUpdateItemMutation,
 } from "../../../redux/features/request";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import { getFirstErrorMessage } from "../../../utils/error.utils";
 const SecondStep = ({ details }) => {
   const [addItemFn] = useAddMultipleItemsMutation();
   const [updateItemFn] = useUpdateItemMutation();
+  const [deleteItemFn] = useDeleteItemMutation();
   const initialValues = {
     items: details?.items?.map((item) => ({
       item_name: item.name || "",
@@ -65,7 +67,6 @@ const SecondStep = ({ details }) => {
         id: toastId,
         duration: 2000,
       });
-      console.log(res);
     } catch (error) {
       console.log("error:", error);
       toast.error(getFirstErrorMessage(error), {
@@ -74,6 +75,30 @@ const SecondStep = ({ details }) => {
       });
     }
   };
+  const handleDeleteItem = async (id) => {
+    const isAccepted = window.confirm("Are you sure?");
+    if (!isAccepted) {
+      return;
+    }
+    const toastId = toast.loading("Items deleting please wait...");
+
+    try {
+      const res = await deleteItemFn({
+        id: id,
+      }).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
+  };
+
   return (
     <div className="p-5">
       <TabHeading
@@ -113,7 +138,11 @@ const SecondStep = ({ details }) => {
             );
           }}
         </Formik>
-        <Formik initialValues={initialValues} onSubmit={handleAddItems}>
+        <Formik
+          initialValues={initialValues}
+          onSubmit={handleAddItems}
+          enableReinitialize
+        >
           {({ values, dirty }) => {
             return (
               <Form className="space-y-6 mt-10">
@@ -123,7 +152,7 @@ const SecondStep = ({ details }) => {
                 />
                 <FieldArray name="items">
                   {(fieldArrayProps) => {
-                    const { push, remove } = fieldArrayProps;
+                    const { push, remove, dirty } = fieldArrayProps;
                     const { items } = values;
 
                     return (
@@ -165,13 +194,23 @@ const SecondStep = ({ details }) => {
                                 Remove
                               </Button>
                             )}
+                            {dirty && (
+                              <Button
+                                size="sm"
+                                type="button"
+                                onClick={() => handleUpdateItem(item)}
+                                className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
+                              >
+                                Update
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               type="button"
-                              onClick={() => handleUpdateItem(item)}
+                              onClick={() => handleDeleteItem(item?.id)}
                               className="text-red-500 hover:underline text-sm border border-red-500 w-[150px] bg-white shadow-none hover:shadow-none capitalize"
                             >
-                              Update
+                              Delete
                             </Button>
                           </div>
                         ))}
