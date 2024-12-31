@@ -76,7 +76,7 @@ const RequestDetails = () => {
       label: "Assign grids",
       value: "6thStep",
       icon: PiStorefront,
-      content: <SixthStep />,
+      content: <SixthStep details={data?.data?.order_request} />,
     },
     {
       label: "Place order",

@@ -23,7 +23,6 @@ const SecondStep = ({ details }) => {
     index: 0,
   });
   const items = details?.items;
-  console.log(items);
   const initialValues = {
     items: [{ item_name: "", quantity: "", type: "box" }],
     start_date: details?.start_date || "",

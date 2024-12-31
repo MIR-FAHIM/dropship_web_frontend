@@ -21,7 +21,6 @@ const FirstStep = ({ setActiveTab, user }) => {
   };
   const [updateClientFn] = useUpdateClientMutation();
   const handleSubmit = async (values) => {
-    console.log("called");
     const toastId = toast.loading("User updating please wait...");
     const data = {
       name: values?.name,
