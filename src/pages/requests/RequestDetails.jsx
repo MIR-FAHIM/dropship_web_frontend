@@ -13,11 +13,12 @@ import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";
 import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
+import SeventhStep from "./components/SeventhStep";
 
 const RequestDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderRequestByIdQuery(id);
-  console.log(data);
+  // console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
@@ -82,7 +83,7 @@ const RequestDetails = () => {
       label: "Place order",
       value: "7thStep",
       icon: PiStorefront,
-      content: <SixthStep />,
+      content: <SeventhStep details={data?.data} />,
     },
   ];
   return (
