@@ -13,10 +13,12 @@ import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";
 import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
+import SeventhStep from "./components/SeventhStep";
 
 const RequestDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderRequestByIdQuery(id);
+  // console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   useEffect(() => {
     setActiveTab(activeTab);
@@ -52,25 +54,36 @@ const RequestDetails = () => {
       label: "Challan",
       value: "4thStep",
       icon: PiStorefront,
-      content: <FourthStep />,
+      content: (
+        <FourthStep
+          requestId={data?.data?.order_request?.id}
+          files={data?.data?.related_files}
+        />
+      ),
     },
     {
       label: "Payment",
       value: "5thStep",
       icon: PiCheckSquareOffset,
-      content: <FifthStep />,
+      content: (
+        <FifthStep
+          setActiveTab={setActiveTab}
+          requestId={data?.data?.order_request?.id}
+          user={data?.data?.order_request?.user}
+        />
+      ),
     },
     {
       label: "Assign grids",
       value: "6thStep",
       icon: PiStorefront,
-      content: <SixthStep />,
+      content: <SixthStep details={data?.data?.order_request} />,
     },
     {
       label: "Place order",
       value: "7thStep",
       icon: PiStorefront,
-      content: <SixthStep />,
+      content: <SeventhStep details={data?.data} />,
     },
   ];
   return (

@@ -8,12 +8,14 @@ const FormikInput = ({
   className,
   type = "text",
   required = false,
+  readonly = false,
 }) => {
   return (
     <div className={className && className}>
       <Field name={name}>
         {({ field }) => (
           <Input
+            readonly={readonly}
             className="px-3"
             {...field}
             type={type}
@@ -37,12 +39,14 @@ FormikInput.propTypes = {
   className: PropTypes.string,
   type: PropTypes.string,
   required: PropTypes.bool,
+  readonly: PropTypes.bool,
 };
 
 FormikInput.defaultProps = {
   label: "",
   type: "text",
   required: false,
+  readonly: false,
 };
 
 export default FormikInput;
