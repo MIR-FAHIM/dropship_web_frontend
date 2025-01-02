@@ -56,6 +56,10 @@ const requestApi = baseApi.injectEndpoints({
       query: () => `/admin/requests`,
       providesTags: ["Request"],
     }),
+    getAssignedGridsByRequestIt: builder.query({
+      query: (id) => `/fetch-items-by-request/${id}`,
+      providesTags: ["Request"],
+    }),
     getOrderRequestById: builder.query({
       query: (id) => `/admin/requests/${id}`,
       providesTags: ["Request"],
@@ -72,4 +76,5 @@ export const {
   useAssignWarehouseMutation,
   useUpdateItemMutation,
   useDeleteItemMutation,
+  useGetAssignedGridsByRequestItQuery,
 } = requestApi;
