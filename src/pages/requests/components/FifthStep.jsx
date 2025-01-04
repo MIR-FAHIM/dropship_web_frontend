@@ -20,7 +20,7 @@ const FifthStep = ({ setActiveTab, requestId, user }) => {
     });
     try {
       const res = await advancePaymentFn(formdata).unwrap();
-      toast.error(res.message, {
+      toast.success(res.message, {
         id: toastId,
         duration: 2000,
       });

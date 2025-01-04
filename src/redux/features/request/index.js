@@ -37,6 +37,14 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    updateDuration: builder.mutation({
+      query: ({ durationInfo, id }) => ({
+        url: `/requests/date/${id}`,
+        method: "PUT",
+        body: durationInfo,
+      }),
+      invalidatesTags: ["Request"],
+    }),
     deleteItem: builder.mutation({
       query: ({ id }) => ({
         url: `/items/${id}`,
@@ -77,4 +85,5 @@ export const {
   useUpdateItemMutation,
   useDeleteItemMutation,
   useGetAssignedGridsByRequestItQuery,
+  useUpdateDurationMutation,
 } = requestApi;
