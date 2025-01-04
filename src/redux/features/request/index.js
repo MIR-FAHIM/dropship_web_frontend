@@ -45,6 +45,14 @@ const requestApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+    updateWTypeAndSize: builder.mutation({
+      query: ({ updateInfo, id }) => ({
+        url: `/requests/size/warehouse-type/${id}`,
+        method: "PUT",
+        body: updateInfo,
+      }),
+      invalidatesTags: ["Request"],
+    }),
     deleteItem: builder.mutation({
       query: ({ id }) => ({
         url: `/items/${id}`,
@@ -86,4 +94,5 @@ export const {
   useDeleteItemMutation,
   useGetAssignedGridsByRequestItQuery,
   useUpdateDurationMutation,
+  useUpdateWTypeAndSizeMutation,
 } = requestApi;
