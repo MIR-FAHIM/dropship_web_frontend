@@ -48,7 +48,12 @@ const RequestDetails = () => {
       label: "Duration",
       value: "3rdStep",
       icon: PiCalendarCheck,
-      content: <ThirdStep />,
+      content: (
+        <ThirdStep
+          details={data?.data?.order_request}
+          setActiveTab={setActiveTab}
+        />
+      ),
     },
     {
       label: "Challan",

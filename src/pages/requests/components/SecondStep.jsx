@@ -111,29 +111,16 @@ const SecondStep = ({ details }) => {
         subTitle="Add items or update items after receiving. Items added here can only be assigned"
       />
       <div>
-        <Formik initialValues={{}} onSubmit={null}>
+        <Formik initialValues={initialValues} onSubmit={null}>
           {({ dirty }) => {
             return (
               <Form className="space-y-6">
                 <FormikInput name="size" label="Size" />
                 <WarehouseTypes />
-                <div className="mt-10">
-                  <TabHeading
-                    title={"Duration"}
-                    subTitle={"Duration of storage as given by the user"}
-                  />
-                  <h3 className="font-medium font-plex mb-5">
-                    Select start and end date
-                  </h3>
-                  <div className="grid grid-cols-2">
-                    <FormikDate label="Start date" name="start_date" />
-                    <FormikDate label="End date" name="end_date" />
-                  </div>
-                </div>
                 {/* Submit Button */}
                 {dirty && (
                   <CustomButton
-                    label="Continue"
+                    label="Save"
                     type="submit"
                     size="lg"
                     className="mt-10"
