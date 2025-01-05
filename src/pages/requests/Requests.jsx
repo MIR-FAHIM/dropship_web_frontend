@@ -113,10 +113,12 @@ const Requests = () => {
                 onClick={() => handleShowItems(item?.items)}
                 className="px-4 py-2 bg-blue-500 text-white rounded"
               >
-                Check Item Request
+                Check Item Request ({item?.items.length})
               </button>
             </td>
-            <td className="px-5 py-3 border">{item?.status}</td>
+            <td className="px-5 py-3 border">
+  {item?.status === 0 ? 'Pending' : item?.status === 1 ? 'Confirmed' : 'Unknown'}
+</td>
             <td className="px-5 py-3 border">
               <select
                 value={selectedWarehouse[item?.id] || item?.warehouse_id || ""}
