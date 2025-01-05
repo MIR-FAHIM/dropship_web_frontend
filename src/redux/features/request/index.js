@@ -88,6 +88,9 @@ const requestApi = baseApi.injectEndpoints({
       query: (id) => `/admin/requests/${id}`,
       providesTags: ["Request"],
     }),
+    getPaymentsByRequestId: builder.query({
+      query: (id) => `/payments/request/${id}`,
+    }),
   }),
 });
 
@@ -104,4 +107,5 @@ export const {
   useUpdateDurationMutation,
   useUpdateWTypeAndSizeMutation,
   usePlaceOrderMutation,
+  useGetPaymentsByRequestIdQuery,
 } = requestApi;
