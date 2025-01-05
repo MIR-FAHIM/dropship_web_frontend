@@ -3,8 +3,16 @@ import baseApi from "../../api/baseApi";
 const requestApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createRequest: builder.mutation({
+      query: (orderInfo) => ({
+        url: "/place-order",
+        method: "POST",
+        body: orderInfo,
+      }),
+      invalidatesTags: ["Request"],
+    }),
+    placeOrder: builder.mutation({
       query: (requestInfo) => ({
-        url: "/create-order-request/user",
+        url: "/place-order",
         method: "POST",
         body: requestInfo,
       }),
@@ -95,4 +103,5 @@ export const {
   useGetAssignedGridsByRequestItQuery,
   useUpdateDurationMutation,
   useUpdateWTypeAndSizeMutation,
+  usePlaceOrderMutation,
 } = requestApi;

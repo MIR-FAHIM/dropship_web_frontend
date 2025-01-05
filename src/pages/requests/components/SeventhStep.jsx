@@ -1,12 +1,44 @@
+import { toast } from "sonner";
 import Loader from "../../../components/shared/Loader";
 import CustomButton from "../../../components/ui/CustomButton";
-import { useGetAssignedGridsByRequestItQuery } from "../../../redux/features/request";
+import {
+  useGetAssignedGridsByRequestItQuery,
+  usePlaceOrderMutation,
+} from "../../../redux/features/request";
+import { getFirstErrorMessage } from "../../../utils/error.utils";
+import FormikForm from "../../../components/formik/FormikForm";
+import FormikInput from "../../../components/formik/FormikInput";
 
 const SeventhStep = ({ details }) => {
   const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
     details?.order_request?.id
   );
+  const [placeOrderFn] = usePlaceOrderMutation();
   const userInfo = details?.order_request?.user;
+  const handlePlaceOrder = async (values) => {
+    const toastId = toast.loading("Payment creating please wait...");
+    const data = {
+      payment: values?.payment,
+      request_id: Number(details?.order_request?.id),
+    };
+    const formdata = new FormData();
+    Object.keys(data).forEach((key) => {
+      formdata.append(key, data[key]);
+    });
+    try {
+      const res = await placeOrderFn(formdata).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
+  };
   return (
     <section>
       <div className="grid grid-cols-3 gap-5 font-DMSans mb-5">
@@ -82,7 +114,17 @@ const SeventhStep = ({ details }) => {
           </div>
         </div>
       </div>
-      <CustomButton label="Place Order" />
+      <div>
+        <FormikForm onSubmit={handlePlaceOrder} initialValues={{ payment: "" }}>
+          <FormikInput
+            type="number"
+            name="payment"
+            label={"Estimated payment"}
+            required
+          />
+          <CustomButton type="submit" label="Place Order" />
+        </FormikForm>
+      </div>
     </section>
   );
 };
