@@ -3,6 +3,7 @@ import Payments from "../pages/billing/pages/Payments";
 import Transactions from "../pages/billing/pages/Transactions";
 import Grids from "../pages/grids/Grids";
 import Items from "../pages/items/Items";
+import OrderDetails from "../pages/orderDetails/OrderDetails";
 import Orders from "../pages/orders/Orders";
 import Overview from "../pages/overview/Overview";
 import RequestDetails from "../pages/requests/RequestDetails";
@@ -30,6 +31,10 @@ export const pagePaths = [
       {
         path: "/orders",
         element: <Orders />,
+      },
+      {
+        path: "/orders/details/:id",
+        element: <OrderDetails />,
       },
       {
         path: "/users",

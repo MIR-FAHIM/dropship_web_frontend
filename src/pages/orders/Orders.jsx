@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom";
 import { useGetAllOrderQuery } from "../../redux/features/order"; // Assuming you have a log query for fetching logs
 import { format, parseISO } from "date-fns";
 
@@ -28,22 +28,27 @@ const Orders = () => {
             <th className="border p-2">Time</th>
             <th className="border p-2">Status</th>
             <th className="border p-2">Created At</th>
+            <th className="border p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
           {/* Check if logs data is available */}
-          {data.data?.map((log) => (
-            <tr key={log.id}>
-              <td className="border p-2">{log.id}</td>
+          {data.data?.map((item) => (
+            <tr key={item.id}>
+              <td className="border p-2">{item.id}</td>
 
-              <td className="border p-2">{log.request_id}</td>
-              <td className="border p-2">{log.payment}</td>
-              <td className="border p-2">{log.payment}</td>
-              <td className="border p-2">{log.status}</td>
+              <td className="border p-2">{item.request_id}</td>
+              <td className="border p-2">{item.payment}</td>
+              <td className="border p-2">{item.payment}</td>
+              <td className="border p-2">{item.status}</td>
               <td className="border p-2">
-                {log.created_at
-                  ? format(parseISO(log.created_at), "dd-MMM-yyyy, hh:mm a")
-                  : "N/A"} {/* Format the created_at date */}
+                {item.created_at
+                  ? format(parseISO(item.created_at), "dd-MMM-yyyy, hh:mm a")
+                  : "N/A"}{" "}
+                {/* Format the created_at date */}
+              </td>
+              <td className="border p-2">
+                <Link to={`details/${item?.id}`}>View details</Link>
               </td>
             </tr>
           ))}
