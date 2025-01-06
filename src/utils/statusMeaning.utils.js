@@ -11,6 +11,10 @@ const statusMeaning = (category, statusCode) => {
       0: "Active",
       1: "Inactive",
     },
+    payment: {
+      0: "Pending",
+      1: "Paid",
+    },
   };
   if (statuses[category]) {
     return statuses[category][statusCode] || "Invalid status code";

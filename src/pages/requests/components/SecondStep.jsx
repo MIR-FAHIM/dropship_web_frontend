@@ -4,12 +4,12 @@ import CustomButton from "../../../components/ui/CustomButton";
 import TabHeading from "./TabHeading";
 import FormikInput from "../../../components/formik/FormikInput";
 import { FieldArray, Form, Formik } from "formik";
-import FormikDate from "../../../components/formik/FormikDate";
 import WarehouseTypes from "../../../components/formik/WarehouseTypes";
 import {
   useAddMultipleItemsMutation,
   useDeleteItemMutation,
   useUpdateItemMutation,
+  useUpdateWTypeAndSizeMutation,
 } from "../../../redux/features/request";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
@@ -18,6 +18,7 @@ const SecondStep = ({ details }) => {
   const [addItemFn] = useAddMultipleItemsMutation();
   const [updateItemFn] = useUpdateItemMutation();
   const [deleteItemFn] = useDeleteItemMutation();
+  const [updateTypeAndAreaFn] = useUpdateWTypeAndSizeMutation();
   const [itemQuantity, setItemQuantity] = useState({
     value: 0,
     index: 0,
@@ -103,6 +104,29 @@ const SecondStep = ({ details }) => {
       });
     }
   };
+  const handleUpdateTypeAndSize = async (values) => {
+    const toastId = toast.loading("Updating please wait...");
+    const data = {
+      size: values.size,
+      warehouseType_id: values.warehouseType_id,
+    };
+    try {
+      const res = await updateTypeAndAreaFn({
+        updateInfo: data,
+        id: details?.id,
+      }).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
+  };
 
   return (
     <div className="p-5">
@@ -111,29 +135,20 @@ const SecondStep = ({ details }) => {
         subTitle="Add items or update items after receiving. Items added here can only be assigned"
       />
       <div>
-        <Formik initialValues={{}} onSubmit={null}>
+        <Formik
+          initialValues={initialValues}
+          onSubmit={handleUpdateTypeAndSize}
+          enableReinitialize
+        >
           {({ dirty }) => {
             return (
               <Form className="space-y-6">
                 <FormikInput name="size" label="Size" />
                 <WarehouseTypes />
-                <div className="mt-10">
-                  <TabHeading
-                    title={"Duration"}
-                    subTitle={"Duration of storage as given by the user"}
-                  />
-                  <h3 className="font-medium font-plex mb-5">
-                    Select start and end date
-                  </h3>
-                  <div className="grid grid-cols-2">
-                    <FormikDate label="Start date" name="start_date" />
-                    <FormikDate label="End date" name="end_date" />
-                  </div>
-                </div>
                 {/* Submit Button */}
                 {dirty && (
                   <CustomButton
-                    label="Continue"
+                    label="Save"
                     type="submit"
                     size="lg"
                     className="mt-10"

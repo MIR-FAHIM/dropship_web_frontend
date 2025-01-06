@@ -5,9 +5,14 @@ import { getFirstErrorMessage } from "../../../utils/error.utils";
 import FormikInput from "../../../components/formik/FormikInput";
 import CustomButton from "../../../components/ui/CustomButton";
 import { useAdvancePaymentMutation } from "../../../redux/features/payment";
+import { useGetPaymentsByRequestIdQuery } from "../../../redux/features/request";
+import statusMeaning from "../../../utils/statusMeaning.utils";
 
 const FifthStep = ({ setActiveTab, requestId, user }) => {
   const [advancePaymentFn] = useAdvancePaymentMutation();
+  const { data: paymentsData, isLoading: isPaymentsDataLoading } =
+    useGetPaymentsByRequestIdQuery(requestId);
+  console.log("yoyoyo", paymentsData);
   const handleSubmit = async (values) => {
     const toastId = toast.loading("Payment creating please wait...");
     const data = {
@@ -20,7 +25,7 @@ const FifthStep = ({ setActiveTab, requestId, user }) => {
     });
     try {
       const res = await advancePaymentFn(formdata).unwrap();
-      toast.error(res.message, {
+      toast.success(res.message, {
         id: toastId,
         duration: 2000,
       });
@@ -41,6 +46,24 @@ const FifthStep = ({ setActiveTab, requestId, user }) => {
       <p className="font-medium mb-8">
         Enter size required to generate initial bill
       </p>
+      <div className="grid grid-cols-4 gap-4 my-5">
+        {paymentsData?.data?.map((item) => (
+          <div key={item?.id} className="border rounded-md p-4">
+            <p>
+              Id: <span className="font-medium">{item?.id}</span>
+            </p>
+            <p>
+              Amount: <span className="font-medium">{item?.amount}</span>
+            </p>
+            <p>
+              Status:{" "}
+              <span className="font-medium">
+                {statusMeaning("payment", item?.status)}
+              </span>
+            </p>
+          </div>
+        ))}
+      </div>
       <Formik
         initialValues={{
           email: user?.email,
