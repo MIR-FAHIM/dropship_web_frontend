@@ -35,6 +35,7 @@ const Orders = () => {
           {data.data?.map((log) => (
             <tr key={log.id}>
               <td className="border p-2">{log.id}</td>
+
               <td className="border p-2">{log.request_id}</td>
               <td className="border p-2">{log.payment}</td>
               <td className="border p-2">{log.payment}</td>

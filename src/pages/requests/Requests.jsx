@@ -133,7 +133,7 @@ const Requests = () => {
                 </option>
                 {warehouseData?.warehouses?.map((warehouse) => (
                   <option key={warehouse.id} value={warehouse.id}>
-                    {warehouse.location} ({warehouse.warehouse_type?.type_name})
+                    {warehouse.name} ({warehouse.warehouse_type?.type_name})
                   </option>
                 ))}
               </select>
