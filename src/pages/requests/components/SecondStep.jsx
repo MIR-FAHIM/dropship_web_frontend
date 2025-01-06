@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import { Button } from "@material-tailwind/react";
 import CustomButton from "../../../components/ui/CustomButton";
-import TabHeading from "./TabHeading";
+import TabHeading from "../../../components/shared/TabHeading";
 import FormikInput from "../../../components/formik/FormikInput";
 import { FieldArray, Form, Formik } from "formik";
 import WarehouseTypes from "../../../components/formik/WarehouseTypes";

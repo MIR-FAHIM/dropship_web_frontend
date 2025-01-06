@@ -1,5 +1,5 @@
 import { Form, Formik } from "formik";
-import TabHeading from "./TabHeading";
+import TabHeading from "../../../components/shared/TabHeading";
 import { LuCirclePlus } from "react-icons/lu";
 import { useUploadChallanMutation } from "../../../redux/features/request";
 import { toast } from "sonner";
