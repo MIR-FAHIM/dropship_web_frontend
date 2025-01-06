@@ -67,7 +67,7 @@ const menuLinks = [
   },
   {
     path: "/activity",
-    label: "Activity",
+    label: "Logs",
     icon: <BiTransferAlt />,
   },
   {

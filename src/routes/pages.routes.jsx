@@ -1,5 +1,4 @@
 import Activity from "../pages/activity/Activity";
-// import Billing from "../pages/billing/Billing";
 import Payments from "../pages/billing/pages/Payments";
 import Transactions from "../pages/billing/pages/Transactions";
 import Grids from "../pages/grids/Grids";

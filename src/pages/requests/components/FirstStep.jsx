@@ -1,21 +1,16 @@
 /* eslint-disable react/prop-types */
-import { Formik } from "formik";
+import { Form, Formik } from "formik";
 import TabHeading from "./TabHeading";
-import { Form } from "react-router-dom";
 import FormikInput from "../../../components/formik/FormikInput";
 import FormikDropdown from "../../../components/formik/FormikDropdown";
 import { transformArrayOfStringsIntoLabelAndValueArray } from "../../../utils";
 import { industryTypes } from "../../../constants";
 import CustomButton from "../../../components/ui/CustomButton";
-// import { useGetWarehouseTypesQuery } from "../../../redux/features/warehouse";
+import { useUpdateClientMutation } from "../../../redux/features/client";
+import { toast } from "sonner";
+import { getFirstErrorMessage } from "../../../utils/error.utils";
 
 const FirstStep = ({ setActiveTab, user }) => {
-  // console.log("user", user);
-  // const { data } = useGetWarehouseTypesQuery();
-  // const warehouseTypes = data?.warehouse_types?.map((item) => ({
-  //   label: item?.type_name,
-  //   value: String(item?.id),
-  // }));
   const initialValues = {
     name: user?.name,
     company_name: user?.company_name,
@@ -24,8 +19,33 @@ const FirstStep = ({ setActiveTab, user }) => {
     industry_type: user?.industry_type,
     address: user?.address,
   };
+  const [updateClientFn] = useUpdateClientMutation();
   const handleSubmit = async (values) => {
-    console.log(values);
+    const toastId = toast.loading("User updating please wait...");
+    const data = {
+      name: values?.name,
+      company_name: values?.company_name,
+      phone: values?.phone,
+      email: values?.email,
+      industry_type: values?.industry_type,
+      address: values?.address,
+    };
+    try {
+      const res = await updateClientFn({
+        userInfo: data,
+        id: user?.id,
+      }).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
   };
   return (
     <div className="w-full p-5">
@@ -33,8 +53,12 @@ const FirstStep = ({ setActiveTab, user }) => {
         title="Details"
         subTitle="Enter user details and select warehouse"
       />
-      <Formik initialValues={initialValues} onSubmit={handleSubmit}>
-        {() => {
+      <Formik
+        initialValues={initialValues}
+        onSubmit={handleSubmit}
+        enableReinitialize
+      >
+        {({ dirty }) => {
           return (
             <Form className="space-y-5 font-dmSans">
               <div className="grid grid-cols-2 gap-10">
@@ -49,12 +73,10 @@ const FirstStep = ({ setActiveTab, user }) => {
                   name="industry_type"
                   label="Industry"
                 />
-                {/* <FormikDropdown
-                  options={warehouseTypes}
-                  name="warehouse"
-                  label="Warehouse"
-                /> */}
               </div>
+              {dirty && (
+                <CustomButton className="mt-10" type="submit" label="Save" />
+              )}
             </Form>
           );
         }}

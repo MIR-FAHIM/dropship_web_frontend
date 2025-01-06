@@ -1,10 +1,37 @@
 import { Form, Formik } from "formik";
 import TabHeading from "./TabHeading";
 import { LuCirclePlus } from "react-icons/lu";
+import { useUploadChallanMutation } from "../../../redux/features/request";
+import { toast } from "sonner";
+import { getFirstErrorMessage } from "../../../utils/error.utils";
+import CustomButton from "../../../components/ui/CustomButton";
 
-const FourthStep = () => {
-  const handleSubmit = (values) => {
-    console.log(values);
+const FourthStep = ({ requestId, files }) => {
+  const [uploadChallanFn] = useUploadChallanMutation();
+  const handleSubmit = async (values) => {
+    const toastId = toast.loading("Challan updating...!");
+    const data = {
+      relatable_id: requestId,
+      type: "challan request",
+      file: values?.file,
+    };
+    const formdata = new FormData();
+    Object.keys(data).forEach((key) => {
+      formdata.append(key, data[key]);
+    });
+    try {
+      const res = await uploadChallanFn(formdata).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
   };
   return (
     <div>
@@ -12,11 +39,34 @@ const FourthStep = () => {
         title="Challan"
         subTitle="Uploaded challan will show up here. You can also add a challan given by the user"
       />
+      {files?.length > 0 && (
+        <div className="mb-5">
+          <p>
+            <span className="Text-medium">Total files: </span>
+            {files?.length}
+          </p>
+          <div className="flex flex-col">
+            {files?.map((item) => (
+              <a
+                key={item?.id}
+                href={
+                  "https://adminwarehouse.jayga.io/public/storage/" + item?.file
+                }
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-500 underline"
+              >
+                View/Download
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       <p className="font-medium font-DMSans">Upload your delivery challan</p>
 
       <Formik initialValues={{ file: "" }} onSubmit={handleSubmit}>
         {({ values, setFieldValue }) => {
-          console.log(values);
           return (
             <Form className="space-y-5 font-dmSans">
               <label
@@ -48,6 +98,7 @@ const FourthStep = () => {
                   setFieldValue("file", event.target.files[0])
                 }
               />
+              <CustomButton className="mt-10" type="submit" label="Submit" />
             </Form>
           );
         }}

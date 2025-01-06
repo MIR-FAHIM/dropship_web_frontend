@@ -8,7 +8,18 @@ const clientApi = baseApi.injectEndpoints({
     getClientById: builder.query({
       query: (id) => `/user/${id}`,
     }),
+    updateClient: builder.mutation({
+      query: ({ userInfo, id }) => ({
+        url: `/user/${id}`,
+        method: "PUT",
+        body: userInfo,
+      }),
+    }),
   }),
 });
 
-export const { useGetAllClientQuery, useGetClientByIdQuery } = clientApi;
+export const {
+  useGetAllClientQuery,
+  useGetClientByIdQuery,
+  useUpdateClientMutation,
+} = clientApi;
