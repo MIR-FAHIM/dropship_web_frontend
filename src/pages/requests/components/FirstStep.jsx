@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Form, Formik } from "formik";
-import TabHeading from "./TabHeading";
+import TabHeading from "../../../components/shared/TabHeading";
 import FormikInput from "../../../components/formik/FormikInput";
 import FormikDropdown from "../../../components/formik/FormikDropdown";
 import { transformArrayOfStringsIntoLabelAndValueArray } from "../../../utils";

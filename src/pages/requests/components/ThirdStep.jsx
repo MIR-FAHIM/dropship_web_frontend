@@ -1,5 +1,5 @@
 import { Form, Formik } from "formik";
-import TabHeading from "./TabHeading";
+import TabHeading from "../../../components/shared/TabHeading";
 import FormikDate from "../../../components/formik/FormikDate";
 import CustomButton from "../../../components/ui/CustomButton";
 import { useUpdateDurationMutation } from "../../../redux/features/request";

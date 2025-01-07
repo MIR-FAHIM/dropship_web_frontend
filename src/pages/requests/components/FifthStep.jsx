@@ -1,5 +1,5 @@
 import { Form, Formik } from "formik";
-import TabHeading from "./TabHeading";
+import TabHeading from "../../../components/shared/TabHeading";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
 import FormikInput from "../../../components/formik/FormikInput";

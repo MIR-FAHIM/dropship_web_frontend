@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom";
 import { useGetAllOrderQuery } from "../../redux/features/order"; // Assuming you have a log query for fetching logs
 import { format, parseISO } from "date-fns";
 
@@ -7,17 +7,17 @@ const Orders = () => {
 
   // If data is loading, show loading message
   if (isLoading) {
-    return <p>Loading logs...</p>;
+    return <p>Loading orders...</p>;
   }
 
-  // If there is an error fetching logs, show error message
+  // If there is an error fetching orders, show error message
   if (error) {
-    return <p>Error fetching logs: {error.message}</p>;
+    return <p>Error fetching orders: {error.message}</p>;
   }
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Logs</h2>
+      <h2 className="text-xl font-semibold mb-4">Orders</h2>
 
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead>
@@ -25,25 +25,30 @@ const Orders = () => {
             <th className="border p-2">Order ID</th>
             <th className="border p-2">Request ID</th>
             <th className="border p-2">Payment</th>
-            <th className="border p-2">Time</th>
+            <th className="border p-2">Duration</th>
             <th className="border p-2">Status</th>
             <th className="border p-2">Created At</th>
+            <th className="border p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {/* Check if logs data is available */}
-          {data.data?.map((log) => (
-            <tr key={log.id}>
-              <td className="border p-2">{log.id}</td>
-
-              <td className="border p-2">{log.request_id}</td>
-              <td className="border p-2">{log.payment}</td>
-              <td className="border p-2">{log.payment}</td>
-              <td className="border p-2">{log.status}</td>
+          {/* Render data rows if available */}
+          {data?.data?.map((item) => (
+            <tr key={item?.order_id}>
+              <td className="border p-2">{item?.order_id}</td>
+              <td className="border p-2">{item?.request_id}</td>
+              <td className="border p-2">{item?.payment}</td>
               <td className="border p-2">
-                {log.created_at
-                  ? format(parseISO(log.created_at), "dd-MMM-yyyy, hh:mm a")
-                  : "N/A"} {/* Format the created_at date */}
+                {item?.request.start_date} {item?.request.end_date}
+              </td>
+              <td className="border p-2">{item?.status}</td>
+              <td className="border p-2">
+                {item?.created_at
+                  ? format(parseISO(item?.created_at), "dd-MMM-yyyy, hh:mm a")
+                  : "N/A"}
+              </td>
+              <td className="border p-2">
+                <Link to={`details/${item?.order_id}`}>View details</Link>
               </td>
             </tr>
           ))}
