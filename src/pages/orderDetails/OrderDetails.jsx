@@ -13,7 +13,6 @@ import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";
 import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
-import SeventhSTep from "./components/SeventhSTep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 
 const OrderDetails = () => {
@@ -45,7 +44,7 @@ const OrderDetails = () => {
       icon: PiCalendarCheck,
       content: (
         <ThirdStep
-          details={data?.data?.order_request}
+          details={data?.data?.order?.request}
           setActiveTab={setActiveTab}
         />
       ),
@@ -77,13 +76,9 @@ const OrderDetails = () => {
       label: "Assign grids",
       value: "6thStep",
       icon: PiStorefront,
-      content: <SixthStep details={data?.data?.order_request} />,
-    },
-    {
-      label: "Place order",
-      value: "7thStep",
-      icon: PiStorefront,
-      content: <SeventhSTep details={data?.data} />,
+      content: (
+        <SixthStep details={data?.data?.order?.request?.assigned_grids} />
+      ),
     },
   ];
   useEffect(() => {
