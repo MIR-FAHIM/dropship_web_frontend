@@ -19,10 +19,8 @@ import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 const OrderDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderDetailsByIdQuery(id);
+  console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
-  useEffect(() => {
-    setActiveTab(activeTab);
-  }, [activeTab]);
   const requestTabs = [
     {
       label: "User Details",
@@ -31,7 +29,7 @@ const OrderDetails = () => {
       content: (
         <FirstStep
           setActiveTab={setActiveTab}
-          user={data?.data?.order_request?.user}
+          user={data?.data?.order?.request?.user}
         />
       ),
     },
@@ -88,6 +86,9 @@ const OrderDetails = () => {
       content: <SeventhSTep details={data?.data} />,
     },
   ];
+  useEffect(() => {
+    setActiveTab(activeTab);
+  }, [activeTab]);
   if (isLoading) {
     return <Loader />;
   }

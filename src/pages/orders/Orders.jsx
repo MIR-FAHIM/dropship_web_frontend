@@ -32,26 +32,27 @@ const Orders = () => {
           </tr>
         </thead>
         <tbody>
-          {/* Check if logs data is available */}
-          {data.data?.map((item) => (
-            <tr key={item.id}>
-              <td className="border p-2">{item.id}</td>
+          {data.data?.map((item) => {
+            return (
+              <tr key={item?.order_id}>
+                <td className="border p-2">{item?.order_id}</td>
 
-              <td className="border p-2">{item.request_id}</td>
-              <td className="border p-2">{item.payment}</td>
-              <td className="border p-2">{item.payment}</td>
-              <td className="border p-2">{item.status}</td>
-              <td className="border p-2">
-                {item.created_at
-                  ? format(parseISO(item.created_at), "dd-MMM-yyyy, hh:mm a")
-                  : "N/A"}{" "}
-                {/* Format the created_at date */}
-              </td>
-              <td className="border p-2">
-                <Link to={`details/${item?.id}`}>View details</Link>
-              </td>
-            </tr>
-          ))}
+                <td className="border p-2">{item.request_id}</td>
+                <td className="border p-2">{item.payment}</td>
+                <td className="border p-2">{item.payment}</td>
+                <td className="border p-2">{item.status}</td>
+                <td className="border p-2">
+                  {item.created_at
+                    ? format(parseISO(item.created_at), "dd-MMM-yyyy, hh:mm a")
+                    : "N/A"}{" "}
+                  {/* Format the created_at date */}
+                </td>
+                <td className="border p-2">
+                  <Link to={`details/${item?.order_id}`}>View details</Link>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
