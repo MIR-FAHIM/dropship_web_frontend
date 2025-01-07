@@ -37,7 +37,7 @@ const OrderDetails = () => {
       label: "Warehouse",
       value: "2ndStep",
       icon: BsBoxSeam,
-      content: <SecondStep details={data?.data?.order_request} />,
+      content: <SecondStep details={data?.data?.order?.request} />,
     },
     {
       label: "Duration",
