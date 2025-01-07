@@ -25,8 +25,9 @@ const Orders = () => {
             <th className="border p-2">Order ID</th>
             <th className="border p-2">Request ID</th>
             <th className="border p-2">Payment</th>
-            <th className="border p-2">Time</th>
+            <th className="border p-2">Duration</th>
             <th className="border p-2">Status</th>
+            <th className="border p-2">Warehouse</th>
             <th className="border p-2">Created At</th>
           </tr>
         </thead>
@@ -34,12 +35,13 @@ const Orders = () => {
           {/* Check if logs data is available */}
           {data.data?.map((log) => (
             <tr key={log.id}>
-              <td className="border p-2">{log.id}</td>
+              <td className="border p-2">{log.order_id}</td>
 
               <td className="border p-2">{log.request_id}</td>
               <td className="border p-2">{log.payment}</td>
-              <td className="border p-2">{log.payment}</td>
+              <td className="border p-2">{log.request.start_date} {log.request.end_date}</td>
               <td className="border p-2">{log.status}</td>
+              <td className="border p-2">{log.request.warehouse.name}</td>
               <td className="border p-2">
                 {log.created_at
                   ? format(parseISO(log.created_at), "dd-MMM-yyyy, hh:mm a")
