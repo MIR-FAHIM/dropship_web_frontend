@@ -25,13 +25,18 @@ const Orders = () => {
             <th className="border p-2">Order ID</th>
             <th className="border p-2">Request ID</th>
             <th className="border p-2">Payment</th>
-            <th className="border p-2">Time</th>
+            <th className="border p-2">Duration</th>
             <th className="border p-2">Status</th>
+            <th className="border p-2">Warehouse</th>
             <th className="border p-2">Created At</th>
             <th className="border p-2">Actions</th>
           </tr>
         </thead>
         <tbody>
+          {/* Check if logs data is available */}
+          {data.data?.map((log) => (
+            <tr key={log.id}>
+              <td className="border p-2">{log.order_id}</td>
           {data.data?.map((item) => {
             return (
               <tr key={item?.order_id}>
