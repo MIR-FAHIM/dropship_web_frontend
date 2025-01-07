@@ -1,7 +1,14 @@
+import TabHeading from "../../../components/shared/TabHeading";
+
 const FifthStep = () => {
   return (
     <div>
-      <p>Hello FifthStep</p>
+      <TabHeading
+        title={"Payment History & Transactions"}
+        subTitle={
+          "View and manage your payment records, statuses, and receipts."
+        }
+      />
     </div>
   );
 };

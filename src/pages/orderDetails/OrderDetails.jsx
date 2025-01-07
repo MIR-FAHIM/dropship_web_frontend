@@ -11,14 +11,13 @@ import FirstStep from "./components/FirstStep";
 import SecondStep from "./components/SecondStep";
 import ThirdStep from "./components/ThirdStep";
 import FourthStep from "./components/FourthStep";
-import FifthStep from "./components/FifthStep";
+// import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 
 const OrderDetails = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetOrderDetailsByIdQuery(id);
-  console.log(data);
   const [activeTab, setActiveTab] = useState("1stStep");
   const requestTabs = [
     {
@@ -53,25 +52,20 @@ const OrderDetails = () => {
       label: "Challan",
       value: "4thStep",
       icon: PiStorefront,
-      content: (
-        <FourthStep
-          requestId={data?.data?.order_request?.id}
-          files={data?.data?.related_files}
-        />
-      ),
+      content: <FourthStep files={data?.data?.request_files} />,
     },
-    {
-      label: "Payment",
-      value: "5thStep",
-      icon: PiCheckSquareOffset,
-      content: (
-        <FifthStep
-          setActiveTab={setActiveTab}
-          requestId={data?.data?.order_request?.id}
-          user={data?.data?.order_request?.user}
-        />
-      ),
-    },
+    // {
+    //   label: "Payment",
+    //   value: "5thStep",
+    //   icon: PiCheckSquareOffset,
+    //   content: (
+    //     <FifthStep
+    //       setActiveTab={setActiveTab}
+    //       requestId={data?.data?.order_request?.id}
+    //       user={data?.data?.order_request?.user}
+    //     />
+    //   ),
+    // },
     {
       label: "Assign grids",
       value: "6thStep",
