@@ -39,7 +39,7 @@ body {
 }
 
 .toggle-checkbox:checked {
-  background-color: #4CAF50; /* Green when checked */
+  background-color: #4caf50; /* Green when checked */
 }
 
 .toggle-checkbox:checked::before {
@@ -65,4 +65,14 @@ body {
   background-color: white;
   border-radius: 50%;
   transform: translate(-50%, -50%);
+}
+
+.overview-card {
+  @apply rounded-xl p-5 space-y-5 hover:duration-150 hover:-translate-y-2 hover:shadow-md ease-in-out;
+}
+.overview-card-title {
+  @apply text-xl font-bold text-gray-800;
+}
+.overview-card-value {
+  @apply text-3xl font-bold text-gray-900;
 }
