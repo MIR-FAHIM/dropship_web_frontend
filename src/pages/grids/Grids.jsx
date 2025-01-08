@@ -67,7 +67,7 @@ const GridStatusPage = () => {
           <option value="">Select a warehouse</option>
           {warehouses?.warehouses?.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
-              {warehouse.location}
+              {warehouse.name}
             </option>
           ))}
         </select>

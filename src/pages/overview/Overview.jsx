@@ -164,7 +164,9 @@ const Overview = () => {
             <CardValue>{data.payment_stats.total_payments}</CardValue>
           </Card>
 
-          {/* Total Payment Amount */}
+          {/* Total Payment Amou
+          
+          t */}
           <Card style={{ backgroundColor: getCardColor(data.payment_stats.total_amount) }}>
             <CardTitle>Total Payment Amount</CardTitle>
             <CardValue>${data.payment_stats.total_amount}</CardValue>
