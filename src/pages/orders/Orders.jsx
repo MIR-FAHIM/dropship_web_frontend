@@ -1,16 +1,17 @@
 import { Link } from "react-router-dom";
 import { useGetAllOrderQuery } from "../../redux/features/order"; // Assuming you have a log query for fetching logs
 import { format, parseISO } from "date-fns";
+import statusMeaning from "../../utils/statusMeaning.utils";
+import { useState } from "react";
+import UpdateOrderStatus from "./components/UpdateOrderStatus";
 
 const Orders = () => {
-  const { data, isLoading, error } = useGetAllOrderQuery(); // Fetch logs using the API
-
-  // If data is loading, show loading message
+  const { data, isLoading, error } = useGetAllOrderQuery();
+  const [isOpen, setOpen] = useState(false);
+  const [orderInfo, setOrderInfo] = useState({});
   if (isLoading) {
     return <p>Loading orders...</p>;
   }
-
-  // If there is an error fetching orders, show error message
   if (error) {
     return <p>Error fetching orders: {error.message}</p>;
   }
@@ -41,7 +42,16 @@ const Orders = () => {
               <td className="border p-2">
                 {item?.request.start_date} {item?.request.end_date}
               </td>
-              <td className="border p-2">{item?.status}</td>
+              <td className="border p-2">
+                <button
+                  onClick={() => {
+                    setOrderInfo(item);
+                    setOpen(true);
+                  }}
+                >
+                  {statusMeaning("order", item?.status)}
+                </button>
+              </td>
               <td className="border p-2">
                 {item?.created_at
                   ? format(parseISO(item?.created_at), "dd-MMM-yyyy, hh:mm a")
@@ -54,6 +64,7 @@ const Orders = () => {
           ))}
         </tbody>
       </table>
+      <UpdateOrderStatus details={orderInfo} open={isOpen} setOpen={setOpen} />
     </div>
   );
 };

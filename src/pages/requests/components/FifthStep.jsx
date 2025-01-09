@@ -12,7 +12,6 @@ const FifthStep = ({ setActiveTab, requestId, user }) => {
   const [advancePaymentFn] = useAdvancePaymentMutation();
   const { data: paymentsData, isLoading: isPaymentsDataLoading } =
     useGetPaymentsByRequestIdQuery(requestId);
-  console.log("yoyoyo", paymentsData);
   const handleSubmit = async (values) => {
     const toastId = toast.loading("Payment creating please wait...");
     const data = {
