@@ -30,10 +30,10 @@ const CustomModal = ({
         {footer && (
           <DialogFooter>
             <Button
-              variant="text"
+              variant="gradient"
               color="red"
               onClick={handleOpen}
-              className="mr-1"
+              className="mr-3"
             >
               <span>Cancel</span>
             </Button>
