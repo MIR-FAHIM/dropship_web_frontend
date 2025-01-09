@@ -47,7 +47,7 @@ const CustomNavbar = () => {
     };
   }, []);
   return (
-    <Navbar className="sticky top-0 z-[9999] max-w-full rounded-none h-[80px] bg-opacity-100 bg-white px-0 opacity-100">
+    <Navbar className="sticky top-0 z-[499] max-w-full rounded-none h-[80px] bg-opacity-100 bg-white px-0 opacity-100">
       <div className="flex items-center justify-between text-blue-gray-900 h-full px-4">
         <Link to={"/"} className="cursor-pointer font-bold">
           Dashboard

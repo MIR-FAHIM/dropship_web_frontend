@@ -1,19 +1,16 @@
 import { Form, Formik } from "formik";
 import TabHeading from "../../../components/shared/TabHeading";
-import { toast } from "sonner";
-import { getFirstErrorMessage } from "../../../utils/error.utils";
 import FormikInput from "../../../components/formik/FormikInput";
 import CustomButton from "../../../components/ui/CustomButton";
 import { useAdvancePaymentMutation } from "../../../redux/features/payment";
 import { useGetPaymentsByRequestIdQuery } from "../../../redux/features/request";
 import statusMeaning from "../../../utils/statusMeaning.utils";
+import Swal from "sweetalert2";
 
 const FifthStep = ({ setActiveTab, requestId, user }) => {
   const [advancePaymentFn] = useAdvancePaymentMutation();
-  const { data: paymentsData, isLoading: isPaymentsDataLoading } =
-    useGetPaymentsByRequestIdQuery(requestId);
+  const { data: paymentsData } = useGetPaymentsByRequestIdQuery(requestId);
   const handleSubmit = async (values) => {
-    const toastId = toast.loading("Payment creating please wait...");
     const data = {
       amount: values?.amount,
       request_id: Number(requestId),
@@ -22,20 +19,36 @@ const FifthStep = ({ setActiveTab, requestId, user }) => {
     Object.keys(data).forEach((key) => {
       formdata.append(key, data[key]);
     });
+
     try {
-      const res = await advancePaymentFn(formdata).unwrap();
-      toast.success(res.message, {
-        id: toastId,
-        duration: 2000,
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        // text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#158E72",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes",
       });
+
+      if (result.isConfirmed) {
+        const res = await advancePaymentFn(formdata).unwrap();
+        await Swal.fire({
+          title: "Paid",
+          text: res.message,
+          icon: "success",
+        });
+      }
     } catch (error) {
-      console.log("error:", error);
-      toast.error(getFirstErrorMessage(error), {
-        id: toastId,
-        duration: 2000,
+      console.error("Error:", error);
+      await Swal.fire({
+        title: "Error!",
+        text: error?.data?.message || "Something went wrong!",
+        icon: "error",
       });
     }
   };
+
   return (
     <div>
       <TabHeading
