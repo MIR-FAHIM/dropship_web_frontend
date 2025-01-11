@@ -8,6 +8,7 @@ import {
 import CustomButton from "../../../components/ui/CustomButton";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
+import Swal from "sweetalert2";
 
 const transformData = (data) => {
   const result = {
@@ -88,18 +89,26 @@ const SixthStep = ({ details }) => {
   const allGrids = gridData?.grids;
 
   const handleSubmit = async () => {
-    const toastId = toast.loading("Grid assigning please wait...");
     const data = transformData(assignedItems);
     try {
-      const res = await assignGridFn(data).unwrap();
-      toast.success(res.message, {
-        id: toastId,
-        duration: 2000,
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        // text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#158E72",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes",
       });
+      if (result.isConfirmed) {
+        const res = await assignGridFn(data).unwrap();
+        toast.success(res.message, {
+          duration: 2000,
+        });
+      }
     } catch (error) {
       console.log("error:", error);
       toast.error(getFirstErrorMessage(error), {
-        id: toastId,
         duration: 2000,
       });
     }
@@ -181,20 +190,22 @@ const SixthStep = ({ details }) => {
           </form>
         </div>
       </div>
-      <div>
-        <p className="font-bold"> Assigned Grids and Items</p>
-        <div className="grid grid-cols-3 gap-5 my-5">
-          {assignedItems?.map((item) => (
-            <div key={item?.id} className="border p-4 rounded-md mb-2">
-              <p>Item Name: {item?.name}</p>
-              <p>Received Quantity: {item?.recived_quatity}</p>
-              <p>Grid Code: {item?.assignedGrid?.grid_code}</p>
-              <p>Grid ID: {item?.assignedGrid?.id}</p>
-            </div>
-          ))}
+      {assignedItems?.length > 0 && (
+        <div>
+          <p className="font-bold"> Assigned Grids and Items</p>
+          <div className="grid grid-cols-3 gap-5 my-5">
+            {assignedItems?.map((item) => (
+              <div key={item?.id} className="border p-4 rounded-md mb-2">
+                <p>Item Name: {item?.name}</p>
+                <p>Received Quantity: {item?.recived_quatity}</p>
+                <p>Grid Code: {item?.assignedGrid?.grid_code}</p>
+                <p>Grid ID: {item?.assignedGrid?.id}</p>
+              </div>
+            ))}
+          </div>
+          <CustomButton onClick={() => handleSubmit()} label="Assign grids" />
         </div>
-        <CustomButton onClick={() => handleSubmit()} label="Assign grids" />
-      </div>
+      )}
     </div>
   );
 };
