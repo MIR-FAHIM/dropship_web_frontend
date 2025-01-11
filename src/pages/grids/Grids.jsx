@@ -12,8 +12,6 @@ const GridStatusPage = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(null); // Store selected warehouse
   const [gridData, setGridData] = useState([]);
 
-  console.log("warehouses", warehouses);
-
   // Fetch all grids initially
   const {
     data: grids,
