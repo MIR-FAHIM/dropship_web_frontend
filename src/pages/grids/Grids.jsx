@@ -12,6 +12,8 @@ const GridStatusPage = () => {
   const [selectedWarehouse, setSelectedWarehouse] = useState(null); // Store selected warehouse
   const [gridData, setGridData] = useState([]);
 
+  console.log("warehouses", warehouses);
+
   // Fetch all grids initially
   const {
     data: grids,
@@ -67,7 +69,7 @@ const GridStatusPage = () => {
           <option value="">Select a warehouse</option>
           {warehouses?.warehouses?.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
-              {warehouse.location}
+              {warehouse?.name + "-" + warehouse?.size}
             </option>
           ))}
         </select>
