@@ -47,7 +47,6 @@ const GridStatusPage = () => {
   if (warehouseError) {
     return <p>Error fetching warehouses: {warehouseError.message}</p>;
   }
-
   return (
     <div className="p-5">
       <div className="flex items-center justify-between">

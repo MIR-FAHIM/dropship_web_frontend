@@ -1,8 +1,11 @@
 import { toast } from "sonner";
 import Loader from "../../../components/shared/Loader";
 import CustomButton from "../../../components/ui/CustomButton";
+//import CustomButton from "../../../components/ui/CustomButton";
+import { useGetWarehouseByIdQuery } from "../../../redux/features/warehouse";
 import {
   useGetAssignedGridsByRequestItQuery,
+  
   usePlaceOrderMutation,
 } from "../../../redux/features/request";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
@@ -10,9 +13,13 @@ import FormikForm from "../../../components/formik/FormikForm";
 import FormikInput from "../../../components/formik/FormikInput";
 
 const SeventhStep = ({ details }) => {
+
+  const { data: warehouseData, isWareLoading, error } = useGetWarehouseByIdQuery(details?.order_request?.warehouse_id);
   const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
     details?.order_request?.id
   );
+   
+
   const [placeOrderFn] = usePlaceOrderMutation();
   const userInfo = details?.order_request?.user;
   const handlePlaceOrder = async (values) => {
@@ -39,6 +46,19 @@ const SeventhStep = ({ details }) => {
       });
     }
   };
+  const startDate = details?.order_request?.start_date;
+  const endDate = details?.order_request?.end_date;
+
+  
+  const calculateDuration = (startDate, endDate) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Convert to days
+    return diffDays;
+  };
+  const duration = startDate && endDate ? calculateDuration(startDate, endDate) : 0;
   return (
     <section>
       <div className="grid grid-cols-3 gap-5 font-DMSans mb-5">
@@ -103,6 +123,7 @@ const SeventhStep = ({ details }) => {
           <div className="space-y-1">
             <p>Customer</p>
             <p className="font-medium font-DMSans">{userInfo?.name}</p>
+           
             <p>Phone</p>
             <p className="font-medium font-DMSans">{userInfo?.phone}</p>
             <p>Email</p>
@@ -112,7 +133,61 @@ const SeventhStep = ({ details }) => {
             <p>Company</p>
             <p className="font-medium font-DMSans">{userInfo?.company_name}</p>
           </div>
+
+          <hr className="my-6 border-t border-gray-300" />
+
+          <div className="space-y-4 p-6 border rounded-lg shadow-lg bg-blue-50">
+  <h3 className="font-medium text-lg text-green-1500">Billing Calculation</h3>
+  
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Total Grid Occupied</p>
+    <p className="font-medium font-DMSans text-green-600">{data?.total_grids}</p>
+  </div>
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Total Size (sqft)</p>
+    <p className="font-medium font-DMSans text-green-600">{data?.total_grids * 50}</p>
+  </div>
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Per Grid Price Per Day</p>
+    <p className="font-medium font-DMSans text-green-600">
+    {warehouseData?.warehouse?.grid_price_per_day}
+    </p>
+  </div>
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Estimated Price Per Day</p>
+    <p className="font-medium font-DMSans text-green-600">
+      {data?.total_grids ? data.total_grids * warehouseData?.warehouse?.grid_price_per_day : "Calculating..."}
+    </p>
+  </div>
+  
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Requested Duration</p>
+    <p className="font-medium font-DMSans text-green-600 mt-2">
+      Duration: {duration} days
+    </p>
+  </div>
+  
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Estimated Price Per Month</p>
+    <p className="font-medium font-DMSans text-green-600">
+      {data?.total_grids ? data.total_grids * warehouseData?.warehouse?.grid_price_per_day * 30 : "Calculating..."}
+    </p>
+  </div>
+  
+  <div className="space-y-1">
+    <p className="font-semibold text-gray-700">Estimated Price On Duration</p>
+    <p className="font-medium font-DMSans text-green-600">
+      {data?.total_grids ? data.total_grids * warehouseData?.warehouse?.grid_price_per_day * duration : "Calculating..."}
+    </p>
+  </div>
+  
+</div>
+
         </div>
+
+       
+
+
       </div>
       <div>
         <FormikForm onSubmit={handlePlaceOrder} initialValues={{ payment: "" }}>
