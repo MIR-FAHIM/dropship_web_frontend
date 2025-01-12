@@ -117,8 +117,12 @@ const Requests = () => {
               </button>
             </td>
             <td className="px-5 py-3 border">
-  {item?.status === 0 ? 'Pending' : item?.status === 1 ? 'Confirmed' : 'Unknown'}
-</td>
+              {item?.status === 0
+                ? "Pending"
+                : item?.status === 1
+                ? "Confirmed"
+                : "Unknown"}
+            </td>
             <td className="px-5 py-3 border">
               <select
                 value={selectedWarehouse[item?.id] || item?.warehouse_id || ""}
@@ -141,7 +145,7 @@ const Requests = () => {
             <td className="px-5 py-3 border flex justify-center">
               <CustomPopover icon={<PiDotsThreeOutlineVerticalBold />}>
                 <div className="flex flex-col items-start">
-                  <button className="requestActions">View Memo</button>
+                  <button className="requestActions">View Challan</button>
                   <button
                     onClick={() => navigate(`/request-details/${item?.id}`)}
                     className="requestActions"

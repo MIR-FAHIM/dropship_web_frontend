@@ -57,8 +57,9 @@ const Orders = () => {
                   ? format(parseISO(item?.created_at), "dd-MMM-yyyy, hh:mm a")
                   : "N/A"}
               </td>
-              <td className="border p-2">
+              <td className="border p-2 flex flex-col space-4">
                 <Link to={`details/${item?.order_id}`}>View details</Link>
+                <Link to={`invoice/${item?.order_id}`}>Create Invoice</Link>
               </td>
             </tr>
           ))}

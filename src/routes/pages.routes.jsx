@@ -2,6 +2,7 @@ import Activity from "../pages/activity/Activity";
 import Payments from "../pages/billing/pages/Payments";
 import Transactions from "../pages/billing/pages/Transactions";
 import Grids from "../pages/grids/Grids";
+import Invoice from "../pages/Invoice/Invoice";
 import Items from "../pages/items/Items";
 import OrderDetails from "../pages/orderDetails/OrderDetails";
 import Orders from "../pages/orders/Orders";
@@ -31,6 +32,10 @@ export const pagePaths = [
       {
         path: "/orders",
         element: <Orders />,
+      },
+      {
+        path: "/orders/invoice/:id",
+        element: <Invoice />,
       },
       {
         path: "/orders/details/:id",
