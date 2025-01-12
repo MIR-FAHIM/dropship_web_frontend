@@ -14,8 +14,6 @@ const Transactions = () => {
     return <p>Error fetching logs: {error.message}</p>;
   }
 
-
-
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4">Transactions</h2>

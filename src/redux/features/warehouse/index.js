@@ -12,6 +12,10 @@ const warehouseApi = baseApi.injectEndpoints({
     getAllWarehouse: builder.query({
       query: () => `/warehouses`,
     }),
+    getWarehouseById: builder.query({
+      query: (id) => `/warehouses/${id}`,
+     
+    }),
     getWarehouseTypes: builder.query({
       query: () => `/admin/warehouse-types`,
     }),
@@ -19,6 +23,7 @@ const warehouseApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetWarehouseByIdQuery,
   useGetAllWarehouseQuery,
   useGetWarehouseTypesQuery,
   useCreateWarehouseMutation,
