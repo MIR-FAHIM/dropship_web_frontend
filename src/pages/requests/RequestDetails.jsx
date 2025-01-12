@@ -75,6 +75,7 @@ const RequestDetails = () => {
           setActiveTab={setActiveTab}
           requestId={data?.data?.order_request?.id}
           user={data?.data?.order_request?.user}
+          details={data?.data?.order_request}
         />
       ),
     },

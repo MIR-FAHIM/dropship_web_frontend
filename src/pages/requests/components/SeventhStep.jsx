@@ -181,6 +181,7 @@ const SeventhStep = ({ details }) => {
     </p>
   </div>
   
+  
 </div>
 
         </div>
