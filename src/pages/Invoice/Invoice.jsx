@@ -3,10 +3,12 @@ import TabHeading from "../../components/shared/TabHeading";
 import { useGetInvoiceAmountQuery } from "../../redux/features/order";
 import DatePicker from "react-datepicker";
 import { format, parse } from "date-fns";
-import "react-datepicker/dist/react-datepicker.css"; // Ensure DatePicker styles are included
+import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
-import { TbCurrencyTaka } from "react-icons/tb";
+// import { TbCurrencyTaka } from "react-icons/tb";
 import CustomTable from "../../components/ui/CustomTable";
+import { usePDF } from "react-to-pdf";
+import CustomButton from "../../components/ui/CustomButton";
 // Helper function to convert a string to a Date object
 const convertToDateObject = (dateString) => {
   return parse(dateString, "yyyy-MM-dd", new Date());
@@ -16,6 +18,7 @@ const tableHead = ["Date", "Space Used", "Duration", "Amount"];
 
 const Invoice = () => {
   const { id } = useParams();
+  const { toPDF, targetRef } = usePDF({ filename: "invoice-jayga.pdf" });
   const [invoiceInfo, setInvoiceInfo] = useState({
     startDate: "",
     endDate: "",
@@ -24,6 +27,7 @@ const Invoice = () => {
 
   // Fetch data with the current invoiceInfo state
   const { data, error } = useGetInvoiceAmountQuery(invoiceInfo);
+
   console.log(error);
 
   return (
@@ -32,8 +36,8 @@ const Invoice = () => {
         title={"Generate Invoice"}
         subTitle={"Generate an invoice for the order"}
       />
-      <div className="grid grid-cols-3">
-        <div>
+      <div className="grid grid-cols-1 gap-10">
+        <div className="w-1/2">
           <div className="flex flex-col gap-4">
             {/* Start Date Picker */}
             <div>
@@ -89,15 +93,20 @@ const Invoice = () => {
             </div>
           </div>
           {/* Display invoice details */}
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
             <h2 className="text-lg font-semibold">Invoice Information</h2>
             <p>Start Date: {invoiceInfo.startDate || "Not selected"}</p>
             <p>End Date: {invoiceInfo.endDate || "Not selected"}</p>
             <p>Data: {data ? JSON.stringify(data) : "Loading..."}</p>
+            <CustomButton onClick={() => toPDF()} label="Download PDF" />
           </div>
         </div>
-        <div className="bg-background p-4 rounded-md col-span-2">
-          <div className="bg-white p-4 rounded-md min-h-[650px] flex flex-col justify-between">
+        <div className="bg-background p-5 rounded-md">
+          {/* PDF section */}
+          <div
+            ref={targetRef}
+            className="bg-white p-10 px-12 rounded-md min-h-[650px] flex flex-col justify-between"
+          >
             <div>
               <img
                 src="/jayga-logo-without-label.png"
@@ -107,7 +116,7 @@ const Invoice = () => {
               <div className="mt-4">
                 <div className="flex items-center justify-between">
                   <p className="text-2xl font-bold flex items-center">
-                    <TbCurrencyTaka className="text-3xl" /> 12,31,412{" "}
+                    12,31,412 TK
                   </p>
                   <p>Date: 12-01-2025</p>
                 </div>
@@ -131,7 +140,7 @@ const Invoice = () => {
               </div>
             </div>
             <div>
-              <div className="border border-l-0 border-r-0 flex items-center justify-between font-bold py-2 my-5">
+              <div className="border border-l-0 border-r-0 flex items-center justify-between font-bold pt-2 pb-5 my-5">
                 <p>Gross Total</p>
                 <p>5000</p>
               </div>
