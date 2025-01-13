@@ -9,6 +9,7 @@ import CustomButton from "../../../components/ui/CustomButton";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
 import Swal from "sweetalert2";
+import Switch from "react-switch"; 
 
 const transformData = (data) => {
   const result = {
@@ -29,6 +30,7 @@ const transformData = (data) => {
 };
 
 const SixthStep = ({ details }) => {
+  const [isOccupied, setIsOccupied] = useState({});
   const [selectedItem, setSelectedItem] = useState(null);
   const [selectedGrid, setSelectedGrid] = useState(null);
   const [updatedItems, setUpdatedItems] = useState(details?.items || []);
@@ -87,6 +89,12 @@ const SixthStep = ({ details }) => {
   }
 
   const allGrids = gridData?.grids;
+const handleToggleOccupied = (gridId) => {
+    setIsOccupied((prev) => ({
+      ...prev,
+      [gridId]: !prev[gridId], // Toggle the state for the specific grid ID
+    }));
+  };
 
   const handleSubmit = async () => {
     const data = transformData(assignedItems);
@@ -139,56 +147,72 @@ const SixthStep = ({ details }) => {
 
         {/* Grid Section */}
         <div className="space-y-5 col-span-1">
-          {/* Assign Grid Form */}
-          <p className="font-semibold">Choice grid</p>
-          <div className="grid grid-cols-2 gap-2">
-            {allGrids?.map((grid) => {
-              const isAssigned = assignedGrids.includes(grid?.id);
+      {/* Assign Grid Form */}
+      <p className="font-semibold">Choice grid</p>
+      <div className="grid grid-cols-2 gap-2">
+        {allGrids?.map((grid) => {
+          const isAssigned = assignedGrids.includes(grid?.id);
 
-              return (
-                <Radio
-                  key={grid?.id}
-                  name="gridId"
-                  id={grid?.id}
-                  label={grid?.grid_code}
-                  onChange={() => setSelectedGrid(grid)}
-                  checked={selectedGrid?.id === grid.id}
-                  disabled={isAssigned} // Disable if grid is assigned
-                  className={isAssigned ? "opacity-50 cursor-not-allowed" : ""}
-                />
-              );
-            })}
-          </div>
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="quantity" className="font-semibold">
-                Enter Quantity
-              </label>
-              <input
-                id="quantity"
-                name="quantity"
-                type="number"
-                className="outline-gray-200 border border-gray-400 focus-visible:outline-gray-300 w-full px-2 py-1"
-                value={formik.values.quantity}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                disabled={!selectedItem}
-              />
-              {formik.touched.quantity && formik.errors.quantity && (
-                <p className="text-red-500 text-sm">{formik.errors.quantity}</p>
-              )}
-            </div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-              disabled={
-                !selectedItem || !selectedGrid || !formik.values.quantity
-              }
-            >
-              Assign Grid
-            </button>
-          </form>
+          return (
+            <Radio
+              key={grid?.id}
+              name="gridId"
+              id={grid?.id}
+              label={grid?.grid_code}
+              onChange={() => setSelectedGrid(grid)}
+              checked={selectedGrid?.id === grid.id}
+              disabled={isAssigned} // Disable if grid is assigned
+              className={isAssigned ? "opacity-50 cursor-not-allowed" : ""}
+            />
+          );
+        })}
+      </div>
+
+      {/* Is Occupied Switch */}
+      {selectedGrid && (
+  <div className="flex items-center space-x-4">
+    <p className="font-semibold">
+      Is {selectedGrid?.grid_code} Occupied?
+    </p>
+    <Switch
+      onChange={() => handleToggleOccupied(selectedGrid.id)}
+      checked={isOccupied[selectedGrid.id] || false}
+      offColor="#ddd"
+      onColor="#4ade80"
+    />
+  </div>
+)}
+
+      <form onSubmit={formik.handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="quantity" className="font-semibold">
+            Enter Quantity
+          </label>
+          <input
+            id="quantity"
+            name="quantity"
+            type="number"
+            className="outline-gray-200 border border-gray-400 focus-visible:outline-gray-300 w-full px-2 py-1"
+            value={formik.values.quantity}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            disabled={!selectedGrid}
+          />
+          {formik.touched.quantity && formik.errors.quantity && (
+            <p className="text-red-500 text-sm">{formik.errors.quantity}</p>
+          )}
         </div>
+        <button
+          type="submit"
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+          disabled={
+            !selectedGrid || !formik.values.quantity
+          }
+        >
+          Assign Grid
+        </button>
+      </form>
+    </div>
       </div>
       {assignedItems?.length > 0 && (
         <div>
