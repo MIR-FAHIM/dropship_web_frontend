@@ -7,6 +7,7 @@ import { LuUserRoundCheck } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
 import { PiCalendarCheck, PiCheckSquareOffset } from "react-icons/pi";
 import { PiStorefront } from "react-icons/pi";
+import { LuMessageSquareText } from "react-icons/lu";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import React, { useEffect, useState } from "react";
 import ThirdStep from "./components/ThirdStep";
@@ -14,6 +15,7 @@ import FourthStep from "./components/FourthStep";
 import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
 import SeventhStep from "./components/SeventhStep";
+import Communication from "./components/Communication";
 
 const RequestDetails = () => {
   const { id } = useParams();
@@ -90,6 +92,12 @@ const RequestDetails = () => {
       value: "7thStep",
       icon: PiStorefront,
       content: <SeventhStep details={data?.data} />,
+    },
+    {
+      label: "Communication",
+      value: "communication",
+      icon: LuMessageSquareText,
+      content: <Communication details={data?.data} />,
     },
   ];
   return (
