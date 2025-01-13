@@ -7,15 +7,21 @@ import { useGetPaymentsByRequestIdQuery } from "../../../redux/features/request"
 import statusMeaning from "../../../utils/statusMeaning.utils";
 import Swal from "sweetalert2";
 import { useGetWarehouseByIdQuery } from "../../../redux/features/warehouse";
-import { useGetAssignedGridsByRequestItQuery } from "../../../redux/features/request";
+import {
+  useGetAssignedGridsByRequestItQuery,
+  
+
+} from "../../../redux/features/request";
 
 const FifthStep = ({ setActiveTab, requestId, user, details }) => {
   const [advancePaymentFn] = useAdvancePaymentMutation();
-  const { data: paymentsData } = useGetPaymentsByRequestIdQuery(requestId);
-  const { data, isLoading } = useGetAssignedGridsByRequestItQuery(details?.id);
-  const { data: warehouseData } = useGetWarehouseByIdQuery(
-    details?.warehouse_id
+  const { data: paymentsData, isLoading: isPaymentsDataLoading } =
+    useGetPaymentsByRequestIdQuery(requestId);
+  console.log("yoyoyo", paymentsData);
+const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
+    details?.id
   );
+    const { data: warehouseData, isWareLoading, error } = useGetWarehouseByIdQuery(details?.warehouse_id);
   const handleSubmit = async (values) => {
     const data = {
       amount: values?.amount,
