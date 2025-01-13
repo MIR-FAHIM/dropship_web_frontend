@@ -33,8 +33,6 @@ const Invoice = () => {
 
   const { data, error, isError } = useGetInvoiceAmountQuery(invoiceInfo);
 
-  console.log(data, error);
-
   return (
     <div className="p-5 font-DMSans">
       <TabHeading
