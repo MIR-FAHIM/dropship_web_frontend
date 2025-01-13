@@ -1,6 +1,9 @@
 import { useState } from "react";
 import TabHeading from "../../components/shared/TabHeading";
-import { useGetInvoiceAmountQuery } from "../../redux/features/order";
+import {
+  useCreateInvoiceMutation,
+  useGetInvoiceAmountQuery,
+} from "../../redux/features/order";
 import DatePicker from "react-datepicker";
 import { format, parse } from "date-fns";
 import "react-datepicker/dist/react-datepicker.css";
@@ -9,6 +12,8 @@ import { useParams } from "react-router-dom";
 import CustomTable from "../../components/ui/CustomTable";
 import { usePDF } from "react-to-pdf";
 import CustomButton from "../../components/ui/CustomButton";
+import { toast } from "sonner";
+import { getFirstErrorMessage } from "../../utils/error.utils";
 // Helper function to convert a string to a Date object
 const convertToDateObject = (dateString) => {
   return parse(dateString, "yyyy-MM-dd", new Date());
@@ -30,8 +35,34 @@ const Invoice = () => {
     endDate: "",
     id,
   });
-
   const { data, error, isError } = useGetInvoiceAmountQuery(invoiceInfo);
+  const [createInvoiceFn] = useCreateInvoiceMutation();
+
+  const handleCreateInvoice = async (values) => {
+    const toastId = toast.loading("Generating invoice please wait...");
+    const data = {
+      start: values?.startDate,
+      end: values?.endDate,
+      order_list_id: values?.id,
+    };
+    const formdata = new FormData();
+    Object.keys(data).forEach((key) => {
+      formdata.append(key, data[key]);
+    });
+    try {
+      const res = await createInvoiceFn(formdata).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
+  };
 
   return (
     <div className="p-5 font-DMSans">
@@ -124,7 +155,10 @@ const Invoice = () => {
                       <td className="px-5 py-3 border">{data?.data?.amount}</td>
                     </tr>
                   </CustomTable>
-                  <CustomButton label="Generate Invoice" />
+                  <CustomButton
+                    onClick={() => handleCreateInvoice(invoiceInfo)}
+                    label="Generate Invoice"
+                  />
                   {/* <CustomButton onClick={() => toPDF()} label="Download PDF" /> */}
                 </div>
               )}
