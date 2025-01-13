@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import { LuUserRoundCheck } from "react-icons/lu";
 import { BsBoxSeam } from "react-icons/bs";
 import { PiCalendarCheck, PiCheckSquareOffset } from "react-icons/pi";
+import { LuMessageSquareText } from "react-icons/lu";
 import { PiStorefront } from "react-icons/pi";
 import FirstStep from "./components/FirstStep";
 import SecondStep from "./components/SecondStep";
@@ -14,6 +15,7 @@ import FourthStep from "./components/FourthStep";
 // import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
+import Communication from "./components/Communication";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -73,6 +75,12 @@ const OrderDetails = () => {
       content: (
         <SixthStep details={data?.data?.order?.request?.assigned_grids} />
       ),
+    },
+    {
+      label: "Communication",
+      value: "communication",
+      icon: LuMessageSquareText,
+      content: <Communication details={data?.data} />,
     },
   ];
   useEffect(() => {

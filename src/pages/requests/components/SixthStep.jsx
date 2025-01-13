@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { Radio } from "@material-tailwind/react";
+import { Radio, Switch } from "@material-tailwind/react";
 import { useFormik } from "formik";
 import {
   useAssignGridMutation,
   useGetGridsByWarehouseIdQuery,
+  useToggleOccupiedGridMutation,
 } from "../../../redux/features/grid";
 import CustomButton from "../../../components/ui/CustomButton";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
 import Swal from "sweetalert2";
+import Loader from "../../../components/shared/Loader";
 
 const transformData = (data) => {
   const result = {
@@ -35,10 +37,12 @@ const SixthStep = ({ details }) => {
   const [assignedGrids, setAssignedGrids] = useState([]);
   const [assignedItems, setAssignedItems] = useState([]);
   const [assignGridFn] = useAssignGridMutation();
+  const [toggleGridFn] = useToggleOccupiedGridMutation();
 
   const { data: gridData, isLoading } = useGetGridsByWarehouseIdQuery(
     details?.warehouse_id
   );
+  const allGrids = gridData?.grids;
 
   const formik = useFormik({
     initialValues: {
@@ -83,10 +87,25 @@ const SixthStep = ({ details }) => {
   });
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <Loader />;
   }
 
-  const allGrids = gridData?.grids;
+  const handleToggleOccupied = async (isOccupied, selectedGrid) => {
+    const toastId = toast.loading("Grid creating please wait...");
+    try {
+      const res = await toggleGridFn(selectedGrid?.id).unwrap();
+      toast.success(res.message, {
+        id: toastId,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
+        id: toastId,
+        duration: 2000,
+      });
+    }
+  };
 
   const handleSubmit = async () => {
     const data = transformData(assignedItems);
@@ -150,15 +169,42 @@ const SixthStep = ({ details }) => {
                   key={grid?.id}
                   name="gridId"
                   id={grid?.id}
-                  label={grid?.grid_code}
+                  label={
+                    <p className={grid?.is_occupied == "1" && "text-red-400"}>
+                      {grid?.grid_code}
+                    </p>
+                  }
                   onChange={() => setSelectedGrid(grid)}
                   checked={selectedGrid?.id === grid.id}
                   disabled={isAssigned} // Disable if grid is assigned
-                  className={isAssigned ? "opacity-50 cursor-not-allowed" : ""}
+                  className={
+                    isAssigned
+                      ? "opacity-50 cursor-not-allowed text-red-400"
+                      : ""
+                  }
                 />
               );
             })}
           </div>
+
+          {/* Is Occupied Switch */}
+          {selectedGrid && (
+            <div className="flex items-center space-x-4">
+              <p className="font-semibold">
+                Is {selectedGrid?.grid_code} Occupied?
+              </p>
+              <Switch
+                id={selectedGrid.grid_code}
+                name={selectedGrid.grid_code}
+                crossOrigin=""
+                checked={selectedGrid?.is_occupied == "1" || false}
+                onChange={(e) =>
+                  handleToggleOccupied(e.target.checked, selectedGrid)
+                }
+              />
+            </div>
+          )}
+
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="quantity" className="font-semibold">
@@ -172,7 +218,7 @@ const SixthStep = ({ details }) => {
                 value={formik.values.quantity}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                disabled={!selectedItem}
+                disabled={!selectedGrid}
               />
               {formik.touched.quantity && formik.errors.quantity && (
                 <p className="text-red-500 text-sm">{formik.errors.quantity}</p>
@@ -181,9 +227,7 @@ const SixthStep = ({ details }) => {
             <button
               type="submit"
               className="px-4 py-2 bg-blue-500 text-white rounded"
-              disabled={
-                !selectedItem || !selectedGrid || !formik.values.quantity
-              }
+              disabled={!selectedGrid || !formik.values.quantity}
             >
               Assign Grid
             </button>

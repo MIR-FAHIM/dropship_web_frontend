@@ -1,7 +1,7 @@
 const CustomTable = ({ tableHead, label, children }) => {
   return (
     <div className="overflow-x-auto">
-      <div className="p-5 bg-white">
+      <div className="bg-white">
         {label && <h3 className="text-xl font-bold mb-5">{label}</h3>}
         <div className="overflow-x-auto">
           <table className="table-auto w-full min-w-max">
