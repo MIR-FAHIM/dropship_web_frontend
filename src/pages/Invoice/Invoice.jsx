@@ -14,7 +14,13 @@ const convertToDateObject = (dateString) => {
   return parse(dateString, "yyyy-MM-dd", new Date());
 };
 
-const tableHead = ["Date", "Space Used", "Duration", "Amount"];
+const tableHead = [
+  "Date",
+  "Space Used",
+  "Duration",
+  "Grid Price Per Day",
+  "Total",
+];
 
 const Invoice = () => {
   const { id } = useParams();
@@ -25,10 +31,9 @@ const Invoice = () => {
     id,
   });
 
-  // Fetch data with the current invoiceInfo state
-  const { data, error } = useGetInvoiceAmountQuery(invoiceInfo);
+  const { data, error, isError } = useGetInvoiceAmountQuery(invoiceInfo);
 
-  console.log(error);
+  console.log(data, error);
 
   return (
     <div className="p-5 font-DMSans">
@@ -37,7 +42,7 @@ const Invoice = () => {
         subTitle={"Generate an invoice for the order"}
       />
       <div className="grid grid-cols-1 gap-10">
-        <div className="w-1/2">
+        <div className="">
           <div className="flex flex-col gap-4">
             {/* Start Date Picker */}
             <div>
@@ -97,8 +102,35 @@ const Invoice = () => {
             <h2 className="text-lg font-semibold">Invoice Information</h2>
             <p>Start Date: {invoiceInfo.startDate || "Not selected"}</p>
             <p>End Date: {invoiceInfo.endDate || "Not selected"}</p>
-            <p>Data: {data ? JSON.stringify(data) : "Loading..."}</p>
-            <CustomButton onClick={() => toPDF()} label="Download PDF" />
+            <div>
+              {isError ? (
+                <p className="text-lg font-semibold text-red-400">
+                  {error?.data?.message}
+                </p>
+              ) : (
+                <div>
+                  <CustomTable tableHead={tableHead}>
+                    <tr>
+                      <td className="px-5 py-3 border">
+                        {invoiceInfo?.startDate} - {invoiceInfo?.endDate}
+                      </td>
+                      <td className="px-5 py-3 border">
+                        {data?.data?.totalGrids}
+                      </td>
+                      <td className="px-5 py-3 border">
+                        {data?.data?.duration}
+                      </td>
+                      <td className="px-5 py-3 border">
+                        {data?.data?.gridPricePerDay}
+                      </td>
+                      <td className="px-5 py-3 border">{data?.data?.amount}</td>
+                    </tr>
+                  </CustomTable>
+                  <CustomButton label="Generate Invoice" />
+                  {/* <CustomButton onClick={() => toPDF()} label="Download PDF" /> */}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="bg-background p-5 rounded-md">
