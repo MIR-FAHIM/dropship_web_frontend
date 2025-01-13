@@ -17,7 +17,7 @@ const transformData = (data) => {
     request_id: data[0].request_id,
     assignments: [],
   };
-
+ 
   data.forEach((item) => {
     const { id, assignedGrid, recived_quatity } = item;
     result.assignments.push({
