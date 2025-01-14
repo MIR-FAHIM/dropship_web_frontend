@@ -20,3 +20,18 @@ export const warehouseTypes = [
   "Bulk Storage",
   "Chemical Storage",
 ];
+
+export const orderStatus = [
+  {
+    label: "Waiting",
+    value: 0,
+  },
+  {
+    label: "Ongoing",
+    value: 1,
+  },
+  {
+    label: "Ready to ship",
+    value: 2,
+  },
+];

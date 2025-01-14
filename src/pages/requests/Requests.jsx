@@ -11,6 +11,7 @@ import { PiDotsThreeOutlineVerticalBold } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
 
 const tableHead = [
+  "ID",
   "Date",
   "User",
   "Size",
@@ -94,6 +95,7 @@ const Requests = () => {
       <CustomTable tableHead={tableHead}>
         {requestData?.data?.data.map((item) => (
           <tr key={item?.id}>
+              <td className="px-5 py-3 border">{item?.id}</td>
             <td className="px-5 py-3 border">
               {format(parseISO(item?.created_at), "dd-MMM',' hh:mm a")}
             </td>
@@ -117,8 +119,12 @@ const Requests = () => {
               </button>
             </td>
             <td className="px-5 py-3 border">
-  {item?.status === 0 ? 'Pending' : item?.status === 1 ? 'Confirmed' : 'Unknown'}
-</td>
+              {item?.status === 0
+                ? "Pending"
+                : item?.status === 1
+                ? "Confirmed"
+                : "Unknown"}
+            </td>
             <td className="px-5 py-3 border">
               <select
                 value={selectedWarehouse[item?.id] || item?.warehouse_id || ""}
@@ -141,7 +147,7 @@ const Requests = () => {
             <td className="px-5 py-3 border flex justify-center">
               <CustomPopover icon={<PiDotsThreeOutlineVerticalBold />}>
                 <div className="flex flex-col items-start">
-                  <button className="requestActions">View Memo</button>
+                  <button className="requestActions">View Challan</button>
                   <button
                     onClick={() => navigate(`/request-details/${item?.id}`)}
                     className="requestActions"

@@ -11,6 +11,7 @@ const gridApi = baseApi.injectEndpoints({
     }),
     getGridsByWarehouseId: builder.query({
       query: (id) => `/warehouses/grids/${id}`,
+      providesTags: ["Grid"],
     }),
     createGrid: builder.mutation({
       query: (gridInfo) => ({
@@ -28,6 +29,16 @@ const gridApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Grid"],
     }),
+    toggleOccupiedGrid: builder.mutation({
+      query: (id) => {
+        // console.log("Grid Info:", id);
+        return {
+          url: `/grid/toggle-occupied/${id}`,
+          method: "PATCH",
+        };
+      },
+      invalidatesTags: ["Grid"],
+    }),
   }),
 });
 
@@ -37,4 +48,5 @@ export const {
   useCreateGridMutation,
   useGetGridsByWarehouseIdQuery,
   useAssignGridMutation,
+  useToggleOccupiedGridMutation,
 } = gridApi;

@@ -1,4 +1,3 @@
-import { Switch } from "@material-tailwind/react";
 import {
   useGetAllPaymentQuery,
   useUpdatePaymentStatusMutation,
@@ -6,29 +5,20 @@ import {
 import { format, parseISO } from "date-fns";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
+import { useState } from "react";
+import CustomModal from "../../../components/ui/CustomModal";
 
-const Payments = () => {
-  const { data, isLoading, error } = useGetAllPaymentQuery();
-  const [updateStatusFn] = useUpdatePaymentStatusMutation();
-
-  if (isLoading) {
-    return <p>Loading logs...</p>;
-  }
-
-  if (error) {
-    return <p>Error fetching logs: {error.message}</p>;
-  }
-
-  const onStatusChange = async (changedStatus, id, currentStatus) => {
+const MakePaymentConfirmed = ({ updateStatusFn, itemDetails }) => {
+  const [isOpen, setOpen] = useState(false);
+  const onStatusChange = async () => {
     const toastId = toast.loading("Payment status updating please wait!");
     try {
       const res = await updateStatusFn({
         paymentInfo: {
-          status: changedStatus === true ? 1 : 0,
+          status: 1,
         },
-        id: id,
+        id: itemDetails?.id,
       });
-      console.log({ res });
       toast.success(res?.data?.message, {
         id: toastId,
         duration: 2000,
@@ -41,6 +31,54 @@ const Payments = () => {
       });
     }
   };
+  return (
+    <div>
+      <button
+        onClick={() => setOpen(true)}
+        className="bg-red-50 py-1 px-2 rounded-md"
+      >
+        Pending
+      </button>
+      <CustomModal
+        open={isOpen}
+        setOpen={setOpen}
+        title={"Confirm payment"}
+        footer={true}
+        onClick={onStatusChange}
+      >
+        <p className="font-bold">
+          {" "}
+          <span className="mr-1 font-semibold">Amount:</span>{" "}
+          {itemDetails?.amount}
+        </p>
+        <p>
+          {" "}
+          <span className="mr-1 font-semibold">Reason:</span>{" "}
+          {itemDetails?.payment_region}
+        </p>
+        <p>
+          {" "}
+          <span className="mr-1 font-semibold">Payment created at:</span>
+          {itemDetails?.created_at
+            ? format(parseISO(itemDetails?.created_at), "dd-MMM-yyyy, hh:mm a")
+            : "N/A"}{" "}
+        </p>
+      </CustomModal>
+    </div>
+  );
+};
+
+const Payments = () => {
+  const { data, isLoading, error } = useGetAllPaymentQuery();
+  const [updateStatusFn] = useUpdatePaymentStatusMutation();
+
+  if (isLoading) {
+    return <p>Loading logs...</p>;
+  }
+
+  if (error) {
+    return <p>Error fetching logs: {error.message}</p>;
+  }
 
   return (
     <div>
@@ -61,34 +99,31 @@ const Payments = () => {
         </thead>
         <tbody>
           {/* Check if logs data is available */}
-          {data.data?.map((log) => (
-            <tr key={log.id}>
-              <td className="border p-2">{log.id}</td>
-              <td className="border p-2">{log.relatable_id}</td>
-              <td className="border p-2">{log.type}</td>
-              <td className="border p-2">{log.amount}</td>
+          {data.data?.map((item) => (
+            <tr key={item?.id}>
+              <td className="border p-2">{item?.id}</td>
+              <td className="border p-2">{item?.relatable_id}</td>
+              <td className="border p-2">{item?.type}</td>
+              <td className="border p-2">{item?.amount}</td>
 
-              <td className="border p-2">{log.payment_region}</td>
+              <td className="border p-2">{item?.payment_region}</td>
               <td className="border p-2">
-                {log.created_at
-                  ? format(parseISO(log.created_at), "dd-MMM-yyyy, hh:mm a")
+                {item?.created_at
+                  ? format(parseISO(item?.created_at), "dd-MMM-yyyy, hh:mm a")
                   : "N/A"}{" "}
                 {/* Format the created_at date */}
               </td>
               <td className="border p-2">
-                {/* Toggle switch based on payment status */}
-                <label className="inline-flex items-center cursor-pointer">
-                  <span className="mr-2">Not Paid</span>
-                  <Switch
-                    id={log.id}
-                    defaultChecked={log.status == "1"}
-                    crossOrigin=""
-                    onChange={(e) =>
-                      onStatusChange(e.target.checked, log.id, log.status)
-                    }
+                {item?.status === "1" ? (
+                  <button className="bg-primary-400 py-1 px-2 rounded-md">
+                    Payment Confirmed
+                  </button>
+                ) : (
+                  <MakePaymentConfirmed
+                    updateStatusFn={updateStatusFn}
+                    itemDetails={item}
                   />
-                  <span className="ml-2">Paid</span>
-                </label>
+                )}
               </td>
             </tr>
           ))}

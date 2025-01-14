@@ -1,20 +1,23 @@
 import { useState } from "react";
-import { Radio } from "@material-tailwind/react";
+import { Radio, Switch } from "@material-tailwind/react";
 import { useFormik } from "formik";
 import {
   useAssignGridMutation,
   useGetGridsByWarehouseIdQuery,
+  useToggleOccupiedGridMutation,
 } from "../../../redux/features/grid";
 import CustomButton from "../../../components/ui/CustomButton";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
+import Swal from "sweetalert2";
+import Loader from "../../../components/shared/Loader";
 
 const transformData = (data) => {
   const result = {
     request_id: data[0].request_id,
     assignments: [],
   };
-
+ 
   data.forEach((item) => {
     const { id, assignedGrid, recived_quatity } = item;
     result.assignments.push({
@@ -34,10 +37,12 @@ const SixthStep = ({ details }) => {
   const [assignedGrids, setAssignedGrids] = useState([]);
   const [assignedItems, setAssignedItems] = useState([]);
   const [assignGridFn] = useAssignGridMutation();
+  const [toggleGridFn] = useToggleOccupiedGridMutation();
 
   const { data: gridData, isLoading } = useGetGridsByWarehouseIdQuery(
     details?.warehouse_id
   );
+  const allGrids = gridData?.grids;
 
   const formik = useFormik({
     initialValues: {
@@ -82,16 +87,13 @@ const SixthStep = ({ details }) => {
   });
 
   if (isLoading) {
-    return <p>Loading...</p>;
+    return <Loader />;
   }
 
-  const allGrids = gridData?.grids;
-
-  const handleSubmit = async () => {
-    const toastId = toast.loading("Grid assigning please wait...");
-    const data = transformData(assignedItems);
+  const handleToggleOccupied = async (isOccupied, selectedGrid) => {
+    const toastId = toast.loading("Grid creating please wait...");
     try {
-      const res = await assignGridFn(data).unwrap();
+      const res = await toggleGridFn(selectedGrid?.id).unwrap();
       toast.success(res.message, {
         id: toastId,
         duration: 2000,
@@ -100,6 +102,32 @@ const SixthStep = ({ details }) => {
       console.log("error:", error);
       toast.error(getFirstErrorMessage(error), {
         id: toastId,
+        duration: 2000,
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    const data = transformData(assignedItems);
+    try {
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        // text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#158E72",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes",
+      });
+      if (result.isConfirmed) {
+        const res = await assignGridFn(data).unwrap();
+        toast.success(res.message, {
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.log("error:", error);
+      toast.error(getFirstErrorMessage(error), {
         duration: 2000,
       });
     }
@@ -141,15 +169,42 @@ const SixthStep = ({ details }) => {
                   key={grid?.id}
                   name="gridId"
                   id={grid?.id}
-                  label={grid?.grid_code}
+                  label={
+                    <p className={grid?.is_occupied == "1" && "text-red-400"}>
+                      {grid?.grid_code}
+                    </p>
+                  }
                   onChange={() => setSelectedGrid(grid)}
                   checked={selectedGrid?.id === grid.id}
                   disabled={isAssigned} // Disable if grid is assigned
-                  className={isAssigned ? "opacity-50 cursor-not-allowed" : ""}
+                  className={
+                    isAssigned
+                      ? "opacity-50 cursor-not-allowed text-red-400"
+                      : ""
+                  }
                 />
               );
             })}
           </div>
+
+          {/* Is Occupied Switch */}
+          {selectedGrid && (
+            <div className="flex items-center space-x-4">
+              <p className="font-semibold">
+                Is {selectedGrid?.grid_code} Occupied?
+              </p>
+              <Switch
+                id={selectedGrid.grid_code}
+                name={selectedGrid.grid_code}
+                crossOrigin=""
+                checked={selectedGrid?.is_occupied == "1" || false}
+                onChange={(e) =>
+                  handleToggleOccupied(e.target.checked, selectedGrid)
+                }
+              />
+            </div>
+          )}
+
           <form onSubmit={formik.handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="quantity" className="font-semibold">
@@ -163,7 +218,7 @@ const SixthStep = ({ details }) => {
                 value={formik.values.quantity}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
-                disabled={!selectedItem}
+                disabled={!selectedGrid}
               />
               {formik.touched.quantity && formik.errors.quantity && (
                 <p className="text-red-500 text-sm">{formik.errors.quantity}</p>
@@ -172,29 +227,29 @@ const SixthStep = ({ details }) => {
             <button
               type="submit"
               className="px-4 py-2 bg-blue-500 text-white rounded"
-              disabled={
-                !selectedItem || !selectedGrid || !formik.values.quantity
-              }
+              disabled={!selectedGrid || !formik.values.quantity}
             >
               Assign Grid
             </button>
           </form>
         </div>
       </div>
-      <div>
-        <p className="font-bold"> Assigned Grids and Items</p>
-        <div className="grid grid-cols-3 gap-5 my-5">
-          {assignedItems?.map((item) => (
-            <div key={item?.id} className="border p-4 rounded-md mb-2">
-              <p>Item Name: {item?.name}</p>
-              <p>Received Quantity: {item?.recived_quatity}</p>
-              <p>Grid Code: {item?.assignedGrid?.grid_code}</p>
-              <p>Grid ID: {item?.assignedGrid?.id}</p>
-            </div>
-          ))}
+      {assignedItems?.length > 0 && (
+        <div>
+          <p className="font-bold"> Assigned Grids and Items</p>
+          <div className="grid grid-cols-3 gap-5 my-5">
+            {assignedItems?.map((item) => (
+              <div key={item?.id} className="border p-4 rounded-md mb-2">
+                <p>Item Name: {item?.name}</p>
+                <p>Received Quantity: {item?.recived_quatity}</p>
+                <p>Grid Code: {item?.assignedGrid?.grid_code}</p>
+                <p>Grid ID: {item?.assignedGrid?.id}</p>
+              </div>
+            ))}
+          </div>
+          <CustomButton onClick={() => handleSubmit()} label="Assign grids" />
         </div>
-        <CustomButton onClick={() => handleSubmit()} label="Assign grids" />
-      </div>
+      )}
     </div>
   );
 };

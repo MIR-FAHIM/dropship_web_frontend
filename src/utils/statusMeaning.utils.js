@@ -15,6 +15,11 @@ const statusMeaning = (category, statusCode) => {
       0: "Pending",
       1: "Paid",
     },
+    order: {
+      0: "Waiting",
+      1: "Ongoing",
+      2: "Ready to ship",
+    },
   };
   if (statuses[category]) {
     return statuses[category][statusCode] || "Invalid status code";
