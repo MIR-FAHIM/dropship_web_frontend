@@ -11,6 +11,7 @@ import { PiDotsThreeOutlineVerticalBold } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
 
 const tableHead = [
+  "ID",
   "Date",
   "User",
   "Size",
@@ -94,6 +95,7 @@ const Requests = () => {
       <CustomTable tableHead={tableHead}>
         {requestData?.data?.data.map((item) => (
           <tr key={item?.id}>
+              <td className="px-5 py-3 border">{item?.id}</td>
             <td className="px-5 py-3 border">
               {format(parseISO(item?.created_at), "dd-MMM',' hh:mm a")}
             </td>
