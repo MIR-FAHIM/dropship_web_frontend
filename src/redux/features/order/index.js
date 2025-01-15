@@ -9,6 +9,9 @@ const orderApi = baseApi.injectEndpoints({
     getOrderDetailsById: builder.query({
       query: (id) => `/orders/${id}`,
     }),
+    getInvoiceDetailsByPaymentId: builder.query({
+      query: (id) => `/show-invoice/${id}`,
+    }),
     getInvoiceAmount: builder.query({
       query: ({ startDate, endDate, id }) => {
         return `/invoice-calculate-amount?start=${startDate}&end=${endDate}&order_list_id=${id}`;
@@ -38,4 +41,5 @@ export const {
   useUpdateOrderStatusMutation,
   useGetInvoiceAmountQuery,
   useCreateInvoiceMutation,
+  useGetInvoiceDetailsByPaymentIdQuery,
 } = orderApi;

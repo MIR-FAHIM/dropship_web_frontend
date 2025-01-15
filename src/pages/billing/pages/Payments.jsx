@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../../utils/error.utils";
 import { useState } from "react";
 import CustomModal from "../../../components/ui/CustomModal";
+import { Link } from "react-router-dom";
 
 const MakePaymentConfirmed = ({ updateStatusFn, itemDetails }) => {
   const [isOpen, setOpen] = useState(false);
@@ -113,7 +114,7 @@ const Payments = () => {
                   : "N/A"}{" "}
                 {/* Format the created_at date */}
               </td>
-              <td className="border p-2">
+              <td className="border p-2 flex flex-col gap-2">
                 {item?.status === "1" ? (
                   <button className="bg-primary-400 py-1 px-2 rounded-md">
                     Payment Confirmed
@@ -124,6 +125,7 @@ const Payments = () => {
                     itemDetails={item}
                   />
                 )}
+                <Link to={`/payment/invoice-pdf/${item?.id}`}>Invoice</Link>
               </td>
             </tr>
           ))}
