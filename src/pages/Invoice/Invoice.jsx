@@ -10,7 +10,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import { useParams } from "react-router-dom";
 // import { TbCurrencyTaka } from "react-icons/tb";
 import CustomTable from "../../components/ui/CustomTable";
-import { usePDF } from "react-to-pdf";
 import CustomButton from "../../components/ui/CustomButton";
 import { toast } from "sonner";
 import { getFirstErrorMessage } from "../../utils/error.utils";
@@ -29,7 +28,6 @@ const tableHead = [
 
 const Invoice = () => {
   const { id } = useParams();
-  const { toPDF, targetRef } = usePDF({ filename: "invoice-jayga.pdf" });
   const [invoiceInfo, setInvoiceInfo] = useState({
     startDate: "",
     endDate: "",
@@ -137,7 +135,7 @@ const Invoice = () => {
                   {error?.data?.message}
                 </p>
               ) : (
-                <div>
+                <div className="space-y-5">
                   <CustomTable tableHead={tableHead}>
                     <tr>
                       <td className="px-5 py-3 border">
@@ -162,68 +160,6 @@ const Invoice = () => {
                   {/* <CustomButton onClick={() => toPDF()} label="Download PDF" /> */}
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-        <div className="bg-background p-5 rounded-md">
-          {/* PDF section */}
-          <div
-            ref={targetRef}
-            className="bg-white p-10 px-12 rounded-md min-h-[650px] flex flex-col justify-between"
-          >
-            <div>
-              <img
-                src="/jayga-logo-without-label.png"
-                alt=""
-                className="h-10"
-              />
-              <div className="mt-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-2xl font-bold flex items-center">
-                    12,31,412 TK
-                  </p>
-                  <p>Date: 12-01-2025</p>
-                </div>
-                <div className="font-medium">
-                  <p>For: Name</p>
-                  <p>Contact: Number</p>
-                </div>
-              </div>
-              <hr className="my-5" />
-              <div>
-                <CustomTable tableHead={tableHead}>
-                  <tr>
-                    <td className="px-5 py-3 border">
-                      {invoiceInfo?.startDate} - {invoiceInfo?.endDate}
-                    </td>
-                    <td className="px-5 py-3 border">5</td>
-                    <td className="px-5 py-3 border">2</td>
-                    <td className="px-5 py-3 border">5000</td>
-                  </tr>
-                </CustomTable>
-              </div>
-            </div>
-            <div>
-              <div className="border border-l-0 border-r-0 flex items-center justify-between font-bold pt-2 pb-5 my-5">
-                <p>Gross Total</p>
-                <p>5000</p>
-              </div>
-              <div className="font-medium mb-5">
-                <p>
-                  Invoice from <span className="font-semibold">Jayga Ltd.</span>
-                </p>
-                <p>
-                  Invoice Number:{" "}
-                  <span className="font-semibold">18ACBA12</span>
-                </p>
-              </div>
-              <div className="text-text-300">
-                <p>
-                  <span>Email: info@jayga.io</span>{" "}
-                  <span>Phone: +8801708652111</span>
-                </p>
-                <p>House 10, Road 22, Sector 14, Uttara, Dhaka, 1230</p>
-              </div>
             </div>
           </div>
         </div>
