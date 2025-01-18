@@ -68,7 +68,8 @@ const Overview = () => {
           <div className="overview-card bg-[#d8f55d]">
             <h3 className="overview-card-title">Total Payment Amount</h3>
             <p className="overview-card-value flex items-center">
-              <TbCurrencyTaka /> {data?.payment_stats?.total_amount}
+              <TbCurrencyTaka />{" "}
+              {(data?.payment_stats?.total_amount).toFixed(2)}
             </p>
           </div>
           <div className="overview-card bg-[#ffdab9]">
