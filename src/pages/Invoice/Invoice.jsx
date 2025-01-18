@@ -20,8 +20,8 @@ const convertToDateObject = (dateString) => {
 
 const tableHead = [
   "Date",
-  "Space Used",
-  "Duration",
+  "Space Used (SQFT)",
+  "Duration (DAY)",
   "Grid Price Per Day",
   "Total",
 ];
