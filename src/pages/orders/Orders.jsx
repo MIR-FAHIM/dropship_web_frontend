@@ -25,7 +25,10 @@ const Orders = () => {
           <tr>
             <th className="border p-2">Order ID</th>
             <th className="border p-2">Request ID</th>
-            <th className="border p-2">Payment</th>
+            <th className="border p-2">Warehouse</th>
+            <th className="border p-2">Total Grids</th>
+            <th className="border p-2">Perday Grid Price</th>
+            
             <th className="border p-2">Duration</th>
             <th className="border p-2">Status</th>
             <th className="border p-2">Created At</th>
@@ -37,7 +40,11 @@ const Orders = () => {
           {data?.data?.map((item) => (
             <tr key={item?.order_id}>
               <td className="border p-2">{item?.order_id}</td>
+             
+            
               <td className="border p-2">{item?.request_id}</td>
+              <td className="border p-2">{item?.request.warehouse.name}-{item?.request.warehouse.owner_name}</td>
+              <td className="border p-2">{item?.total_grids}</td>
               <td className="border p-2">{item?.payment}</td>
               <td className="border p-2">
                 {item?.request.start_date} {item?.request.end_date}

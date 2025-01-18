@@ -94,7 +94,7 @@ const Requests = () => {
       )}
       <CustomTable tableHead={tableHead}>
         {requestData?.data?.data.map((item) => (
-          <tr key={item?.id}>
+          <tr key={item?.id} className={item?.status === 1 ? 'bg-green-200' : ''}>
               <td className="px-5 py-3 border">{item?.id}</td>
             <td className="px-5 py-3 border">
               {format(parseISO(item?.created_at), "dd-MMM',' hh:mm a")}
