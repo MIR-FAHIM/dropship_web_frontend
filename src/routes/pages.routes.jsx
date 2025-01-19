@@ -62,6 +62,10 @@ export const pagePaths = [
         path: "/billing/payments",
         element: <Payments />,
       },
+      // {
+      //   path: "/billing/paymentpage/:id",
+      //   element: <PaymentPage />,
+      // },
       {
         path: "/billing/transactions",
         element: <Transactions />,

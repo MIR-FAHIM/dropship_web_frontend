@@ -67,6 +67,7 @@ const Orders = () => {
               <td className="border p-2 flex flex-col space-4">
                 <Link to={`details/${item?.order_id}`}>View details</Link>
                 <Link to={`invoice/${item?.order_id}`}>Create Invoice</Link>
+                {/* <Link to={`billing/paymentpage/${item?.order_id}`}>Payment Page</Link> */}
               </td>
             </tr>
           ))}
