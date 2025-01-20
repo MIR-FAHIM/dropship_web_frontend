@@ -22,8 +22,8 @@ const Login = () => {
     try {
       const res = await loginFunc(values).unwrap();
       toast.success(res?.message, { id: toastId, duration: 2000 });
-      dispatch(setToken({ token: res?.token }));
-      saveToLocalstorage("token", res?.token);
+      dispatch(setToken({ token: res?.data?.token }));
+      saveToLocalstorage("token", res?.data?.token);
       navigate("/");
     } catch (error) {
       console.log("error:", error);

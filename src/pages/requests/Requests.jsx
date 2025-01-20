@@ -46,6 +46,7 @@ const Requests = () => {
   const { data: requestData } = useGetAllRequestQuery();
   const { data: warehouseData, isLoading: warehouseLoading } =
     useGetAllWarehouseQuery();
+  console.log({ warehouseData });
   const [assignWarehouse] = useAssignWarehouseMutation();
 
   const [selectedItems, setSelectedItems] = useState(null);
@@ -72,7 +73,6 @@ const Requests = () => {
         requestId: requestId,
       }).unwrap();
       setError(null); // Clear any previous errors
-      console.log("Warehouse assigned successfully");
     } catch (err) {
       setError(`Failed to assign warehouse: ${err.message}`);
       console.error("Error assigning warehouse:", err);
@@ -94,8 +94,11 @@ const Requests = () => {
       )}
       <CustomTable tableHead={tableHead}>
         {requestData?.data?.data.map((item) => (
-          <tr key={item?.id} className={item?.status === 1 ? 'bg-green-200' : ''}>
-              <td className="px-5 py-3 border">{item?.id}</td>
+          <tr
+            key={item?.id}
+            className={item?.status === 1 ? "bg-green-200" : ""}
+          >
+            <td className="px-5 py-3 border">{item?.id}</td>
             <td className="px-5 py-3 border">
               {format(parseISO(item?.created_at), "dd-MMM',' hh:mm a")}
             </td>
@@ -137,7 +140,7 @@ const Requests = () => {
                 <option value="" disabled>
                   {warehouseLoading ? "Loading..." : "Select Warehouse"}
                 </option>
-                {warehouseData?.warehouses?.map((warehouse) => (
+                {warehouseData?.data?.map((warehouse) => (
                   <option key={warehouse.id} value={warehouse.id}>
                     {warehouse.name} ({warehouse.warehouse_type?.type_name})
                   </option>
