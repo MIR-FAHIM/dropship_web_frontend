@@ -17,7 +17,7 @@ const transformData = (data) => {
     request_id: data[0].request_id,
     assignments: [],
   };
- 
+
   data.forEach((item) => {
     const { id, assignedGrid, recived_quatity } = item;
     result.assignments.push({
@@ -42,7 +42,7 @@ const SixthStep = ({ details }) => {
   const { data: gridData, isLoading } = useGetGridsByWarehouseIdQuery(
     details?.warehouse_id
   );
-  const allGrids = gridData?.grids;
+  const allGrids = gridData?.data;
 
   const formik = useFormik({
     initialValues: {
