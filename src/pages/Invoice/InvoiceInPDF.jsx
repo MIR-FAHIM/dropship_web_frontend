@@ -28,13 +28,13 @@ const InvoiceInPDF = () => {
             <div className="mt-4">
               <div className="flex items-center justify-between">
                 <p className="text-2xl font-bold flex items-center">
-                  {data?.email_data?.amount} TK
+                  {data?.data?.email_data?.amount} TK
                 </p>
                 <p>Date: {format(new Date(), "dd-MM-yyyy")}</p>
               </div>
               <div className="font-medium">
-                <p>For: {data?.email_data?.user_name}</p>
-                <p>Contact: {data?.email_data?.phone}</p>
+                <p>For: {data?.data?.email_data?.user_name}</p>
+                <p>Contact: {data?.data?.email_data?.phone}</p>
               </div>
             </div>
             <hr className="my-5" />
@@ -42,20 +42,20 @@ const InvoiceInPDF = () => {
               <CustomTable tableHead={tableHead}>
                 <tr>
                   <td className="px-5 py-3 border">
-                    {data?.email_data?.start_date} -{" "}
-                    {data?.email_data?.end_date}
+                    {data?.data?.email_data?.start_date} -{" "}
+                    {data?.data?.email_data?.end_date}
                   </td>
                   <td className="px-5 py-3 border">
-                    {data?.email_data?.total_grids}
+                    {data?.data?.email_data?.total_grids}
                   </td>
                   <td className="px-5 py-3 border">
-                    {data?.email_data?.duration}
+                    {data?.data?.email_data?.duration}
                   </td>
                   <td className="px-5 py-3 border">
-                    {data?.email_data?.total_items}
+                    {data?.data?.email_data?.total_items}
                   </td>
                   <td className="px-5 py-3 border">
-                    {data?.email_data?.amount}
+                    {data?.data?.email_data?.amount}
                   </td>
                 </tr>
               </CustomTable>
@@ -64,7 +64,7 @@ const InvoiceInPDF = () => {
           <div>
             <div className="border border-l-0 border-r-0 flex items-center justify-between font-bold pt-2 pb-5 my-5">
               <p>Gross Total</p>
-              <p>{data?.email_data?.amount} TK</p>
+              <p>{data?.data?.email_data?.amount} TK</p>
             </div>
             <div className="font-medium mb-5">
               <p>
@@ -73,7 +73,7 @@ const InvoiceInPDF = () => {
               <p>
                 Invoice Number:{" "}
                 <span className="font-semibold">
-                  {data?.email_data?.invoice_number}
+                  {data?.data?.email_data?.invoice_number}
                 </span>
               </p>
             </div>
