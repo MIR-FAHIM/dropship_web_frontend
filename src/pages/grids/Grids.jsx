@@ -21,9 +21,9 @@ const GridStatusPage = () => {
 
   useEffect(() => {
     // Ensure the warehouse data and grids data are available
-    if (grids?.grids && selectedWarehouse) {
+    if (grids?.data && selectedWarehouse) {
       // Filter the grids for the selected warehouse by matching warehouse_id
-      const filteredGrids = grids.grids.filter(
+      const filteredGrids = grids?.data?.filter(
         (grid) => grid.warehouse_id === parseInt(selectedWarehouse)
       );
       setGridData(filteredGrids); // Update grid data when it is fetched and filtered
@@ -64,7 +64,7 @@ const GridStatusPage = () => {
           value={selectedWarehouse || ""}
         >
           <option value="">Select a warehouse</option>
-          {warehouses?.warehouses?.map((warehouse) => (
+          {warehouses?.data?.map((warehouse) => (
             <option key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </option>
