@@ -1,6 +1,7 @@
 import Activity from "../pages/activity/Activity";
 import Payments from "../pages/billing/pages/Payments";
 import Transactions from "../pages/billing/pages/Transactions";
+import PaymentPage from "../pages/billing/PaymentPage";
 import Grids from "../pages/grids/Grids";
 import Invoice from "../pages/Invoice/Invoice";
 import InvoiceInPDF from "../pages/Invoice/InvoiceInPDF";
@@ -13,7 +14,9 @@ import Requests from "../pages/requests/Requests";
 import Users from "../pages/users/Users";
 import Warehouse from "../pages/warehouse/Warehouse";
 
+
 export const pagePaths = [
+
   {
     path: "/",
     element: <Overview />,
@@ -39,6 +42,10 @@ export const pagePaths = [
         element: <Invoice />,
       },
       {
+        path: "/billing/paymentpage/:id",
+        element: <PaymentPage />,
+      },
+      {
         path: "/payment/invoice-pdf/:id",
         element: <InvoiceInPDF />,
       },
@@ -62,10 +69,7 @@ export const pagePaths = [
         path: "/billing/payments",
         element: <Payments />,
       },
-      // {
-      //   path: "/billing/paymentpage/:id",
-      //   element: <PaymentPage />,
-      // },
+     
       {
         path: "/billing/transactions",
         element: <Transactions />,
