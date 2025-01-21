@@ -9,6 +9,7 @@ import { format, parseISO } from "date-fns";
 import CustomPopover from "../../components/ui/CustomPopover";
 import { PiDotsThreeOutlineVerticalBold } from "react-icons/pi";
 import { useNavigate } from "react-router-dom";
+import Pagination from "../../components/shared/Pagination";
 
 const tableHead = [
   "ID",
@@ -43,10 +44,12 @@ const Modal = ({ isOpen, title, children, onClose }) => {
 
 const Requests = () => {
   const navigate = useNavigate();
-  const { data: requestData } = useGetAllRequestQuery();
+  const [orderQuery, setOrderQuery] = useState({
+    page: 1,
+  });
+  const { data: requestData } = useGetAllRequestQuery(orderQuery);
   const { data: warehouseData, isLoading: warehouseLoading } =
     useGetAllWarehouseQuery();
-  console.log({ warehouseData });
   const [assignWarehouse] = useAssignWarehouseMutation();
 
   const [selectedItems, setSelectedItems] = useState(null);
@@ -79,14 +82,16 @@ const Requests = () => {
     }
   };
 
+  const handlePageChange = (page) => {
+    setOrderQuery((prev) => ({ ...prev, page }));
+  };
+
   return (
     <div>
       <div className="p-5">
         <h3 className="text-xl font-semibold">
           Total Requests:{" "}
-          <span className="font-bold">
-            {requestData?.data?.data.length || 0}
-          </span>
+          <span className="font-bold">{requestData?.data?.total || 0}</span>
         </h3>
       </div>
       {error && (
@@ -167,6 +172,13 @@ const Requests = () => {
           </tr>
         ))}
       </CustomTable>
+      <div className="flex justify-end mb-5 py-5">
+        <Pagination
+          currentPage={orderQuery.page}
+          totalPages={Math.ceil(requestData?.data?.total / 15)}
+          onPageChange={handlePageChange}
+        />
+      </div>
 
       <Modal
         isOpen={!!selectedItems}

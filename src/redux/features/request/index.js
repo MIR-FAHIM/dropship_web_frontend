@@ -77,7 +77,7 @@ const requestApi = baseApi.injectEndpoints({
       }),
     }),
     getAllRequest: builder.query({
-      query: () => `/admin/requests`,
+      query: (orderQuery) => `/admin/requests?page=${orderQuery?.page}`,
       providesTags: ["Request"],
     }),
     getAssignedGridsByRequestIt: builder.query({
