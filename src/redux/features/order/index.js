@@ -24,6 +24,13 @@ const orderApi = baseApi.injectEndpoints({
         body: invoiceData,
       }),
     }),
+    itemDispatchRequest: builder.mutation({
+      query: (dispatchData) => ({
+        url: `/items/delivery/request`,
+        method: "POST",
+        body: dispatchData,
+      }),
+    }),
     updateOrderStatus: builder.mutation({
       query: ({ orderInfo, id }) => ({
         url: `/orders/status/${id}`,
@@ -40,6 +47,8 @@ export const {
   useGetOrderDetailsByIdQuery,
   useUpdateOrderStatusMutation,
   useGetInvoiceAmountQuery,
+  useItemDispatchRequestMutation,
   useCreateInvoiceMutation,
+ 
   useGetInvoiceDetailsByPaymentIdQuery,
 } = orderApi;
