@@ -6,6 +6,10 @@ const orderApi = baseApi.injectEndpoints({
       query: () => `/orders`,
       providesTags: ["Order"],
     }),
+    getRequestedDeliveryItem: builder.query({
+      query: (id) => `/item-delivery-requests/${id}`,
+      
+    }),
     getOrderDetailsById: builder.query({
       query: (id) => `/orders/${id}`,
     }),
@@ -39,16 +43,26 @@ const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Order"],
     }),
+    updateItemDeliveryStatus: builder.mutation({
+      query: ({id }) => ({
+        url: `/item-delivery-requests/status/${id}`,
+        method: "PUT",
+        body:{ "status":"1"},
+      }),
+     
+    }),
   }),
 });
 
 export const {
   useGetAllOrderQuery,
   useGetOrderDetailsByIdQuery,
+  useGetRequestedDeliveryItemQuery,
   useUpdateOrderStatusMutation,
   useGetInvoiceAmountQuery,
   useItemDispatchRequestMutation,
   useCreateInvoiceMutation,
+  useUpdateItemDeliveryStatusMutation,
  
   useGetInvoiceDetailsByPaymentIdQuery,
 } = orderApi;

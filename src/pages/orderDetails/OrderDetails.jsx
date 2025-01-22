@@ -11,6 +11,7 @@ import { PiStorefront } from "react-icons/pi";
 import FirstStep from "./components/FirstStep";
 import SecondStep from "./components/SecondStep";
 import ThirdStep from "./components/ThirdStep";
+import RequetsedDeliveryItem from "./components/RequestedItemdDelivery";
 import FourthStep from "./components/FourthStep";
 // import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
@@ -82,7 +83,15 @@ const OrderDetails = () => {
       value: "ItemDispatch",
       icon: PiStorefront,
       content: (
-        <ItemDispatch details={data?.data?.order?.request?.assigned_grids} />
+        <ItemDispatch details={data?.data?.order?.request?.assigned_grids}  request = {data?.data?.order}/>
+      ),
+    },
+    {
+      label: "Delivery Items",
+      value: "RequetsedDeliveryItem",
+      icon: PiStorefront,
+      content: (
+        <RequetsedDeliveryItem details={data?.data} />
       ),
     },
     {

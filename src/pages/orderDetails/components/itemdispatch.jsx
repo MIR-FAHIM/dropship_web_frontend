@@ -3,7 +3,7 @@ import TabHeading from "../../../components/shared/TabHeading";
 import { useItemDispatchRequestMutation } from "../../../redux/features/order";
 import { toast } from "sonner";
 
-const ItemDispatch = ({ details }) => {
+const ItemDispatch = ({ details, request }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState("");
   const [message, setMessage] = useState("");
@@ -24,7 +24,7 @@ const ItemDispatch = ({ details }) => {
     const toastId = toast.loading("Dispatching...!");
     const payload = {
       item_id: selectedItem.item?.id,
-      request_id: 123, // Assuming a request ID for now
+      request_id: request.request_id, // Assuming a request ID for now
       gridcode: selectedItem.grid?.grid_code,
       quantity: quantity,
       message: message || "Urgent delivery", // Default message if empty
