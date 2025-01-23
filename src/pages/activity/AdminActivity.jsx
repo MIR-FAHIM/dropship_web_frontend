@@ -1,9 +1,9 @@
 
-import { useGetLogStatusQuery } from "../../redux/features/log"; // Assuming you have a log query for fetching logs
+import { useGetAdminActivityQuery } from "../../redux/features/log"; // Assuming you have a log query for fetching logs
 import { format, parseISO } from "date-fns";
 
-const Logs = () => {
-  const { data, isLoading, error } = useGetLogStatusQuery(); // Fetch logs using the API
+const AdminActivity = () => {
+  const { data, isLoading, error } = useGetAdminActivityQuery(); // Fetch logs using the API
 
   // If data is loading, show loading message
   if (isLoading) {
@@ -17,24 +17,27 @@ const Logs = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Error Logs</h2>
+      <h2 className="text-xl font-semibold mb-4">Admin Activity</h2>
      
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead>
           <tr>
-            <th className="border p-2">Feature</th>
-            <th className="border p-2">Response</th>
-            <th className="border p-2">Message</th>
+            <th className="border p-2">ID</th>
+            <th className="border p-2">Type</th>
+            <th className="border p-2">Description</th>
+            <th className="border p-2">Admin</th>
             <th className="border p-2">Time</th>
           </tr>
         </thead>
         <tbody>
           {/* Check if logs data is available */}
-          {data.data?.data.map((log) => (
+          {data?.data?.map((log) => (
             <tr key={log.id}>
-              <td className="border p-2">{log.api_name}</td>
-              <td className="border p-2">{log.response}</td>
-              <td className="border p-2">{log.message}</td>
+              <td className="border p-2">{log.id}</td>
+              <td className="border p-2">{log.type}</td>
+              <td className="border p-2">{log.description}</td>
+              <td className="border p-2">{log.admin_id}</td>
+            
               <td className="border p-2">
                 {log.created_at
                   ? format(parseISO(log.created_at), "dd-MMM-yyyy, hh:mm a")
@@ -48,4 +51,4 @@ const Logs = () => {
   );
 };
 
-export default Logs;
+export default AdminActivity;

@@ -6,6 +6,7 @@ import Grids from "../pages/grids/Grids";
 import Invoice from "../pages/Invoice/Invoice";
 import InvoiceInPDF from "../pages/Invoice/InvoiceInPDF";
 import Items from "../pages/items/Items";
+import AdminActivity from "../pages/activity/AdminActivity";
 import OrderDetails from "../pages/orderDetails/OrderDetails";
 import Orders from "../pages/orders/Orders";
 import Overview from "../pages/overview/Overview";
@@ -68,6 +69,10 @@ export const pagePaths = [
       {
         path: "/billing/payments",
         element: <Payments />,
+      },
+      {
+        path: "/adminactivity",
+        element: <AdminActivity />,
       },
      
       {

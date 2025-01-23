@@ -67,9 +67,22 @@ const menuLinks = [
   },
   {
     path: "/activity",
-    label: "Logs",
-    icon: <BiTransferAlt />,
+    label: "Activity",
+    icon: <PiReceipt />,
+    children: [
+      {
+        path: "/adminactivity",
+        label: "Admin Activity",
+      },
+      {
+        path: "/activity",
+        label: "Error Log",
+        
+      },
+      
+    ],
   },
+  
   {
     path: "/warehouse",
     label: "Warehouse",
