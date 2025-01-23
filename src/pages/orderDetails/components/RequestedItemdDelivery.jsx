@@ -44,6 +44,7 @@ const RequetsedItemDelivey = ({ details }) => {
         <thead>
           <tr>
             <th className="border p-2">ID</th>
+            <th className="border p-2">Item ID</th>
             <th className="border p-2">Item Name</th>
             <th className="border p-2">Grid ID</th>
             <th className="border p-2">Delivery Quantity</th>
@@ -56,6 +57,7 @@ const RequetsedItemDelivey = ({ details }) => {
           {data?.data.map((log) => (
             <tr key={log.id}>
               <td className="border p-2">{log.id}</td>
+              <td className="border p-2">{log.item_id}</td>
               <td className="border p-2">{log.item_name}</td>
               <td className="border p-2">{log.grid_code}</td>
               <td className="border p-2">{log.quantity}</td>
