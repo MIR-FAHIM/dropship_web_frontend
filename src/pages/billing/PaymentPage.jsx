@@ -8,7 +8,7 @@ import Loader from "../../components/shared/Loader";
 
 const tableHead = ["Date", "Space Used", "Duration", "Total Items", "Total"];
 
-const InvoiceInPDF = () => {
+const PaymentPage = () => {
   const { id } = useParams();
   const { data, isLoading } = useGetInvoiceDetailsByPaymentIdQuery(id);
   const { toPDF, targetRef } = usePDF({ filename: "invoice-jayga.pdf" });
@@ -89,11 +89,11 @@ const InvoiceInPDF = () => {
       </div>
       <CustomButton
         onClick={() => toPDF()}
-        label="Download PDF"
+        label="Pay Now"
         className={"w-1/2 mx-auto"}
       />
     </div>
   );
 };
 
-export default InvoiceInPDF;
+export default PaymentPage;

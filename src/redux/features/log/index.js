@@ -5,10 +5,13 @@ const logApi = baseApi.injectEndpoints({
     getLogStatus: builder.query({
       query: () => `/log-status`,
     }),
+    getAdminActivity: builder.query({
+      query: () => `/adminactivities`,
+    }),
     getLogStatusById: builder.query({
       query: (id) => `/log-status/${id}`,
     }),
   }),
 });
 
-export const { useGetLogStatusQuery, useGetLogStatusByIdQuery } = logApi;
+export const { useGetLogStatusQuery, useGetAdminActivityQuery, useGetLogStatusByIdQuery } = logApi;

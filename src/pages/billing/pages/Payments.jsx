@@ -94,7 +94,8 @@ const Payments = () => {
             <th className="border p-2">Amount</th>
             <th className="border p-2">Reason</th>
             <th className="border p-2">Time</th>
-            <th className="border p-2">Paid</th>{" "}
+            <th className="border p-2">Is Paid</th>{" "}
+            <th className="border p-2">Action</th>{" "}
             {/* Add a new column for the switch */}
           </tr>
         </thead>
@@ -114,7 +115,7 @@ const Payments = () => {
                   : "N/A"}{" "}
                 {/* Format the created_at date */}
               </td>
-              <td className="border p-2 flex flex-col gap-2">
+              <td className="border p-2">
                 {item?.status === "1" ? (
                   <button className="bg-primary-400 py-1 px-2 rounded-md">
                     Payment Confirmed
@@ -125,7 +126,12 @@ const Payments = () => {
                     itemDetails={item}
                   />
                 )}
-                <Link to={`/payment/invoice-pdf/${item?.id}`}>Invoice</Link>
+               
+              </td>
+              <td className="border p-2 flex flex-col gap-2">
+              <Link to={`/payment/invoice-pdf/${item?.id}`}>Invoice</Link>
+              <Link to={`/billing/paymentpage/${item?.id}`}>Pay Now Page</Link>
+               
               </td>
             </tr>
           ))}

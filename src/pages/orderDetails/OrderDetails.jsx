@@ -9,13 +9,16 @@ import { PiCalendarCheck, PiCheckSquareOffset } from "react-icons/pi";
 import { LuMessageSquareText } from "react-icons/lu";
 import { PiStorefront } from "react-icons/pi";
 import FirstStep from "./components/FirstStep";
+
 import SecondStep from "./components/SecondStep";
 import ThirdStep from "./components/ThirdStep";
+import RequetsedDeliveryItem from "./components/RequestedItemdDelivery";
 import FourthStep from "./components/FourthStep";
 // import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import Communication from "./components/Communication";
+import ItemDispatch from "./components/itemdispatch";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -74,6 +77,24 @@ const OrderDetails = () => {
       icon: PiStorefront,
       content: (
         <SixthStep details={data?.data?.order?.request?.assigned_grids} />
+      ),
+    },
+
+   
+    {
+      label: "Dispatch Item",
+      value: "ItemDispatch",
+      icon: PiStorefront,
+      content: (
+        <ItemDispatch details={data?.data?.order?.request?.assigned_grids}  request = {data?.data?.order}/>
+      ),
+    },
+    {
+      label: "Delivery Items",
+      value: "RequetsedDeliveryItem",
+      icon: PiStorefront,
+      content: (
+        <RequetsedDeliveryItem details={data?.data} />
       ),
     },
     {

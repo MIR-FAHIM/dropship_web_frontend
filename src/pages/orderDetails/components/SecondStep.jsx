@@ -57,3 +57,6 @@ const SecondStep = ({ details }) => {
 };
 
 export default SecondStep;
+
+
+

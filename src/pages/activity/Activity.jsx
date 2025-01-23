@@ -17,7 +17,7 @@ const Logs = () => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Logs</h2>
+      <h2 className="text-xl font-semibold mb-4">Error Logs</h2>
      
       <table className="min-w-full table-auto border-collapse border border-gray-300">
         <thead>
