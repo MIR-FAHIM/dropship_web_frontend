@@ -19,6 +19,7 @@ import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import Communication from "./components/Communication";
 import ItemDispatch from "./components/itemdispatch";
+import Delivery from "./components/Delivery";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -80,22 +81,28 @@ const OrderDetails = () => {
       ),
     },
 
-   
     {
       label: "Dispatch Item",
       value: "ItemDispatch",
       icon: PiStorefront,
       content: (
-        <ItemDispatch details={data?.data?.order?.request?.assigned_grids}  request = {data?.data?.order}/>
+        <ItemDispatch
+          details={data?.data?.order?.request?.assigned_grids}
+          request={data?.data?.order}
+        />
       ),
     },
     {
       label: "Delivery Items",
       value: "RequetsedDeliveryItem",
       icon: PiStorefront,
-      content: (
-        <RequetsedDeliveryItem details={data?.data} />
-      ),
+      content: <RequetsedDeliveryItem details={data?.data} />,
+    },
+    {
+      label: "Delivery",
+      value: "delivery",
+      icon: PiStorefront,
+      content: <Delivery details={data?.data} />,
     },
     {
       label: "Communication",
