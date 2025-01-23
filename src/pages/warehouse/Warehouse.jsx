@@ -15,20 +15,21 @@ const tableHead = [
 
 const Warehouse = () => {
   const { data } = useGetAllWarehouseQuery();
-  console.log(data);
   const [details, setDetails] = useState({});
   //   const [isDetailsModalOpen, setDetailsModalOpen]=useState(false);
   return (
     <div className="p-5">
-      <div className="flex justify-end">
+      <div className="flex justify-end mb-5">
         <CreateWarehouse />
       </div>
       <CustomTable tableHead={tableHead}>
-        {data?.warehouses?.map((item) => (
+        {data?.data?.map((item) => (
           <tr key={item?.id}>
-          
             <td className="px-5 py-3 border">{item?.name}</td>
-            <td className="px-5 py-3 border">{item?.district}{item?.area}</td>
+            <td className="px-5 py-3 border">
+              {item?.district}
+              {item?.area}
+            </td>
             <td className="px-5 py-3 border">{item?.grid_price_per_day}</td>
             <td className="px-5 py-3 border">{item?.size}</td>
             <td className="px-5 py-3 border">{item?.total_grids}</td>
