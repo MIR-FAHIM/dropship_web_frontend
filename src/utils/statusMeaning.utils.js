@@ -20,6 +20,11 @@ const statusMeaning = (category, statusCode) => {
       1: "Ongoing",
       2: "Ready to ship",
     },
+    deliver: {
+      0: "Waiting",
+      1: "Delivered",
+      2: "Ready to ship",
+    },
   };
   if (statuses[category]) {
     return statuses[category][statusCode] || "Invalid status code";

@@ -12,14 +12,14 @@ import FirstStep from "./components/FirstStep";
 
 import SecondStep from "./components/SecondStep";
 import ThirdStep from "./components/ThirdStep";
-import RequetsedDeliveryItem from "./components/RequestedItemdDelivery";
 import FourthStep from "./components/FourthStep";
 // import FifthStep from "./components/FifthStep";
 import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import Communication from "./components/Communication";
-import ItemDispatch from "./components/itemdispatch";
-import Delivered from "./components/Delivered";
+// import RequetsedDeliveryItem from "./components/RequestedItemdDelivery";
+// import ItemDispatch from "./components/DManagement/Itemdispatch";
+import Delivery from "./components/Delivery";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -81,28 +81,28 @@ const OrderDetails = () => {
       ),
     },
 
+    // {
+    //   label: "Dispatch Item",
+    //   value: "ItemDispatch",
+    //   icon: PiStorefront,
+    //   content: (
+    //     <ItemDispatch
+    //       details={data?.data?.order?.request?.assigned_grids}
+    //       request={data?.data?.order}
+    //     />
+    //   ),
+    // },
+    // {
+    //   label: "Delivery Items",
+    //   value: "RequetsedDeliveryItem",
+    //   icon: PiStorefront,
+    //   content: <RequetsedDeliveryItem details={data?.data} />,
+    // },
     {
-      label: "Dispatch Item",
-      value: "ItemDispatch",
-      icon: PiStorefront,
-      content: (
-        <ItemDispatch
-          details={data?.data?.order?.request?.assigned_grids}
-          request={data?.data?.order}
-        />
-      ),
-    },
-    {
-      label: "Delivery Items",
-      value: "RequetsedDeliveryItem",
-      icon: PiStorefront,
-      content: <RequetsedDeliveryItem details={data?.data} />,
-    },
-    {
-      label: "Delivered",
+      label: "Delivery",
       value: "delivery",
       icon: PiStorefront,
-      content: <Delivered details={data?.data} />,
+      content: <Delivery details={data?.data} />,
     },
     {
       label: "Communication",
