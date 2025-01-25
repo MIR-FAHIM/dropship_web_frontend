@@ -18,6 +18,8 @@ import { LuArchive } from "react-icons/lu";
 import { BiTransferAlt } from "react-icons/bi";
 import { MdOutlineWarehouse } from "react-icons/md";
 import { FaAngleDown } from "react-icons/fa6";
+import logo from "../src/assets/jayga-logo.png";
+import sLogo from "../src/assets/jayga-logo-without-label.png";
 // menu links
 const menuLinks = [
   {
@@ -77,12 +79,10 @@ const menuLinks = [
       {
         path: "/activity",
         label: "Error Log",
-        
       },
-      
     ],
   },
-  
+
   {
     path: "/warehouse",
     label: "Warehouse",
@@ -104,7 +104,9 @@ const App = () => {
         <button
           onClick={() => setCollapse(!isCollapse)}
           className={`absolute top-[25px] border p-1 rounded-full text-xl text-text-300 bg-background/50 ${
-            isCollapse ? "left-[3.8%]" : "lg:left-[18.8%] left-[37%]"
+            isCollapse
+              ? "left-[3.8%]"
+              : "lg:left-[18.8%] 2xl:left-[14.2%] left-[37%]"
           }`}
         >
           <IoIosArrowBack />
@@ -118,7 +120,7 @@ const App = () => {
             <div className="lg:w-[5%] w-[8%] h-screen">
               {/* header */}
               <div className="h-[80px] lg:p-5 p-2 flex justify-center items-center">
-                <img src="jayga-logo-without-label.png" alt="" />
+                <img src={sLogo} alt="" className="2xl:h-[50px]" />
               </div>
               {/* links */}
               <div className="flex flex-col items-center mt-5 px-1 space-y-2">
@@ -145,11 +147,11 @@ const App = () => {
         ) : (
           <>
             {/* expended sidebar */}
-            <div className="lg:w-[20%] w-[40%] h-screen border flex flex-col justify-between">
+            <div className="lg:w-[20%] 2xl:w-[15%] w-[40%] h-screen border flex flex-col justify-between">
               <div>
                 {/* header */}
                 <div className="h-[80px] bg-white p-5 border-b border-border flex justify-start">
-                  <img src="jayga-logo.png" alt="" className="h-full" />
+                  <img src={logo} alt="" />
                 </div>
                 {/* links */}
                 <div className="text-text-300 m-3">
@@ -228,7 +230,7 @@ const App = () => {
         {/* content */}
         <div
           className={`bg-background ${
-            isCollapse ? "lg:w-[95%] w-[92%]" : "lg:w-[80%] w-[60%]"
+            isCollapse ? "lg:w-[95%] w-[92%]" : "lg:w-[80%] 2xl:w-[85%] w-[60%]"
           } max-h-screen overflow-y-scroll`}
         >
           <CustomNavbar />
