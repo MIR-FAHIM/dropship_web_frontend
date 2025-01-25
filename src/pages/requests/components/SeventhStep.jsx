@@ -20,6 +20,7 @@ const SeventhStep = ({ details }) => {
   const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
     details?.order_request?.id
   );
+  console.log("data", data);
   const [placeOrderFn] = usePlaceOrderMutation();
   const userInfo = details?.order_request?.user;
   const handlePlaceOrder = async (values) => {
@@ -69,7 +70,7 @@ const SeventhStep = ({ details }) => {
               <Loader />
             ) : (
               <div className="grid grid-cols-2 gap-4">
-                {data?.assignments?.map((item) => (
+                {data?.data?.assignments?.map((item) => (
                   <div key={item?.id} className="border rounded-md p-4">
                     <p>
                       Name:{" "}
