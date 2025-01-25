@@ -19,7 +19,7 @@ import SixthStep from "./components/SixthStep";
 import { Tab, TabPanel, Tabs, TabsHeader } from "@material-tailwind/react";
 import Communication from "./components/Communication";
 import ItemDispatch from "./components/itemdispatch";
-import Delivery from "./components/Delivery";
+import Delivered from "./components/Delivered";
 
 const OrderDetails = () => {
   const { id } = useParams();
@@ -99,10 +99,10 @@ const OrderDetails = () => {
       content: <RequetsedDeliveryItem details={data?.data} />,
     },
     {
-      label: "Delivery",
+      label: "Delivered",
       value: "delivery",
       icon: PiStorefront,
-      content: <Delivery details={data?.data} />,
+      content: <Delivered details={data?.data} />,
     },
     {
       label: "Communication",

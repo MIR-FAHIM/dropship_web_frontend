@@ -1,4 +1,4 @@
-const Delivery = () => {
+const Delivered = () => {
   return (
     <div>
       <p>Hello Delivery</p>
@@ -6,4 +6,4 @@ const Delivery = () => {
   );
 };
 
-export default Delivery;
+export default Delivered;
