@@ -16,6 +16,7 @@ const SeventhStep = ({ details }) => {
     isWareLoading,
     error,
   } = useGetWarehouseByIdQuery(details?.order_request?.warehouse_id);
+
   const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
     details?.order_request?.id
   );
@@ -143,13 +144,13 @@ const SeventhStep = ({ details }) => {
             <div className="space-y-1">
               <p className="font-semibold text-gray-700">Total Grid Occupied</p>
               <p className="font-medium font-DMSans text-green-600">
-                {data?.total_grids}
+                {data?.data?.total_grids}
               </p>
             </div>
             <div className="space-y-1">
               <p className="font-semibold text-gray-700">Total Size (sqft)</p>
               <p className="font-medium font-DMSans text-green-600">
-                {data?.total_grids * 50}
+                {data?.data?.total_grids * 50}
               </p>
             </div>
             <div className="space-y-1">
@@ -157,7 +158,7 @@ const SeventhStep = ({ details }) => {
                 Per Grid Price Per Day
               </p>
               <p className="font-medium font-DMSans text-green-600">
-                {warehouseData?.warehouse?.grid_price_per_day}
+                {warehouseData?.data?.grid_price_per_day}
               </p>
             </div>
             <div className="space-y-1">
@@ -165,9 +166,9 @@ const SeventhStep = ({ details }) => {
                 Estimated Price Per Day
               </p>
               <p className="font-medium font-DMSans text-green-600">
-                {data?.total_grids
-                  ? data.total_grids *
-                    warehouseData?.warehouse?.grid_price_per_day
+                {data?.data?.total_grids
+                  ? data?.data?.total_grids *
+                    warehouseData?.data?.grid_price_per_day
                   : "Calculating..."}
               </p>
             </div>
@@ -184,9 +185,9 @@ const SeventhStep = ({ details }) => {
                 Estimated Price Per Month
               </p>
               <p className="font-medium font-DMSans text-green-600">
-                {data?.total_grids
-                  ? data.total_grids *
-                    warehouseData?.warehouse?.grid_price_per_day *
+                {data?.data?.total_grids
+                  ? data?.data?.total_grids *
+                    warehouseData?.data?.grid_price_per_day *
                     30
                   : "Calculating..."}
               </p>
@@ -197,9 +198,9 @@ const SeventhStep = ({ details }) => {
                 Estimated Price On Duration
               </p>
               <p className="font-medium font-DMSans text-green-600">
-                {data?.total_grids
-                  ? data.total_grids *
-                    warehouseData?.warehouse?.grid_price_per_day *
+                {data?.data?.total_grids
+                  ? data?.data?.total_grids *
+                    warehouseData?.data?.grid_price_per_day *
                     duration
                   : "Calculating..."}
               </p>
