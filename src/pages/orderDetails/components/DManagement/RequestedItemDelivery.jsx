@@ -1,10 +1,15 @@
-import TabHeading from "../../../components/shared/TabHeading";
-import { useGetRequestedDeliveryItemQuery, useUpdateItemDeliveryStatusMutation } from "../../../redux/features/order";
+import {
+  useGetRequestedDeliveryItemQuery,
+  useUpdateItemDeliveryStatusMutation,
+} from "../../../../redux/features/order";
 import { format, parseISO } from "date-fns";
 import Swal from "sweetalert2";
+import TabHeading from "../../../../components/shared/TabHeading";
 
-const RequetsedItemDelivey = ({ details }) => {
-  const { data, isLoading, error, refetch } = useGetRequestedDeliveryItemQuery(details?.order.id);
+const RequestedItemDelivery = ({ details }) => {
+  const { data, isLoading, error, refetch } = useGetRequestedDeliveryItemQuery(
+    details?.order.id
+  );
   const [updateItemDeliveryStatus] = useUpdateItemDeliveryStatusMutation();
 
   const handleStatusChange = async (id) => {
@@ -21,7 +26,11 @@ const RequetsedItemDelivey = ({ details }) => {
     if (confirm.isConfirmed) {
       try {
         await updateItemDeliveryStatus({ id }).unwrap();
-        Swal.fire("Success!", "The delivery status has been updated.", "success");
+        Swal.fire(
+          "Success!",
+          "The delivery status has been updated.",
+          "success"
+        );
         refetch(); // Re-fetch the data to update the state
       } catch (err) {
         Swal.fire("Error!", err.message || "Something went wrong.", "error");
@@ -70,7 +79,9 @@ const RequetsedItemDelivey = ({ details }) => {
                     Confirm Deliver
                   </button>
                 ) : (
-                  <span className="text-green-500 font-semibold">Delivered</span>
+                  <span className="text-green-500 font-semibold">
+                    Delivered
+                  </span>
                 )}
               </td>
               <td className="border p-2">{log.message}</td>
@@ -87,4 +98,4 @@ const RequetsedItemDelivey = ({ details }) => {
   );
 };
 
-export default RequetsedItemDelivey;
+export default RequestedItemDelivery;

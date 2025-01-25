@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import TabHeading from "../../../components/shared/TabHeading";
-import { useItemDispatchRequestMutation } from "../../../redux/features/order";
+import TabHeading from "../../../../components/shared/TabHeading";
+import { useItemDispatchRequestMutation } from "../../../../redux/features/order";
 import { toast } from "sonner";
 
 const ItemDispatch = ({ details, request }) => {
@@ -49,7 +49,10 @@ const ItemDispatch = ({ details, request }) => {
 
   return (
     <div>
-      <TabHeading title="Dispatch Item From Grid" subTitle="Select a grid and dispatch a quantity of that item." />
+      <TabHeading
+        title="Dispatch Item From Grid"
+        subTitle="Select a grid and dispatch a quantity of that item."
+      />
       <div className="font-plex grid grid-cols-4 gap-4">
         {details?.map((detail, index) => (
           <div
@@ -61,7 +64,9 @@ const ItemDispatch = ({ details, request }) => {
           >
             <div className="flex items-center">
               <h3 className="font-medium">Grid Code:</h3>
-              <p className="font-semibold ms-1">{detail.grid?.grid_code || "N/A"}</p>
+              <p className="font-semibold ms-1">
+                {detail.grid?.grid_code || "N/A"}
+              </p>
             </div>
             <div className="flex items-center">
               <h3 className="font-medium">Item Name:</h3>
@@ -79,7 +84,10 @@ const ItemDispatch = ({ details, request }) => {
             {selectedItem === detail && (
               <div className="mt-4">
                 <div>
-                  <label htmlFor="quantity" className="block text-sm font-medium">
+                  <label
+                    htmlFor="quantity"
+                    className="block text-sm font-medium"
+                  >
                     Dispatch Quantity
                   </label>
                   <input
@@ -92,7 +100,10 @@ const ItemDispatch = ({ details, request }) => {
                   />
                 </div>
                 <div className="mt-2">
-                  <label htmlFor="message" className="block text-sm font-medium">
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium"
+                  >
                     Message (Optional)
                   </label>
                   <textarea
