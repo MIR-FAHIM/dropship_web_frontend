@@ -9,11 +9,28 @@ const warehouseApi = baseApi.injectEndpoints({
         body: wareInfo,
       }),
     }),
+    createWarehouseUser: builder.mutation({
+      query: (user) => ({
+        url: "/register/user",
+        method: "POST",
+        body: user,
+      }),
+    }),
+    assignWarehouseUser: builder.mutation({
+      query: (data) => ({
+        url: "/warehouse/assign-staff",
+        method: "POST",
+        body: data,
+      }),
+    }),
     getAllWarehouse: builder.query({
       query: () => `/warehouses`,
     }),
     getWarehouseById: builder.query({
       query: (id) => `/warehouses/${id}`,
+    }),
+    getWarehouseUser: builder.query({
+      query: (id) => `/warehouse-stuff/${id}`,
      
     }),
     getWarehouseTypes: builder.query({
@@ -27,4 +44,8 @@ export const {
   useGetAllWarehouseQuery,
   useGetWarehouseTypesQuery,
   useCreateWarehouseMutation,
+  useCreateWarehouseUserMutation,
+  useAssignWarehouseUserMutation,
+  useGetWarehouseUserQuery,
+
 } = warehouseApi;

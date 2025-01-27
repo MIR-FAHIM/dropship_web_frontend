@@ -14,6 +14,7 @@ import RequestDetails from "../pages/requests/RequestDetails";
 import Requests from "../pages/requests/Requests";
 import Users from "../pages/users/Users";
 import Warehouse from "../pages/warehouse/Warehouse";
+import WarehouseDetails from "../pages/warehouse/WarehouseDetails";
 
 
 export const pagePaths = [
@@ -53,6 +54,10 @@ export const pagePaths = [
       {
         path: "/orders/details/:id",
         element: <OrderDetails />,
+      },
+      {
+        path: "/warehousedetails/:id",
+        element: <WarehouseDetails />,
       },
       {
         path: "/users",

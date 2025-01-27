@@ -39,6 +39,7 @@ const FirstStep = ({ setActiveTab, user }) => {
         id: toastId,
         duration: 2000,
       });
+      refetch();
     } catch (error) {
       console.log("error:", error);
       toast.error(getFirstErrorMessage(error), {

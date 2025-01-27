@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import CustomTable from "../../components/ui/CustomTable";
 import { useGetAllWarehouseQuery } from "../../redux/features/warehouse";
 import statusMeaning from "../../utils/statusMeaning.utils";
 import CreateWarehouse from "./components/CreateWarehouse";
 const tableHead = [
+  "ID",
   "Name",
   "Location",
   "Price per Day",
@@ -25,6 +27,7 @@ const Warehouse = () => {
       <CustomTable tableHead={tableHead}>
         {data?.data?.map((item) => (
           <tr key={item?.id}>
+            <td className="px-5 py-3 border">{item?.id}</td>
             <td className="px-5 py-3 border">{item?.name}</td>
             <td className="px-5 py-3 border">
               {item?.district}
@@ -37,13 +40,7 @@ const Warehouse = () => {
               {statusMeaning("Warehouse", item?.status)}
             </td>
             <td className="px-5 py-3 border">
-              <button
-                onClick={() => {
-                  setDetails(item);
-                }}
-              >
-                Details
-              </button>
+            <Link to={`/warehousedetails/${item?.id}`}>View details</Link>
             </td>
           </tr>
         ))}
