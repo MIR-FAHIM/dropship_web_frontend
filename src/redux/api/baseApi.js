@@ -13,7 +13,7 @@ const baseApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Grid", "Request", "Payment", "Note"],
+  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse"],
   endpoints: () => ({}),
 });
 

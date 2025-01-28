@@ -15,6 +15,7 @@ const warehouseApi = baseApi.injectEndpoints({
         method: "POST",
         body: user,
       }),
+      invalidatesTags: ["User"],
     }),
     assignWarehouseUser: builder.mutation({
       query: (data) => ({
@@ -31,7 +32,7 @@ const warehouseApi = baseApi.injectEndpoints({
     }),
     getWarehouseUser: builder.query({
       query: (id) => `/warehouse-stuff/${id}`,
-     
+      providesTags: ["User"],
     }),
     getWarehouseTypes: builder.query({
       query: () => `/admin/warehouse-types`,
@@ -47,5 +48,4 @@ export const {
   useCreateWarehouseUserMutation,
   useAssignWarehouseUserMutation,
   useGetWarehouseUserQuery,
-
 } = warehouseApi;

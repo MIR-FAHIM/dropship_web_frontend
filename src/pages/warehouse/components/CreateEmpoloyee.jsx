@@ -1,26 +1,21 @@
-import { useState } from "react";
 import { toast } from "sonner";
-import { FieldArray, Form, Formik } from "formik";
-import { Link } from "react-router-dom";
+import { Form, Formik } from "formik";
 import CustomTable from "../../../components/ui/CustomTable";
 import { useGetWarehouseUserQuery } from "../../../redux/features/warehouse";
 import { useCreateWarehouseUserMutation } from "../../../redux/features/warehouse";
-import {  useAssignWarehouseUserMutation } from "../../../redux/features/warehouse";
+import { useAssignWarehouseUserMutation } from "../../../redux/features/warehouse";
 import FormikInput from "../../../components/formik/FormikInput";
-import statusMeaning from "../../../utils/statusMeaning.utils";
 import CustomButton from "../../../components/ui/CustomButton";
-const tableHead = [
-  "Name",
-  "Email",
-  "Mobile",
-  "Type",
-];
+import { getFirstErrorMessage } from "../../../utils/error.utils";
+const tableHead = ["Name", "Email", "Mobile", "Type"];
+import FormikDropdown from "../../../components/formik/FormikDropdown";
+import { transformArrayOfStringsIntoLabelAndValueArray } from "../../../utils";
+import { industryTypes } from "../../../constants";
 
 const WarehouseUser = ({ id }) => {
-  const { data ,refetch} = useGetWarehouseUserQuery(id);
-  const [details, setDetails] = useState({});
+  const { data, refetch } = useGetWarehouseUserQuery(id);
   const [createWarehouseUser] = useCreateWarehouseUserMutation();
-  const [assignWarehouseUser] =  useAssignWarehouseUserMutation();
+  const [assignWarehouseUser] = useAssignWarehouseUserMutation();
 
   const createUser = async (values) => {
     const toastId = toast.loading("User adding please wait...");
@@ -36,24 +31,24 @@ const WarehouseUser = ({ id }) => {
 
     try {
       const res = await createWarehouseUser(data).unwrap();
-      const assignuser = {
-        warehouse_id: 21,
-    user_id: res.data.user.id,
+      const assignUser = {
+        warehouse_id: id,
+        user_id: res?.data?.user?.id,
       };
-      const assignData = await assignWarehouseUser(assignuser).unwrap();
-     
-      toast.success(res.message, {
+      const assignData = await assignWarehouseUser(assignUser).unwrap();
+
+      const resMessage = `${res.message} && ${assignData.message}`;
+      refetch();
+      toast.success(resMessage, {
         id: toastId,
         duration: 2000,
       });
-      
     } catch (error) {
       console.log("Error:", error);
       toast.error(getFirstErrorMessage(error), {
         id: toastId,
         duration: 2000,
       });
-     
     }
   };
 
@@ -63,14 +58,16 @@ const WarehouseUser = ({ id }) => {
     phone: "",
     password: "",
     company_name: "",
-    industry_type: "A", // Default industry type
-    type: "owner", // Default user type
+    industry_type: "",
+    type: "owner",
   };
 
   return (
     <div className="p-5">
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Create New User For This Warehouse</h2>
+        <h2 className="text-2xl font-semibold mb-4">
+          Create New User For This Warehouse
+        </h2>
 
         <div className="bg-white p-6 rounded-lg shadow-lg">
           <Formik
@@ -84,9 +81,20 @@ const WarehouseUser = ({ id }) => {
                   <FormikInput name="name" label="Name" />
                   <FormikInput name="email" label="Email" />
                   <FormikInput name="phone" label="Phone" />
-                  <FormikInput name="password" label="Password" type="password" />
+                  <FormikInput
+                    name="password"
+                    label="Password"
+                    type="password"
+                  />
                   <FormikInput name="company_name" label="Company Name" />
-                  <FormikInput name="industry_type" label="Industry Type" />
+                  <FormikDropdown
+                    options={transformArrayOfStringsIntoLabelAndValueArray(
+                      industryTypes
+                    )}
+                    name="industry_type"
+                    label="Industry Type"
+                  />
+                  {/* <FormikInput name="industry_type" label="Industry Type" /> */}
                   <FormikInput name="type" label="User Type" />
                 </div>
 

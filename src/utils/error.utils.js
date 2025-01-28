@@ -13,13 +13,30 @@
 //         }
 //     }
 // }
+// {
+//   "status": 422,
+//   "data": {
+//       "success": false,
+//       "status": 422,
+//       "message": "Validation failed",
+//       "data": null,
+//       "errors": {
+//           "password": [
+//               "The password field must be at least 8 characters."
+//           ]
+//       }
+//   }
+// }
 export const getFirstErrorMessage = (error) => {
-  const errorMessages = error?.data?.messages || error?.data?.message;
+  if (!error?.data) return "Something went wrong!";
 
-  if (errorMessages) {
-    const firstErrorKey = Object.keys(errorMessages)[0];
-    return errorMessages[firstErrorKey]?.[0] || "An unknown error occurred!";
+  // Check for the first format
+  const messages = error.data.messages || error.data.errors;
+  if (messages && typeof messages === "object") {
+    const firstErrorKey = Object.keys(messages)[0];
+    return messages[firstErrorKey]?.[0] || "An unknown error occurred!";
   }
 
-  return "Something went wrong!";
+  // If no errors, return the generic message
+  return error.data.message || "Something went wrong!";
 };
