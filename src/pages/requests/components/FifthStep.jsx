@@ -111,8 +111,8 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
           <div className="flex justify-between items-center">
             <p className="font-semibold text-gray-700">Total Grid Occupied</p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids && data.total_grids > 0
-                ? data.total_grids
+              {data?.data.total_grids && data.data.total_grids > 0
+                ? data.data.total_grids
                 : "Add Items and Assign in Grids"}
             </p>
           </div>
@@ -123,8 +123,8 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
           <div className="flex justify-between items-center">
             <p className="font-semibold text-gray-700">Total Size (sqft)</p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids && data.total_grids > 0
-                ? data.total_grids * 50
+              {data?.data.total_grids && data.data.total_grids > 0
+                ? data.data.total_grids * 50
                 : "Add Items and Assign in Grids"}
             </p>
           </div>
@@ -137,8 +137,8 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
               Per Grid Price Per Day
             </p>
             <p className="font-medium font-DMSans text-green-600">
-              {warehouseData?.warehouse?.grid_price_per_day
-                ? warehouseData?.warehouse?.grid_price_per_day
+              {warehouseData?.data?.grid_price_per_day
+                ? warehouseData?.data?.grid_price_per_day
                 : "No Data"}
             </p>
           </div>
@@ -151,9 +151,9 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
               Estimated Price Per Day
             </p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids && warehouseData?.warehouse?.grid_price_per_day
-                ? data.total_grids *
-                  warehouseData?.warehouse?.grid_price_per_day
+              {data?.data.total_grids && warehouseData?.data?.grid_price_per_day
+                ? data.data.total_grids *
+                  warehouseData?.data?.grid_price_per_day
                 : "Add Items and Assign in Grids"}
             </p>
           </div>
@@ -178,9 +178,9 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
               Estimated Price Per Month
             </p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids && warehouseData?.warehouse?.grid_price_per_day
-                ? data.total_grids *
-                  warehouseData?.warehouse?.grid_price_per_day *
+              {data?.data.total_grids && warehouseData?.data?.grid_price_per_day
+                ? data.data.total_grids *
+                  warehouseData?.data?.grid_price_per_day *
                   30
                 : "No Grid Added Yet"}
             </p>
@@ -194,11 +194,11 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
               Estimated Price On Duration
             </p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids &&
-              warehouseData?.warehouse?.grid_price_per_day &&
+              {data?.data.total_grids &&
+              warehouseData?.data?.grid_price_per_day &&
               duration > 0
-                ? data.total_grids *
-                  warehouseData?.warehouse?.grid_price_per_day *
+                ? data.data.total_grids *
+                  warehouseData?.data?.grid_price_per_day *
                   duration
                 : "No Data"}
             </p>
@@ -211,11 +211,11 @@ const { data, isLoading } = useGetAssignedGridsByRequestItQuery(
               Advance Payment (20%) On Duration
             </p>
             <p className="font-medium font-DMSans text-green-600">
-              {data?.total_grids &&
-              warehouseData?.warehouse?.grid_price_per_day &&
+              {data?.data.total_grids &&
+              warehouseData?.data?.grid_price_per_day &&
               duration > 0
-                ? data.total_grids *
-                  warehouseData?.warehouse?.grid_price_per_day *
+                ? data.data.total_grids *
+                  warehouseData?.data?.grid_price_per_day *
                   duration *
                   0.2
                 : "No Data"}
