@@ -14,6 +14,7 @@ import CustomButton from "../../../components/ui/CustomButton";
 
 const initialValues = {
   location: "",
+  
   latitude: "",
   longitude: "",
   size: "",
