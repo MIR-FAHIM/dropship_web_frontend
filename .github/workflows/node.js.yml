@@ -1,4 +1,10 @@
-FTP-Deploy-Action:
+name: 🚀 Shipping Build
+on:
+  push:
+    branches:
+      - Next-Release
+jobs:
+  FTP-Deploy-Action:
     name: 🎉 Deploy
     runs-on: ubuntu-latest
 
@@ -8,10 +14,10 @@ FTP-Deploy-Action:
         with:
           fetch-depth: 2
 
-      - name: Use Node.js 16
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: "16"
+          node-version: "18"
 
       - name: Cache npm dependencies
         uses: actions/cache@v3
@@ -28,8 +34,6 @@ FTP-Deploy-Action:
           CI: false
 
       - name: 🏗 Build Project
-        # env:
-        #   VITE_MERCHANT_ID: ${{ secrets.VITE_MERCHANT_ID }}
         run: npm run build
 
       - name: 📂 Sync folders and files to the server

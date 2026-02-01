@@ -1,7 +1,7 @@
 import { Button } from "@material-tailwind/react";
 import FormikForm from "../../components/formik/FormikForm";
 import FormikInput from "../../components/formik/FormikInput";
-import { useLoginMutation } from "../../redux/features/user";
+import { useLoginMutation } from "../../redux/features/auth";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { saveToLocalstorage } from "../../utils/localstorage.utils";
 
 const initialValues = {
-  email: "jayga@gmail.com",
+  email: "ridoyfahim92@gmail.com",
   password: "12345678",
 };
 
@@ -18,12 +18,13 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleLogin = async (values) => {
-    const toastId = toast.loading("Login processing!");
+    //const toastId = toast.loading("Login processing!");
     try {
       const res = await loginFunc(values).unwrap();
-      toast.success(res?.message, { id: toastId, duration: 2000 });
-      dispatch(setToken({ token: res?.token }));
-      saveToLocalstorage("token", res?.token);
+      // toast.success(res?.message, { id: toastId, duration: 2000 });
+      dispatch(setToken({ token: res['data']["token"] }));
+      saveToLocalstorage("token", res['data']["token"]);
+      saveToLocalstorage("userId", res['data']["user"]["id"]);
       navigate("/");
     } catch (error) {
       console.log("error:", error);

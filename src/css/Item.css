@@ -1,0 +1,30 @@
+/* src/Items.css */
+.items-container {
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  
+  .category-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .category {
+    border: 1px solid #ccc;
+    padding: 20px;
+    margin: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .category:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .selected-category {
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 20px;
+    background-color: #f9f9f9;
+  }
