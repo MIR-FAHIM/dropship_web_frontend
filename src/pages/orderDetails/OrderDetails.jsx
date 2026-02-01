@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useGetOrderDetailsByIdQuery } from "../../redux/features/order";
+
 import Loader from "../../components/shared/Loader";
 import React, { useEffect, useState } from "react";
 // icons

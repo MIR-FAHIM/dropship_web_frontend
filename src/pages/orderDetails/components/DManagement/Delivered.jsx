@@ -1,6 +1,6 @@
 import Loader from "../../../../components/shared/Loader";
 import CustomTable from "../../../../components/ui/CustomTable";
-import { useGetRequestedDeliveryItemQuery } from "../../../../redux/features/order";
+
 import statusMeaning from "../../../../utils/statusMeaning.utils";
 
 const tableHead = [

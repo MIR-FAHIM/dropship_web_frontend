@@ -1,7 +1,4 @@
-import {
-  useGetRequestedDeliveryItemQuery,
-  useUpdateItemDeliveryStatusMutation,
-} from "../../../../redux/features/order";
+
 import { format, parseISO } from "date-fns";
 import Swal from "sweetalert2";
 import TabHeading from "../../../../components/shared/TabHeading";

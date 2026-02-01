@@ -1,6 +1,7 @@
 import { useState } from "react";
 import CustomNavbar from "./components/shared/CustomNavbar";
 import { NavLink, Outlet } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Accordion,
   AccordionHeader,
@@ -15,36 +16,53 @@ import {
 import { IoIosArrowBack } from "react-icons/io";
 import { IoCalendarOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
-import { BiTransferAlt } from "react-icons/bi";
-import { MdOutlineWarehouse } from "react-icons/md";
+import { BiLogoProductHunt, BiTransferAlt } from "react-icons/bi";
+import { MdOutlineProductionQuantityLimits, MdOutlineWarehouse } from "react-icons/md";
 import { FaAngleDown } from "react-icons/fa6";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
+import { Heart, HomeIcon } from "lucide-react";
+import { FaProductHunt } from "react-icons/fa";
 // menu links
 const menuLinks = [
   {
     path: "/",
-    label: "Overview",
+    label: "Home",
+    icon: <HomeIcon />,
+  },
+  {
+    path: "/dashboard",
+    label: "Dashboard",
     icon: <HiOutlineSquares2X2 />,
   },
   {
-    path: "/requests",
-    label: "Requests",
+    path: "/items",
+    label: "All Products",
+    icon: <LuArchive />,
+  },
+  {
+    path: "/favproducts",
+    label: "Favourite Product",
+    icon: <Heart />,
+  },
+  {
+    path: "/post",
+    label: "Facebook Content",
+    icon: <MdOutlineWarehouse />,
+  },
+  {
+    path: "/order",
+    label: "Order List",
     icon: <HiOutlineClipboardDocumentCheck />,
   },
   {
-    path: "/grids",
-    label: "Grids",
-    icon: <PiUsers />,
-  },
-  {
-    path: "/orders",
-    label: "Orders",
+    path: "/saleandprofit",
+    label: "Sales & Profit",
     icon: <IoCalendarOutline />,
   },
   {
     path: "/billing",
-    label: "Billing",
+    label: "Transactions",
     icon: <PiReceipt />,
     children: [
       {
@@ -59,48 +77,49 @@ const menuLinks = [
   },
   {
     path: "/users",
-    label: "Users",
+    label: "Support Ticket",
     icon: <PiUsers />,
   },
   {
-    path: "/items",
-    label: "Items",
-    icon: <LuArchive />,
-  },
-  {
-    path: "/activity",
-    label: "Activity",
+    path: "/withdraw",
+    label: "Withdraw",
     icon: <PiReceipt />,
-    children: [
+    children:[
       {
-        path: "/adminactivity",
-        label: "Admin Activity",
+        path: "/add-payment-account",
+        label: "Add Payment Account",
       },
       {
-        path: "/activity",
-        label: "Error Log",
+        path: "/withdraw",
+        label: "Withdraw",
       },
-    ],
+    ]
+   
   },
-
   {
-    path: "/warehouse",
-    label: "Warehouse",
-    icon: <MdOutlineWarehouse />,
+    path: "/contact-us",
+    label: "Contact Developer",
+    icon: <PiUsers />,
   },
 ];
 
 const App = () => {
   const [isCollapse, setCollapse] = useState(false);
   const [openAccordion, setOpenAccordion] = useState(0);
+  const { t, i18n } = useTranslation();
 
-  const handleOpenAccordion = (value) =>
-    setOpenAccordion(openAccordion === value ? 0 : value);
+  // Language Change Handler
+  
+
+  const handleOpenAccordion = (value) => setOpenAccordion(openAccordion === value ? 0 : value);
 
   return (
     <>
       {/* collapse button */}
       <div className="relative z-[500]">
+        {/* Language Switcher - Placing it here or in a prominent spot */}
+     
+        
         <button
           onClick={() => setCollapse(!isCollapse)}
           className={`absolute top-[25px] border p-1 rounded-full text-xl text-text-300 bg-background/50 ${
@@ -112,6 +131,7 @@ const App = () => {
           <IoIosArrowBack />
         </button>
       </div>
+
       <div className="flex">
         {/* sidebar */}
         {isCollapse ? (
@@ -146,7 +166,7 @@ const App = () => {
           </>
         ) : (
           <>
-            {/* expended sidebar */}
+            {/* expanded sidebar */}
             <div className="lg:w-[20%] 2xl:w-[15%] w-[40%] h-screen border flex flex-col justify-between">
               <div>
                 {/* header */}
@@ -175,7 +195,7 @@ const App = () => {
                           >
                             <div className="flex items-center gap-x-3">
                               <span className="text-xl">{item.icon}</span>
-                              {item.label}
+                              {t(item.label)}
                             </div>
                           </AccordionHeader>
                           <AccordionBody className="p-0 text-base">
@@ -192,7 +212,7 @@ const App = () => {
                                     }`
                                   }
                                 >
-                                  {child.label}
+                                  {t(child.label)}
                                 </NavLink>
                               ))}
                             </div>
@@ -214,7 +234,7 @@ const App = () => {
                         }
                       >
                         <span className="text-xl">{item.icon}</span>
-                        {item.label}
+                        {t(item.label)}
                       </NavLink>
                     );
                   })}
@@ -222,11 +242,12 @@ const App = () => {
               </div>
               {/* footer */}
               <div className="m-3 text-text-300">
-                <p>Developed by Jayga Systems B.V</p>
+                <p>{t('welcome')}</p>
               </div>
             </div>
           </>
         )}
+        
         {/* content */}
         <div
           className={`bg-background ${

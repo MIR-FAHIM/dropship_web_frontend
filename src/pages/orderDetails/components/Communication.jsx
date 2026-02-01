@@ -1,5 +1,5 @@
 import TabHeading from "../../../components/shared/TabHeading";
-import { useGetNotesByReqQuery } from "../../../redux/features/communication";
+
 import { format, parseISO } from "date-fns";
 
 const Communication = ({details }) => {

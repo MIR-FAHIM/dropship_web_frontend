@@ -1,5 +1,5 @@
 
-import { useGetAdminActivityQuery } from "../../redux/features/log"; // Assuming you have a log query for fetching logs
+ // Assuming you have a log query for fetching logs
 import { format, parseISO } from "date-fns";
 
 const AdminActivity = () => {

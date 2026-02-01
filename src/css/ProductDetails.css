@@ -1,0 +1,347 @@
+.product-details-container {
+  font-family: Arial, sans-serif;
+  margin: 30px auto;
+  max-width: 1200px;
+  padding: 0 15px;
+}
+
+.product-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.product-image-column {
+  width: 48%;
+  padding-right: 20px;
+  text-align: center;
+}
+
+.product-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 15px;
+}
+
+.download-btn,
+.favorite-btn {
+  padding: 10px 20px;
+  background-color: #0056b3;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.favorite-btn {
+  background-color: #ff6347;
+}
+
+.download-btn:hover,
+.favorite-btn:hover {
+  background-color: #003366;
+}
+
+.product-info-column {
+  width: 48%;
+}
+
+.product-name {
+  font-size: 2.2rem;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.product-sku {
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.size-selection,
+.quantity-selection,
+.sell-price {
+  margin-bottom: 20px;
+}
+
+.size-dropdown,
+.quantity-input,
+.sell-price-input {
+  padding: 10px;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+
+.add-to-order-btn {
+  background-color: #28a745;
+  color: white;
+  padding: 14px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+.product-description {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f7f7f7;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.product-tabs {
+  margin-top: 40px;
+  padding: 10px;
+  width: 400px;
+  background-color: #f8f8f8;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.tabs {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.tab {
+  padding: 12px 25px;
+  background-color: #8bb5df;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 5px;
+  transition: background-color 0.3s;
+}
+
+.tab.active {
+  background-color: #0056b3;
+}
+
+.tab:hover {
+  background-color: #0056b3;
+}
+
+.tab-content {
+  margin-top: 20px;
+}
+
+.images-tab-content {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Creates 4 equal-width columns */
+  gap: 20px; /* Space between each item in the grid */
+  justify-items: center; /* Centers the images horizontally in each grid cell */
+  margin-top: 20px;
+}
+
+.image-container {
+  display: flex;
+  flex-direction: column; /* Stacks the image and button vertically */
+  align-items: center; /* Centers items horizontally */
+  text-align: center; /* Centers text in the button */
+}
+
+.tab-image {
+  width: 200px;
+  max-width: 200px; /* Maximum image width */
+  height: 200px;
+  border-radius: 8px;
+  margin-bottom: 10px; /* Adds spacing between the image and the button */
+}
+
+.download-btn {
+  padding: 10px 20px;
+  background-color: #848785;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.download-btn:hover {
+  background-color: #0056b3; /* Darkens the button on hover */
+}
+
+/* Responsive adjustments for different screen sizes */
+@media (max-width: 1200px) {
+  .images-tab-content {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on medium screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .images-tab-content {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+  }
+}
+
+@media (max-width: 480px) {
+  .images-tab-content {
+    grid-template-columns: 1fr; /* 1 column on very small screens */
+  }
+}
+.strategy-tab-content {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Each strategy card (container for title and subtitle) */
+.strategy-card {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Title of the strategy */
+.strategy-title {
+  font-size: 1.5rem;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* Subtitle or description of the strategy */
+.strategy-subtitle {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.5;
+}
+
+/* Fallback message when no strategy is available */
+.strategy-tab-content p {
+  color: #888;
+  font-size: 1rem;
+  font-style: italic;
+}
+
+/* Style for the reviews container */
+.reviews-tab-content {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Each review card */
+.review-card {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Header for the review card */
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Title of the review section */
+.review-title {
+  font-size: 1 rem;
+  color: #333;
+  margin-bottom: 0;
+}
+
+/* Rating stars */
+.review-rating {
+  display: flex;
+  align-items: center;
+}
+
+.star {
+  font-size: 1.2rem;
+  color: #ccc;
+  margin-right: 2px;
+}
+
+.star.filled {
+  color: gold;
+}
+
+/* Rating count text */
+.review-rating-text {
+  font-size: 1rem;
+  color: #555;
+  margin-left: 5px;
+}
+
+/* Review text */
+.review-text {
+  font-size: 1rem;
+  color: #555;
+  line-height: 1.5;
+  margin-top: 10px;
+}
+
+/* Fallback message when no reviews are available */
+.reviews-tab-content p {
+  color: #888;
+  font-size: 1rem;
+  font-style: italic;
+}
+.videos-tab-content {
+  padding: 20px;
+}
+
+.video-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr); /* 8 columns per row */
+  gap: 10px; /* Smaller gap between items */
+  margin-top: 20px;
+}
+
+.video-item {
+  background-color: #f8f8f8;
+  padding: 10px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.youtube-icon {
+  font-size: 40px;
+  color: #ff0000; /* YouTube Red */
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.video-file-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Hover effects for video items */
+.video-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+

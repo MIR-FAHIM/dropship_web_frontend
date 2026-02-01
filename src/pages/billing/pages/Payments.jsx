@@ -1,142 +1,48 @@
-import {
-  useGetAllPaymentQuery,
-  useUpdatePaymentStatusMutation,
-} from "../../../redux/features/payment";
-import { format, parseISO } from "date-fns";
-import { toast } from "sonner";
-import { getFirstErrorMessage } from "../../../utils/error.utils";
-import { useState } from "react";
-import CustomModal from "../../../components/ui/CustomModal";
-import { Link } from "react-router-dom";
-
-const MakePaymentConfirmed = ({ updateStatusFn, itemDetails }) => {
-  const [isOpen, setOpen] = useState(false);
-  const onStatusChange = async () => {
-    const toastId = toast.loading("Payment status updating please wait!");
-    try {
-      const res = await updateStatusFn({
-        paymentInfo: {
-          status: 1,
-        },
-        id: itemDetails?.id,
-      });
-      toast.success(res?.data?.message, {
-        id: toastId,
-        duration: 2000,
-      });
-    } catch (error) {
-      console.log("error:", error);
-      toast.error(getFirstErrorMessage(error), {
-        id: toastId,
-        duration: 2000,
-      });
-    }
-  };
-  return (
-    <div>
-      <button
-        onClick={() => setOpen(true)}
-        className="bg-red-50 py-1 px-2 rounded-md"
-      >
-        Pending
-      </button>
-      <CustomModal
-        open={isOpen}
-        setOpen={setOpen}
-        title={"Confirm payment"}
-        footer={true}
-        onClick={onStatusChange}
-      >
-        <p className="font-bold">
-          {" "}
-          <span className="mr-1 font-semibold">Amount:</span>{" "}
-          {itemDetails?.amount}
-        </p>
-        <p>
-          {" "}
-          <span className="mr-1 font-semibold">Reason:</span>{" "}
-          {itemDetails?.payment_region}
-        </p>
-        <p>
-          {" "}
-          <span className="mr-1 font-semibold">Payment created at:</span>
-          {itemDetails?.created_at
-            ? format(parseISO(itemDetails?.created_at), "dd-MMM-yyyy, hh:mm a")
-            : "N/A"}{" "}
-        </p>
-      </CustomModal>
-    </div>
-  );
-};
+import React, { useState } from 'react';
 
 const Payments = () => {
-  const { data, isLoading, error } = useGetAllPaymentQuery();
-  const [updateStatusFn] = useUpdatePaymentStatusMutation();
+  // Initial transactions (example data)
+  const initialTransactions = [
+    { id: 1, date: '2025-02-01', details: 'Deposit', amount: 500, balance: 500 },
+    { id: 2, date: '2025-02-02', details: 'Withdrawal', amount: -200, balance: 300 },
+    { id: 3, date: '2025-02-03', details: 'Deposit', amount: 150, balance: 450 },
+    { id: 4, date: '2025-02-04', details: 'Withdrawal', amount: -100, balance: 350 },
+  ];
 
-  if (isLoading) {
-    return <p>Loading logs...</p>;
-  }
-
-  if (error) {
-    return <p>Error fetching logs: {error.message}</p>;
-  }
+  // State to hold the transactions and balance
+  const [transactions, setTransactions] = useState(initialTransactions);
 
   return (
-    <div>
-      <h2 className="text-xl font-semibold mb-4">Payments</h2>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Balance Statement</h2>
 
-      <table className="min-w-full table-auto border-collapse border border-gray-300">
-        <thead>
-          <tr>
-            <th className="border p-2">Payment ID</th>
-            <th className="border p-2">Req ID</th>
-            <th className="border p-2">Type</th>
-            <th className="border p-2">Amount</th>
-            <th className="border p-2">Reason</th>
-            <th className="border p-2">Time</th>
-            <th className="border p-2">Is Paid</th>{" "}
-            <th className="border p-2">Action</th>{" "}
-            {/* Add a new column for the switch */}
-          </tr>
-        </thead>
-        <tbody>
-          {/* Check if logs data is available */}
-          {data.data?.map((item) => (
-            <tr key={item?.id}>
-              <td className="border p-2">{item?.id}</td>
-              <td className="border p-2">{item?.relatable_id}</td>
-              <td className="border p-2">{item?.type}</td>
-              <td className="border p-2">{item?.amount}</td>
-
-              <td className="border p-2">{item?.payment_region}</td>
-              <td className="border p-2">
-                {item?.created_at
-                  ? format(parseISO(item?.created_at), "dd-MMM-yyyy, hh:mm a")
-                  : "N/A"}{" "}
-                {/* Format the created_at date */}
-              </td>
-              <td className="border p-2">
-                {item?.status === "1" ? (
-                  <button className="bg-primary-400 py-1 px-2 rounded-md">
-                    Payment Confirmed
-                  </button>
-                ) : (
-                  <MakePaymentConfirmed
-                    updateStatusFn={updateStatusFn}
-                    itemDetails={item}
-                  />
-                )}
-               
-              </td>
-              <td className="border p-2 flex flex-col gap-2">
-              <Link to={`/payment/invoice-pdf/${item?.id}`}>Invoice</Link>
-              <Link to={`/billing/paymentpage/${item?.id}`}>Pay Now Page</Link>
-               
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        {/* Balance Statement Table */}
+        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+          <table className="min-w-full table-auto">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Transaction Date</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Transaction Details</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Amount</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id} className="border-t">
+                  <td className="px-4 py-2 text-sm text-gray-700">{transaction.date}</td>
+                  <td className="px-4 py-2 text-sm text-gray-700">{transaction.details}</td>
+                  <td className={`px-4 py-2 text-sm ${transaction.amount < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                    {transaction.amount < 0 ? `- $${Math.abs(transaction.amount)}` : `+ $${transaction.amount}`}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-700">{`$${transaction.balance}`}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

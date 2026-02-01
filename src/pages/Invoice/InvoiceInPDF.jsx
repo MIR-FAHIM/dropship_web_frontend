@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useGetInvoiceDetailsByPaymentIdQuery } from "../../redux/features/order";
+
 import { usePDF } from "react-to-pdf";
 import CustomButton from "../../components/ui/CustomButton";
 import CustomTable from "../../components/ui/CustomTable";

@@ -1,97 +1,105 @@
-import { useParams } from "react-router-dom";
-import { useGetInvoiceDetailsByPaymentIdQuery } from "../../redux/features/order";
-import { usePDF } from "react-to-pdf";
-import CustomButton from "../../components/ui/CustomButton";
-import CustomTable from "../../components/ui/CustomTable";
-import { format } from "date-fns";
-import Loader from "../../components/shared/Loader";
-
-const tableHead = ["Date", "Space Used", "Duration", "Total Items", "Total"];
+import React, { useState } from 'react';
 
 const PaymentPage = () => {
-  const { id } = useParams();
-  const { data, isLoading } = useGetInvoiceDetailsByPaymentIdQuery(id);
-  const { toPDF, targetRef } = usePDF({ filename: "invoice-jayga.pdf" });
-  if (isLoading) {
-    return <Loader />;
-  }
+  // Orders data with different statuses
+  const ordersData = [
+    { id: 1, customerName: 'John Doe', status: 'Pending', product: 'Smartphone', price: '$499.99' },
+    { id: 2, customerName: 'Jane Smith', status: 'Processing', product: 'Laptop', price: '$899.99' },
+    { id: 3, customerName: 'Sam Wilson', status: 'Delivered', product: 'Headphones', price: '$199.99' },
+    { id: 4, customerName: 'Emma White', status: 'Completed', product: 'Smartwatch', price: '$199.99' },
+    { id: 5, customerName: 'Mike Johnson', status: 'Pending', product: 'Tablet', price: '$299.99' },
+    { id: 6, customerName: 'Chris Brown', status: 'Delivered', product: 'Smartphone', price: '$499.99' },
+  ];
+
+  // State for the current filter
+  const [filter, setFilter] = useState('All');
+
+  // Filtered orders based on the current filter
+  const filteredOrders = filter === 'All' ? ordersData : ordersData.filter(order => order.status === filter);
+
   return (
-    <div className="bg-background">
-      <div className=" p-5 rounded-md">
-        {/* PDF section */}
-        <div
-          ref={targetRef}
-          className="bg-white p-16 px-20 rounded-md min-h-[650px] flex flex-col justify-between"
-        >
-          <div>
-            <img src="/jayga-logo-without-label.png" alt="" className="h-10" />
-            <div className="mt-4">
-              <div className="flex items-center justify-between">
-                <p className="text-2xl font-bold flex items-center">
-                  {data?.data?.email_data?.amount} TK
-                </p>
-                <p>Date: {format(new Date(), "dd-MM-yyyy")}</p>
-              </div>
-              <div className="font-medium">
-                <p>For: {data?.data?.email_data?.user_name}</p>
-                <p>Contact: {data?.data?.email_data?.phone}</p>
-              </div>
-            </div>
-            <hr className="my-5" />
-            <div>
-              <CustomTable tableHead={tableHead}>
-                <tr>
-                  <td className="px-5 py-3 border">
-                    {data?.data?.email_data?.start_date} -{" "}
-                    {data?.data?.email_data?.end_date}
-                  </td>
-                  <td className="px-5 py-3 border">
-                    {data?.data?.email_data?.total_grids}
-                  </td>
-                  <td className="px-5 py-3 border">
-                    {data?.data?.email_data?.duration}
-                  </td>
-                  <td className="px-5 py-3 border">
-                    {data?.data?.email_data?.total_items}
-                  </td>
-                  <td className="px-5 py-3 border">
-                    {data?.data?.email_data?.amount}
-                  </td>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Order List</h2>
+
+        {/* Filter Buttons */}
+        <div className="mb-6 flex space-x-4">
+          <button
+            onClick={() => setFilter('All')}
+            className={`px-4 py-2 rounded-md ${filter === 'All' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            All
+          </button>
+          <button
+            onClick={() => setFilter('Pending')}
+            className={`px-4 py-2 rounded-md ${filter === 'Pending' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Pending
+          </button>
+          <button
+            onClick={() => setFilter('Processing')}
+            className={`px-4 py-2 rounded-md ${filter === 'Processing' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Processing
+          </button>
+          <button
+            onClick={() => setFilter('Delivered')}
+            className={`px-4 py-2 rounded-md ${filter === 'Delivered' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Delivered
+          </button>
+          <button
+            onClick={() => setFilter('Completed')}
+            className={`px-4 py-2 rounded-md ${filter === 'Completed' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            Completed
+          </button>
+        </div>
+
+        {/* Order List */}
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          {filteredOrders.length === 0 ? (
+            <div className="p-4 text-center text-gray-500">No orders found</div>
+          ) : (
+            <table className="w-full table-auto">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="px-4 py-2 text-left">Order ID</th>
+                  <th className="px-4 py-2 text-left">Customer Name</th>
+                  <th className="px-4 py-2 text-left">Product</th>
+                  <th className="px-4 py-2 text-left">Price</th>
+                  <th className="px-4 py-2 text-left">Status</th>
                 </tr>
-              </CustomTable>
-            </div>
-          </div>
-          <div>
-            <div className="border border-l-0 border-r-0 flex items-center justify-between font-bold pt-2 pb-5 my-5">
-              <p>Gross Total</p>
-              <p>{data?.data?.email_data?.amount} TK</p>
-            </div>
-            <div className="font-medium mb-5">
-              <p>
-                Invoice from <span className="font-semibold">Jayga Ltd.</span>
-              </p>
-              <p>
-                Invoice Number:{" "}
-                <span className="font-semibold">
-                  {data?.data?.email_data?.invoice_number}
-                </span>
-              </p>
-            </div>
-            <div className="text-text-300">
-              <p>
-                <span>Email: info@jayga.io</span>{" "}
-                <span>Phone: +8801708652111</span>
-              </p>
-              <p>House 10, Road 22, Sector 14, Uttara, Dhaka, 1230</p>
-            </div>
-          </div>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order) => (
+                  <tr key={order.id} className="border-t">
+                    <td className="px-4 py-2">{order.id}</td>
+                    <td className="px-4 py-2">{order.customerName}</td>
+                    <td className="px-4 py-2">{order.product}</td>
+                    <td className="px-4 py-2">{order.price}</td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`px-2 py-1 rounded-full ${
+                          order.status === 'Pending'
+                            ? 'bg-yellow-300 text-yellow-800'
+                            : order.status === 'Processing'
+                            ? 'bg-blue-300 text-blue-800'
+                            : order.status === 'Delivered'
+                            ? 'bg-green-300 text-green-800'
+                            : 'bg-gray-300 text-gray-800'
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
-      <CustomButton
-        onClick={() => toPDF()}
-        label="Pay Now"
-        className={"w-1/2 mx-auto"}
-      />
     </div>
   );
 };
