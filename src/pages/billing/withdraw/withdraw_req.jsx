@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useGetPaymentAccountByUserQuery, useAddWithdrawReqMutation,useGetWithdrawReqByUserQuery } from '../../redux/features/withdraw';
+import { useGetPaymentAccountByUserQuery, useAddWithdrawReqMutation,useGetWithdrawReqByUserQuery } from '../../../redux/features/withdraw';
 
 const WithdrawPage = () => {
   const [withdrawAmount, setWithdrawAmount] = useState('');

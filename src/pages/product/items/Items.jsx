@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { useListCategoriesQuery } from "../../redux/features/category";
-import { imgBaseUrl } from "../../../config";
+import { useListCategoriesQuery } from "../../../redux/features/category";
+import { imgBaseUrl } from "../../../../config";
 
 const Items = () => {
   

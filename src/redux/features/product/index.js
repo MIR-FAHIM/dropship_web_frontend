@@ -32,7 +32,7 @@ const productApi = baseApi.injectEndpoints({
       query: () => API_ENDPOINTS.products.listFeatured.path,
     }),
     getFavProducts: builder.query({
-      query: () => API_ENDPOINTS.wishlists.list.path,
+      query: (userId) => buildEndpointPath(API_ENDPOINTS.wishlists.list.path, { userId }),
     }),
 
     listTodayDealProducts: builder.query({
@@ -58,11 +58,24 @@ const productApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.products.delete.method,
       }),
     }),
+    deleteWishProduct: builder.mutation({
+      query: (id) => ({
+        url: buildEndpointPath(API_ENDPOINTS.wishlists.delete.path, { id }),
+        method: API_ENDPOINTS.wishlists.delete.method,
+      }),
+    }),
 
     addProductImage: builder.mutation({
       query: ({ id, ...payload }) => ({
         url: buildEndpointPath(API_ENDPOINTS.products.addImage.path, { id }),
         method: API_ENDPOINTS.products.addImage.method,
+        body: payload,
+      }),
+    }),
+    addWishList: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.wishlists.add.path, { id }),
+        method: API_ENDPOINTS.wishlists.add.method,
         body: payload,
       }),
     }),
@@ -88,8 +101,9 @@ export const {
   useGetProductDetailsQuery,
   useUpdateProductMutation,
   useDeleteProductMutation,
-  useAddProductImageMutation,
+  useAddWishListMutation,
   useDeleteProductImageMutation,
+  useDeleteWishProductMutation,
 } = productApi;
 
 export default productApi;

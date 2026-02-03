@@ -1,10 +1,10 @@
 import { useParams } from "react-router-dom";
 
 import { usePDF } from "react-to-pdf";
-import CustomButton from "../../components/ui/CustomButton";
-import CustomTable from "../../components/ui/CustomTable";
+import CustomButton from "../../../components/ui/CustomButton";
+import CustomTable from "../../../components/ui/CustomTable";
 import { format } from "date-fns";
-import Loader from "../../components/shared/Loader";
+import Loader from "../../../components/shared/Loader";
 
 const tableHead = ["Date", "Space Used", "Duration", "Total Items", "Total"];
 

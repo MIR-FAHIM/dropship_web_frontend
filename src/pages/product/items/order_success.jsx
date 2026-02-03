@@ -1,6 +1,6 @@
 import React, {useEffect} from 'react';
 import { useNavigate, useLocation } from 'react-router-dom'; // If you're using react-router for navigation
-import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../redux/features/cart";
+import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../../redux/features/cart";
 
 const SuccessPage = () => {
   const navigate = useNavigate();

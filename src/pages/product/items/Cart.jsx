@@ -1,9 +1,9 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../redux/features/cart";
-import { imgBaseUrl } from "../../../config";
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
+import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../../redux/features/cart";
+import { imgBaseUrl } from "../../../../config";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 const CartPage = () => {
   const navigate = useNavigate();
   const { data: cartList, error, isLoading, refetch } = useGetCartQuery(getFromLocalstorage("userId") || 1);

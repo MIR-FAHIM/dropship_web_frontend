@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {  useAddPaymentAccountMutation,
     useGetPaymentMethodListQuery,
-    useGetPaymentAccountByUserQuery, } from "../../redux/features/withdraw";
+    useGetPaymentAccountByUserQuery, } from "../../../redux/features/withdraw";
 import { useDispatch } from 'react-redux';
 
 const AddPaymentAccount = () => {

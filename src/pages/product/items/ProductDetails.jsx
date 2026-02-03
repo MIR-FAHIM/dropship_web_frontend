@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from "react";
-import "../../../src/css/ProductDetails.css"; // Custom CSS for styling
+import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
-import { useGetProductDetailsQuery } from "../../redux/features/product";
-import { useCreateCartMutation } from "../../redux/features/cart";
-import { imgBaseUrl } from "../../../config";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
+import { useGetProductDetailsQuery } from "../../../redux/features/product";
+import { useCreateCartMutation } from "../../../redux/features/cart";
+import { imgBaseUrl } from "../../../../config";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -16,30 +14,73 @@ const ProductDetails = () => {
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
-  const handleDownloadAssets = async (productData) => {
-    console.log("i am here");
-    const zip = new JSZip();
-    
+  const normalizeImageUrl = (rawUrl) => {
+    if (!rawUrl) return null;
+    let url = String(rawUrl);
+
+    if (url.includes("/storage/app/uploads/") && !url.includes("/storage/app/public/")) {
+      url = url.replace("/storage/app/uploads/", "/storage/app/public/uploads/");
+    }
+
+    if (url.includes("/storage/app/public/public/")) {
+      url = url.replace("/storage/app/public/public/", "/storage/app/public/");
+    }
+
+    return url;
+  };
+
+  const buildImageUrl = (fileName, fallback) => {
+    if (!fileName && fallback) return normalizeImageUrl(fallback);
+    if (!fileName) return null;
+
     try {
-      // Add primary image
-      if (productData?.primary_image?.file_name) {
-        const imageUrl = `${imgBaseUrl}/${productData.primary_image.file_name}`;
-        const imageResponse = await fetch(imageUrl);
-        if (imageResponse.ok) {
-          const imageBlob = await imageResponse.blob();
-          zip.file(`${productData.name}_image_1.jpg`, imageBlob);
-        }
+      const base = String(imgBaseUrl || "").replace(/\/+$/, "");
+      return normalizeImageUrl(new URL(fileName, `${base}/`).toString());
+    } catch {
+      const base = String(imgBaseUrl || "").replace(/\/+$/, "");
+      const path = String(fileName).replace(/^\/+/, "");
+      return normalizeImageUrl(`${base}/${path}`);
+    }
+  };
+
+  const handleDownloadAssets = async (productData, fallbackImageUrl) => {
+    const safeName = String(productData?.name || productData?.product_name || "product")
+      .replace(/\s+/g, "_")
+      .replace(/[^a-zA-Z0-9_-]/g, "");
+
+    const fileName = productData?.primary_image?.file_name;
+    const imageUrl = buildImageUrl(fileName, fallbackImageUrl);
+
+    if (!imageUrl) {
+      alert("Image not available");
+      return;
+    }
+
+    try {
+      const response = await fetch(imageUrl, { mode: "cors", cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Image request failed");
       }
-  
-      // Add product description
-      zip.file(`${productData.name}_description.html`, productData.description || "");
-  
-      // Generate and download the ZIP file
-      zip.generateAsync({ type: "blob" }).then(function (content) {
-        saveAs(content, `${productData.product_name}_assets.zip`);
-      });
+
+      const blob = await response.blob();
+      const ext = (productData?.primary_image?.extension || "jpg").toLowerCase();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = objectUrl;
+      link.download = `${safeName}.${ext}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(objectUrl);
     } catch (error) {
-      console.error("Error occurred while generating ZIP:", error);
+      console.error("Download failed:", error);
+      const link = document.createElement("a");
+      link.href = imageUrl;
+      link.rel = "noopener noreferrer";
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     }
   };
   
@@ -102,9 +143,10 @@ const ProductDetails = () => {
   }
 
   const product = detail?.data;
-  const primaryImageUrl = product?.primary_image?.file_name
-    ? `${imgBaseUrl}/${product.primary_image.file_name}`
-    : "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
+  const primaryImageUrl = buildImageUrl(
+    product?.primary_image?.file_name,
+    "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
+  );
 
   // Example comparison price (you can get this data from an API)
   const comparisonPrice = 150; // Example from a popular site
@@ -122,7 +164,7 @@ const ProductDetails = () => {
           {/* Download and Favorite Icons */}
           <div className="product-actions">
             <FaDownload className="download-icon" title="Download" 
-            onClick={() => handleDownloadAssets(product)} />
+            onClick={() => handleDownloadAssets(product, primaryImageUrl)} />
             <FaHeart
               className={`favorite-icon ${isFavorite ? "favorited" : ""} ${isFavorite ? "text-red-500" : "text-gray-400"}`}
               onClick={toggleFavorite}
@@ -268,7 +310,7 @@ const ProductDetails = () => {
                   alt={`Product Image ${product?.id}`}
                   className="tab-image"
                 />
-                <button className="download-btn" onClick={() => handleDownloadAssets(product)}>
+                <button className="download-btn" onClick={() => handleDownloadAssets(product, primaryImageUrl)}>
                   Download
                 </button>
               </div>
