@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 
 const menuItems = [
-  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/items" },
+  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/items/category" },
   { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/product-assistant" },
   { name: "Boosting Products", icon: <FaRocket className="text-red-500" />, route: "/favproducts" },
   { name: "Sales Guideline", icon: <FaBook className="text-green-600" />, route: "/sale-guide-line" },
@@ -35,21 +35,21 @@ const Overview = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [trackButtonClick, { isButtonLoading: createLoading, error: createError }] = useButtonClickMutation();
   const handleButtonClick = (buttonName) => {
-       
-    trackButtonClick(buttonName)  // Call the mutation and pass the button name
-        .unwrap() // Unwrap the response or error
-        .then((response) => {
-            console.log("Button click tracked:", response);
-        })
-        .catch((error) => {
-            console.error("Error tracking button click:", error);
-        });
-};
 
-const handleNavigate = (route, button) => {
-  navigate(route);
-  handleButtonClick(button);
-};
+    trackButtonClick(buttonName)  // Call the mutation and pass the button name
+      .unwrap() // Unwrap the response or error
+      .then((response) => {
+        console.log("Button click tracked:", response);
+      })
+      .catch((error) => {
+        console.error("Error tracking button click:", error);
+      });
+  };
+
+  const handleNavigate = (route, button) => {
+    navigate(route);
+    handleButtonClick(button);
+  };
   // Mock data for reseller metrics
   const resellerMetrics = {
     totalProducts: 120,
@@ -72,8 +72,8 @@ const handleNavigate = (route, button) => {
             Welcome, Reseller! 🚀
           </h2>
           <p className="text-gray-600 mb-6">
-    {t("Product Collection")} <span className="text-blue-600 font-bold">{resellerMetrics.totalProducts}</span> , {t("We Have Product Images")}  <span className="text-green-600 font-bold">{resellerMetrics.totalAssets}</span>  {t("And")} {t("We have video")} <span className="text-purple-600 font-bold">{resellerMetrics.totalVideos}</span> </p>
-         
+            {t("Product Collection")} <span className="text-blue-600 font-bold">{resellerMetrics.totalProducts}</span> , {t("We Have Product Images")}  <span className="text-green-600 font-bold">{resellerMetrics.totalAssets}</span>  {t("And")} {t("We have video")} <span className="text-purple-600 font-bold">{resellerMetrics.totalVideos}</span> </p>
+
 
           {/* Search Field */}
           <input
@@ -85,7 +85,7 @@ const handleNavigate = (route, button) => {
           />
 
           {/* Reseller Metrics */}
-{/* Reseller Metrics Summary */}
+          {/* Reseller Metrics Summary */}
 
         </div>
 
@@ -94,7 +94,7 @@ const handleNavigate = (route, button) => {
           {filteredMenu.map((item, index) => (
             <button
               key={index}
-              onClick={() => handleNavigate(item.route,item.name)}
+              onClick={() => handleNavigate(item.route, item.name)}
               className="flex items-center justify-center gap-3 p-4 bg-white border border-gray-200 hover:bg-gray-100 transition-all rounded-lg shadow-md text-lg font-semibold"
             >
               {item.icon} {t(item.name)}

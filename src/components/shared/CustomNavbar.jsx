@@ -34,7 +34,8 @@ function NavList() {
 }
 
 const CustomNavbar = () => {
-    const { data: balance, errorBal, isLoadingBal } = useGetUserBalanceQuery(1); // Fetch balance for user with ID 1
+  const userId = localStorage.getItem("userId") || 1;
+  const { data: balance, errorBal, isLoadingBal } = useGetUserBalanceQuery(userId); // Fetch balance for user with ID 1
   const [openNav, setOpenNav] = React.useState(false);
   const [cartCount, setCartCounts] = useState(0); // Initialize the cart count
   const [showBalance, setShowBalance] = useState(false); // State to track visibility of balance
@@ -42,8 +43,7 @@ const CustomNavbar = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
-  // Get cart data for user id 1
-  const userId = localStorage.getItem("userId") || 1;
+
   const { data, error, isLoading, refetch } = useGetCartQuery(userId);
 
   // UseEffect to handle setting the cart count when data changes
@@ -54,7 +54,19 @@ const CustomNavbar = () => {
   }, [data]);
 
   useEffect(() => {
-    // This effect will run after the balance is loaded
+    const handleCartUpdated = () => {
+      refetch();
+    };
+
+    window.addEventListener("cart-updated", handleCartUpdated);
+
+    return () => {
+      window.removeEventListener("cart-updated", handleCartUpdated);
+    };
+  }, [refetch]);
+
+  useEffect(() => {
+  
     console.log('Balance Loaded:', balance);
   }, [balance]);
 
@@ -121,7 +133,7 @@ const CustomNavbar = () => {
           {/* Conditionally display the balance */}
           {showBalance && !isLoadingBal && !errorBal && (
             <div className="text-xl mt-2">
-              <span>Balance: ${balance.data.balance}</span> {/* Using balance.balance */}
+              <span>Balance: ${balance?.data?.balance ?? 0}</span>
             </div>
           )}
         </div>

@@ -14,6 +14,9 @@ const categoryApi = baseApi.injectEndpoints({
     listCategories: builder.query({
       query: () => API_ENDPOINTS.categories.list.path,
     }),
+    listCategoriesWithChildren: builder.query({
+      query: () => API_ENDPOINTS.categories.listWithChildren.path,
+    }),
 
     getCategoryDetails: builder.query({
       query: (id) =>
@@ -45,6 +48,7 @@ const categoryApi = baseApi.injectEndpoints({
 export const {
   useCreateCategoryMutation,
   useListCategoriesQuery,
+  useListCategoriesWithChildrenQuery,
   useGetCategoryDetailsQuery,
   useGetCategoryChildrenQuery,
   useUpdateCategoryMutation,

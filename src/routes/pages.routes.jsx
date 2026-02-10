@@ -6,9 +6,9 @@ import FavProducts from "../pages/favproduct/FavProducts";
 import Invoice from "../pages/billing/Invoice/Invoice";
 import InvoiceInPDF from "../pages/billing/Invoice/InvoiceInPDF";
 
-import Items from "../pages/product/items/Items";
+import ItemsCategory from "../pages/product/items/Items_category";
 import ProfilePage from "../pages/profile/Profile";
-import CartPage from "../pages/product/items/Cart";
+import CartPage from "../pages/cart/Cart";
 import SuccessPage from "../pages/product/items/order_success";
 import ProductsList from "../pages/product/items/ProductsList";
 import ProductDetails from "../pages/product/items/ProductDetails";
@@ -88,8 +88,8 @@ export const pagePaths = [
         element: <ProfilePage />,
       },
       {
-        path: "/items",
-        element: <Items />,
+        path: "/items/category",
+        element: <ItemsCategory />,
       },
       {
         path: "/product-assistant",

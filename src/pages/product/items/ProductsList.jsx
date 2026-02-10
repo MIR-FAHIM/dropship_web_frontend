@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useListProductsQuery } from "../../../redux/features/product";
+import { useListProductsCategoryWiseQuery } from "../../../redux/features/product";
 import ProductCard from "../product_card_component";
 import Pagination from "../../../components/shared/Pagination";
 
@@ -9,8 +9,9 @@ const ProductsList = () => {
   const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
-  const { data: products, isLoading, isError, error } = useListProductsQuery({
+  const { data: products, isLoading, isError, error } = useListProductsCategoryWiseQuery({
     page,
+    category_id: id,
   });
   const productList = useMemo(() => {
     const list = products?.data?.data || [];

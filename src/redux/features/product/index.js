@@ -27,6 +27,12 @@ const productApi = baseApi.injectEndpoints({
         params,
       }),
     }),
+    listProductsCategoryWise: builder.query({
+      query: (params) => ({
+        url: API_ENDPOINTS.products.categoryWise.path,
+        params,
+      }),
+    }),
 
     listFeaturedProducts: builder.query({
       query: () => API_ENDPOINTS.products.listFeatured.path,
@@ -95,6 +101,7 @@ export const {
   useCreateProductMutation,
   useUploadProductImageMutation,
   useListProductsQuery,
+  useListProductsCategoryWiseQuery,
   useListFeaturedProductsQuery,
   useGetFavProductsQuery,
   useListTodayDealProductsQuery,

@@ -1,9 +1,9 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../../redux/features/cart";
-import { imgBaseUrl } from "../../../../config";
-import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../redux/features/cart";
+import { imgBaseUrl } from "../../../config";
+import { getFromLocalstorage } from "../../utils/localstorage.utils";
 const CartPage = () => {
   const navigate = useNavigate();
   const { data: cartList, error, isLoading, refetch } = useGetCartQuery(getFromLocalstorage("userId") || 1);
@@ -127,6 +127,10 @@ const CartPage = () => {
         <div className="text-lg font-bold mb-2">
           Total Items:
           <span className="font-semibold text-gray-700"> {cart?.total_items ?? 0}</span>
+        </div>
+        <div className="text-lg font-bold">
+          Your Profit:
+          <span className="font-semibold text-green-600"> ৳{cart?.reseller_profit_total ?? 0}</span>
         </div>
         <div className="text-lg font-bold">
           Subtotal:

@@ -27,6 +27,7 @@ export const API_ENDPOINTS = {
   categories: {
     create: define("POST", "/categories/create"),
     list: define("GET", "/categories/list"),
+    listWithChildren: define("GET", "/categories/with-children"),
     details: define("GET", "/categories/details/{id}"),
     children: define("GET", "/categories/children/{id}"),
     update: define("PUT", "/categories/update/{id}"),
@@ -45,6 +46,7 @@ export const API_ENDPOINTS = {
     create: define("POST", "/products/create"),
     imageUpload: define("POST", "/products/images/upload/{productId}"),
     list: define("GET", "/products/list"),
+    categoryWise: define("GET", "/products/category/wise"),
     listFeatured: define("GET", "/products/list/featured"),
     listTodayDeal: define("GET", "/products/list/today-deal"),
     details: define("GET", "/products/details/{id}"),

@@ -11,6 +11,7 @@ const ProductDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
+  const [resellerPrice, setResellerPrice] = useState("");
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
@@ -84,9 +85,24 @@ const ProductDetails = () => {
     }
   };
   
+  const product = detail?.data;
+  const basePrice = Number(product?.unit_price ?? 0);
+  const resellerPriceValue = Number(resellerPrice || 0);
+  const profitValue = resellerPriceValue - basePrice;
+  const marginValue = basePrice > 0 ? (profitValue / basePrice) * 100 : 0;
+  const totalBaseValue = basePrice * quantity;
+  const totalSellValue = resellerPriceValue * quantity;
+  const totalProfitValue = totalSellValue - totalBaseValue;
+
   useEffect(() => {
     console.log("product ID from URL:", id);
   }, [id]);
+
+  useEffect(() => {
+    if (Number.isFinite(basePrice) && basePrice > 0) {
+      setResellerPrice(String(basePrice));
+    }
+  }, [basePrice]);
 
   const handleAddToCart = async () => {
     if (!product) {
@@ -98,12 +114,14 @@ const ProductDetails = () => {
       user_id: localStorage.getItem("userId"),
       product_id: product.id,
       qty: quantity,
+      reseller_price: resellerPriceValue || basePrice,
     };
 
     try {
       const res = await createCart(cartItem);
       if (res?.data?.status === 200 || res?.data?.status === "success") {
         alert("Product added to cart!");
+        window.dispatchEvent(new Event("cart-updated"));
       }
     } catch (error) {
       console.error("Error adding product to cart:", error);
@@ -133,6 +151,36 @@ const ProductDetails = () => {
     setQuantity(value < 1 ? 1 : value);
   };
 
+  const handleResellerPriceInput = (event) => {
+    const value = event.target.value;
+    if (value === "") {
+      setResellerPrice("");
+      return;
+    }
+    const parsed = Number(value);
+    if (Number.isNaN(parsed) || parsed < 0) return;
+    setResellerPrice(value);
+  };
+
+  const handleCopyText = async (text) => {
+    const safeText = String(text || "").trim();
+    if (!safeText) return;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(safeText);
+        return;
+      }
+      const temp = document.createElement("textarea");
+      temp.value = safeText;
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand("copy");
+      temp.remove();
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
+
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -142,138 +190,177 @@ const ProductDetails = () => {
     return <div>Error: {error.message}</div>;
   }
 
-  const product = detail?.data;
   const primaryImageUrl = buildImageUrl(
     product?.primary_image?.file_name,
     "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
   );
 
-  // Example comparison price (you can get this data from an API)
-  const comparisonPrice = 150; // Example from a popular site
-
   return (
     <div className="product-details-container">
-      <div className="product-header">
+      <div className="product-hero">
         <div className="product-image-column">
-          {/* Product Image */}
-          <img
-            src={primaryImageUrl}
-            alt={product?.name}
-            className="product-image"
-          />
-          {/* Download and Favorite Icons */}
-          <div className="product-actions">
-            <FaDownload className="download-icon" title="Download" 
-            onClick={() => handleDownloadAssets(product, primaryImageUrl)} />
-            <FaHeart
-              className={`favorite-icon ${isFavorite ? "favorited" : ""} ${isFavorite ? "text-red-500" : "text-gray-400"}`}
-              onClick={toggleFavorite}
-              title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+          <div className="product-image-wrapper">
+            <img
+              src={primaryImageUrl}
+              alt={product?.name}
+              className="product-image"
             />
+          </div>
+
+          <div className="product-actions">
+            <button
+              type="button"
+              className="action-btn"
+              onClick={() => handleDownloadAssets(product, primaryImageUrl)}
+            >
+              <FaDownload />
+              Download assets
+            </button>
+            <button
+              type="button"
+              className="action-btn secondary"
+              onClick={() => handleCopyText(product?.name)}
+            >
+              Copy title
+            </button>
+            <button
+              type="button"
+              className="action-btn secondary"
+              onClick={() => handleCopyText(product?.description)}
+            >
+              Copy description
+            </button>
           </div>
         </div>
 
         <div className="product-info-column">
-          {/* Product Name */}
-          <h1 className="product-name">{product?.name}</h1>
-
-          {/* SKU */}
-          <p className="product-sku">SKU: {product?.barcode || "N/A"}</p>
-
-          {/* Price */}
-          <div className="price-info">
-            <p>Base Price: ৳{product?.unit_price ?? 0}</p>
-            <p>Suggested Price (from popular sites): ৳{comparisonPrice}</p>
+          <div className="product-title-row">
+            <div>
+              <p className="product-kicker">Reseller workspace</p>
+              <h1 className="product-name">{product?.name}</h1>
+              <p className="product-sku">SKU: {product?.barcode || "N/A"}</p>
+            </div>
+            <button
+              type="button"
+              className={`favorite-toggle ${isFavorite ? "active" : ""}`}
+              onClick={toggleFavorite}
+              title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+            >
+              <FaHeart />
+            </button>
           </div>
 
-          <div className="quantity-selection">
-            <p>Category: {product?.category?.name || "N/A"}</p>
-            <p>Stock: {product?.current_stock ?? 0}</p>
-            <p>Unit: {product?.unit || "N/A"}</p>
-          </div>
-
-          <div className="quantity-selection">
-            <label>Quantity:</label>
-            <div className="flex items-center gap-2 mt-2">
-              <button
-                type="button"
-                onClick={handleDecreaseQty}
-                className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
-              >
-                -
-              </button>
-              <input
-                type="number"
-                value={quantity}
-                onChange={handleQtyInput}
-                min="1"
-                className="quantity-input text-center w-20"
-              />
-              <button
-                type="button"
-                onClick={handleIncreaseQty}
-                className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
-              >
-                +
-              </button>
+          <div className="product-meta-grid">
+            <div className="meta-card">
+              <p className="meta-label">Base price</p>
+              <p className="meta-value">৳ {basePrice}</p>
+            </div>
+            <div className="meta-card">
+              <p className="meta-label">Stock</p>
+              <p className="meta-value">{product?.current_stock ?? 0}</p>
+            </div>
+            <div className="meta-card">
+              <p className="meta-label">Category</p>
+              <p className="meta-value">{product?.category?.name || "N/A"}</p>
+            </div>
+            <div className="meta-card">
+              <p className="meta-label">Unit</p>
+              <p className="meta-value">{product?.unit || "N/A"}</p>
             </div>
           </div>
 
-          {/* Add to Order Button */}
-          <button
-  onClick={handleAddToCart}
-  disabled={isAddingToCart}
-  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg ${
-    isAddingToCart
-      ? "bg-gray-400 cursor-not-allowed"
-      : "bg-blue-600 hover:bg-blue-700"
-  } text-white font-semibold transition duration-300`}
->
-  {isAddingToCart ? (
-    <>
-      <svg
-        className="animate-spin h-5 w-5 text-white"
-        viewBox="0 0 24 24"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        ></circle>
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 0116 0H4z"
-        ></path>
-      </svg>
-      Adding...
-    </>
-  ) : (
-    <>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M3 3h2l1.68 12.39a1 1 0 001 .89h10.72a1 1 0 001-.89L21 3H3zm3 16a2 2 0 104 0H6zm10 0a2 2 0 104 0h-4z"
-        />
-      </svg>
-      Add to Cart
-    </>
-  )}
-</button>
+          <div className="reseller-panel">
+            <div className="reseller-head">
+              <h2>Set your selling price</h2>
+              <p>Use this price on your own store or marketplace.</p>
+            </div>
 
+            <div className="price-input-row">
+              <label htmlFor="reseller-price">Your price</label>
+              <div className="price-input">
+                <span>৳</span>
+                <input
+                  id="reseller-price"
+                  type="number"
+                  value={resellerPrice}
+                  onChange={handleResellerPriceInput}
+                  min="0"
+                  placeholder="Enter your price"
+                />
+              </div>
+            </div>
+
+            <div className="price-stats">
+              <div className={`stat-card ${profitValue >= 0 ? "positive" : "negative"}`}>
+                <p>Profit per item</p>
+                <strong>৳ {Number.isFinite(profitValue) ? profitValue.toFixed(0) : 0}</strong>
+              </div>
+              <div className="stat-card">
+                <p>Margin on base</p>
+                <strong>{Number.isFinite(marginValue) ? marginValue.toFixed(1) : 0}%</strong>
+              </div>
+            </div>
+
+            <div className="quantity-selection">
+              <label>Quantity</label>
+              <div className="qty-controls">
+                <button type="button" onClick={handleDecreaseQty}>
+                  -
+                </button>
+                <input
+                  type="number"
+                  value={quantity}
+                  onChange={handleQtyInput}
+                  min="1"
+                  className="quantity-input"
+                />
+                <button type="button" onClick={handleIncreaseQty}>
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="price-stats totals">
+              <div className="stat-card">
+                <p>Total sell value</p>
+                <strong>৳ {Number.isFinite(totalSellValue) ? totalSellValue.toFixed(0) : 0}</strong>
+              </div>
+              <div className="stat-card">
+                <p>Total base cost</p>
+                <strong>৳ {Number.isFinite(totalBaseValue) ? totalBaseValue.toFixed(0) : 0}</strong>
+              </div>
+              <div className={`stat-card ${totalProfitValue >= 0 ? "positive" : "negative"}`}>
+                <p>Total profit</p>
+                <strong>৳ {Number.isFinite(totalProfitValue) ? totalProfitValue.toFixed(0) : 0}</strong>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAddToCart}
+              disabled={isAddingToCart}
+              className={`primary-btn ${isAddingToCart ? "disabled" : ""}`}
+            >
+              {isAddingToCart ? "Adding..." : "Add to cart at your price"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="reseller-steps">
+        <div className="step-card">
+          <span className="step-number">01</span>
+          <h3>Copy & download</h3>
+          <p>Grab product title, description, and images for your store.</p>
+        </div>
+        <div className="step-card">
+          <span className="step-number">02</span>
+          <h3>Set your price</h3>
+          <p>Adjust selling price based on your margin and market.</p>
+        </div>
+        <div className="step-card">
+          <span className="step-number">03</span>
+          <h3>Order when sold</h3>
+          <p>Come back and place your order using your selling price.</p>
         </div>
       </div>
 
@@ -290,7 +377,7 @@ const ProductDetails = () => {
             className={`tab ${activeTab === "images" ? "active" : ""}`}
             onClick={() => handleTabClick("images")}
           >
-            Images
+            Image assets
           </button>
           <button
             className={`tab ${activeTab === "details" ? "active" : ""}`}

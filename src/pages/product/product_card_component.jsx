@@ -259,7 +259,7 @@ const ProductCard = ({
 		<Card
 			onClick={() => onClick?.(product)}
 			sx={{
-				borderRadius: 4,
+				borderRadius: 3,
 				overflow: "hidden",
 				border: `1px solid ${theme.palette.divider}`,
 				background: theme.palette.background.paper,
@@ -267,20 +267,20 @@ const ProductCard = ({
 				position: "relative",
 				cursor: "pointer",
 				"&:hover": {
-					transform: "translateY(-4px)",
+					transform: "translateY(-3px)",
 					boxShadow:
 						theme.palette.mode === "dark"
-							? "0 18px 40px rgba(0,0,0,0.35)"
-							: "0 18px 40px rgba(0,0,0,0.12)",
+							? "0 14px 32px rgba(0,0,0,0.32)"
+							: "0 14px 32px rgba(0,0,0,0.1)",
 					borderColor: theme.palette.primary.main,
 				},
 			}}
 		>
-			<Box sx={{ p: 1.25 }}>
+			<Box sx={{ p: 1 }}>
 				<Box
 					sx={{
-						height: 200,
-						borderRadius: 3,
+						height: 150,
+						borderRadius: 2.5,
 						overflow: "hidden",
 						border: `1px solid ${theme.palette.divider}`,
 						background: theme.palette.action.hover,
@@ -307,7 +307,7 @@ const ProductCard = ({
 						}}
 					/>
 
-					<Stack direction="row" spacing={1} sx={{ position: "absolute", left: 10, top: 10 }}>
+					<Stack direction="row" spacing={0.5} sx={{ position: "absolute", left: 8, top: 8 }}>
 						{discountLabel ? (
 							<Chip
 								icon={<LocalOffer fontSize="small" />}
@@ -315,7 +315,7 @@ const ProductCard = ({
 								size="small"
 								sx={{
 									borderRadius: 999,
-									fontWeight: 900,
+									fontWeight: 800,
 									background: theme.palette.primary.main,
 									color: "#fff",
 									border: `1px solid ${theme.palette.divider}`,
@@ -328,7 +328,7 @@ const ProductCard = ({
 								label="Out of stock"
 								size="small"
 								color="error"
-								sx={{ borderRadius: 999, fontWeight: 900 }}
+								sx={{ borderRadius: 999, fontWeight: 800 }}
 							/>
 						) : (
 							<Chip
@@ -337,7 +337,7 @@ const ProductCard = ({
 								variant="outlined"
 								sx={{
 									borderRadius: 999,
-									fontWeight: 900,
+									fontWeight: 800,
 									color: theme.palette.text.secondary,
 									borderColor: theme.palette.divider,
 									background: theme.palette.background.paper,
@@ -345,75 +345,18 @@ const ProductCard = ({
 							/>
 						)}
 					</Stack>
-
-					<Stack spacing={1} sx={{ position: "absolute", right: 10, top: 10 }}>
-						<Tooltip title={inWish ? "Already in wishlist" : "Add to wishlist"}>
-							<span>
-								<IconButton
-									onClick={handleToggleWish}
-									sx={{
-										borderRadius: 3,
-										border: `1px solid ${theme.palette.divider}`,
-										background: theme.palette.background.paper,
-										"&:hover": { background: theme.palette.action.hover },
-									}}
-								>
-									{inWish ? <Favorite color="error" /> : <FavoriteBorder />}
-								</IconButton>
-							</span>
-						</Tooltip>
-
-						<Tooltip title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}>
-							<span>
-								<IconButton
-									disabled={outOfStock}
-									onClick={handleAddToCart}
-									sx={{
-										width: 48,
-										height: 48,
-										borderRadius: 4,
-										border: `1px solid ${theme.palette.divider}`,
-										background: theme.palette.background.paper,
-										boxShadow:
-											theme.palette.mode === "dark"
-												? "0 10px 22px rgba(0,0,0,0.35)"
-												: "0 10px 22px rgba(0,0,0,0.12)",
-										"&:hover": {
-											transform: "translateY(-1px) scale(1.03)",
-										},
-										"&.Mui-disabled": { opacity: 0.5 },
-									}}
-								>
-									{inCart ? <ShoppingCart /> : <ShoppingCartOutlined />}
-								</IconButton>
-							</span>
-						</Tooltip>
-
-						<Tooltip title="Quick view">
-							<IconButton
-								onClick={handleView}
-								sx={{
-									borderRadius: 3,
-									border: `1px solid ${theme.palette.divider}`,
-									background: theme.palette.background.paper,
-									"&:hover": { background: theme.palette.action.hover },
-								}}
-							>
-								<VisibilityOutlined />
-							</IconButton>
-						</Tooltip>
-					</Stack>
 				</Box>
 			</Box>
 
-			<CardContent sx={{ p: 2 }}>
-				<Stack spacing={1}>
+			<CardContent sx={{ p: 1.5 }}>
+				<Stack spacing={0.75}>
 					<Typography
-						fontWeight={950}
+						fontWeight={900}
 						sx={{
-							lineHeight: 1.15,
+							lineHeight: 1.2,
+							fontSize: 14,
 							display: "-webkit-box",
-							WebkitLineClamp: 1,
+							WebkitLineClamp: 2,
 							WebkitBoxOrient: "vertical",
 							overflow: "hidden",
 						}}
@@ -426,7 +369,7 @@ const ProductCard = ({
 					</Typography>
 
 					<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-						<Typography fontWeight={950} sx={{ fontSize: 18, color: theme.palette.primary.main }}>
+						<Typography fontWeight={900} sx={{ fontSize: 16, color: theme.palette.primary.main }}>
 							৳ {hasSale ? salePrice : price}
 						</Typography>
 						{hasSale ? (
@@ -443,41 +386,88 @@ const ProductCard = ({
 						) : null}
 					</Box>
 
-					<Stack direction="row" spacing={1} alignItems="center">
+					<Stack direction="row" spacing={0.75} alignItems="center">
 						<Rating value={ratingValue} precision={0.5} size="small" readOnly />
-						<Typography variant="caption" sx={{ fontWeight: 800, color: theme.palette.text.secondary }}>
+						<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>
 							({reviewsCount})
 						</Typography>
-						<Chip
-							size="small"
-							label={`Sold: ${product?.total_sales ?? product?.sales_count ?? 0}`}
-							sx={{
-								ml: "auto",
-								borderRadius: 999,
-								fontWeight: 900,
-								background: theme.palette.background.paper,
-								border: `1px solid ${theme.palette.divider}`,
-								color: theme.palette.text.secondary,
-							}}
-						/>
 					</Stack>
 
-					<Stack direction="row" justifyContent="flex-end">
-						<Tooltip title="Download image">
-							<IconButton
-								onClick={(event) => {
+					<Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
+						<Stack direction="row" spacing={0.5} alignItems="center">
+							<Tooltip title={inWish ? "Already in wishlist" : "Add to wishlist"}>
+								<span>
+									<IconButton
+										onClick={handleToggleWish}
+										sx={{
+											size: "small",
+											width: 32,
+											height: 32,
+											borderRadius: 2,
+											border: `1px solid ${theme.palette.divider}`,
+											background: theme.palette.background.paper,
+											"&:hover": { background: theme.palette.action.hover },
+										}}
+									>
+										{inWish ? <Favorite color="error" fontSize="small" /> : <FavoriteBorder fontSize="small" />}
+									</IconButton>
+								</span>
+							</Tooltip>
+
+							<Tooltip title="Quick view">
+								<IconButton
+									onClick={handleView}
+									sx={{
+										width: 32,
+										height: 32,
+										borderRadius: 2,
+										border: `1px solid ${theme.palette.divider}`,
+										background: theme.palette.background.paper,
+										"&:hover": { background: theme.palette.action.hover },
+									}}
+								>
+									<VisibilityOutlined fontSize="small" />
+								</IconButton>
+							</Tooltip>
+
+							<Tooltip title="Download image">
+								<IconButton
+									onClick={(event) => {
 									event.stopPropagation();
 									onDownload?.(imageUrl);
 								}}
-								sx={{
-									borderRadius: 3,
-									border: `1px solid ${theme.palette.divider}`,
-									background: theme.palette.background.paper,
-									"&:hover": { background: theme.palette.action.hover },
-								}}
-							>
-								<Download />
-							</IconButton>
+									sx={{
+										width: 32,
+										height: 32,
+										borderRadius: 2,
+										border: `1px solid ${theme.palette.divider}`,
+										background: theme.palette.background.paper,
+										"&:hover": { background: theme.palette.action.hover },
+									}}
+								>
+									<Download fontSize="small" />
+								</IconButton>
+							</Tooltip>
+						</Stack>
+
+						<Tooltip title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}>
+							<span>
+								<IconButton
+									disabled={outOfStock}
+									onClick={handleAddToCart}
+									sx={{
+										width: 36,
+										height: 36,
+										borderRadius: 2.5,
+										border: `1px solid ${theme.palette.divider}`,
+										background: theme.palette.background.paper,
+										"&:hover": { background: theme.palette.action.hover },
+										"&.Mui-disabled": { opacity: 0.5 },
+									}}
+								>
+									{inCart ? <ShoppingCart fontSize="small" /> : <ShoppingCartOutlined fontSize="small" />}
+								</IconButton>
+							</span>
 						</Tooltip>
 					</Stack>
 				</Stack>
