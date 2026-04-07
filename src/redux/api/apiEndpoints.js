@@ -12,6 +12,8 @@ export const API_ENDPOINTS = {
   },
 
   users: {
+    dropshipperRegister: define("POST", "/users/dropshipper-register"),
+    dropshippers: define("GET", "/users/dropshippers"),
     create: define("POST", "/users/create"),
     list: define("GET", "/users/list"),
     customers: define("GET", "/users/customers"),
@@ -170,6 +172,12 @@ export const API_ENDPOINTS = {
     credit: define("GET", "/transactions/credit"),
     debit: define("GET", "/transactions/debit"),
     report: define("GET", "/transactions/report"),
+  },
+
+  vendors: {
+    register: define("POST", "/vendors/register"),
+    profile: define("GET", "/vendors/profile/{id}"),
+    list: define("GET", "/vendors/list"),
   },
 };
 

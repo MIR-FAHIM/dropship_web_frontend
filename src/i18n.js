@@ -41,17 +41,17 @@ const resources = {
       "Get Started": "Get Started",
       "see_product": "Find Products from categories.",
       "home_page_bullets": {
-        "access_verified_products": "Access 10,000+ verified products across multiple categories",
-"download_images_videos": "Download high-quality product images & videos for free",
-  "sell_own_platform": "Sell on your own platform (Facebook, WhatsApp, website, or marketplace)",
-  "set_own_prices": "Set your own prices and profit instantly",
-  "instant_order_fulfillment": "Get instant order fulfillment—just place the order with Bebsha360 at your cost price",
-  "cash_on_delivery": "Enjoy cash on delivery, call center support, and real-time tracking",
-  "no_stock_no_risk": "No stock, no delivery, no risk—just sell and earn! 🚀 Start your journey with Bebsha360 today!",
-  "we_determined": "We are determined to help your business to grow.",
-  "sales_tips_strategies": "Access product strategies & expert tips to sell effectively and increase sales.",
-  "product_analysis_ai_search": "Get product analysis tools & AI-based product searching to find winning products.",
-  "only_8_steps_to_profit":"💰 Only 8 Steps to Add Profit to Your Balance!",
+        "access_verified_products": "১০,০০০+ ভেরিফাইড প্রোডাক্ট সহজেই পাবেন বিভিন্ন ক্যাটেগরিতে",
+        "download_images_videos": "ফ্রিতে ডাউনলোড করুন উচ্চমানের পণ্যের ছবি ও ভিডিও",
+        "sell_own_platform": "নিজের প্ল্যাটফর্মে বিক্রি করুন (ফেসবুক, হোয়াটসঅ্যাপ, ওয়েবসাইট, বা মার্কেটপ্লেস)",
+        "set_own_prices": "নিজের মূল্য নির্ধারণ করুন এবং তাৎক্ষণিক লাভ করুন",
+        "instant_order_fulfillment": "অর্ডার প্লেস করলেই সঙ্গে সঙ্গে প্রসেসিং—শুধু Bebsha360-এ আপনার নিজস্ব প্রাইসে অর্ডার করুন",
+        "cash_on_delivery": "ক্যাশ অন ডেলিভারি, কল সেন্টার সাপোর্ট, ও রিয়েল-টাইম ট্র্যাকিং উপভোগ করুন",
+        "no_stock_no_risk": "স্টক নেই, ডেলিভারি ব্যবস্থা নেই, ঝামেলা নেই—শুধু বিক্রি করুন আর আয় করুন! 🚀 আজই Bebsha360-এর সাথে আপনার বিজনেস শুরু করুন!",
+        "we_determined": "আমরা আপনার ব্যবসা বৃদ্ধিতে বদ্ধপরিকর",
+        "sales_tips_strategies": "পণ্যের সঠিক কৌশল ও এক্সপার্ট টিপস সংগ্রহ করতে পারবেন যাতে সহজেই আপনার বিক্রি বাড়ে",
+        "product_analysis_ai_search": "পণ্য বিশ্লেষণ টুলস ও এআই-ভিত্তিক পণ্য অনুসন্ধান করে সহজেই সেরা ও লাভজনক পণ্য খুঁজে পান",
+        "only_8_steps_to_profit": "💰 মাত্র ৮ ধাপে আপনার লাভ বৃদ্ধি করুন!"
       },
 
       

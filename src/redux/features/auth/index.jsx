@@ -10,27 +10,27 @@ const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
-    // Mutation for creating a main category
     register: builder.mutation({
       query: (data) => ({
         url: "/register",
         method: "POST",
-        body: data
+        body: data,
       }),
     }),
-
-
-
-
-
+    dropshipperRegister: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.users.dropshipperRegister.path,
+        method: API_ENDPOINTS.users.dropshipperRegister.method,
+        body: data,
+      }),
+    }),
   }),
 });
 
 export const {
   useLoginMutation,
   useRegisterMutation,
-
-
+  useDropshipperRegisterMutation,
 } = authApi;
 
 export default authApi;

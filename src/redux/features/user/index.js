@@ -1,4 +1,5 @@
 import baseApi from "../../api/baseApi";
+import API_ENDPOINTS from "../../api/apiEndpoints";
 
 const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -24,6 +25,13 @@ const userApi = baseApi.injectEndpoints({
         body: data
       }),
     }),
+    getDropshippers: builder.query({
+      query: (page = 1) => ({
+        url: `${API_ENDPOINTS.users.dropshippers.path}?page=${page}`,
+        method: API_ENDPOINTS.users.dropshippers.method,
+      }),
+      providesTags: ["User"],
+    }),
   }),
   
 });
@@ -33,6 +41,7 @@ export const {
   useLoginMutation,
   useButtonClickMutation,
   useAddContactMutation,
+  useGetDropshippersQuery,
  
 } = userApi;
 

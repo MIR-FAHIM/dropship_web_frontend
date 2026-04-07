@@ -156,10 +156,7 @@ export const pagePaths = [
         path: "/dashboard",
         element: <Overview />,
       },
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
+
     ],
   },
 ];

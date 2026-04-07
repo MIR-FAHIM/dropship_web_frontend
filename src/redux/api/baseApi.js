@@ -6,7 +6,7 @@ const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${baseUrl}/api`,
     prepareHeaders: (headers, { endpoint }) => {
-      const noAuthEndpoints = ["login", "register"];
+      const noAuthEndpoints = ["login", "register", "dropshipperRegister", "vendorRegister", "vendorLogin"];
       if (noAuthEndpoints.includes(endpoint)) {
         headers.set("Accept", "application/json");
         return headers;
@@ -19,7 +19,7 @@ const baseApi = createApi({
       return headers;
     },
   }),
-  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse"],
+  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor"],
   endpoints: () => ({}),
 });
 
