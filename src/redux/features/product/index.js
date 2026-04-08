@@ -9,6 +9,7 @@ const productApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.products.create.method,
         body: productData,
       }),
+      invalidatesTags: ["Product"],
     }),
 
     uploadProductImage: builder.mutation({
@@ -22,10 +23,11 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     listProducts: builder.query({
-      query: (params) => ({
+      query: (page = 1) => ({
         url: API_ENDPOINTS.products.list.path,
-        params,
+        params: { page },
       }),
+      providesTags: ["Product"],
     }),
     listProductsCategoryWise: builder.query({
       query: (params) => ({
@@ -63,6 +65,7 @@ const productApi = baseApi.injectEndpoints({
         url: buildEndpointPath(API_ENDPOINTS.products.delete.path, { id }),
         method: API_ENDPOINTS.products.delete.method,
       }),
+      invalidatesTags: ["Product"],
     }),
     deleteWishProduct: builder.mutation({
       query: (id) => ({

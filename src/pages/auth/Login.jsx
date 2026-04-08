@@ -26,7 +26,11 @@ const Login = () => {
       saveToLocalstorage("token", res.data.token);
       saveToLocalstorage("userId", res.data.user.id);
       toast.success(res?.message || "লগইন সফল হয়েছে!");
-      navigate("/dashboard");
+      if (res.data.user.user_type === "dropshipper") {
+        navigate("/dashboard");
+      } else {
+        navigate("/");
+      }
     } catch (err) {
       toast.error(err?.data?.message || "লগইন ব্যর্থ হয়েছে!");
     }

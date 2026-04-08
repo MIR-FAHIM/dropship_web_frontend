@@ -1,22 +1,16 @@
 import React, { useState } from "react";
 import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetVendorProductsQuery } from "../../../redux/features/vendor_api";
-import { useDeleteProductMutation } from "../../../redux/features/product";
-import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+import { useListProductsQuery, useDeleteProductMutation } from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
 
-const VendorProducts = () => {
+const AdminProducts = () => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const vendorId = getFromLocalstorage("userId");
-  const { data, isLoading, isFetching } = useGetVendorProductsQuery(
-    { vendorId, page: currentPage },
-    { skip: !vendorId }
-  );
+  const { data, isLoading, isFetching } = useListProductsQuery(currentPage);
   const [deleteProduct] = useDeleteProductMutation();
 
   const products = data?.data?.data || [];
@@ -49,15 +43,15 @@ const VendorProducts = () => {
               placeholder="পণ্য খুঁজুন..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+              className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-64"
             />
           </div>
           <button
-            onClick={() => navigate("/vendor-panel/products/create")}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition shrink-0"
+            onClick={() => navigate("/admin-panel/products/create")}
+            className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition shrink-0"
           >
             <Plus className="w-4 h-4" />
-            নতুন পণ্য যোগ
+            পণ্য যোগ
           </button>
         </div>
       </div>
@@ -74,7 +68,7 @@ const VendorProducts = () => {
             <p className="text-gray-500 text-sm font-medium">
               {searchTerm ? "কোনো পণ্য পাওয়া যায়নি।" : "এখনো কোনো পণ্য যোগ করা হয়নি।"}
             </p>
-            <p className="text-gray-400 text-xs mt-1">উপরের বাটনে ক্লিক করে আপনার প্রথম পণ্য যোগ করুন।</p>
+            <p className="text-gray-400 text-xs mt-1">উপরের বাটনে ক্লিক করে নতুন পণ্য যোগ করুন।</p>
           </div>
         ) : (
           <div className={isFetching ? "opacity-50" : ""}>
@@ -145,7 +139,7 @@ const VendorProducts = () => {
                       <td className="py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => navigate(`/vendor-panel/products/${product.id}`)}
+                            onClick={() => navigate(`/admin-panel/products/${product.id}`)}
                             className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition"
                             title="বিস্তারিত"
                           >
@@ -195,4 +189,4 @@ const VendorProducts = () => {
   );
 };
 
-export default VendorProducts;
+export default AdminProducts;

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -7,6 +7,7 @@ import {
   Wallet,
   Settings,
   ChevronLeft,
+  ChevronDown,
   Menu,
   LogOut,
   X,
@@ -15,6 +16,10 @@ import {
   Users,
   UserCog,
   Truck,
+  FolderTree,
+  Tag,
+  SlidersHorizontal,
+  ImageIcon,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -25,9 +30,35 @@ const adminMenuLinks = [
     end: true,
   },
   {
-    path: "/admin-panel/products",
     label: "পণ্য সমূহ",
     icon: <Package className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/products",
+        label: "সকল পণ্য",
+        icon: <Package className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/categories",
+        label: "ক্যাটাগরি",
+        icon: <FolderTree className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/brands",
+        label: "ব্র্যান্ড",
+        icon: <Tag className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/attributes",
+        label: "অ্যাট্রিবিউট",
+        icon: <SlidersHorizontal className="w-4 h-4" />,
+      },
+    ],
+  },
+  {
+    path: "/admin-panel/media",
+    label: "মিডিয়া",
+    icon: <ImageIcon className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/orders",
@@ -64,7 +95,17 @@ const adminMenuLinks = [
 const AdminPanelLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState({});
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const toggleMenu = (label) => {
+    setExpandedMenus((prev) => ({ ...prev, [label]: !prev[label] }));
+  };
+
+  const isChildActive = (children) => {
+    return children?.some((child) => location.pathname === child.path);
+  };
 
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
@@ -92,24 +133,71 @@ const AdminPanelLayout = () => {
 
       {/* Menu Links */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {adminMenuLinks.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.end}
-            onClick={() => isMobile && setMobileOpen(false)}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-red-600 text-white"
-                  : "text-gray-300 hover:bg-gray-700 hover:text-white"
-              } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`
-            }
-          >
-            {item.icon}
-            {(sidebarOpen || isMobile) && <span>{item.label}</span>}
-          </NavLink>
-        ))}
+        {adminMenuLinks.map((item) =>
+          item.children ? (
+            <div key={item.label}>
+              <button
+                onClick={() => toggleMenu(item.label)}
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full ${
+                  isChildActive(item.children)
+                    ? "bg-red-600/20 text-red-400"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
+              >
+                {item.icon}
+                {(sidebarOpen || isMobile) && (
+                  <>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-200 ${
+                        expandedMenus[item.label] || isChildActive(item.children) ? "rotate-180" : ""
+                      }`}
+                    />
+                  </>
+                )}
+              </button>
+              {(sidebarOpen || isMobile) &&
+                (expandedMenus[item.label] || isChildActive(item.children)) && (
+                  <div className="ml-4 mt-1 space-y-1 border-l border-gray-700 pl-3">
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.path}
+                        to={child.path}
+                        onClick={() => isMobile && setMobileOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isActive
+                              ? "bg-red-600 text-white"
+                              : "text-gray-400 hover:bg-gray-700 hover:text-white"
+                          }`
+                        }
+                      >
+                        {child.icon}
+                        <span>{child.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+            </div>
+          ) : (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              end={item.end}
+              onClick={() => isMobile && setMobileOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-red-600 text-white"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`
+              }
+            >
+              {item.icon}
+              {(sidebarOpen || isMobile) && <span>{item.label}</span>}
+            </NavLink>
+          )
+        )}
       </nav>
 
       {/* Logout */}

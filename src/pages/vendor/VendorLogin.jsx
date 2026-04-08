@@ -27,7 +27,12 @@ const VendorLogin = () => {
       saveToLocalstorage("userId", res.data.user.id);
       saveToLocalstorage("vendorUser", JSON.stringify(res.data.user));
       toast.success(res?.message || "লগইন সফল হয়েছে!");
-      navigate("/vendor-panel");
+            if (res.data.user.user_type === "vendor") {
+         navigate("/vendor-panel");
+      } else {
+        navigate("/");
+      }
+    
     } catch (err) {
       toast.error(err?.data?.message || "লগইন ব্যর্থ হয়েছে!");
     }

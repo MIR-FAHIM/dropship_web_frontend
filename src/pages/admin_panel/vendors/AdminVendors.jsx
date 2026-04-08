@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Store, Search, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
-import { useGetVendorListQuery } from "../../redux/features/vendor_api";
+import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
 
 const AdminVendors = () => {
   const { data, isLoading, error } = useGetVendorListQuery();

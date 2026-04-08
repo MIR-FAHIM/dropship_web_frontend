@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Truck, Search, Users, UserCheck, UserX, Loader2, XCircle } from "lucide-react";
-import { useGetDropshippersQuery } from "../../redux/features/user";
+import { useGetDropshippersQuery } from "../../../redux/features/user";
 
 const AdminDropshippers = () => {
   const [searchTerm, setSearchTerm] = useState("");

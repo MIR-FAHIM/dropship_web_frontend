@@ -9,10 +9,12 @@ const categoryApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.categories.create.method,
         body: categoryData,
       }),
+      invalidatesTags: ["Category"],
     }),
 
     listCategories: builder.query({
-      query: () => API_ENDPOINTS.categories.list.path,
+      query: (page = 1) => `${API_ENDPOINTS.categories.list.path}?page=${page}`,
+      providesTags: ["Category"],
     }),
     listCategoriesWithChildren: builder.query({
       query: () => API_ENDPOINTS.categories.listWithChildren.path,
@@ -34,6 +36,7 @@ const categoryApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.categories.update.method,
         body: categoryData,
       }),
+      invalidatesTags: ["Category"],
     }),
 
     deleteCategory: builder.mutation({
@@ -41,6 +44,7 @@ const categoryApi = baseApi.injectEndpoints({
         url: buildEndpointPath(API_ENDPOINTS.categories.delete.path, { id }),
         method: API_ENDPOINTS.categories.delete.method,
       }),
+      invalidatesTags: ["Category"],
     }),
   }),
 });

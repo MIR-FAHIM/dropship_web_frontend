@@ -1,25 +1,46 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
+import { getFromLocalstorage, removeFromLocalstorage } from "../../utils/localstorage.utils";
 import {imgBaseUrl, baseUrl} from '../../../config';
-const baseApi = createApi({
-  reducerPath: "api",
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${baseUrl}/api`,
-    prepareHeaders: (headers, { endpoint }) => {
-      const noAuthEndpoints = ["login", "register", "dropshipperRegister", "vendorRegister", "vendorLogin"];
-      if (noAuthEndpoints.includes(endpoint)) {
-        headers.set("Accept", "application/json");
-        return headers;
-      }
-      const token = getFromLocalstorage("token");
-      if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
-      }
+
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: `${baseUrl}/api`,
+  prepareHeaders: (headers, { endpoint }) => {
+    const noAuthEndpoints = ["login", "register", "dropshipperRegister", "vendorRegister", "vendorLogin"];
+    if (noAuthEndpoints.includes(endpoint)) {
       headers.set("Accept", "application/json");
       return headers;
-    },
-  }),
-  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor"],
+    }
+    const token = getFromLocalstorage("token");
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+    headers.set("Accept", "application/json");
+    return headers;
+  },
+});
+
+const baseQueryWithAuth = async (args, api, extraOptions) => {
+  const result = await rawBaseQuery(args, api, extraOptions);
+
+  // If API responds with token missing error, redirect to admin login
+  const errorData = result?.error?.data || result?.data;
+  if (
+    errorData?.status === "error" &&
+    errorData?.message === "API token missing"
+  ) {
+    removeFromLocalstorage("token");
+    removeFromLocalstorage("userId");
+    window.location.href = "/admin-login";
+    return result;
+  }
+
+  return result;
+};
+
+const baseApi = createApi({
+  reducerPath: "api",
+  baseQuery: baseQueryWithAuth,
+  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor", "Upload", "Category", "Brand", "Product"],
   endpoints: () => ({}),
 });
 

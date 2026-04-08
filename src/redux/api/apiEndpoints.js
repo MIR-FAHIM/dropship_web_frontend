@@ -178,6 +178,7 @@ export const API_ENDPOINTS = {
     register: define("POST", "/vendors/register"),
     profile: define("GET", "/vendors/profile/{id}"),
     list: define("GET", "/vendors/list"),
+    products: define("GET", "/vendors/products/{vendorId}"),
   },
 };
 
