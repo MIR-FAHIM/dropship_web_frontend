@@ -20,6 +20,7 @@ import {
   Tag,
   SlidersHorizontal,
   ImageIcon,
+  ListChecks,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -77,13 +78,18 @@ const adminMenuLinks = [
   },
   {
     path: "/admin-panel/employees",
-    label: "কর্মচারী",
+    label: "টিমমেট",
     icon: <Users className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/accounting",
     label: "হিসাব-নিকাশ",
     icon: <Wallet className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/tasks",
+    label: "টাস্ক",
+    icon: <ListChecks className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/settings",

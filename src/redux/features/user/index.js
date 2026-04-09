@@ -32,6 +32,13 @@ const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+    getAdminList: builder.query({
+      query: (page = 1) => ({
+        url: API_ENDPOINTS.users.adminList.path,
+        params: { page },
+      }),
+      providesTags: ["User"],
+    }),
   }),
   
 });
@@ -42,7 +49,7 @@ export const {
   useButtonClickMutation,
   useAddContactMutation,
   useGetDropshippersQuery,
- 
+  useGetAdminListQuery,
 } = userApi;
 
 export default userApi;

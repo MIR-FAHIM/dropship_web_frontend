@@ -28,6 +28,7 @@ import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
+import AdminVendorDetails from "../pages/admin_panel/vendors/AdminVendorDetails";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
@@ -39,6 +40,8 @@ import AdminAttributes from "../pages/admin_panel/products/AdminAttributes";
 import AdminMedia from "../pages/admin_panel/media/AdminMedia";
 import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate";
 import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail";
+import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
+import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -116,10 +119,13 @@ export const router = createBrowserRouter([
       { path: "attributes", element: <AdminAttributes /> },
       { path: "media", element: <AdminMedia /> },
       { path: "orders", element: <AdminOrders /> },
+      { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "vendors", element: <AdminVendors /> },
+      { path: "vendors/:id", element: <AdminVendorDetails /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
+      { path: "tasks", element: <AdminTasks /> },
       { path: "settings", element: <AdminSettings /> },
     ],
   },

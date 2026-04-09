@@ -30,6 +30,10 @@ const orderApi = baseApi.injectEndpoints({
       query: () => API_ENDPOINTS.orders.allOrders.path,
     }),
 
+    getOrderStatusSummary: builder.query({
+      query: () => API_ENDPOINTS.orders.statusSummary.path,
+    }),
+
     listCompletedOrders: builder.query({
       query: () => API_ENDPOINTS.orders.completed.path,
     }),
@@ -44,11 +48,17 @@ const orderApi = baseApi.injectEndpoints({
     }),
 
     updateOrderStatus: builder.mutation({
-      query: ({ id, ...payload }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.orders.updateStatus.path, { id }),
-        method: API_ENDPOINTS.orders.updateStatus.method,
-        body: payload,
-      }),
+      query: ({ id, status_id, note, changed_by }) => {
+        const formData = new FormData();
+        formData.append("status_id", status_id);
+        if (note) formData.append("note", note);
+        if (changed_by) formData.append("changed_by", changed_by);
+        return {
+          url: buildEndpointPath(API_ENDPOINTS.orders.updateStatus.path, { id }),
+          method: API_ENDPOINTS.orders.updateStatus.method,
+          body: formData,
+        };
+      },
     }),
 
     updateOrderItemStatus: builder.mutation({
@@ -83,6 +93,7 @@ export const {
   useCreateContactUsMutation,
   useListOrdersByUserQuery,
   useListAllOrdersQuery,
+  useGetOrderStatusSummaryQuery,
   useListCompletedOrdersQuery,
   useListCompletedOrdersByUserQuery,
   useGetOrderDetailsQuery,

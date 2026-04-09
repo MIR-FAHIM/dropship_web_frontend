@@ -16,6 +16,7 @@ export const API_ENDPOINTS = {
     dropshippers: define("GET", "/users/dropshippers"),
     create: define("POST", "/users/create"),
     list: define("GET", "/users/list"),
+    adminList: define("GET", "/users/admin-list"),
     customers: define("GET", "/users/customers"),
     vendors: define("GET", "/users/vendors"),
     deliveryMen: define("GET", "/users/delivery-men"),
@@ -80,10 +81,11 @@ export const API_ENDPOINTS = {
     checkout: define("POST", "/orders/checkout"),
     listByUser: define("GET", "/orders/list/{userId}"),
     allOrders: define("GET", "/orders/all/orders"),
+    statusSummary: define("GET", "/orders/status-summary"),
     completed: define("GET", "/orders/completed"),
     completedByUser: define("GET", "/orders/completed/{userId}"),
     details: define("GET", "/orders/details/{id}"),
-    updateStatus: define("PATCH", "/orders/status/{id}"),
+    updateStatus: define("POST", "/orders/update/status/{id}"),
     updateItemStatus: define("PATCH", "/orders/item/status/{id}"),
   },
 
@@ -179,6 +181,21 @@ export const API_ENDPOINTS = {
     profile: define("GET", "/vendors/profile/{id}"),
     list: define("GET", "/vendors/list"),
     products: define("GET", "/vendors/products/{vendorId}"),
+  },
+
+  tasks: {
+    list: define("GET", "/tasks/list"),
+    create: define("POST", "/tasks/create"),
+    updateStatus: define("PATCH", "/tasks/update-status/{id}"),
+    statusList: define("GET", "/tasks/status-list"),
+  },
+
+  taskTypes: {
+    list: define("GET", "/task-types/list"),
+  },
+
+  taskPriorities: {
+    list: define("GET", "/task-priorities/list"),
   },
 };
 

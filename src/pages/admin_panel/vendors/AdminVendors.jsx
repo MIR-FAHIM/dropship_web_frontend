@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { Store, Search, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
+import { Store, Search, CheckCircle, XCircle, Clock, Loader2, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
 
 const AdminVendors = () => {
   const { data, isLoading, error } = useGetVendorListQuery();
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
   const vendors = data?.data || [];
   const activeCount = vendors.filter((v) => v.is_active === 1).length;
@@ -101,6 +103,7 @@ const AdminVendors = () => {
                   <th className="pb-3 font-medium">ধরন</th>
                   <th className="pb-3 font-medium">স্ট্যাটাস</th>
                   <th className="pb-3 font-medium">তারিখ</th>
+                  <th className="pb-3 font-medium">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody>
@@ -126,6 +129,15 @@ const AdminVendors = () => {
                     </td>
                     <td className="py-3 text-gray-500 text-xs">
                       {new Date(vendor.created_at).toLocaleDateString("bn-BD")}
+                    </td>
+                    <td className="py-3">
+                      <button
+                        onClick={() => navigate(`/admin-panel/vendors/${vendor.user_id || vendor.id}`)}
+                        className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium"
+                      >
+                        <Eye className="w-4 h-4" />
+                        পণ্য দেখুন
+                      </button>
                     </td>
                   </tr>
                 ))}
