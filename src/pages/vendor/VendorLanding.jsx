@@ -55,13 +55,13 @@ const testimonials = [
   {
     name: "রফিক হাসান",
     role: "ইলেকট্রনিক্স ভেন্ডর",
-    text: "Bebsha360-এর মাধ্যমে মাত্র ৬ মাসে আমার ইলেকট্রনিক্স ব্যবসা ৩ গুণ বেড়েছে। রিসেলার নেটওয়ার্কটি অসাধারণ!",
+    text: "ResellerBrain-এর মাধ্যমে মাত্র ৬ মাসে আমার ইলেকট্রনিক্স ব্যবসা ৩ গুণ বেড়েছে। রিসেলার নেটওয়ার্কটি অসাধারণ!",
     rating: 5,
   },
   {
     name: "ফাতেমা আক্তার",
     role: "ফ্যাশন ও পোশাক",
-    text: "অনলাইনে বিক্রি করতে গিয়ে অনেক সমস্যায় পড়েছিলাম। Bebsha360-এর ভেন্ডর প্ল্যাটফর্মে এখন প্রতিদিন নিয়মিত অর্ডার পাচ্ছি, কোনো মার্কেটিং ঝামেলা ছাড়াই।",
+    text: "অনলাইনে বিক্রি করতে গিয়ে অনেক সমস্যায় পড়েছিলাম। ResellerBrain-এর ভেন্ডর প্ল্যাটফর্মে এখন প্রতিদিন নিয়মিত অর্ডার পাচ্ছি, কোনো মার্কেটিং ঝামেলা ছাড়াই।",
     rating: 5,
   },
   {
@@ -79,7 +79,7 @@ const VendorLanding = () => {
     <div className="bg-white min-h-screen font-sans">
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 sm:px-10 py-4 bg-white shadow-md sticky top-0 z-50">
-        <h1 className="text-2xl font-bold text-blue-600">Bebsha360</h1>
+        <h1 className="text-2xl font-bold text-blue-600">ResellerBrain</h1>
         <div className="flex items-center gap-4">
           <a href="#benefits" className="hidden sm:inline text-gray-600 hover:text-blue-600 text-sm font-medium">
             সুবিধাসমূহ
@@ -104,7 +104,7 @@ const VendorLanding = () => {
           </span>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
             আপনার ব্যবসা বাড়ান <br className="hidden sm:block" />
-            <span className="text-yellow-300">Bebsha360</span>-এর সাথে
+            <span className="text-yellow-300">ResellerBrain</span>-এর সাথে
           </h1>
           <p className="mt-5 text-base sm:text-lg text-blue-100 max-w-2xl mx-auto leading-relaxed">
             বাংলাদেশের দ্রুত বিস্তৃত ড্রপশিপিং প্ল্যাটফর্মে আপনার পণ্য তালিকাভুক্ত করুন। হাজারো সক্রিয়
@@ -150,10 +150,10 @@ const VendorLanding = () => {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
-              ভেন্ডররা কেন Bebsha360 বেছে নেন
+              ভেন্ডররা কেন ResellerBrain বেছে নেন
             </h2>
             <p className="mt-3 text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-              Bebsha360 পণ্য সরবরাহকারীদের সরাসরি সারা বাংলাদেশের বিশাল রিসেলার নেটওয়ার্কের সাথে সংযুক্ত করে।
+              ResellerBrain পণ্য সরবরাহকারীদের সরাসরি সারা বাংলাদেশের বিশাল রিসেলার নেটওয়ার্কের সাথে সংযুক্ত করে।
               আমরা সম্পূর্ণ অবকাঠামো তৈরি করেছি — আপনি শুধু ভালো পণ্য সরবরাহ করুন, বিক্রি এমনিতেই বাড়বে।
             </p>
           </div>
@@ -182,7 +182,7 @@ const VendorLanding = () => {
                 আমরা বাড়ছি — আপনিও পারবেন
               </h2>
               <p className="mt-4 text-gray-600 text-sm sm:text-base leading-relaxed">
-                লঞ্চের পর থেকে Bebsha360 প্রতি মাসে দ্রুত প্রবৃদ্ধি অর্জন করছে। আমাদের রিসেলার নেটওয়ার্ক
+                লঞ্চের পর থেকে ResellerBrain প্রতি মাসে দ্রুত প্রবৃদ্ধি অর্জন করছে। আমাদের রিসেলার নেটওয়ার্ক
                 প্রতিদিন বাড়ছে, অর্থাৎ আপনার পণ্যে বেশি মানুষের নজর পড়বে এবং বেশি অর্ডার আসবে।
               </p>
               <ul className="mt-6 space-y-3">
@@ -253,7 +253,7 @@ const VendorLanding = () => {
             আমাদের ভেন্ডরদের অভিজ্ঞতা
           </h2>
           <p className="mt-3 text-gray-600 text-center text-sm sm:text-base">
-            যারা ইতোমধ্যে Bebsha360-এর সাথে ব্যবসা বাড়াচ্ছেন, তাদের কথা শুনুন।
+            যারা ইতোমধ্যে ResellerBrain-এর সাথে ব্যবসা বাড়াচ্ছেন, তাদের কথা শুনুন।
           </p>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -282,7 +282,7 @@ const VendorLanding = () => {
             আপনার ব্যবসা বাড়াতে প্রস্তুত?
           </h2>
           <p className="mt-4 text-blue-100 text-base sm:text-lg">
-            ২,৫০০+ ভেন্ডর ইতোমধ্যে Bebsha360-এ বিক্রি করছেন। রেজিস্ট্রেশন সম্পূর্ণ বিনামূল্যে এবং
+            ২,৫০০+ ভেন্ডর ইতোমধ্যে ResellerBrain-এ বিক্রি করছেন। রেজিস্ট্রেশন সম্পূর্ণ বিনামূল্যে এবং
             আমাদের টিম অনবোর্ডিংয়ের প্রতিটি ধাপে আপনাকে সাহায্য করবে।
           </p>
           <button
@@ -297,7 +297,7 @@ const VendorLanding = () => {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-400 py-10">
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p className="text-sm">&copy; {new Date().getFullYear()} Bebsha360। সর্বস্বত্ব সংরক্ষিত।</p>
+          <p className="text-sm">&copy; {new Date().getFullYear()} ResellerBrain। সর্বস্বত্ব সংরক্ষিত।</p>
           <div className="flex gap-6 text-sm">
             <a href="/contact-us-form" className="hover:text-white transition">যোগাযোগ করুন</a>
             <a href="#" className="hover:text-white transition">গোপনীয়তা নীতি</a>

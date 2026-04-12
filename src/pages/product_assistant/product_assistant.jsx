@@ -8,7 +8,7 @@ const queries = [
     "Show me products with the best customer reviews.",
     "Which products offer the highest profit potential?",
     "Display the top trending products for this month.",
-    "Show Bebsha360’s analysis of products with high sales potential for the next two weeks."
+    "Show ResellerBrain’s analysis of products with high sales potential for the next two weeks."
   ];
 
 const ProductAssistantPage = ({ questionId }) => {

@@ -54,7 +54,7 @@ const VendorPanelLayout = () => {
         <div className="flex items-center gap-2">
           <Store className="w-6 h-6 text-yellow-400" />
           {(sidebarOpen || isMobile) && (
-            <span className="text-lg font-bold text-white">Bebsha360</span>
+            <span className="text-lg font-bold text-white">ResellerBrain</span>
           )}
         </div>
         {isMobile && (

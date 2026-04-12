@@ -97,7 +97,7 @@ const HomePage = () => {
         <div className="bg-gradient-to-b from-blue-50 to-white min-h-screen font-sans">
             {/* Navbar */}
             <nav className="flex justify-between items-center px-6 sm:px-10 py-4 bg-white shadow-md sticky top-0 z-50">
-                <h1 className="text-2xl font-bold text-blue-600">Bebsha360</h1>
+                <h1 className="text-2xl font-bold text-blue-600">ResellerBrain</h1>
                 <div className="hidden md:flex items-center space-x-6 text-gray-700 text-sm font-medium">
                     <a href="#about" className="hover:text-blue-600">{t("আমাদের সম্পর্কে")}</a>
                     <a href="#profits" className="hover:text-blue-600">{t("লাভ হিসাব")}</a>
@@ -134,7 +134,7 @@ const HomePage = () => {
 
                     <div className="mt-6 mx-auto max-w-2xl rounded-xl border border-white/30 bg-white/10 px-5 py-4 text-left shadow-sm">
                         <p className="text-sm sm:text-base text-white/90 leading-relaxed">
-                            {t("স্বাগতম ফিউচার অন্টপ্রেনিয়র! আপনি কি নিজের একটি অনলাইন ব্র্যান্ড তৈরি করার স্বপ্ন দেখছেন? কিন্তু পণ্যের স্টক করা, ডেলিভারি মেইনটেইন করা বা বড় ইনভেস্টমেন্টের অভাবে শুরু করতে পারছেন না? Bebsha360 এসেছে আপনার সেই সব সমস্যার সমাধান নিয়ে। আমরা বিশ্বাস করি, ব্যবসার জন্য বড় পুঁজির চেয়ে বড় ইচ্ছাশক্তি বেশি প্রয়োজন।")}
+                            {t("স্বাগতম ফিউচার অন্টপ্রেনিয়র! আপনি কি নিজের একটি অনলাইন ব্র্যান্ড তৈরি করার স্বপ্ন দেখছেন? কিন্তু পণ্যের স্টক করা, ডেলিভারি মেইনটেইন করা বা বড় ইনভেস্টমেন্টের অভাবে শুরু করতে পারছেন না? ResellerBrain এসেছে আপনার সেই সব সমস্যার সমাধান নিয়ে। আমরা বিশ্বাস করি, ব্যবসার জন্য বড় পুঁজির চেয়ে বড় ইচ্ছাশক্তি বেশি প্রয়োজন।")}
                         </p>
                     </div>
 
@@ -156,11 +156,11 @@ const HomePage = () => {
                 </div>
             </section>
 
-            {/* Why Bebsha360 Section */}
+            {/* Why ResellerBrain Section */}
             <section className="py-14 bg-white">
                 <div className="max-w-6xl mx-auto px-6">
                     <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
-                        {t("কেন Bebsha360 আপনার ব্যবসার সেরা পার্টনার?")}
+                        {t("কেন ResellerBrain আপনার ব্যবসার সেরা পার্টনার?")}
                     </h2>
 
                     <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -185,7 +185,7 @@ const HomePage = () => {
                                 <span className="ml-4 text-blue-400 transition-transform duration-300 group-open:rotate-180">▾</span>
                             </summary>
                             <p className="mt-4 text-sm sm:text-base text-gray-600 leading-relaxed">
-                                {t("অনলাইনে কোন পণ্য ট্রেন্ডিং এবং কোনটি বিক্রি করলে বেশি লাভ হবে—এই তথ্য অনেক সময় পাওয়া কঠিন। Bebsha360 আপনাকে রিসার্চ ও গাইডলাইন দিয়ে সাহায্য করে, যাতে আপনি ডেটা-ড্রিভেন সিদ্ধান্ত নিতে পারেন।")}
+                                {t("অনলাইনে কোন পণ্য ট্রেন্ডিং এবং কোনটি বিক্রি করলে বেশি লাভ হবে—এই তথ্য অনেক সময় পাওয়া কঠিন। ResellerBrain আপনাকে রিসার্চ ও গাইডলাইন দিয়ে সাহায্য করে, যাতে আপনি ডেটা-ড্রিভেন সিদ্ধান্ত নিতে পারেন।")}
                             </p>
                             <div className="mt-4">
                                 <button className="inline-flex items-center rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700">

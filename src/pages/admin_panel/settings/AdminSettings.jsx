@@ -3,7 +3,7 @@ import { Save } from "lucide-react";
 
 const AdminSettings = () => {
   const [formData, setFormData] = useState({
-    siteName: "Bebsha360",
+    siteName: "ResellerBrain",
     siteEmail: "",
     sitePhone: "",
     address: "",
@@ -49,7 +49,7 @@ const AdminSettings = () => {
                 name="siteEmail"
                 value={formData.siteEmail}
                 onChange={handleChange}
-                placeholder="admin@bebsha360.com"
+                placeholder="admin@resellerbrain.com"
                 className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
               />
             </div>

@@ -49,7 +49,7 @@ const RegisterPage = () => {
             className="text-3xl font-bold text-[#158E72] cursor-pointer"
             onClick={() => navigate("/")}
           >
-            Bebsha360
+            ResellerBrain
           </h1>
           <p className="mt-2 text-gray-500 text-sm">
             ড্রপশিপার হিসেবে রেজিস্টার করুন
@@ -205,7 +205,7 @@ const RegisterPage = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          &copy; {new Date().getFullYear()} Bebsha360। সর্বস্বত্ব সংরক্ষিত।
+          &copy; {new Date().getFullYear()} ResellerBrain। সর্বস্বত্ব সংরক্ষিত।
         </p>
       </div>
     </div>

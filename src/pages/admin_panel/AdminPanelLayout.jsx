@@ -120,7 +120,7 @@ const AdminPanelLayout = () => {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-red-400" />
           {(sidebarOpen || isMobile) && (
-            <span className="text-lg font-bold text-white">Bebsha360</span>
+            <span className="text-lg font-bold text-white">ResellerBrain</span>
           )}
         </div>
         {isMobile && (

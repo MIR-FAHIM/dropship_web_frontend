@@ -45,9 +45,9 @@ const resources = {
         "download_images_videos": "ফ্রিতে ডাউনলোড করুন উচ্চমানের পণ্যের ছবি ও ভিডিও",
         "sell_own_platform": "নিজের প্ল্যাটফর্মে বিক্রি করুন (ফেসবুক, হোয়াটসঅ্যাপ, ওয়েবসাইট, বা মার্কেটপ্লেস)",
         "set_own_prices": "নিজের মূল্য নির্ধারণ করুন এবং তাৎক্ষণিক লাভ করুন",
-        "instant_order_fulfillment": "অর্ডার প্লেস করলেই সঙ্গে সঙ্গে প্রসেসিং—শুধু Bebsha360-এ আপনার নিজস্ব প্রাইসে অর্ডার করুন",
+        "instant_order_fulfillment": "অর্ডার প্লেস করলেই সঙ্গে সঙ্গে প্রসেসিং—শুধু ResellerBrain-এ আপনার নিজস্ব প্রাইসে অর্ডার করুন",
         "cash_on_delivery": "ক্যাশ অন ডেলিভারি, কল সেন্টার সাপোর্ট, ও রিয়েল-টাইম ট্র্যাকিং উপভোগ করুন",
-        "no_stock_no_risk": "স্টক নেই, ডেলিভারি ব্যবস্থা নেই, ঝামেলা নেই—শুধু বিক্রি করুন আর আয় করুন! 🚀 আজই Bebsha360-এর সাথে আপনার বিজনেস শুরু করুন!",
+        "no_stock_no_risk": "স্টক নেই, ডেলিভারি ব্যবস্থা নেই, ঝামেলা নেই—শুধু বিক্রি করুন আর আয় করুন! 🚀 আজই ResellerBrain-এর সাথে আপনার বিজনেস শুরু করুন!",
         "we_determined": "আমরা আপনার ব্যবসা বৃদ্ধিতে বদ্ধপরিকর",
         "sales_tips_strategies": "পণ্যের সঠিক কৌশল ও এক্সপার্ট টিপস সংগ্রহ করতে পারবেন যাতে সহজেই আপনার বিক্রি বাড়ে",
         "product_analysis_ai_search": "পণ্য বিশ্লেষণ টুলস ও এআই-ভিত্তিক পণ্য অনুসন্ধান করে সহজেই সেরা ও লাভজনক পণ্য খুঁজে পান",
@@ -57,8 +57,8 @@ const resources = {
       
         "faq": {
           "question_1": {
-            "ques": "What is Bebsha360?",
-            "ans": "Bebsha360 is a complete automated online product reselling business platform.",
+            "ques": "What is ResellerBrain?",
+            "ans": "ResellerBrain is a complete automated online product reselling business platform.",
          
           },
          
@@ -127,23 +127,23 @@ const resources = {
           "desc": "Customers place orders on your platform."
         },
         "order_bebsha360": {
-          "title": "6. Order from Bebsha360",
-          "desc": "Place the same order with your price on Bebsha360 with customer details."
+          "title": "6. Order from ResellerBrain",
+          "desc": "Place the same order with your price on ResellerBrain with customer details."
         },
         "delivery_bebsha360": {
-          "title": "7. Delivery by Bebsha360",
+          "title": "7. Delivery by ResellerBrain",
           "desc": "We handle packaging & delivery to your customer."
         },
         "earn_withdraw": {
           "title": "8. Earn & Withdraw",
-          "desc": "Get your profit in your Bebsha360 balance and withdraw via bKash/Nagad."
+          "desc": "Get your profit in your ResellerBrain balance and withdraw via bKash/Nagad."
         }
 
       },
       
       
-      "Bebsha360 – Start Your E-Commerce Business with Zero Investment!": "Bebsha360 – Start Your E-Commerce Business with Zero Investment!",
-      "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! Bebsha360 brings you a hassle-free dropshipping and reselling platform where you can:": "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! Bebsha360 brings you a hassle-free dropshipping and reselling platform where you can:",
+      "ResellerBrain – Start Your E-Commerce Business with Zero Investment!": "ResellerBrain – Start Your E-Commerce Business with Zero Investment!",
+      "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! ResellerBrain brings you a hassle-free dropshipping and reselling platform where you can:": "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! ResellerBrain brings you a hassle-free dropshipping and reselling platform where you can:",
 
 
       
@@ -186,16 +186,16 @@ const resources = {
     "Withdraw": "টাকা উত্তোলন",
     "Add Payment Account": "পেমেন্ট একাউন্ট যুক্ত করুন",
     "Get Started": "এখনই শুরু করুন ব্যবসা",
-    "Bebsha360 – Start Your E-Commerce Business with Zero Investment!": "Bebsha360 – বিনিয়োগ ছাড়াই শুরু করুন নিজের ই-কমার্স ব্যবসা!",
-    "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! Bebsha360 brings you a hassle-free dropshipping and reselling platform where you can:": "এখন যে কেউ—শিক্ষার্থী, গৃহিণী, চাকরিজীবী বা একেবারে নতুন উদ্যোক্তারা—এক টাকাও বিনিয়োগ না করে নিজের ই-কমার্স ব্যবসা শুরু করতে পারবেন! Bebsha360 আপনাকে দিচ্ছে ড্রপশিপিং ও রিসেলিং-এর সেরা সুযোগ, যেখানে আপনি—",
+    "ResellerBrain – Start Your E-Commerce Business with Zero Investment!": "ResellerBrain – বিনিয়োগ ছাড়াই শুরু করুন নিজের ই-কমার্স ব্যবসা!",
+    "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! ResellerBrain brings you a hassle-free dropshipping and reselling platform where you can:": "এখন যে কেউ—শিক্ষার্থী, গৃহিণী, চাকরিজীবী বা একেবারে নতুন উদ্যোক্তারা—এক টাকাও বিনিয়োগ না করে নিজের ই-কমার্স ব্যবসা শুরু করতে পারবেন! ResellerBrain আপনাকে দিচ্ছে ড্রপশিপিং ও রিসেলিং-এর সেরা সুযোগ, যেখানে আপনি—",
     "home_page_bullets": {
       "access_verified_products": "১০,০০০+ ভেরিফাইড প্রোডাক্ট সহজেই পাবেন বিভিন্ন ক্যাটেগরিতে",
       "download_images_videos": "ফ্রিতে ডাউনলোড করুন উচ্চমানের পণ্যের ছবি ও ভিডিও",
       "sell_own_platform": "নিজের প্ল্যাটফর্মে বিক্রি করুন (ফেসবুক, হোয়াটসঅ্যাপ, ওয়েবসাইট, বা মার্কেটপ্লেস)",
       "set_own_prices": "নিজের মূল্য নির্ধারণ করুন এবং তাৎক্ষণিক লাভ করুন",
-      "instant_order_fulfillment": "অর্ডার প্লেস করলেই সঙ্গে সঙ্গে প্রসেসিং—শুধু Bebsha360-এ আপনার নিজস্ব প্রাইসে অর্ডার করুন",
+      "instant_order_fulfillment": "অর্ডার প্লেস করলেই সঙ্গে সঙ্গে প্রসেসিং—শুধু ResellerBrain-এ আপনার নিজস্ব প্রাইসে অর্ডার করুন",
       "cash_on_delivery": "ক্যাশ অন ডেলিভারি, কল সেন্টার সাপোর্ট, ও রিয়েল-টাইম ট্র্যাকিং উপভোগ করুন",
-      "no_stock_no_risk": "স্টক নেই, ডেলিভারি ব্যবস্থা নেই, ঝামেলা নেই—শুধু বিক্রি করুন আর আয় করুন! 🚀 আজই Bebsha360-এর সাথে আপনার বিজনেস শুরু করুন!",
+      "no_stock_no_risk": "স্টক নেই, ডেলিভারি ব্যবস্থা নেই, ঝামেলা নেই—শুধু বিক্রি করুন আর আয় করুন! 🚀 আজই ResellerBrain-এর সাথে আপনার বিজনেস শুরু করুন!",
       "we_determined": "আমরা আপনার ব্যবসা বৃদ্ধিতে বদ্ধপরিকর",
       "sales_tips_strategies": "পণ্যের সঠিক কৌশল ও এক্সপার্ট টিপস সংগ্রহ করতে পারবেন যাতে সহজেই আপনার বিক্রি বাড়ে",
       "product_analysis_ai_search": "পণ্য বিশ্লেষণ টুলস ও এআই-ভিত্তিক পণ্য অনুসন্ধান করে সহজেই সেরা ও লাভজনক পণ্য খুঁজে পান",
@@ -204,8 +204,8 @@ const resources = {
     },
 "faq": {
           "question_1": {
-            "ans":  "Bebsha360 একটি সম্পূর্ণ অটোমেটেড অনলাইন প্রোডাক্ট রিসেলিং বিজনেস এর সহযোগী প্লাটফর্ম।",
-            "ques": "Bebsha360 কি?"
+            "ans":  "ResellerBrain একটি সম্পূর্ণ অটোমেটেড অনলাইন প্রোডাক্ট রিসেলিং বিজনেস এর সহযোগী প্লাটফর্ম।",
+            "ques": "ResellerBrain কি?"
           },
           
           "question_2": {
@@ -271,16 +271,16 @@ const resources = {
           "desc": "আপনার প্ল্যাটফর্মে ক্রেতারা অর্ডার প্রদান করবে।"
         },
         "order_bebsha360": {
-          "title": "৬. Bebsha360 থেকে অর্ডার করুন",
-          "desc": "একই অর্ডার আপনার নির্ধারিত মূল্যে Bebsha360 এ দিন।"
+          "title": "৬. ResellerBrain থেকে অর্ডার করুন",
+          "desc": "একই অর্ডার আপনার নির্ধারিত মূল্যে ResellerBrain এ দিন।"
         },
         "delivery_bebsha360": {
-          "title": "৭. Bebsha360 ডেলিভারি",
+          "title": "৭. ResellerBrain ডেলিভারি",
           "desc": "আমরা প্যাকেজিং ও ক্রেতার কাছে ডেলিভারি নিশ্চিত করবো।"
         },
         "earn_withdraw": {
           "title": "৮. আয় ও উত্তোলন",
-          "desc": "Bebsha360 ব্যালেন্সে আপনার লাভ পান এবং bKash/Nagad এর মাধ্যমে উত্তোলন করুন।"
+          "desc": "ResellerBrain ব্যালেন্সে আপনার লাভ পান এবং bKash/Nagad এর মাধ্যমে উত্তোলন করুন।"
         }
 
       },

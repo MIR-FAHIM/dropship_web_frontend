@@ -47,7 +47,7 @@ const AdminLogin = () => {
             className="text-3xl font-bold text-red-600 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            Bebsha360
+            ResellerBrain
           </h1>
           <p className="mt-2 text-gray-500 text-sm">Admin Panel Login</p>
         </div>
@@ -131,7 +131,7 @@ const AdminLogin = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          &copy; {new Date().getFullYear()} Bebsha360. All rights reserved.
+          &copy; {new Date().getFullYear()} ResellerBrain. All rights reserved.
         </p>
       </div>
     </div>

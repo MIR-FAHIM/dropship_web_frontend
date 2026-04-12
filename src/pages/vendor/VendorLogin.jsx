@@ -47,7 +47,7 @@ const VendorLogin = () => {
             className="text-3xl font-bold text-blue-600 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            Bebsha360
+            ResellerBrain
           </h1>
           <p className="mt-2 text-gray-500 text-sm">ভেন্ডর প্যানেলে লগইন করুন</p>
         </div>
@@ -161,7 +161,7 @@ const VendorLogin = () => {
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 mt-6">
-          &copy; {new Date().getFullYear()} Bebsha360। সর্বস্বত্ব সংরক্ষিত।
+          &copy; {new Date().getFullYear()} ResellerBrain। সর্বস্বত্ব সংরক্ষিত।
         </p>
       </div>
     </div>

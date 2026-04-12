@@ -62,7 +62,7 @@ const ProductDetailsHomePage = () => {
           <p className="product-price text-lg font-semibold text-green-600">You can set your own sell price which will be collected from your customer and will add the profit to your balance after delivery.</p>
 
           <p className="login-info text-sm text-center text-gray-700 italic mb-4">
-            For more information and access, please login to Bebsha360.
+            For more information and access, please login to ResellerBrain.
           </p>
           <button
            
