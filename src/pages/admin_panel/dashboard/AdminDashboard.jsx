@@ -1,4 +1,5 @@
 import React from "react";
+import { useGetAdminDashboardReportQuery } from "../../../redux/features/report";
 import {
   ShoppingBag,
   Package,
@@ -14,52 +15,56 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 
-const statCards = [
+const getStatCards = (data) => [
   {
     label: "মোট বিক্রয়",
-    value: "৳০",
-    change: "+০%",
+    value: `৳${data?.total_sell ?? 0}`,
+    change: "",
     icon: <DollarSign className="w-6 h-6" />,
     color: "bg-green-500",
   },
   {
     label: "মোট অর্ডার",
-    value: "০",
-    change: "+০%",
+    value: `${data?.orders_count ?? 0}`,
+    change: "",
     icon: <ShoppingBag className="w-6 h-6" />,
     color: "bg-blue-500",
   },
   {
     label: "মোট পণ্য",
-    value: "০",
+    value: `${data?.products_count ?? 0}`,
     change: "",
     icon: <Package className="w-6 h-6" />,
     color: "bg-purple-500",
   },
   {
     label: "মোট ভেন্ডর",
-    value: "০",
+    value: `${data?.total_vendor ?? 0}`,
     change: "",
     icon: <Store className="w-6 h-6" />,
     color: "bg-orange-500",
   },
   {
     label: "মোট ড্রপশিপার",
-    value: "০",
+    value: `${data?.total_dropshipper ?? 0}`,
     change: "",
     icon: <Truck className="w-6 h-6" />,
     color: "bg-teal-500",
   },
   {
     label: "মোট কর্মচারী",
-    value: "০",
+    value: `${data?.total_admin ?? 0}`,
     change: "",
     icon: <Users className="w-6 h-6" />,
     color: "bg-indigo-500",
   },
 ];
 
+
 const AdminDashboard = () => {
+  const { data, isLoading, isError, error } = useGetAdminDashboardReportQuery();
+  const stats = getStatCards(data?.data);
+
   return (
     <div className="space-y-6">
       {/* Welcome */}
@@ -72,26 +77,34 @@ const AdminDashboard = () => {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {statCards.map((card) => (
-          <div
-            key={card.label}
-            className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center text-white`}>
-                {card.icon}
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, idx) => (
+            <div key={idx} className="bg-gray-100 rounded-xl border border-gray-200 p-5 animate-pulse h-32" />
+          ))
+        ) : isError ? (
+          <div className="col-span-6 text-center text-red-500">ডেটা লোড করতে সমস্যা হয়েছে।</div>
+        ) : (
+          stats.map((card) => (
+            <div
+              key={card.label}
+              className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition"
+            >
+              <div className={`flex items-center justify-between mb-3`}>
+                <div className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center text-white`}>
+                  {card.icon}
+                </div>
+                {card.change && (
+                  <span className="flex items-center text-xs font-medium text-green-600">
+                    <ArrowUpRight className="w-3 h-3" />
+                    {card.change}
+                  </span>
+                )}
               </div>
-              {card.change && (
-                <span className="flex items-center text-xs font-medium text-green-600">
-                  <ArrowUpRight className="w-3 h-3" />
-                  {card.change}
-                </span>
-              )}
+              <p className="text-2xl font-bold text-gray-800">{card.value}</p>
+              <p className="text-xs text-gray-500 mt-1 font-medium">{card.label}</p>
             </div>
-            <p className="text-2xl font-bold text-gray-800">{card.value}</p>
-            <p className="text-xs text-gray-500 mt-1 font-medium">{card.label}</p>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       {/* Order Summary + Recent Activity */}

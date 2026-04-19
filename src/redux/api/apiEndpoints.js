@@ -27,6 +27,12 @@ export const API_ENDPOINTS = {
     delete: define("DELETE", "/users/delete/{id}"),
   },
 
+  dashboard: {
+   
+    adminDashboardReport: define("GET", "/reports/dashboard"),
+  
+  },
+
   categories: {
     create: define("POST", "/categories/create"),
     list: define("GET", "/categories/list"),

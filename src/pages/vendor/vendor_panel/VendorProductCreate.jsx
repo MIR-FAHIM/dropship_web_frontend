@@ -8,6 +8,12 @@ import { useListCategoriesQuery } from "../../../redux/features/category";
 import { useListBrandsQuery } from "../../../redux/features/brand";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
+import { useGetAttributesQuery, useGetAttributeDetailsQuery } from "../../../redux/features/attribute";
+import { useCreateProductAttributeMutation, useListProductAttributesQuery } from "../../../redux/features/productAttribute";
+import FormikForm from "../../../components/formik/FormikForm";
+import FormikDropdown from "../../../components/formik/FormikDropdown";
+import FormikInput from "../../../components/formik/FormikInput";
+import * as Yup from "yup";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
 
@@ -16,6 +22,7 @@ const tabs = [
   { id: "media", label: "ছবি ও মিডিয়া" },
   { id: "pricing", label: "মূল্য ও স্টক" },
   { id: "shipping", label: "শিপিং ও সেটিংস" },
+  { id: "productAttribute", label: "Product Attribute" },
 ];
 
 const initialForm = {
@@ -32,6 +39,7 @@ const initialForm = {
   photosPreview: null,
   video_link: "",
   unit_price: "",
+  max_resell_price: "",
   purchase_price: "",
   current_stock: "",
   unit: "",
@@ -61,6 +69,36 @@ const VendorProductCreate = () => {
   const [formData, setFormData] = useState(initialForm);
   const [mediaTarget, setMediaTarget] = useState(null);
   const [mediaOpen, setMediaOpen] = useState(false);
+  const [createdProductId, setCreatedProductId] = useState(null);
+  const [selectedAttrId, setSelectedAttrId] = useState(null);
+  const { data: attrData } = useGetAttributesQuery();
+  const [createProductAttribute, { isLoading: creatingProdAttr }] = useCreateProductAttributeMutation();
+  const { data: prodAttrList, refetch: refetchProdAttr } = useListProductAttributesQuery(createdProductId, { skip: !createdProductId });
+  const attributeOptions = (attrData?.data || []).map((a) => ({ value: a.id, label: a.name }));
+  const { data: selectedAttrDetails, isLoading: loadingAttrDetails } = useGetAttributeDetailsQuery(selectedAttrId, { skip: selectedAttrId == null });
+  const valuesArr = selectedAttrDetails?.data?.values || selectedAttrDetails?.data?.attribute_values || [];
+  const attributeValueOptions = Array.isArray(valuesArr)
+    ? valuesArr.map((v) => ({ value: v.id, label: v.value }))
+    : [];
+  const prodAttrInitial = { attribute_id: "", attribute_value_id: "", stock: "" };
+  const prodAttrSchema = Yup.object({
+    attribute_id: Yup.string().required("Required"),
+    attribute_value_id: Yup.string().required("Required"),
+    stock: Yup.number().required("Required"),
+  });
+  const handleProdAttrSubmit = async (values, { resetForm }) => {
+    if (!createdProductId) return toast.error("Product must be created first");
+    const payload = {
+      product_id: createdProductId,
+      attribute_id: values.attribute_id,
+      attribute_value_id: values.attribute_value_id,
+      stock: values.stock,
+    };
+    await createProductAttribute(payload).unwrap();
+    toast.success("Product attribute added");
+    resetForm();
+    refetchProdAttr();
+  };
 
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const { data: catData } = useListCategoriesQuery(1);
@@ -120,6 +158,7 @@ const VendorProductCreate = () => {
     payload.append("description", formData.description);
     payload.append("unit_price", formData.unit_price);
     payload.append("purchase_price", formData.purchase_price || "");
+    payload.append("max_resell_price", formData.max_resell_price || "");
     payload.append("current_stock", formData.current_stock || "");
     payload.append("unit", formData.unit);
     payload.append("weight", formData.weight);
@@ -144,9 +183,14 @@ const VendorProductCreate = () => {
     payload.append("barcode", formData.barcode);
 
     try {
-      await createProduct(payload).unwrap();
+      const res = await createProduct(payload).unwrap();
       toast.success("পণ্য তৈরি হয়েছে!");
-      navigate("/vendor-panel/products");
+      if (res?.data?.id) {
+        setCreatedProductId(res.data.id);
+        setActiveTab("productAttribute");
+      } else {
+        navigate("/vendor-panel/products");
+      }
     } catch (err) {
       toast.error(err?.data?.message || "পণ্য তৈরি ব্যর্থ!");
     }
@@ -297,12 +341,16 @@ const VendorProductCreate = () => {
           {activeTab === "pricing" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <div>
-                <label className={labelClass}>বিক্রয় মূল্য (৳) *</label>
+                <label className={labelClass}>Dropshipping Price *</label>
                 <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
               <div>
-                <label className={labelClass}>ক্রয় মূল্য (৳)</label>
+                <label className={labelClass}>Base Price (৳)</label>
                 <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Max Resell Price (৳)</label>
+                <input type="number" name="max_resell_price" value={formData.max_resell_price} onChange={handleChange} placeholder="0" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>বর্তমান স্টক</label>
@@ -360,9 +408,65 @@ const VendorProductCreate = () => {
           )}
 
           {/* Tab: Shipping & Settings */}
+                    {/* Tab: Product Attribute */}
+                    {activeTab === "productAttribute" && (
+                      <div className="space-y-6">
+                        <h2 className="text-lg font-bold mb-2">Product Attribute</h2>
+                        <FormikForm
+                          initialValues={prodAttrInitial}
+                          validationSchema={prodAttrSchema}
+                          onSubmit={handleProdAttrSubmit}
+                        >
+                          <FormikDropdown
+                            name="attribute_id"
+                            label="Attribute"
+                            options={attributeOptions}
+                            onChange={(val, form) => {
+                              const numVal = typeof val === "string" ? Number(val) : val;
+                              setSelectedAttrId(numVal);
+                              form.setFieldValue("attribute_id", numVal);
+                              form.setFieldValue("attribute_value_id", "");
+                            }}
+                          />
+                          <FormikDropdown
+                            name="attribute_value_id"
+                            label={loadingAttrDetails ? "Loading..." : "Attribute Value"}
+                            options={attributeValueOptions}
+                            disabled={selectedAttrId == null || loadingAttrDetails}
+                          />
+                          {selectedAttrId != null && !loadingAttrDetails && attributeValueOptions.length === 0 && (
+                            <div className="text-xs text-red-500 mt-1">No attribute values found for this attribute.</div>
+                          )}
+                          <FormikInput name="stock" label="Stock" type="number" required />
+                          <button
+                            type="submit"
+                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                            disabled={creatingProdAttr}
+                          >
+                            {creatingProdAttr ? "Adding..." : "Add Attribute"}
+                          </button>
+                        </FormikForm>
+
+                        {/* List of product attributes */}
+                        <div className="mt-6">
+                          <h3 className="font-semibold mb-2">Attribute List</h3>
+                          {prodAttrList?.data?.length > 0 ? (
+                            <ul className="list-disc ml-6">
+                              {prodAttrList.data.map((item) => (
+                                <li key={item.id}>
+                                  Attribute: {item.attribute?.name} | Value: {item.attribute_value?.value} | Stock: {item.stock}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <div className="text-gray-400">No attributes added yet.</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
           {activeTab === "shipping" && (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <label className={labelClass}>শিপিং ধরন</label>
                   <select name="shipping_type" value={formData.shipping_type} onChange={handleChange} className={inputClass}>
@@ -375,7 +479,7 @@ const VendorProductCreate = () => {
                   <label className={labelClass}>শিপিং চার্জ (৳)</label>
                   <input type="number" name="shipping_cost" value={formData.shipping_cost} onChange={handleChange} placeholder="0" className={inputClass} />
                 </div>
-              </div>
+              </div> */}
 
               <div>
                 <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-4">সেটিংস</p>
