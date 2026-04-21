@@ -119,31 +119,51 @@ const AdminProductCreate = () => {
 
 
   // State for attribute values dropdown (must be before hooks that use it)
-  const [selectedAttrId, setSelectedAttrId] = useState(null); // number or null
+  const [selectedAttrId, setSelectedAttrId] = useState(""); // string for UI, number for API
 
-  // Product Attribute Tab Logic (move to top-level)
   const { data: attrData } = useGetAttributesQuery();
   const [createProductAttribute, { isLoading: creatingProdAttr }] = useCreateProductAttributeMutation();
   const { data: prodAttrList, refetch: refetchProdAttr } = useListProductAttributesQuery(createdProductId, { skip: !createdProductId });
 
   // Prepare attribute options (value as number)
-  const attributeOptions = (attrData?.data || []).map((a) => ({ value: a.id, label: a.name }));
+  const attributeOptions = (attrData?.data || []).map((a) => ({
+    value: String(a.id),
+    label: a.name,
+  }));
 
   // Fetch attribute values when attribute is selected
-  const { data: selectedAttrDetails, isLoading: loadingAttrDetails, refetch: refetchAttrDetails } = useGetAttributeDetailsQuery(selectedAttrId, { skip: selectedAttrId == null });
+  const shouldFetchAttrDetails = !!selectedAttrId && !isNaN(Number(selectedAttrId));
+  const {
+    data: selectedAttrDetails,
+    isLoading: loadingAttrDetails,
+  } = useGetAttributeDetailsQuery(
+    shouldFetchAttrDetails ? Number(selectedAttrId) : undefined,
+    {
+      skip: !shouldFetchAttrDetails,
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   // Debug log for API response
-  React.useEffect(() => {
-    if (selectedAttrId != null) {
-      console.log("Selected attribute id (number):", selectedAttrId);
-      console.log("Attribute details API response:", selectedAttrDetails);
-    }
-  }, [selectedAttrId, selectedAttrDetails]);
+  // Debug log for API response (remove in production)
+  // React.useEffect(() => {
+  //   if (selectedAttrId) {
+  //     console.log("Selected attribute id (number):", selectedAttrId);
+  //     console.log("Attribute details API response:", selectedAttrDetails);
+  //   }
+  // }, [selectedAttrId, selectedAttrDetails]);
 
   // Support both possible API response keys
-  const valuesArr = selectedAttrDetails?.data?.values || selectedAttrDetails?.data?.attribute_values || [];
+  const valuesArr =
+    selectedAttrDetails?.data?.values ||
+    selectedAttrDetails?.data?.attribute_values ||
+    [];
+
   const attributeValueOptions = Array.isArray(valuesArr)
-    ? valuesArr.map((v) => ({ value: v.id, label: v.value }))
+    ? valuesArr.map((v) => ({
+      value: String(v.id),
+      label: v.value,
+    }))
     : [];
 
   // Formik logic for product attribute
@@ -263,15 +283,13 @@ const AdminProductCreate = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${
-                activeTab === tab.id
+              className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${activeTab === tab.id
                   ? "border-red-600 text-red-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
+                }`}
             >
-              <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold ${
-                activeTab === tab.id ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600"
-              }`}>
+              <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold ${activeTab === tab.id ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600"
+                }`}>
                 {idx + 1}
               </span>
               {tab.label}
@@ -389,12 +407,12 @@ const AdminProductCreate = () => {
                 <label className={labelClass}>বিক্রয় মূল্য (৳) *</label>
                 <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
-             
+
               <div>
                 <label className={labelClass}>ক্রয় মূল্য (৳)</label>
                 <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
               </div>
-               <div>
+              <div>
                 <label className={labelClass}>সর্বাধিক পুনঃবিক্রয় মূল্য (৳) *</label>
                 <input type="number" name="max_resell_price" value={formData.max_resell_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
@@ -480,7 +498,7 @@ const AdminProductCreate = () => {
                     { name: "refundable", label: "রিফান্ডযোগ্য" },
                     { name: "published", label: "পাবলিশড" },
                     { name: "featured", label: "ফিচার্ড" },
-                    { name: "seller_featured", label: "সেলার ফিচার্ড" },
+                    { name: "seller_featured", label: "Hot Product" },
                     { name: "todays_deal", label: "আজকের ডিল" },
                     { name: "variant_product", label: "ভ্যারিয়েন্ট পণ্য" },
                     { name: "stock_visibility_state", label: "স্টক দৃশ্যমান" },
@@ -510,33 +528,42 @@ const AdminProductCreate = () => {
                 validationSchema={prodAttrSchema}
                 onSubmit={handleProdAttrSubmit}
               >
-                <FormikDropdown
-                  name="attribute_id"
-                  label="Attribute"
-                  options={attributeOptions}
-                  onChange={(val, form) => {
-                    // Ensure val is a number
-                    const numVal = typeof val === "string" ? Number(val) : val;
-                    setSelectedAttrId(numVal);
-                    form.setFieldValue("attribute_id", numVal);
-                    form.setFieldValue("attribute_value_id", "");
-                    // Debug log
-                    console.log("Selected attribute id (onChange):", numVal, typeof numVal);
-                  }}
-                />
+                {/* Attribute selection chips */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {attributeOptions.map((attr) => (
+                    <button
+                      type="button"
+                      key={attr.value}
+                      className={`px-3 py-1 rounded-full border text-sm transition
+                        ${selectedAttrId === attr.value
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"}
+                      `}
+                      onClick={() => {
+                        setSelectedAttrId(attr.value);
+                        // Set Formik field value for attribute_id and reset attribute_value_id
+                        document.querySelector('[name="attribute_id"]').value = attr.value;
+                        document.querySelector('[name="attribute_value_id"]').value = "";
+                      }}
+                    >
+                      {attr.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Hidden field for Formik to keep attribute_id in sync */}
+                <input type="hidden" name="attribute_id" value={selectedAttrId} />
+
                 <FormikDropdown
                   name="attribute_value_id"
                   label={loadingAttrDetails ? "Loading..." : "Attribute Value"}
                   options={attributeValueOptions}
-                  disabled={selectedAttrId == null || loadingAttrDetails}
+                  disabled={!selectedAttrId || loadingAttrDetails}
                 />
-                {/* Debug info for attribute values */}
-                {selectedAttrId != null && !loadingAttrDetails && attributeValueOptions.length === 0 && (
-                  <div className="text-xs text-red-500 mt-1">No attribute values found for this attribute.</div>
-                )}
-                {/* Debug info for attribute values */}
+
                 {selectedAttrId && !loadingAttrDetails && attributeValueOptions.length === 0 && (
-                  <div className="text-xs text-red-500 mt-1">No attribute values found for this attribute.</div>
+                  <div className="text-xs text-red-500 mt-1">
+                    No attribute values found for this attribute.
+                  </div>
                 )}
                 <FormikInput name="stock" label="Stock" type="number" required />
                 <button
