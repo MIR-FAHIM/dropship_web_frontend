@@ -3,6 +3,13 @@ import {
   ArrowLeft, Package, Loader2, Tag, Truck, Settings, Image as ImageIcon,
   User, Calendar, BarChart3, Weight, DollarSign,
 } from "lucide-react";
+import { useGetAttributesQuery, useGetAttributeDetailsQuery } from "../../../redux/features/attribute";
+import { useCreateProductAttributeMutation, useListByProductAttributesQuery } from "../../../redux/features/productAttribute";
+import FormikForm from "../../../components/formik/FormikForm";
+import FormikDropdown from "../../../components/formik/FormikDropdown";
+import FormikInput from "../../../components/formik/FormikInput";
+import * as Yup from "yup";
+import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
@@ -12,13 +19,13 @@ const tabs = [
   { id: "media", label: "ছবি ও মিডিয়া", icon: ImageIcon },
   { id: "pricing", label: "মূল্য ও স্টক", icon: DollarSign },
   { id: "shipping", label: "শিপিং ও সেটিংস", icon: Truck },
+  { id: "attributes", label: "Attributes", icon: Tag },
 ];
 
 const Badge = ({ active, trueLabel = "হ্যাঁ", falseLabel = "না" }) => (
   <span
-    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-      active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-    }`}
+    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+      }`}
   >
     {active ? trueLabel : falseLabel}
   </span>
@@ -35,6 +42,48 @@ const AdminProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
+
+
+  // Attribute tab state/hooks
+  const [selectedAttrId, setSelectedAttrId] = useState("");
+  const { data: attrData } = useGetAttributesQuery();
+  const { data: prodAttrList, refetch: refetchProdAttr } = useListByProductAttributesQuery('3');
+  const { data: selectedAttrDetails, isLoading: loadingAttrDetails } = useGetAttributeDetailsQuery(
+    selectedAttrId ? Number(selectedAttrId) : undefined,
+    { skip: selectedAttrId === "" }
+  );
+  const [createProductAttribute, { isLoading: creatingProdAttr }] = useCreateProductAttributeMutation();
+
+  const attributeOptions = (attrData?.data || []).map((a) => ({
+    value: String(a.id),
+    label: a.name,
+  }));
+
+  const valuesArr = selectedAttrDetails?.data?.values || selectedAttrDetails?.data?.attribute_values || [];
+  const attributeValueOptions = Array.isArray(valuesArr)
+    ? valuesArr.map((v) => ({ value: String(v.id), label: v.value }))
+    : [];
+
+  const prodAttrInitial = { attribute_id: "", attribute_value_id: "", stock: "" };
+  const prodAttrSchema = Yup.object({
+    attribute_id: Yup.string().required("Required"),
+    attribute_value_id: Yup.string().required("Required"),
+    stock: Yup.number().required("Required"),
+  });
+
+  const handleProdAttrSubmit = async (values, { resetForm }) => {
+    const payload = {
+      product_id: id,
+      attribute_id: Number(values.attribute_id),
+      attribute_value_id: Number(values.attribute_value_id),
+      stock: values.stock,
+    };
+    await createProductAttribute(payload).unwrap();
+    toast.success("Product attribute added");
+    resetForm();
+    setSelectedAttrId("");
+    refetchProdAttr();
+  };
 
   const { data, isLoading, isError } = useGetProductDetailsQuery(id);
   const product = data?.data;
@@ -126,11 +175,10 @@ const AdminProductDetail = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${
-                  activeTab === tab.id
+                className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${activeTab === tab.id
                     ? "border-red-600 text-red-600"
                     : "border-transparent text-gray-500 hover:text-gray-700"
-                }`}
+                  }`}
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
@@ -140,6 +188,64 @@ const AdminProductDetail = () => {
         </div>
 
         <div className="p-6">
+          {/* Tab: Attributes */}
+          {activeTab === "attributes" && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-bold mb-2">Product Attributes</h2>
+              <FormikForm
+                initialValues={prodAttrInitial}
+                validationSchema={prodAttrSchema}
+                onSubmit={handleProdAttrSubmit}
+              >
+                <FormikDropdown
+                  name="attribute_id"
+                  label="Attribute"
+                  options={attributeOptions}
+                  onChange={(val, form) => {
+                    const strVal = val ? String(val) : "";
+                    setSelectedAttrId(strVal);
+                    form.setFieldValue("attribute_id", strVal);
+                    form.setFieldValue("attribute_value_id", "");
+                  }}
+                />
+                <FormikDropdown
+                  name="attribute_value_id"
+                  label={loadingAttrDetails ? "Loading..." : "Attribute Value"}
+                  options={attributeValueOptions}
+                  disabled={!selectedAttrId || loadingAttrDetails}
+                />
+                {selectedAttrId && !loadingAttrDetails && attributeValueOptions.length === 0 && (
+                  <div className="text-xs text-red-500 mt-1">
+                    No attribute values found for this attribute.
+                  </div>
+                )}
+                <FormikInput name="stock" label="Stock" type="number" required />
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  disabled={creatingProdAttr}
+                >
+                  {creatingProdAttr ? "Adding..." : "Add Attribute"}
+                </button>
+              </FormikForm>
+
+              {/* List of product attributes */}
+              <div className="mt-6">
+                <h3 className="font-semibold mb-2">Attribute List</h3>
+                {prodAttrList?.data?.length > 0 ? (
+                  <ul className="list-disc ml-6">
+                    {prodAttrList.data.map((item) => (
+                      <li key={item.id}>
+                        Attribute: {item.attribute?.name} | Value: {item.value?.value} | Stock: {item.stock}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="text-gray-400">No attributes added yet.</div>
+                )}
+              </div>
+            </div>
+          )}
           {/* Tab: Basic Info */}
           {activeTab === "basic" && (
             <div>

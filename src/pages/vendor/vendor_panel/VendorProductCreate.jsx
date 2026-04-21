@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import {
   ArrowLeft, ArrowRight, Save, Loader2, ImagePlus, Check,
 } from "lucide-react";
@@ -286,7 +288,14 @@ const VendorProductCreate = () => {
               </div>
               <div className="md:col-span-2">
                 <label className={labelClass}>বিবরণ</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="পণ্যের বিবরণ লিখুন..." className={inputClass} />
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
+                  placeholder="পণ্যের বিবরণ লিখুন..."
+                  className="bg-white rounded-lg border border-gray-300"
+                  style={{ minHeight: 120 }}
+                />
               </div>
             </div>
           )}

@@ -11,13 +11,9 @@ import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
-
-import { useGetAttributesQuery } from "../../../redux/features/attribute";
-import { useGetAttributeDetailsQuery } from "../../../redux/features/attribute";
-import { useCreateProductAttributeMutation, useListProductAttributesQuery } from "../../../redux/features/productAttribute";
-import FormikForm from "../../../components/formik/FormikForm";
-import FormikDropdown from "../../../components/formik/FormikDropdown";
-import FormikInput from "../../../components/formik/FormikInput";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+// import FormikForm, FormikDropdown, FormikInput, and attribute hooks removed
 import * as Yup from "yup";
 
 const tabs = [
@@ -25,7 +21,6 @@ const tabs = [
   { id: "media", label: "ছবি ও মিডিয়া" },
   { id: "pricing", label: "মূল্য ও স্টক" },
   { id: "shipping", label: "শিপিং ও সেটিংস" },
-  { id: "productAttribute", label: "Product Attribute" },
 ];
 
 const initialForm = {
@@ -118,76 +113,7 @@ const AdminProductCreate = () => {
   };
 
 
-  // State for attribute values dropdown (must be before hooks that use it)
-  const [selectedAttrId, setSelectedAttrId] = useState(""); // string for UI, number for API
 
-  const { data: attrData } = useGetAttributesQuery();
-  const [createProductAttribute, { isLoading: creatingProdAttr }] = useCreateProductAttributeMutation();
-  const { data: prodAttrList, refetch: refetchProdAttr } = useListProductAttributesQuery(createdProductId, { skip: !createdProductId });
-
-  // Prepare attribute options (value as number)
-  const attributeOptions = (attrData?.data || []).map((a) => ({
-    value: String(a.id),
-    label: a.name,
-  }));
-
-  // Fetch attribute values when attribute is selected
-  const shouldFetchAttrDetails = !!selectedAttrId && !isNaN(Number(selectedAttrId));
-  const {
-    data: selectedAttrDetails,
-    isLoading: loadingAttrDetails,
-  } = useGetAttributeDetailsQuery(
-    shouldFetchAttrDetails ? Number(selectedAttrId) : undefined,
-    {
-      skip: !shouldFetchAttrDetails,
-      refetchOnMountOrArgChange: true,
-    }
-  );
-
-  // Debug log for API response
-  // Debug log for API response (remove in production)
-  // React.useEffect(() => {
-  //   if (selectedAttrId) {
-  //     console.log("Selected attribute id (number):", selectedAttrId);
-  //     console.log("Attribute details API response:", selectedAttrDetails);
-  //   }
-  // }, [selectedAttrId, selectedAttrDetails]);
-
-  // Support both possible API response keys
-  const valuesArr =
-    selectedAttrDetails?.data?.values ||
-    selectedAttrDetails?.data?.attribute_values ||
-    [];
-
-  const attributeValueOptions = Array.isArray(valuesArr)
-    ? valuesArr.map((v) => ({
-      value: String(v.id),
-      label: v.value,
-    }))
-    : [];
-
-  // Formik logic for product attribute
-  const prodAttrInitial = { attribute_id: "", attribute_value_id: "", stock: "" };
-  const prodAttrSchema = Yup.object({
-    attribute_id: Yup.string().required("Required"),
-    attribute_value_id: Yup.string().required("Required"),
-    stock: Yup.number().required("Required"),
-  });
-
-
-  const handleProdAttrSubmit = async (values, { resetForm }) => {
-    if (!createdProductId) return toast.error("Product must be created first");
-    const payload = {
-      product_id: createdProductId,
-      attribute_id: values.attribute_id,
-      attribute_value_id: values.attribute_value_id,
-      stock: values.stock,
-    };
-    await createProductAttribute(payload).unwrap();
-    toast.success("Product attribute added");
-    resetForm();
-    refetchProdAttr();
-  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) return toast.error("পণ্যের নাম দিন");
@@ -344,10 +270,14 @@ const AdminProductCreate = () => {
                 <label className={labelClass}>ট্যাগ</label>
                 <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="কমা দিয়ে আলাদা করুন" className={inputClass} />
               </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>বিবরণ</label>
-                <textarea name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="পণ্যের বিবরণ লিখুন..." className={inputClass} />
-              </div>
+                             <ReactQuill
+                               theme="snow"
+                               value={formData.description}
+                               onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
+                               placeholder="পণ্যের বিবরণ লিখুন..."
+                               className="bg-white rounded-lg border border-gray-300"
+                               style={{ minHeight: 120 }}
+                             />
             </div>
           )}
 
@@ -519,79 +449,7 @@ const AdminProductCreate = () => {
             </div>
           )}
 
-          {/* Tab: Product Attribute */}
-          {activeTab === "productAttribute" && (
-            <div className="space-y-6">
-              <h2 className="text-lg font-bold mb-2">Product Attribute</h2>
-              <FormikForm
-                initialValues={prodAttrInitial}
-                validationSchema={prodAttrSchema}
-                onSubmit={handleProdAttrSubmit}
-              >
-                {/* Attribute selection chips */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {attributeOptions.map((attr) => (
-                    <button
-                      type="button"
-                      key={attr.value}
-                      className={`px-3 py-1 rounded-full border text-sm transition
-                        ${selectedAttrId === attr.value
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"}
-                      `}
-                      onClick={() => {
-                        setSelectedAttrId(attr.value);
-                        // Set Formik field value for attribute_id and reset attribute_value_id
-                        document.querySelector('[name="attribute_id"]').value = attr.value;
-                        document.querySelector('[name="attribute_value_id"]').value = "";
-                      }}
-                    >
-                      {attr.label}
-                    </button>
-                  ))}
-                </div>
-                {/* Hidden field for Formik to keep attribute_id in sync */}
-                <input type="hidden" name="attribute_id" value={selectedAttrId} />
 
-                <FormikDropdown
-                  name="attribute_value_id"
-                  label={loadingAttrDetails ? "Loading..." : "Attribute Value"}
-                  options={attributeValueOptions}
-                  disabled={!selectedAttrId || loadingAttrDetails}
-                />
-
-                {selectedAttrId && !loadingAttrDetails && attributeValueOptions.length === 0 && (
-                  <div className="text-xs text-red-500 mt-1">
-                    No attribute values found for this attribute.
-                  </div>
-                )}
-                <FormikInput name="stock" label="Stock" type="number" required />
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  disabled={creatingProdAttr}
-                >
-                  {creatingProdAttr ? "Adding..." : "Add Attribute"}
-                </button>
-              </FormikForm>
-
-              {/* List of product attributes */}
-              <div className="mt-6">
-                <h3 className="font-semibold mb-2">Attribute List</h3>
-                {prodAttrList?.data?.length > 0 ? (
-                  <ul className="list-disc ml-6">
-                    {prodAttrList.data.map((item) => (
-                      <li key={item.id}>
-                        Attribute: {item.attribute?.name} | Value: {item.attribute_value?.value} | Stock: {item.stock}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-gray-400">No attributes added yet.</div>
-                )}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Navigation Buttons */}

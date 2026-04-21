@@ -16,12 +16,21 @@ const productAttributeApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+
+listByProductAttributes: builder.query({
+  query: (productId) => ({
+    url: `/product-attributes/by-product/${productId}`,
+    method: "GET",
+  }),
+}),
+
   }),
 });
 
 export const {
   useCreateProductAttributeMutation,
   useListProductAttributesQuery,
+  useListByProductAttributesQuery,
 } = productAttributeApi;
 
 export default productAttributeApi;

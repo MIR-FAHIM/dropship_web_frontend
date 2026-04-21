@@ -144,6 +144,7 @@ export const API_ENDPOINTS = {
   productAttributes: {
     create: define("POST", "/product-attributes/create"),
     list: define("GET", "/product-attributes/list"),
+    listByProduct: define("GET", "/product-attributes/by-product/{productId}"),
     details: define("GET", "/product-attributes/details/{id}"),
     update: define("PUT", "/product-attributes/update/{id}"),
     delete: define("DELETE", "/product-attributes/delete/{id}"),
