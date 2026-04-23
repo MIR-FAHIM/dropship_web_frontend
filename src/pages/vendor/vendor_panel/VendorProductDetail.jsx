@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
+import MediaPickerModal from "../../../components/shared/MediaPickerModal";
+import { useAddProductImageMutation } from "../../../redux/features/product";
 
 const tabs = [
   { id: "basic", label: "মৌলিক তথ্য", icon: Package },
@@ -40,6 +42,24 @@ const InfoRow = ({ label, value, children }) => (
 
 
 const VendorProductDetail = () => {
+    // Gallery image assignment state
+    const [mediaOpen, setMediaOpen] = useState(false);
+    const [assigning, setAssigning] = useState(false);
+    const [addProductImage] = useAddProductImageMutation();
+    // Handle image selection from media picker
+    const handleGalleryImageSelect = async (file) => {
+      if (!file?.id) return;
+      setAssigning(true);
+      try {
+        await addProductImage({ id, image: file.id }).unwrap();
+        toast.success("Image assigned to gallery!");
+      } catch (err) {
+        toast.error("Image assignment failed");
+      } finally {
+        setAssigning(false);
+        setMediaOpen(false);
+      }
+    };
   const { id } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
@@ -268,7 +288,10 @@ const VendorProductDetail = () => {
               </InfoRow>
               <InfoRow label="বিবরণ">
                 {product.description ? (
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap">{product.description}</p>
+                 <div
+                    className="text-sm text-gray-700 whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: product.description }}
+                  />
                 ) : "—"}
               </InfoRow>
               <InfoRow label="ইউনিট" value={product.unit} />
@@ -292,14 +315,30 @@ const VendorProductDetail = () => {
                   </div>
                 )}
               </div>
+              {/* Gallery Section (AdminProductDetail style) */}
               <div>
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">গ্যালারি ছবি</h3>
+                <div className="flex items-center gap-3 mb-3">
+                  <h3 className="text-sm font-semibold text-gray-700">গ্যালারি ছবি</h3>
+                  <button
+                    type="button"
+                    className="text-xs text-blue-600 hover:underline border px-2 py-1 rounded disabled:opacity-50"
+                    onClick={() => setMediaOpen(true)}
+                    disabled={assigning}
+                  >
+                    {assigning ? "Assigning..." : "ছবি যোগ করুন"}
+                  </button>
+                </div>
+                <MediaPickerModal
+                  open={mediaOpen}
+                  onClose={() => setMediaOpen(false)}
+                  onSelect={handleGalleryImageSelect}
+                />
                 {product.images && product.images.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
                     {product.images.map((img, i) => (
                       <img
-                        key={img.id || i}
-                        src={`${imgBaseUrl}/${img.file_name}`}
+                        key={img.image.id || i}
+                        src={`${imgBaseUrl}/${img.image.file_name}`}
                         alt={`photo-${i}`}
                         className="w-full aspect-square rounded-lg object-cover border border-gray-200"
                       />

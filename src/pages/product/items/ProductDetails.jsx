@@ -391,6 +391,7 @@ const ProductDetails = () => {
         <div className="tab-content">
           {activeTab === "images" && (
             <div className="images-tab-content">
+              {/* Primary image download */}
               <div className="image-container" key={product?.id}>
                 <img
                   src={primaryImageUrl}
@@ -401,6 +402,27 @@ const ProductDetails = () => {
                   Download
                 </button>
               </div>
+              {/* Gallery grid */}
+              {product.images && product.images.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 mt-6">
+                  {product.images.map((img, i) => (
+                    <div
+                      key={img.image.id || i}
+                      className="flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 overflow-hidden"
+                      style={{ minHeight: 180, minWidth: 180, maxHeight: 240, maxWidth: 240 }}
+                    >
+                      <img
+                        src={`${imgBaseUrl}/${img.image.file_name}`}
+                        alt={`photo-${i}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        className="gallery-image"
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mt-4">কোনো গ্যালারি ছবি নেই।</p>
+              )}
             </div>
           )}
           {activeTab === "details" && (

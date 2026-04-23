@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { imgBaseUrl } from "../../../../config";
 import {
   Plus,
   Search,
@@ -25,7 +26,9 @@ import {
   useGetTaskStatusListQuery,
   useGetTaskTypeListQuery,
   useGetTaskPriorityListQuery,
+  useAssignTaskMutation,
 } from "../../../redux/features/task";
+import { useGetAdminListQuery } from "../../../redux/features/user";
 
 const priorityColors = {
   Low: "bg-green-100 text-green-700",
@@ -56,6 +59,7 @@ const AdminTasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailTask, setDetailTask] = useState(null);
+  const [previewImg, setPreviewImg] = useState(null);
 
   const { data: taskData, isLoading: tasksLoading } = useGetTaskListQuery();
   const { data: statusData } = useGetTaskStatusListQuery();
@@ -63,6 +67,10 @@ const AdminTasks = () => {
   const { data: priorityData } = useGetTaskPriorityListQuery();
   const [createTask, { isLoading: creating }] = useCreateTaskMutation();
   const [updateTaskStatus] = useUpdateTaskStatusMutation();
+  const [assignTask] = useAssignTaskMutation();
+  const { data: adminListData, isLoading: adminListLoading } = useGetAdminListQuery();
+  const admins = adminListData?.data?.data || [];
+  const [selectedAdmin, setSelectedAdmin] = useState(null);
 
   const tasks = taskData?.data?.data || [];
   const statuses = statusData?.data?.data || [];
@@ -157,9 +165,20 @@ const AdminTasks = () => {
       }
     });
     try {
-      await createTask(fd).unwrap();
+      const taskRes = await createTask(fd).unwrap();
+      // Get created task id
+      const taskId = taskRes?.data?.id;
+      if (taskId && selectedAdmin) {
+        const assignFd = new FormData();
+        assignFd.append("task_id", taskId);
+        assignFd.append("assign_to", selectedAdmin.id);
+        // Optionally, set added_by from current user if available
+        // assignFd.append("added_by", currentUserId);
+        await assignTask(assignFd).unwrap();
+      }
       setShowCreateModal(false);
       resetForm();
+      setSelectedAdmin(null);
     } catch (err) {
       console.error("Task create failed:", err);
     }
@@ -258,7 +277,7 @@ const AdminTasks = () => {
                       অগ্রগতি
                     </th>
                     <th className="text-left py-3 px-4 font-medium">
-                      তৈরি করেছেন
+                      Assigned To
                     </th>
                     <th className="text-left py-3 px-4 font-medium">তারিখ</th>
                     <th className="text-center py-3 px-4 font-medium">
@@ -274,7 +293,7 @@ const AdminTasks = () => {
                     >
                       <td className="py-3.5 px-4 max-w-[200px]">
                         <p className="font-semibold text-gray-800 line-clamp-1">
-                          {task.task_title}
+                         {task.id}: {task.task_title}
                         </p>
                         <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">
                           {task.task_details}
@@ -341,14 +360,23 @@ const AdminTasks = () => {
                         )}
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
-                            {task.creator?.name?.charAt(0)?.toUpperCase() || "?"}
-                          </div>
-                          <span className="text-xs text-gray-600 line-clamp-1">
-                            {task.creator?.name || "—"}
-                          </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {Array.isArray(task.assigned_to) && task.assigned_to.length > 0 ? (
+                            task.assigned_to.map((a) => (
+                              <div key={a.id} className="flex items-center gap-1 mr-2 mb-1">
+                                <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-600">
+                                  {a.assign_to?.name?.charAt(0)?.toUpperCase() || "?"}
+                                </div>
+                                <span className="text-xs text-gray-600 line-clamp-1">
+                                  {a.assign_to?.name || "—"}
+                                </span>
+                              </div>
+                            ))
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
                         </div>
+   
                       </td>
                       <td className="py-3.5 px-4 text-xs text-gray-500">
                         {formatDate(task.created_at)}
@@ -454,19 +482,36 @@ const AdminTasks = () => {
                   </div>
                 )}
 
-                {/* Footer */}
-                <div className="flex items-center justify-between pt-1 border-t border-gray-100">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[9px] font-bold text-gray-600">
-                      {task.creator?.name?.charAt(0)?.toUpperCase() || "?"}
-                    </div>
-                    <span className="text-[11px] text-gray-500">
-                      {task.creator?.name || "—"}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-gray-400">
-                    {formatDate(task.created_at)}
-                  </span>
+                {/* Assigned To (Mobile) */}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {Array.isArray(task.assigned_to) && task.assigned_to.length > 0 ? (
+                    task.assigned_to.map((a) => (
+                      <div key={a.id} className="flex items-center gap-1">
+                        <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center text-[9px] font-bold text-gray-600">
+                          {a.assign_to?.name?.charAt(0)?.toUpperCase() || "?"}
+                        </div>
+                        <span className="text-[11px] text-gray-600 line-clamp-1">
+                          {a.assign_to?.name || "—"}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-[11px] text-gray-400">—</span>
+                  )}
+                </div>
+     
+                {/* Task Images (Mobile) */}
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {Array.isArray(task.task_images) && task.task_images.length > 0 && task.task_images.map((img) => (
+                    img.task_image?.file_name ? (
+                      <img
+                        key={img.id}
+                        src={`${imgBaseUrl}/${img.task_image.file_name}`}
+                        alt={img.task_image.file_name || 'task-img'}
+                        className="w-7 h-7 rounded object-cover border border-gray-200"
+                      />
+                    ) : null
+                  ))}
                 </div>
               </div>
             ))}
@@ -530,6 +575,30 @@ const AdminTasks = () => {
                 />
               </div>
 
+              {/* Admin Selection Row */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  অ্যাডমিন নির্বাচন করুন
+                </label>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {adminListLoading ? (
+                    <span className="text-xs text-gray-400">লোড হচ্ছে...</span>
+                  ) : admins.length === 0 ? (
+                    <span className="text-xs text-gray-400">কোনো অ্যাডমিন নেই</span>
+                  ) : (
+                    admins.map((admin) => (
+                      <button
+                        type="button"
+                        key={admin.id}
+                        className={`px-3 py-1 rounded-full border text-xs font-medium transition ${selectedAdmin?.id === admin.id ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}
+                        onClick={() => setSelectedAdmin(admin)}
+                      >
+                        {admin.name}
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
               {/* Type & Priority Row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -737,6 +806,48 @@ const AdminTasks = () => {
 
             {/* Body */}
             <div className="p-6 space-y-5">
+                            {/* Assigned To (Detail Modal) */}
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-1">Assigned To</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Array.isArray(detailTask.assigned_to) && detailTask.assigned_to.length > 0 ? (
+                                  detailTask.assigned_to.map((a) => (
+                                    <div key={a.id} className="flex items-center gap-1">
+                                      <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-[11px] font-bold text-gray-600">
+                                        {a.assign_to?.name?.charAt(0)?.toUpperCase() || "?"}
+                                      </div>
+                                      <span className="text-xs text-gray-700 line-clamp-1">
+                                        {a.assign_to?.name || "—"}
+                                      </span>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Task Images (Detail Modal) */}
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-1">Task Images</p>
+                              <div className="flex flex-wrap gap-2">
+                                {Array.isArray(detailTask.task_images) && detailTask.task_images.length > 0 ? (
+                                  detailTask.task_images.map((img) => (
+                                    img.task_image?.file_name ? (
+                                      <img
+                                        key={img.id}
+                                        src={img.task_image?.url || `${imgBaseUrl}/${img.task_image.file_name}`}
+                                        alt={img.task_image.file_original_name || img.task_image.file_name || 'task-img'}
+                                        className="w-12 h-12 rounded object-cover border border-gray-200 cursor-pointer hover:scale-105 transition-transform"
+                                        onClick={() => setPreviewImg(img.task_image?.url || `${imgBaseUrl}/${img.task_image.file_name}`)}
+                                      />
+                                    ) : null
+                                  ))
+                                ) : (
+                                  <span className="text-xs text-gray-400">—</span>
+                                )}
+                              </div>
+                            </div>
               {/* Title */}
               <div>
                 <h3 className="text-lg font-bold text-gray-800">
@@ -887,6 +998,23 @@ const AdminTasks = () => {
           </div>
         </div>
       )}
+    {/* Image Preview Modal */}
+    {previewImg && (
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70" onClick={() => setPreviewImg(null)}>
+        <img
+          src={previewImg}
+          alt="Preview"
+          className="max-w-full max-h-[90vh] rounded-xl shadow-2xl border-4 border-white"
+          onClick={e => e.stopPropagation()}
+        />
+        <button
+          onClick={() => setPreviewImg(null)}
+          className="absolute top-6 right-6 bg-white rounded-full p-2 shadow hover:bg-gray-100 transition"
+        >
+          <X className="w-6 h-6 text-gray-700" />
+        </button>
+      </div>
+    )}
     </div>
   );
 };

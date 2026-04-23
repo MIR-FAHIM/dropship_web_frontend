@@ -30,7 +30,7 @@ const initialForm = {
   vendor_id: "",
   tags: "",
   description: "",
-  slug: "",
+  // slug: "",
   barcode: "",
   // media
   thumbnail_img: null,
@@ -157,7 +157,7 @@ const AdminProductCreate = () => {
     payload.append("variant_product", formData.variant_product);
     payload.append("approved", formData.approved);
     payload.append("stock_visibility_state", formData.stock_visibility_state);
-    payload.append("slug", formData.slug);
+    // payload.append("slug", formData.slug);
     payload.append("barcode", formData.barcode);
 
     try {
@@ -210,8 +210,8 @@ const AdminProductCreate = () => {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition ${activeTab === tab.id
-                  ? "border-red-600 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                ? "border-red-600 text-red-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
             >
               <span className={`w-6 h-6 rounded-full text-xs flex items-center justify-center font-bold ${activeTab === tab.id ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600"
@@ -258,26 +258,26 @@ const AdminProductCreate = () => {
                   ))}
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label className={labelClass}>স্লাগ</label>
                 <input type="text" name="slug" value={formData.slug} onChange={handleChange} placeholder="product-slug" className={inputClass} />
-              </div>
+              </div> */}
               <div>
-                <label className={labelClass}>বারকোড</label>
+                <label className={labelClass}>SKU</label>
                 <input type="text" name="barcode" value={formData.barcode} onChange={handleChange} placeholder="বারকোড" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>ট্যাগ</label>
                 <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="কমা দিয়ে আলাদা করুন" className={inputClass} />
               </div>
-                             <ReactQuill
-                               theme="snow"
-                               value={formData.description}
-                               onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
-                               placeholder="পণ্যের বিবরণ লিখুন..."
-                               className="bg-white rounded-lg border border-gray-300"
-                               style={{ minHeight: 120 }}
-                             />
+              <ReactQuill
+                theme="snow"
+                value={formData.description}
+                onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
+                placeholder="পণ্যের বিবরণ লিখুন..."
+                className="bg-white rounded-lg border border-gray-300"
+                style={{ minHeight: 120 }}
+              />
             </div>
           )}
 

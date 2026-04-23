@@ -59,6 +59,8 @@ const handleProduct = (id) => {
           <ProductCard
             key={product.id}
             product={product}
+            hideDownload={true}
+            hideFav={true}
             onClick={() => handleProduct(product.id)}
             onDownload={handleDownloadImage}
           />

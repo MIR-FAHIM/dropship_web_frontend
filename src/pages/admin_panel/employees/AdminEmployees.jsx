@@ -158,7 +158,7 @@ const AdminEmployees = () => {
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-sm font-bold text-red-600 flex-shrink-0">
-                            {admin.name?.charAt(0)?.toUpperCase() || "?"}
+                          {admin.id}
                           </div>
                           <span className="font-medium text-gray-800 line-clamp-1">
                             {admin.name}

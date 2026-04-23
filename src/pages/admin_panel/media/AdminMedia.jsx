@@ -104,6 +104,7 @@ const AdminMedia = () => {
                     loading="lazy"
                   />
                   {/* Overlay */}
+               
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
                     <button
                       onClick={() => handleDelete(file.id)}
@@ -114,7 +115,7 @@ const AdminMedia = () => {
                   </div>
                   {/* File info */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <p className="text-white text-xs truncate">{file.file_original_name}</p>
+                    <p className="text-white text-xs truncate">{file.id}: {file.file_original_name}</p>
                     <p className="text-gray-300 text-[10px]">{(file.file_size / 1024).toFixed(1)} KB</p>
                   </div>
                 </div>

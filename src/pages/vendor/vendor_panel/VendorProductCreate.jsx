@@ -24,7 +24,7 @@ const tabs = [
   { id: "media", label: "ছবি ও মিডিয়া" },
   { id: "pricing", label: "মূল্য ও স্টক" },
   { id: "shipping", label: "শিপিং ও সেটিংস" },
-  { id: "productAttribute", label: "Product Attribute" },
+
 ];
 
 const initialForm = {
@@ -33,7 +33,7 @@ const initialForm = {
   brand_id: "",
   tags: "",
   description: "",
-  slug: "",
+ // slug: "",
   barcode: "",
   thumbnail_img: null,
   thumbnailPreview: null,
@@ -181,7 +181,7 @@ const VendorProductCreate = () => {
     payload.append("variant_product", formData.variant_product);
     payload.append("approved", formData.approved);
     payload.append("stock_visibility_state", formData.stock_visibility_state);
-    payload.append("slug", formData.slug);
+   // payload.append("slug", formData.slug);
     payload.append("barcode", formData.barcode);
 
     try {
@@ -274,12 +274,12 @@ const VendorProductCreate = () => {
                   ))}
                 </select>
               </div>
-              <div>
+              {/* <div>
                 <label className={labelClass}>স্লাগ</label>
                 <input type="text" name="slug" value={formData.slug} onChange={handleChange} placeholder="product-slug" className={inputClass} />
-              </div>
+              </div> */}
               <div>
-                <label className={labelClass}>বারকোড</label>
+                <label className={labelClass}>SKU</label>
                 <input type="text" name="barcode" value={formData.barcode} onChange={handleChange} placeholder="বারকোড" className={inputClass} />
               </div>
               <div>
@@ -498,7 +498,7 @@ const VendorProductCreate = () => {
                     { name: "refundable", label: "রিফান্ডযোগ্য" },
                     { name: "published", label: "পাবলিশড" },
                     { name: "featured", label: "ফিচার্ড" },
-                    { name: "seller_featured", label: "সেলার ফিচার্ড" },
+                    { name: "seller_featured", label: "Hot Product" },
                     { name: "todays_deal", label: "আজকের ডিল" },
                     { name: "variant_product", label: "ভ্যারিয়েন্ট পণ্য" },
                     { name: "stock_visibility_state", label: "স্টক দৃশ্যমান" },

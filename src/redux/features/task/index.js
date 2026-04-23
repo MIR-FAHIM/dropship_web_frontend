@@ -19,6 +19,14 @@ const taskApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Tasks"],
     }),
+    assignTask: builder.mutation({
+      query: (formData) => ({
+        url: API_ENDPOINTS.tasks.assign.path,
+        method: "POST",
+        body: formData,
+      }),
+      invalidatesTags: ["Tasks"],
+    }),
 
     updateTaskStatus: builder.mutation({
       query: ({ id, status_id }) => ({
@@ -45,6 +53,7 @@ const taskApi = baseApi.injectEndpoints({
 
 export const {
   useGetTaskListQuery,
+  useAssignTaskMutation,
   useCreateTaskMutation,
   useUpdateTaskStatusMutation,
   useGetTaskStatusListQuery,

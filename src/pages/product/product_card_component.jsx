@@ -52,6 +52,8 @@ const ProductCard = ({
 	onClick,
 	onDownload,
 	onView,
+	hideDownload,
+	hideFav,
 	onToggleWish,
 	onAddToCart,
 }) => {
@@ -279,8 +281,8 @@ const ProductCard = ({
 			<Box sx={{ p: 1 }}>
 				<Box
 					sx={{
-						height: 150,
-						borderRadius: 2.5,
+						height: 300,
+						borderRadius: 1,
 						overflow: "hidden",
 						border: `1px solid ${theme.palette.divider}`,
 						background: theme.palette.action.hover,
@@ -395,15 +397,17 @@ const ProductCard = ({
 
 					<Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
 						<Stack direction="row" spacing={0.5} alignItems="center">
+							{!hideFav && (	
 							<Tooltip title={inWish ? "Already in wishlist" : "Add to wishlist"}>
 								<span>
+
 									<IconButton
 										onClick={handleToggleWish}
 										sx={{
 											size: "small",
 											width: 32,
 											height: 32,
-											borderRadius: 2,
+											borderRadius: 1,
 											border: `1px solid ${theme.palette.divider}`,
 											background: theme.palette.background.paper,
 											"&:hover": { background: theme.palette.action.hover },
@@ -413,7 +417,7 @@ const ProductCard = ({
 									</IconButton>
 								</span>
 							</Tooltip>
-
+							)}
 							<Tooltip title="Quick view">
 								<IconButton
 									onClick={handleView}
@@ -429,7 +433,7 @@ const ProductCard = ({
 									<VisibilityOutlined fontSize="small" />
 								</IconButton>
 							</Tooltip>
-
+							{!hideDownload && (
 							<Tooltip title="Download image">
 								<IconButton
 									onClick={(event) => {
@@ -448,8 +452,9 @@ const ProductCard = ({
 									<Download fontSize="small" />
 								</IconButton>
 							</Tooltip>
+							)}
 						</Stack>
-
+								
 						<Tooltip title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}>
 							<span>
 								<IconButton

@@ -91,7 +91,7 @@ const AdminProducts = () => {
                 <tbody>
                   {filtered.map((product, i) => (
                     <tr key={product.id} className="border-b last:border-0 hover:bg-gray-50">
-                      <td className="py-3 text-gray-600">{(currentPage - 1) * 20 + i + 1}</td>
+                      <td className="py-3 text-gray-600">{product.id}</td>
                       <td className="py-3">
                         {product.primary_image?.file_name ? (
                           <img

@@ -195,6 +195,7 @@ export const API_ENDPOINTS = {
     create: define("POST", "/tasks/create"),
     updateStatus: define("PATCH", "/tasks/update-status/{id}"),
     statusList: define("GET", "/tasks/status-list"),
+    assign: define("POST", "/tasks/assign"),
   },
 
   taskTypes: {

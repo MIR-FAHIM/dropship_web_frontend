@@ -1,33 +1,36 @@
 import React, { useState, useEffect } from "react";
-
-import "../../../src/css/ProductDetails.css"; // Custom CSS for styling
+import "../../../src/css/ProductDetails.css";
 import { FaHeart } from "react-icons/fa";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useGetProductDetailsQuery } from "../../redux/features/product";
 import { imgBaseUrl } from "../../../config";
-import { useNavigate } from "react-router-dom";
 const ProductDetailsHomePage = () => {
   const { id } = useParams();
  const  navigate = useNavigate();
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
   const [activeTab, setActiveTab] = useState("images");
+  const [selectedImage, setSelectedImage] = useState(null);
   const handleTabClick = (tab) => setActiveTab(tab);
   useEffect(() => {
-    console.log("product ID from URL:", id);
+    setSelectedImage(null);
   }, [id]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="product-details-loading">Loading...</div>;
   }
 
   if (isError) {
-    return <div>Error: {error.message}</div>;
+    return <div className="product-details-error">Error: {error.message}</div>;
   }
 
   const product = detail?.data;
+  const galleryImages = product?.images && product.images.length > 0
+    ? product.images.map(img => img.image?.file_name ? `${imgBaseUrl}/${img.image.file_name}` : null).filter(Boolean)
+    : [];
   const primaryImageUrl = product?.primary_image?.file_name
     ? `${imgBaseUrl}/${product.primary_image.file_name}`
     : "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
+  const mainImageUrl = selectedImage || primaryImageUrl;
   const goToLogin = () => {
     navigate("/");
   };
@@ -35,11 +38,27 @@ const ProductDetailsHomePage = () => {
     <div className="product-details-container">
       <div className="product-header">
         <div className="product-image-column">
-          <img
-            src={primaryImageUrl}
-            alt={product?.name}
-            className="product-image"
-          />
+          <div className="main-image-container" style={{ width: 340, height: 340, borderRadius: 16, overflow: "hidden", background: "#f8f8f8", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #e5e7eb", marginBottom: 16 }}>
+            <img
+              src={mainImageUrl}
+              alt={product?.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              className="product-image"
+            />
+          </div>
+          {galleryImages.length > 0 && (
+            <div className="gallery-thumbnails" style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              {[primaryImageUrl, ...galleryImages].map((img, idx) => (
+                <img
+                  key={img + idx}
+                  src={img}
+                  alt={`Gallery ${idx}`}
+                  style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: mainImageUrl === img ? "2px solid #2563eb" : "1px solid #e5e7eb", cursor: "pointer", boxShadow: mainImageUrl === img ? "0 0 0 2px #2563eb33" : "none" }}
+                  onClick={() => setSelectedImage(img)}
+                />
+              ))}
+            </div>
+          )}
           <div className="product-actions">
             <p className="download-info">Marketing kits can be downloaded after login</p>
             <FaHeart
@@ -60,71 +79,74 @@ const ProductDetailsHomePage = () => {
             <p className="product-stock text-md font-semibold text-blue-300">Stock: {product?.current_stock ?? 0}</p>
           </div>
           <p className="product-price text-lg font-semibold text-green-600">You can set your own sell price which will be collected from your customer and will add the profit to your balance after delivery.</p>
-
           <p className="login-info text-sm text-center text-gray-700 italic mb-4">
             For more information and access, please login to ResellerBrain.
           </p>
-          <button
-           
-            onClick={goToLogin}
-          >
-            Login
-          </button>
+          <button onClick={goToLogin} className="login-btn">Login</button>
         </div>
-        
-
       </div>
 
-     {/* Product Images, Reviews, and Strategy Tabs */}
-           <div className="product-tabs">
-             <div className="tabs">
-               <button
-                 className={`tab ${activeTab === "images" ? "active" : ""}`}
-                 onClick={() => handleTabClick("images")}
-               >
-                 Images
-               </button>
-               <button
-                 className={`tab ${activeTab === "details" ? "active" : ""}`}
-                 onClick={() => handleTabClick("details")}
-               >
-                 Details
-               </button>
-             </div>
-     
-             {/* Tab Content */}
-                {/* Tab image */}
-             <div className="tab-content">
-               {activeTab === "images" && (
-                 <div className="images-tab-content">
-                   <div className="image-container" key={product?.id}>
-                     <img
-                       src={primaryImageUrl}
-                       alt={`Product Image ${product?.id}`}
-                       className="tab-image"
-                     />
-                     <p className="download-info">Marketing kits can be downloaded after login</p>
-                   </div>
-                 </div>
-               )}
-               {activeTab === "details" && (
-                 <div className="strategy-tab-content">
-                   <div className="strategy-card">
-                     <h3 className="strategy-title">Category</h3>
-                     <p className="strategy-subtitle">{product?.category?.name || "N/A"}</p>
-                   </div>
-                   <div className="strategy-card">
-                     <h3 className="strategy-title">Sub Category</h3>
-                     <p className="strategy-subtitle">{product?.sub_category?.name || "N/A"}</p>
-                   </div>
-                   <div className="strategy-card">
-                     <h3 className="strategy-title">Shop</h3>
-                     <p className="strategy-subtitle">{product?.shop?.name || "N/A"}</p>
-                   </div>
-                 </div>
-               )}
-             </div>
-           </div>
+      {/* Product Images, Reviews, and Strategy Tabs */}
+      <div className="product-tabs">
+        <div className="tabs">
+          <button
+            className={`tab ${activeTab === "images" ? "active" : ""}`}
+            onClick={() => handleTabClick("images")}
+          >
+            Images
+          </button>
+          <button
+            className={`tab ${activeTab === "details" ? "active" : ""}`}
+            onClick={() => handleTabClick("details")}
+          >
+            Details
+          </button>
+        </div>
+        <div className="tab-content">
+          {activeTab === "images" && (
+            <div className="images-tab-content">
+              <div className="image-container" key={product?.id}>
+                <img
+                  src={mainImageUrl}
+                  alt={`Product Image ${product?.id}`}
+                  className="tab-image"
+                  style={{ width: 340, height: 340, objectFit: "cover", borderRadius: 16, border: "1px solid #e5e7eb" }}
+                />
+                <p className="download-info">Marketing kits can be downloaded after login</p>
+              </div>
+              {galleryImages.length > 0 && (
+                <div className="gallery-thumbnails" style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  {[primaryImageUrl, ...galleryImages].map((img, idx) => (
+                    <img
+                      key={img + idx}
+                      src={img}
+                      alt={`Gallery ${idx}`}
+                      style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8, border: mainImageUrl === img ? "2px solid #2563eb" : "1px solid #e5e7eb", cursor: "pointer", boxShadow: mainImageUrl === img ? "0 0 0 2px #2563eb33" : "none" }}
+                      onClick={() => setSelectedImage(img)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {activeTab === "details" && (
+            <div className="strategy-tab-content">
+              <div className="strategy-card">
+                <h3 className="strategy-title">Category</h3>
+                <p className="strategy-subtitle">{product?.category?.name || "N/A"}</p>
+              </div>
+              <div className="strategy-card">
+                <h3 className="strategy-title">Sub Category</h3>
+                <p className="strategy-subtitle">{product?.sub_category?.name || "N/A"}</p>
+              </div>
+              <div className="strategy-card">
+                <h3 className="strategy-title">Shop</h3>
+                <p className="strategy-subtitle">{product?.shop?.name || "N/A"}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
