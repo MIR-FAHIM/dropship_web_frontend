@@ -18,6 +18,7 @@ import {
   XCircle,
   BarChart3,
   Eye,
+  Share2,
 } from "lucide-react";
 import {
   useGetTaskListQuery,
@@ -29,6 +30,9 @@ import {
   useAssignTaskMutation,
 } from "../../../redux/features/task";
 import { useGetAdminListQuery } from "../../../redux/features/user";
+import AssignTask from "./AssignTask";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+
 
 const priorityColors = {
   Low: "bg-green-100 text-green-700",
@@ -71,7 +75,7 @@ const AdminTasks = () => {
   const { data: adminListData, isLoading: adminListLoading } = useGetAdminListQuery();
   const admins = adminListData?.data?.data || [];
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-
+    const userId = getFromLocalstorage("userId") || 0;
   const tasks = taskData?.data?.data || [];
   const statuses = statusData?.data?.data || [];
   const taskTypes = typeData?.data?.data || [];
@@ -172,6 +176,7 @@ const AdminTasks = () => {
         const assignFd = new FormData();
         assignFd.append("task_id", taskId);
         assignFd.append("assign_to", selectedAdmin.id);
+        assignFd.append("added_by", userId); // Assuming you have userId from auth state
         // Optionally, set added_by from current user if available
         // assignFd.append("added_by", currentUserId);
         await assignTask(assignFd).unwrap();
@@ -381,13 +386,23 @@ const AdminTasks = () => {
                       <td className="py-3.5 px-4 text-xs text-gray-500">
                         {formatDate(task.created_at)}
                       </td>
-                      <td className="py-3.5 px-4 text-center">
+                      <td className="py-3.5 px-4 text-center flex gap-2 justify-center items-center">
                         <button
                           onClick={() => setDetailTask(task)}
                           className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-500 hover:text-red-500"
                           title="বিস্তারিত দেখুন"
                         >
                           <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            const url = `${window.location.origin}/task-share-detail/${task.id}`;
+                            navigator.clipboard.writeText(url);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded-lg transition text-gray-500 hover:text-blue-500"
+                          title="Copy share link"
+                        >
+                          <Share2 className="w-4 h-4" />
                         </button>
                       </td>
                     </tr>
@@ -576,29 +591,12 @@ const AdminTasks = () => {
               </div>
 
               {/* Admin Selection Row */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                  অ্যাডমিন নির্বাচন করুন
-                </label>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {adminListLoading ? (
-                    <span className="text-xs text-gray-400">লোড হচ্ছে...</span>
-                  ) : admins.length === 0 ? (
-                    <span className="text-xs text-gray-400">কোনো অ্যাডমিন নেই</span>
-                  ) : (
-                    admins.map((admin) => (
-                      <button
-                        type="button"
-                        key={admin.id}
-                        className={`px-3 py-1 rounded-full border text-xs font-medium transition ${selectedAdmin?.id === admin.id ? "bg-red-500 text-white border-red-500" : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"}`}
-                        onClick={() => setSelectedAdmin(admin)}
-                      >
-                        {admin.name}
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
+              <AssignTask
+                admins={admins}
+                selectedAdmin={selectedAdmin}
+                setSelectedAdmin={setSelectedAdmin}
+                adminListLoading={adminListLoading}
+              />
               {/* Type & Priority Row */}
               <div className="grid grid-cols-2 gap-3">
                 <div>

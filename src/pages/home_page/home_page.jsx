@@ -2,22 +2,24 @@ import React from "react";
 import { CheckCircle, TrendingUp, ShoppingBag, Image, DollarSign, Package, Truck, Shield, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {imgBaseUrl} from '../../../config';
+import { imgBaseUrl } from '../../../config';
 import { useListCategoriesQuery } from "../../redux/features/category";
 import { useButtonClickMutation } from "../../redux/features/user";
 import { Link } from "react-router-dom";
+import ProductsListHomePage from "./product_list_home";
+import FooterHome from "./FooterHome";
 const HomePage = () => {
 
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
-      const [trackButtonClick, { isButtonLoading: createLoading, error: createError }] = useButtonClickMutation();
+    const [trackButtonClick, { isButtonLoading: createLoading, error: createError }] = useButtonClickMutation();
     const { data, error, isLoading } = useListCategoriesQuery();
     const handleChangeLanguage = (lng) => {
         i18n.changeLanguage(lng); // Change language dynamically
         localStorage.setItem("language", lng); // Optionally persist language selection
     };
     const handleButtonClick = (buttonName) => {
-       
+
         trackButtonClick(buttonName)  // Call the mutation and pass the button name
             .unwrap() // Unwrap the response or error
             .then((response) => {
@@ -46,7 +48,7 @@ const HomePage = () => {
         { icon: <Package className="w-6 h-6 text-blue-600" />, text: t("home_page_bullets.instant_order_fulfillment") },
         { icon: <Truck className="w-6 h-6 text-red-500" />, text: t("home_page_bullets.cash_on_delivery") },
         { icon: <CheckCircle className="w-6 h-6 text-teal-500" />, text: t("home_page_bullets.no_stock_no_risk") }
-      ];
+    ];
     const workSteps = [
         {
             title: t("ধাপ ১ - মার্কেটিং:"),
@@ -144,14 +146,14 @@ const HomePage = () => {
                          <button className="bg-yellow-400 px-8 py-3 rounded-lg text-blue-900 font-bold text-lg transition duration-300 hover:bg-yellow-500">
                             {t("Get Started")}
                         </button></Link> */}
-                       
-                        
-                            <button className="bg-white px-6 py-2.5 rounded-lg text-blue-900 font-bold text-base sm:text-lg transition duration-300 hover:bg-gray-200"
+
+
+                        <button className="bg-white px-6 py-2.5 rounded-lg text-blue-900 font-bold text-base sm:text-lg transition duration-300 hover:bg-gray-200"
                             onClick={() => handleDashboard()}
-                            >
-                                {t("Dropshipper Login")}
-                            </button>
-                       
+                        >
+                            {t("Dropshipper Login")}
+                        </button>
+
                     </div>
                 </div>
             </section>
@@ -244,37 +246,37 @@ const HomePage = () => {
                 </div>
             </section>
 
-                        {/* Key Benefits */}
-                        <section className="py-16 bg-gray-50">
-                                <div className="max-w-4xl mx-auto px-6">
-                                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
-                                                {t("আমাদের কিছু প্রধান সুবিধা")}
-                                        </h2>
-                                        <p className="mt-2 text-center text-sm sm:text-base text-gray-600">
-                                                {t("বাংলা ভাষায় সহজ ব্যাখ্যা, যাতে আপনি দ্রুত সিদ্ধান্ত নিতে পারেন।")}
-                                        </p>
+            {/* Key Benefits */}
+            <section className="py-16 bg-gray-50">
+                <div className="max-w-4xl mx-auto px-6">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
+                        {t("আমাদের কিছু প্রধান সুবিধা")}
+                    </h2>
+                    <p className="mt-2 text-center text-sm sm:text-base text-gray-600">
+                        {t("বাংলা ভাষায় সহজ ব্যাখ্যা, যাতে আপনি দ্রুত সিদ্ধান্ত নিতে পারেন।")}
+                    </p>
 
-                                        <div className="mt-8 space-y-4 text-base sm:text-lg text-gray-700">
-                                                {features.map((feature, index) => (
-                                                        <div key={index} className="flex items-start gap-3 rounded-lg bg-white p-4 shadow-sm">
-                                                                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
-                                                                        {index + 1}
-                                                                </span>
-                                                                <div className="flex items-start gap-3">
-                                                                        {feature.icon}
-                                                                        <p>{feature.text}</p>
-                                                                </div>
-                                                        </div>
-                                                ))}
-                                        </div>
+                    <div className="mt-8 space-y-4 text-base sm:text-lg text-gray-700">
+                        {features.map((feature, index) => (
+                            <div key={index} className="flex items-start gap-3 rounded-lg bg-white p-4 shadow-sm">
+                                <span className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-xs font-bold text-white">
+                                    {index + 1}
+                                </span>
+                                <div className="flex items-start gap-3">
+                                    {feature.icon}
+                                    <p>{feature.text}</p>
                                 </div>
-                        </section>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
 
-
+            <ProductsListHomePage />
 
             {/* Categories section */}
-            <div className="min-h-screen bg-gray-50 p-6">
+            {/* <div className="min-h-screen bg-gray-50 p-6">
                 <div className="max-w-8xl mx-auto">
                     <h1 className="text-2xl font-bold text-gray-800 text-center mb-6">{t("see_product")}</h1>
 
@@ -300,9 +302,9 @@ const HomePage = () => {
                         ))}
                     </div>
                 </div>
-            </div>
+            </div> */}
 
-            <p className="text-gray-600 mt-2">Created By Mir Fahim Rahman</p>
+            <FooterHome />
         </div>
     );
 };

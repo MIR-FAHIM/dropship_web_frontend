@@ -32,10 +32,13 @@ const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+    getUserDetails: builder.query({
+      query: (id) => `/users/details/${id}`,
+    }),
     getAdminList: builder.query({
       query: (page = 1) => ({
-        url: API_ENDPOINTS.users.adminList.path,
-        params: { page },
+        url: `${API_ENDPOINTS.users.adminList.path}?page=${page}`,
+        method: API_ENDPOINTS.users.adminList.method,
       }),
       providesTags: ["User"],
     }),
@@ -48,8 +51,9 @@ export const {
   useLoginMutation,
   useButtonClickMutation,
   useAddContactMutation,
-  useGetDropshippersQuery,
+  useGetUserDetailsQuery,
   useGetAdminListQuery,
+  useGetDropshippersQuery,
 } = userApi;
 
 export default userApi;

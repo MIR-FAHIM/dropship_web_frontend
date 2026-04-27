@@ -69,10 +69,10 @@ const menuLinks = [
         path: "/billing/payments",
         label: "Payments",
       },
-      {
-        path: "/billing/transactions",
-        label: "Transactions",
-      },
+      // {
+      //   path: "/billing/transactions",
+      //   label: "Transactions",
+      // },
     ],
   },
   {

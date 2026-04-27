@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useListProductsQuery } from "../../redux/features/product";
 import { useButtonClickMutation } from "../../redux/features/user";
-import ProductCard from "../product/product_card_component";
+import ProductCardHomePage from "../product/product_card_home_page";
 
 
 const ProductsListHomePage = () => {
@@ -56,7 +56,7 @@ const handleProduct = (id) => {
       <h2 className="text-center text-blue-600 font-bold text-lg mb-6">Product List</h2>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
         {productList.map((product) => (
-          <ProductCard
+          <ProductCardHomePage
             key={product.id}
             product={product}
             hideDownload={true}

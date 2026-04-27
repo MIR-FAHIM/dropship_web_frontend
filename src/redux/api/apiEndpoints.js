@@ -180,6 +180,7 @@ export const API_ENDPOINTS = {
   transactions: {
     credit: define("GET", "/transactions/credit"),
     debit: define("GET", "/transactions/debit"),
+    reseller: define("GET", "/transactions/reseller"),
     report: define("GET", "/transactions/report"),
   },
 
@@ -192,6 +193,7 @@ export const API_ENDPOINTS = {
 
   tasks: {
     list: define("GET", "/tasks/list"),
+    details: define("GET", "/tasks/details/{id}"),
     create: define("POST", "/tasks/create"),
     updateStatus: define("PATCH", "/tasks/update-status/{id}"),
     statusList: define("GET", "/tasks/status-list"),

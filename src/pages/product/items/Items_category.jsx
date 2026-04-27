@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useListCategoriesWithChildrenQuery } from "../../../redux/features/category";
 import { imgBaseUrl } from "../../../../config";
 
 const ItemsCategory = () => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
 
   const defaultImageUrl = 'https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80';
@@ -29,18 +31,18 @@ const ItemsCategory = () => {
       <div className="max-w-7xl mx-auto space-y-8">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Browse Categories</h1>
-            <p className="text-sm text-gray-600">Pick a category and explore its subcategories.</p>
+            <h1 className="text-2xl font-semibold text-gray-900">{t("Browse Categories")}</h1>
+            <p className="text-sm text-gray-600">{t("Pick a category and explore its subcategories.")}</p>
           </div>
           <div className="hidden md:flex items-center gap-2 text-xs text-gray-500">
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            Updated live
+            {t("Updated live")}
           </div>
         </div>
 
         {categories.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-gray-600">
-            No categories available.
+            {t("No categories available.")}
           </div>
         ) : (
           <div className="space-y-10">
@@ -62,7 +64,7 @@ const ItemsCategory = () => {
                     </div>
                     <div>
                       <h2 className="text-lg font-semibold text-gray-900">{category.name}</h2>
-                      <p className="text-sm text-gray-500">{category.children?.length ?? 0} subcategories</p>
+                      <p className="text-sm text-gray-500">We have {category.products_count ?? 0} winning products</p>
                     </div>
                   </button>
 
@@ -123,7 +125,7 @@ const ItemsCategory = () => {
                     ))
                   ) : (
                     <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
-                      No child categories yet.
+                      {t("No child categories yet.")}
                     </div>
                   )}
                 </div>

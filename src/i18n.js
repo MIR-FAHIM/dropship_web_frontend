@@ -22,6 +22,7 @@ const resources = {
       "We have video": "We Have Product Videos",
       "And": "and",
       "All Products": "All Products",
+      "Browse Categories": "Browse Categories",
       "Winning Products": "Winning Products",
       "Boosting Products": "Boosting Products",
       "Sales Guideline": "Sales Guideline",
@@ -61,6 +62,8 @@ const resources = {
             "ans": "ResellerBrain is a complete automated online product reselling business platform.",
          
           },
+         
+     
          
           "question_2": {
             "ques": "What is the delivery charge?",
@@ -158,6 +161,7 @@ const resources = {
       "And": "এবং",
       "We Have Product Images": " প্রোডাক্টের ছবি আছে",
       "All Products": "সকল পণ্য",
+      "Browse Categories": "ব্রাউজ ক্যাটেগরিজ",
       "Favourite Product": "প্রিয় পণ্য",
       "Facebook Content": "ফেসবুক কনটেন্ট",
       "Order List": "অর্ডার তালিকা",

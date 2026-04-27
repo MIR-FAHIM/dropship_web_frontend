@@ -82,7 +82,7 @@ const orderApi = baseApi.injectEndpoints({
 
     // Inside your redux query definition
     getUserBalance: builder.query({
-      query: (id) => `/getBalance/${id}`,
+      query: (id) => `/users/getBalance/${id}`,
     }),
   }),
 });

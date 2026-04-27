@@ -42,6 +42,7 @@ import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate
 import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail";
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
+import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -85,6 +86,11 @@ export const router = createBrowserRouter([
     path: "/vendor-login",
     element: <VendorLogin />,
   },
+
+  { path: "task-share-detail/:id", 
+    element: <TaskShareDetail /> 
+  },
+
   {
     path: "/vendor-register",
     element: <VendorRegister />,
@@ -126,6 +132,7 @@ export const router = createBrowserRouter([
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
       { path: "tasks", element: <AdminTasks /> },
+     
       { path: "settings", element: <AdminSettings /> },
     ],
   },

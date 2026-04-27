@@ -44,6 +44,9 @@ const taskApi = baseApi.injectEndpoints({
     getTaskTypeList: builder.query({
       query: () => API_ENDPOINTS.taskTypes.list.path,
     }),
+    getTaskDetails: builder.query({
+      query: (id) => API_ENDPOINTS.tasks.details.path.replace("{id}", id),
+    }),
 
     getTaskPriorityList: builder.query({
       query: () => API_ENDPOINTS.taskPriorities.list.path,
@@ -59,6 +62,7 @@ export const {
   useGetTaskStatusListQuery,
   useGetTaskTypeListQuery,
   useGetTaskPriorityListQuery,
+  useGetTaskDetailsQuery,
 } = taskApi;
 
 export default taskApi;

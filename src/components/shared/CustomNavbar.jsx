@@ -142,7 +142,7 @@ const CustomNavbar = ({ onMenuToggle }) => {
 
           {showBalance && !isLoadingBal && !errorBal && (
             <div className="text-xl mt-2">
-              <span>Balance: ${balance?.data?.balance ?? 0}</span>
+              <span>Balance: ${balance?.data?.balance?.balance ?? 0}</span>
             </div>
           )}
         </div>
@@ -159,15 +159,8 @@ const CustomNavbar = ({ onMenuToggle }) => {
             )}
           </div>
 
-          {/* Contact button - hidden on small mobile */}
-          <Button
-            size="small"
-            className="hidden sm:block text-xs lg:text-sm"
-            sx={{ textTransform: "none" }}
-            onClick={() => handleContactUsClick()}
-          >
-            Contact Developer
-          </Button>
+         
+         
 
           {/* Language switcher */}
           <div className="flex items-center gap-1">

@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
 import { imgBaseUrl } from "../../../../config";
+import ProductGallery from "./product_gallery";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -403,26 +404,10 @@ const ProductDetails = () => {
                 </button>
               </div>
               {/* Gallery grid */}
-              {product.images && product.images.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5 mt-6">
-                  {product.images.map((img, i) => (
-                    <div
-                      key={img.image.id || i}
-                      className="flex items-center justify-center bg-gray-50 rounded-xl border border-gray-200 overflow-hidden"
-                      style={{ minHeight: 180, minWidth: 180, maxHeight: 240, maxWidth: 240 }}
-                    >
-                      <img
-                        src={`${imgBaseUrl}/${img.image.file_name}`}
-                        alt={`photo-${i}`}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        className="gallery-image"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-400 mt-4">কোনো গ্যালারি ছবি নেই।</p>
-              )}
+          <ProductGallery
+    images={product.images}
+    imgBaseUrl={imgBaseUrl}
+  />
             </div>
           )}
           {activeTab === "details" && (
