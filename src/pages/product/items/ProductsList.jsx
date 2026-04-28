@@ -49,7 +49,7 @@ const ProductsList = () => {
           <ProductCard
             key={product.id}
             product={product}
-            onClick={() => navigate(`/productdetails/${product.id}`)}
+            onClick={() => navigate(`/app/productdetails/${product.id}`)}
             onDownload={handleDownloadImage}
           />
         ))}

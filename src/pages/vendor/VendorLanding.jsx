@@ -112,7 +112,7 @@ const VendorLanding = () => {
           </p>
           <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
             <button
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/vendor-register")}
               className="bg-yellow-400 text-blue-900 px-8 py-3.5 rounded-lg font-bold text-lg hover:bg-yellow-500 transition flex items-center justify-center gap-2"
             >
               ভেন্ডর হোন <ArrowRight className="w-5 h-5" />

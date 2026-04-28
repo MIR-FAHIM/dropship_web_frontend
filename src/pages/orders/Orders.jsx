@@ -95,7 +95,7 @@ const Order = () => {
                     <td className="px-4 py-2">
                       <button
                         className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300"
-                        onClick={() => navigate(`/orders-details/${order.id}`)}
+                        onClick={() => navigate(`/app/orders-details/${order.id}`)}
                       >
                         View Details
                       </button>

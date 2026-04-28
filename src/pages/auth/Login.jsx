@@ -27,7 +27,7 @@ const Login = () => {
       saveToLocalstorage("userId", res.data.user.id);
       toast.success(res?.message || "লগইন সফল হয়েছে!");
       if (res.data.user.user_type === "dropshipper") {
-        navigate("/dashboard");
+        navigate("/app/dashboard-new");
       } else {
         navigate("/");
       }

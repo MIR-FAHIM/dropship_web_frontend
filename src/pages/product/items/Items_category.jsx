@@ -51,7 +51,7 @@ const ItemsCategory = () => {
                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                   <button
                     type="button"
-                    onClick={() => navigate(`/productlist/${category.id}`)}
+                    onClick={() => navigate(`/app/productlist/${category.id}`)}
                     className="group flex items-center gap-4 text-left"
                   >
                     <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">

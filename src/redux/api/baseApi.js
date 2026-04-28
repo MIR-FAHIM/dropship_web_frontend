@@ -22,7 +22,6 @@ const rawBaseQuery = fetchBaseQuery({
 const baseQueryWithAuth = async (args, api, extraOptions) => {
   const result = await rawBaseQuery(args, api, extraOptions);
 
-  // If API responds with token missing error, redirect to admin login
   const errorData = result?.error?.data || result?.data;
   if (
     errorData?.status === "error" &&
@@ -30,7 +29,12 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
   ) {
     removeFromLocalstorage("token");
     removeFromLocalstorage("userId");
-    window.location.href = "/admin-login";
+
+    // ✅ Only redirect to admin-login if user is in admin panel
+    if (window.location.pathname.startsWith("/admin-panel")) {
+      window.location.href = "/admin-login";
+    }
+
     return result;
   }
 

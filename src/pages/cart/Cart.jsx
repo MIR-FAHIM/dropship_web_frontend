@@ -138,7 +138,7 @@ const CartPage = () => {
         </div>
         <button
           type="button"
-          onClick={() => navigate("/checkout")}
+          onClick={() => navigate("/app/checkout")}
           disabled={(cart?.total_items ?? 0) === 0}
           className={`mt-4 w-full py-2 rounded-lg text-white font-semibold transition duration-300 ${
             (cart?.total_items ?? 0) === 0

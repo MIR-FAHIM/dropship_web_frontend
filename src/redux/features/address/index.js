@@ -6,6 +6,12 @@ const addressApi = baseApi.injectEndpoints({
     getUserAddresses: builder.query({
       query: (userId) => buildEndpointPath(API_ENDPOINTS.addresses.byUser.path, { userId }),
     }),
+    getDivisions: builder.query({
+      query: () => API_ENDPOINTS.address.divisions.path,
+    }),
+    getDistricts: builder.query({
+      query: (divisionId) => buildEndpointPath(API_ENDPOINTS.address.districts.path, { divisionId }),
+    }),
     addAddress: builder.mutation({
       query: (payload) => {
         const formData = new FormData();
@@ -25,6 +31,6 @@ const addressApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetUserAddressesQuery, useAddAddressMutation } = addressApi;
+export const { useGetDivisionsQuery, useGetDistrictsQuery, useAddAddressMutation, useGetUserAddressesQuery } = addressApi;
 
 export default addressApi;

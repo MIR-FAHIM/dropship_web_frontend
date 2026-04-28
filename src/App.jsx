@@ -26,78 +26,78 @@ import { FaProductHunt } from "react-icons/fa";
 // menu links
 const menuLinks = [
   {
-    path: "/",
+    path: "/app/dashboard-new",
     label: "Home",
     icon: <HomeIcon />,
   },
   {
-    path: "/dashboard",
+    path: "/app/dashboard-new",
     label: "Dashboard",
     icon: <HiOutlineSquares2X2 />,
   },
   {
-    path: "/items/category",
+    path: "/app/items/category",
     label: "All Products",
     icon: <LuArchive />,
   },
   {
-    path: "/favproducts",
+    path: "/app/favproducts",
     label: "Favourite Product",
     icon: <Heart />,
   },
   {
-    path: "/post",
+    path: "/app/post",
     label: "Facebook Content",
     icon: <MdOutlineWarehouse />,
   },
   {
-    path: "/order",
+    path: "/app/order",
     label: "Order List",
     icon: <HiOutlineClipboardDocumentCheck />,
   },
   {
-    path: "/saleandprofit",
+    path: "/app/saleandprofit",
     label: "Sales & Profit",
     icon: <IoCalendarOutline />,
   },
   {
-    path: "/billing",
+    path: "/app/billing",
     label: "Transactions",
     icon: <PiReceipt />,
     children: [
       {
-        path: "/billing/payments",
+        path: "/app/billing/payments",
         label: "Payments",
       },
       // {
-      //   path: "/billing/transactions",
+      //   path: "/app/billing/transactions",
       //   label: "Transactions",
       // },
     ],
   },
   {
-    path: "/users",
+    path: "/app/users",
     label: "Support Ticket",
     icon: <PiUsers />,
   },
   {
-    path: "/withdraw",
+    path: "/app/withdraw",
     label: "Withdraw",
     icon: <PiReceipt />,
     children:[
       {
-        path: "/add-payment-account",
+        path: "/app/add-payment-account",
         label: "Add Payment Account",
       },
       {
-        path: "/withdraw",
+        path: "/app/withdraw",
         label: "Withdraw",
       },
     ]
    
   },
   {
-    path: "/contact-us",
+    path: "/app/contact-us",
     label: "Contact Developer",
     icon: <PiUsers />,
   },

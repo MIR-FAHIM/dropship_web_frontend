@@ -2,23 +2,24 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useButtonClickMutation } from "../../redux/features/user";
+import { Outlet } from "react-router-dom";
 import {
   FaBoxOpen, FaTrophy, FaRocket, FaBook, FaVideo,
   FaStore, FaChartBar, FaWallet, FaMoneyBillWave, FaHeadset,
 } from "react-icons/fa";
 
 const menuItems = [
-  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/items/category" },
-  { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/product-assistant" },
-  { name: "Boosting Products", icon: <FaRocket className="text-red-500" />, route: "/favproducts" },
-  { name: "Sales Guideline", icon: <FaBook className="text-green-600" />, route: "/sale-guide-line" },
-  { name: "Learning Video", icon: <FaVideo className="text-purple-600" />, route: "/learning-video" },
-  { name: "Ecommerce Website", icon: <FaStore className="text-indigo-600" />, route: "/ecommerce-website" },
-  { name: "Sales Dashboard", icon: <FaChartBar className="text-pink-600" />, route: "/saleandprofit" },
-  { name: "Balance Statement", icon: <FaWallet className="text-teal-600" />, route: "/payments" },
-  { name: "Passive Income", icon: <FaMoneyBillWave className="text-orange-500" />, route: "/passive-income" },
-  { name: "Support Center", icon: <FaHeadset className="text-gray-600" />, route: "/users" },
-  { name: "General Questions", icon: <FaHeadset className="text-gray-600" />, route: "/faq" },
+  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/app/items/category" },
+  { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/app/product-assistant" },
+  { name: "Boosting Products", icon: <FaRocket className="text-red-500" />, route: "/app/favproducts" },
+  { name: "Sales Guideline", icon: <FaBook className="text-green-600" />, route: "/app/sale-guide-line" },
+  { name: "Learning Video", icon: <FaVideo className="text-purple-600" />, route: "/app/learning-video" },
+  { name: "Ecommerce Website", icon: <FaStore className="text-indigo-600" />, route: "/app/ecommerce-website" },
+  { name: "Sales Dashboard", icon: <FaChartBar className="text-pink-600" />, route: "/app/saleandprofit" },
+  { name: "Balance Statement", icon: <FaWallet className="text-teal-600" />, route: "/app/billing" },
+  { name: "Passive Income", icon: <FaMoneyBillWave className="text-orange-500" />, route: "/app/passive-income" },
+  { name: "Support Center", icon: <FaHeadset className="text-gray-600" />, route: "/app/users" },
+  { name: "General Questions", icon: <FaHeadset className="text-gray-600" />, route: "/app/faq" },
 ];
 
 const leaderboardData = [

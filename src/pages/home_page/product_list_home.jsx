@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useListProductsQuery } from "../../redux/features/product";
+import { useListHomeProductsQuery } from "../../redux/features/product";
 import { useButtonClickMutation } from "../../redux/features/user";
 import ProductCardHomePage from "../product/product_card_home_page";
 
@@ -26,7 +26,7 @@ const handleProduct = (id) => {
   navigate(`/products-detail-home/${id}`);
   handleButtonClick("product clicked home");
 };
-  const { data: products, isLoading, isError, error } = useListProductsQuery();
+  const { data: products, isLoading, isError, error } = useListHomeProductsQuery();
   const productList = useMemo(() => {
     const list = products?.data?.data || [];
     if (!id) return list;

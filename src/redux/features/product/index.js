@@ -29,6 +29,13 @@ const productApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Product"],
     }),
+    listHomeProducts: builder.query({
+      query: (page = 1) => ({
+        url: API_ENDPOINTS.products.listhome.path,
+        params: { page },
+      }),
+      providesTags: ["Product"],
+    }),
     listProductsCategoryWise: builder.query({
       query: (params) => ({
         url: API_ENDPOINTS.products.categoryWise.path,
@@ -105,6 +112,7 @@ export const {
   useUploadProductImageMutation,
   useAddProductImageMutation,
   useListProductsQuery,
+  useListHomeProductsQuery,
   useListProductsCategoryWiseQuery,
   useListFeaturedProductsQuery,
   useGetFavProductsQuery,

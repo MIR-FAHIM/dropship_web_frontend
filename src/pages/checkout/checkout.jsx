@@ -417,7 +417,7 @@ const CheckoutPage = () => {
 				notify(res?.data?.message || "Order placed successfully!", "success");
 				localStorage.setItem("cart", JSON.stringify(0));
 				window.dispatchEvent(new Event("cart-updated"));
-				setTimeout(() => navigate("/order"), 1000);
+				setTimeout(() => navigate("/app/order"), 1000);
 			} else {
 				notify(res?.data?.message || "Failed to place order.", "error");
 			}
@@ -598,7 +598,7 @@ const CheckoutPage = () => {
 							<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
 								<ShoppingCartIcon sx={{ fontSize: 48, color: theme.palette.text.disabled }} />
 								<Typography sx={{ fontWeight: 800, color: subInk }}>Your cart is empty.</Typography>
-								<Button variant="outlined" size="small" onClick={() => navigate("/")} sx={{ borderRadius: 999, textTransform: "none", fontWeight: 900 }}>
+								<Button variant="outlined" size="small" onClick={() => navigate("/app/items/category")} sx={{ borderRadius: 999, textTransform: "none", fontWeight: 900 }}>
 									Browse Products
 								</Button>
 							</Stack>

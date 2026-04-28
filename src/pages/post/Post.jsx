@@ -28,7 +28,7 @@ const Post = () => {
 
         <div className="space-y-6">
           {data?.posts?.map((post) => (
-            <div key={post.id} className="bg-white shadow-lg rounded-lg overflow-hidden" onClick={() => navigate(`/productdetails/${post.product_id}`)}>
+            <div key={post.id} className="bg-white shadow-lg rounded-lg overflow-hidden" onClick={() => navigate(`/app/productdetails/${post.product_id}`)}>
               <div className="flex items-center p-4 border-b border-gray-200">
                 <img
                   src={post.product.main_image_url}

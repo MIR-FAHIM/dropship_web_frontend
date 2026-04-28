@@ -1,6 +1,8 @@
 // Centralized API endpoint definitions derived from backend routes.php
 // Base URL is configured in baseApi.js as `${imgBaseUrl}/api`
 
+import { DivideSquare } from "lucide-react";
+
 const define = (method, path) => ({ method, path });
 
 export const API_ENDPOINTS = {
@@ -55,6 +57,7 @@ export const API_ENDPOINTS = {
     create: define("POST", "/products/create"),
     imageUpload: define("POST", "/products/images/upload/{productId}"),
     list: define("GET", "/products/list"),
+    listhome: define("GET", "/products/list-home-product"),
     categoryWise: define("GET", "/products/category/wise"),
     listFeatured: define("GET", "/products/list/featured"),
     listTodayDeal: define("GET", "/products/list/today-deal"),
@@ -206,6 +209,13 @@ export const API_ENDPOINTS = {
 
   taskPriorities: {
     list: define("GET", "/task-priorities/list"),
+  },
+  notifications: {
+    allList: define("GET", "/notifications/all-list"),
+  },
+  address: {
+    divisions: define("GET", "/address/divisions"),
+    districts: define("GET", "/address/districts/{divisionId}"),
   },
 };
 

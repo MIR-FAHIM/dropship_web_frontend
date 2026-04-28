@@ -82,6 +82,10 @@ export const router = createBrowserRouter([
     path: "/vendor",
     element: <VendorLanding />,
   },
+    {
+    path: "/admin-login",
+    element: <AdminLogin />,
+  },
   {
     path: "/vendor-login",
     element: <VendorLogin />,
@@ -108,10 +112,7 @@ export const router = createBrowserRouter([
       { path: "settings", element: <VendorSettings /> },
     ],
   },
-  {
-    path: "/admin-login",
-    element: <AdminLogin />,
-  },
+
   {
     path: "/admin-panel",
     element: <AdminPanelLayout />,
@@ -141,7 +142,7 @@ export const router = createBrowserRouter([
     element: <ProductDetailsHomePage />,
   },
   {
-    path: "/",
+    path: "/app",
     element: (
       <PrivateRoute>
         <App />

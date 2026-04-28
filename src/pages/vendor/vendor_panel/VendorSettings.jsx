@@ -1,5 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Settings, Save } from "lucide-react";
+import { useGetUserDetailsQuery } from '../../../redux/features/user';
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+
+
+
 
 const VendorSettings = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +16,24 @@ const VendorSettings = () => {
     address: "",
     zone: "",
   });
+  const userId = getFromLocalstorage("userId") || 1;// Adjust the key as per your local storage structure
+
+  // Fetch user details
+  const { data, isLoading, isError } = useGetUserDetailsQuery(userId);
+  // Populate form when data is loaded
+  useEffect(() => {
+    if (data && data.data) {
+      setFormData({
+        shopName: data.data.name || "", // No shopName in API response, leave blank or map if available
+        ownerName: data.data.name || "",
+        email: data.data.email || "",
+        phone: data.data.phone || "",
+        whatsapp: data.data.phone || "", // No whatsapp in API, fallback to phone
+        address: data.data.address || "",
+        zone: data.data.city || "", // No zone in API, fallback to city
+      });
+    }
+  }, [data]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -21,6 +44,13 @@ const VendorSettings = () => {
     // TODO: integrate update API
     console.log("Settings update:", formData);
   };
+
+  if (isLoading) {
+    return <div>লোড হচ্ছে...</div>;
+  }
+  if (isError) {
+    return <div>ব্যবহারকারীর তথ্য আনতে সমস্যা হয়েছে।</div>;
+  }
 
   return (
     <div className="space-y-6">

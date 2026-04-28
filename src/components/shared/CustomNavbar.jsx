@@ -13,7 +13,7 @@ import { useGetUserBalanceQuery } from "../../redux/features/order";
 import getStorage from "redux-persist/es/storage/getStorage";
 
 const navLinks = [
-  { path: "/profile", label: "Account" },
+  { path: "/app/profile", label: "Account" },
 ];
 
 function NavList() {
@@ -93,7 +93,7 @@ const CustomNavbar = ({ onMenuToggle }) => {
   const goToCart = async () => {
     await refetch(); // Refetch cart data to ensure it's up-to-date
     if ((data?.data?.total_items || 0) > 0) {
-      navigate("/cart"); // Navigate to the cart page if cart has items
+      navigate("/app/cart"); // Navigate to the cart page if cart has items
     } else {
       alert("Your cart is empty!"); // Optionally notify the user if the cart is empty
     }

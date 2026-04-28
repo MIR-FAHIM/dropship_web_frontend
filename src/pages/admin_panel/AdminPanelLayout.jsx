@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AdminNotification from "./notification/AdminNotification";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -21,6 +22,7 @@ import {
   SlidersHorizontal,
   ImageIcon,
   ListChecks,
+  Bell,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -102,6 +104,7 @@ const AdminPanelLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [expandedMenus, setExpandedMenus] = useState({});
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -209,7 +212,7 @@ const AdminPanelLayout = () => {
       {/* Logout */}
       <div className="p-3 border-t border-gray-700">
         <button
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/admin-login")}
           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-red-600/20 hover:text-red-400 transition-colors ${
             !sidebarOpen && !isMobile ? "justify-center" : ""
           }`}
@@ -270,6 +273,34 @@ const AdminPanelLayout = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Notification Icon */}
+            <button
+              type="button"
+              className="relative focus:outline-none"
+              aria-label="Notifications"
+              onClick={() => setNotificationOpen(true)}
+            >
+              <Bell className="w-6 h-6 text-gray-500 hover:text-red-600 transition-colors" />
+              {/* Example notification dot, can be conditionally rendered */}
+              <span className="absolute top-0 right-0 block h-2 w-2 rounded-full ring-2 ring-white bg-red-500"></span>
+            </button>
+            {/* Notification Modal */}
+            {notificationOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-lg shadow-lg w-full max-w-md max-h-[80vh] overflow-y-auto relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-red-600 text-xl font-bold"
+                    onClick={() => setNotificationOpen(false)}
+                    aria-label="Close notification modal"
+                  >
+                    &times;
+                  </button>
+                  <div className="p-4">
+                    <AdminNotification />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white text-sm font-bold">
               A
             </div>

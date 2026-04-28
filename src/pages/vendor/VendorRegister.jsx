@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useGetDivisionsQuery, useGetDistrictsQuery } from "../../redux/features/address";
 import { Store, ArrowRight, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useVendorRegisterMutation } from "../../redux/features/vendor_api";
@@ -26,6 +27,47 @@ const zones = [
   "ময়মনসিংহ",
 ];
 
+// ✅ Moved OUTSIDE VendorRegister — prevents remount on every keystroke
+const InputField = ({ label, name, type = "text", placeholder, required = true, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    <input
+      type={type}
+      name={name}
+      value={value}
+      onChange={onChange}
+      required={required}
+      placeholder={placeholder}
+      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+    />
+  </div>
+);
+
+// ✅ Moved OUTSIDE VendorRegister — prevents remount on every keystroke
+const SelectField = ({ label, name, options, placeholder, value, onChange }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+      {label} <span className="text-red-500">*</span>
+    </label>
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      required
+      className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+);
+
 const VendorRegister = () => {
   const navigate = useNavigate();
   const [vendorRegister, { isLoading }] = useVendorRegisterMutation();
@@ -40,12 +82,24 @@ const VendorRegister = () => {
     whatsapp: "",
     phone: "",
     address: "",
-    zone: "",
+    divisionId: "",
+    districtId: "",
     shopType: "",
   });
 
+  // Fetch divisions
+  const { data: divisionsData, isLoading: divisionsLoading } = useGetDivisionsQuery();
+  // Fetch districts based on selected division
+  const { data: districtsData, isLoading: districtsLoading } = useGetDistrictsQuery(formData.divisionId, { skip: !formData.divisionId });
+
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Reset district if division changes
+    if (name === "divisionId") {
+      setFormData({ ...formData, divisionId: value, districtId: "" });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,7 +117,8 @@ const VendorRegister = () => {
         contact_person: formData.contactPerson,
         emergency_contact: formData.emergencyContact,
         address: formData.address,
-        zone: formData.zone,
+        state: formData.divisionId, // division id
+        city: formData.districtId,  // district id
         phone: formData.phone,
         whatsapp: formData.whatsapp,
         owner_name: formData.ownerName,
@@ -77,45 +132,6 @@ const VendorRegister = () => {
       toast.error(err?.data?.message || "রেজিস্ট্রেশন ব্যর্থ হয়েছে!");
     }
   };
-
-  const InputField = ({ label, name, type = "text", placeholder, required = true }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        required={required}
-        placeholder={placeholder}
-        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-      />
-    </div>
-  );
-
-  const SelectField = ({ label, name, options, placeholder }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-        {label} <span className="text-red-500">*</span>
-      </label>
-      <select
-        name={name}
-        value={formData[name]}
-        onChange={handleChange}
-        required
-        className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
-      >
-        <option value="">{placeholder}</option>
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4 py-12">
@@ -155,26 +171,71 @@ const VendorRegister = () => {
                   label="দোকানের নাম"
                   name="shopName"
                   placeholder="আপনার দোকানের নাম"
+                  value={formData.shopName}
+                  onChange={handleChange}
                 />
                 <SelectField
                   label="দোকানের ধরন"
                   name="shopType"
                   options={shopTypes}
                   placeholder="ধরন নির্বাচন করুন"
+                  value={formData.shopType}
+                  onChange={handleChange}
                 />
                 <div className="sm:col-span-2">
                   <InputField
                     label="ঠিকানা"
                     name="address"
                     placeholder="সম্পূর্ণ ঠিকানা লিখুন"
+                    value={formData.address}
+                    onChange={handleChange}
                   />
                 </div>
-                <SelectField
-                  label="জোন"
-                  name="zone"
-                  options={zones}
-                  placeholder="জোন নির্বাচন করুন"
-                />
+                {/* Division Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    বিভাগ <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="divisionId"
+                    value={formData.divisionId}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                  >
+                    <option value="">বিভাগ নির্বাচন করুন</option>
+                    {divisionsLoading ? (
+                      <option>লোড হচ্ছে...</option>
+                    ) : (
+                      divisionsData?.data?.map((div) => (
+                        <option key={div.id} value={div.id}>{div.bn_name || div.name}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
+                {/* District Dropdown */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    জেলা <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    name="districtId"
+                    value={formData.districtId}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white"
+                    disabled={!formData.divisionId}
+                  >
+                    <option value="">জেলা নির্বাচন করুন</option>
+                    {districtsLoading ? (
+                      <option>লোড হচ্ছে...</option>
+                    ) : (
+                      districtsData?.data?.map((dist) => (
+                        <option key={dist.id} value={dist.id}>{dist.bn_name || dist.name}</option>
+                      ))
+                    )}
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -188,23 +249,31 @@ const VendorRegister = () => {
                   label="মালিকের নাম"
                   name="ownerName"
                   placeholder="পুরো নাম"
+                  value={formData.ownerName}
+                  onChange={handleChange}
                 />
                 <InputField
                   label="যোগাযোগকারী ব্যক্তি"
                   name="contactPerson"
                   placeholder="যোগাযোগকারীর নাম"
+                  value={formData.contactPerson}
+                  onChange={handleChange}
                 />
                 <InputField
                   label="ফোন নম্বর"
                   name="phone"
                   type="tel"
                   placeholder="০১XXXXXXXXX"
+                  value={formData.phone}
+                  onChange={handleChange}
                 />
                 <InputField
                   label="জরুরি যোগাযোগ"
                   name="emergencyContact"
                   type="tel"
                   placeholder="০১XXXXXXXXX"
+                  value={formData.emergencyContact}
+                  onChange={handleChange}
                 />
                 <InputField
                   label="হোয়াটসঅ্যাপ নম্বর"
@@ -212,6 +281,8 @@ const VendorRegister = () => {
                   type="tel"
                   placeholder="০১XXXXXXXXX"
                   required={false}
+                  value={formData.whatsapp}
+                  onChange={handleChange}
                 />
               </div>
             </div>
@@ -228,6 +299,8 @@ const VendorRegister = () => {
                     name="email"
                     type="email"
                     placeholder="vendor@example.com"
+                    value={formData.email}
+                    onChange={handleChange}
                   />
                 </div>
                 <InputField
@@ -235,12 +308,16 @@ const VendorRegister = () => {
                   name="password"
                   type="password"
                   placeholder="কমপক্ষে ৮ অক্ষর"
+                  value={formData.password}
+                  onChange={handleChange}
                 />
                 <InputField
                   label="পাসওয়ার্ড নিশ্চিত করুন"
                   name="confirmPassword"
                   type="password"
                   placeholder="পুনরায় পাসওয়ার্ড দিন"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
                 />
               </div>
             </div>
