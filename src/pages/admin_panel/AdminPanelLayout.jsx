@@ -84,6 +84,11 @@ const adminMenuLinks = [
     icon: <Users className="w-5 h-5" />,
   },
   {
+    path: "/admin-panel/all-withdraw-requests",
+    label: "All Withdraw Requests",
+    icon: <Users className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/accounting",
     label: "হিসাব-নিকাশ",
     icon: <Wallet className="w-5 h-5" />,
@@ -96,6 +101,11 @@ const adminMenuLinks = [
   {
     path: "/admin-panel/settings",
     label: "সেটিংস",
+    icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/my-business-info",
+    label: "My Business Info",
     icon: <Settings className="w-5 h-5" />,
   },
 ];

@@ -20,6 +20,7 @@ import VendorDashboard from "../pages/vendor/vendor_panel/VendorDashboard";
 import VendorProducts from "../pages/vendor/vendor_panel/VendorProducts";
 import VendorProductCreate from "../pages/vendor/vendor_panel/VendorProductCreate";
 import VendorProductDetail from "../pages/vendor/vendor_panel/VendorProductDetail";
+import VendorBankAccount from "../pages/vendor/vendor_panel/bank_account/VendorBankAccount";
 import VendorOrders from "../pages/vendor/vendor_panel/VendorOrders";
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
@@ -43,6 +44,8 @@ import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
+import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
+import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -109,6 +112,7 @@ export const router = createBrowserRouter([
       { path: "products/:id", element: <VendorProductDetail /> },
       { path: "orders", element: <VendorOrders /> },
       { path: "accounting", element: <VendorAccounting /> },
+      { path: "bank-account", element: <VendorBankAccount /> },
       { path: "settings", element: <VendorSettings /> },
     ],
   },
@@ -133,8 +137,10 @@ export const router = createBrowserRouter([
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
       { path: "tasks", element: <AdminTasks /> },
-     
+      { path: "task-share-detail/:id", element: <TaskShareDetail /> },
       { path: "settings", element: <AdminSettings /> },
+      { path: "my-business-info", element: <MyBusinessInfo /> },
+      { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
     ],
   },
   {

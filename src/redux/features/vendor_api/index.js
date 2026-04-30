@@ -1,3 +1,4 @@
+
 import baseApi from "../../api/baseApi";
 import { API_ENDPOINTS, buildEndpointPath } from "../../api/apiEndpoints";
 
@@ -7,6 +8,14 @@ const vendorApi = baseApi.injectEndpoints({
       query: (data) => ({
         url: API_ENDPOINTS.vendors.register.path,
         method: API_ENDPOINTS.vendors.register.method,
+        body: data,
+      }),
+    }),
+
+        loginAsVendor: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.auth.loginAsVendor.path,
+        method: API_ENDPOINTS.auth.loginAsVendor.method,
         body: data,
       }),
     }),
@@ -38,6 +47,14 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Product"],
     }),
+    vendorIsActive: builder.mutation({
+      query: ({ id, data }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.vendors.isActive.path, { id }),
+        method: API_ENDPOINTS.vendors.isActive.method,
+        body: data,
+      }),
+      invalidatesTags: ["Vendor"],
+    }),
   }),
 });
 
@@ -47,6 +64,8 @@ export const {
   useGetVendorProfileQuery,
   useGetVendorListQuery,
   useGetVendorProductsQuery,
+  useVendorIsActiveMutation,
+  useLoginAsVendorMutation,
 } = vendorApi;
 
 export default vendorApi;

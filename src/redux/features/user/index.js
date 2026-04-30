@@ -42,18 +42,26 @@ const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ["User"],
     }),
+
+    userBan: builder.mutation({
+      query: (id) => ({
+        url: API_ENDPOINTS.users.ban.path.replace('{id}', id),
+        method: API_ENDPOINTS.users.ban.method,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
-  
 });
 
-export const {
 
+export const {
   useLoginMutation,
   useButtonClickMutation,
   useAddContactMutation,
   useGetUserDetailsQuery,
   useGetAdminListQuery,
   useGetDropshippersQuery,
+  useUserBanMutation,
 } = userApi;
 
 export default userApi;

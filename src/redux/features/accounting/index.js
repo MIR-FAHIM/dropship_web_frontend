@@ -30,6 +30,25 @@ const accountingApi = baseApi.injectEndpoints({
     getTransactionReport: builder.query({
       query: () => API_ENDPOINTS.transactions.report.path,
     }),
+    addUserBankAccount: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.bankAccounts.addUserBankAccount.path,
+        method: API_ENDPOINTS.bankAccounts.addUserBankAccount.method,
+        body: data,
+      }),
+    }),
+    getUserBankAccount: builder.query({
+      query: (userId) => ({
+        url: API_ENDPOINTS.bankAccounts.getUserBankAccount.path.replace('{userId}', userId),
+        method: API_ENDPOINTS.bankAccounts.getUserBankAccount.method,
+      }),
+    }),
+    getPaymentMethods: builder.query({
+      query: () => ({
+        url: API_ENDPOINTS.bankAccounts.getPaymentMethods.path,
+        method: API_ENDPOINTS.bankAccounts.getPaymentMethods.method,
+      }),
+    }),
   }),
 });
 
@@ -39,6 +58,9 @@ export const {
   useGetDebitTransactionsQuery,
   useGetResellerTransactionsQuery,
   useGetTransactionReportQuery,
+  useAddUserBankAccountMutation,
+  useGetUserBankAccountQuery,
+  useGetPaymentMethodsQuery,
 } = accountingApi;
 
 export default accountingApi;

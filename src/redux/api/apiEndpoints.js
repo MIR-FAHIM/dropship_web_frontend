@@ -8,6 +8,7 @@ const define = (method, path) => ({ method, path });
 export const API_ENDPOINTS = {
   auth: {
     login: define("POST", "/auth/login"),
+    loginAsVendor: define("POST", "/auth/login-as-vendor"),
     logout: define("POST", "/auth/logout"),
     listTokens: define("GET", "/auth/tokens"),
     revokeToken: define("DELETE", "/auth/tokens/{id}"),
@@ -57,6 +58,7 @@ export const API_ENDPOINTS = {
     create: define("POST", "/products/create"),
     imageUpload: define("POST", "/products/images/upload/{productId}"),
     list: define("GET", "/products/list"),
+    approval: define("PATCH", "/products/approval/{id}"),
     listhome: define("GET", "/products/list-home-product"),
     categoryWise: define("GET", "/products/category/wise"),
     listFeatured: define("GET", "/products/list/featured"),
@@ -191,6 +193,7 @@ export const API_ENDPOINTS = {
     register: define("POST", "/vendors/register"),
     profile: define("GET", "/vendors/profile/{id}"),
     list: define("GET", "/vendors/list"),
+    isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),
   },
 
@@ -216,6 +219,17 @@ export const API_ENDPOINTS = {
   address: {
     divisions: define("GET", "/address/divisions"),
     districts: define("GET", "/address/districts/{divisionId}"),
+  },
+  bankAccounts: {
+    addUserBankAccount: define("POST", "/paymentmethods/add-user-bank-account"),
+    getUserBankAccount: define("GET", "/paymentmethods/get-user-bank-accounts/{userId}"),
+    getPaymentMethods: define("GET", "/paymentmethods/get-payment-methods"),
+  },
+  withdraws: {
+    addWithdrawRequest: define("POST", "/withdraws/add"),
+    getUserWithdrawRequests: define("GET", "/withdraws/user/{userId}"),
+    getAllWithdraws: define("GET", "/withdraws/all"),
+    changeStatus: define("POST", "/withdraws/status-change/{id}"),
   },
 };
 

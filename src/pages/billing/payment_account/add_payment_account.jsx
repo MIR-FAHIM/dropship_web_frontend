@@ -1,189 +1,143 @@
-import React, { useState, useEffect } from 'react';
-import {  useAddPaymentAccountMutation,
-    useGetPaymentMethodListQuery,
-    useGetPaymentAccountByUserQuery, } from "../../../redux/features/withdraw";
-import { useDispatch } from 'react-redux';
+import React, { useState } from "react";
+import { useAddUserBankAccountMutation, useGetUserBankAccountQuery, useGetPaymentMethodsQuery } from "../../../redux/features/accounting";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 const AddPaymentAccount = () => {
-  const [accountData, setAccountData] = useState({
-   
-    account_name: '',
-    payment_method_id: 0,
-    account_number: '',
-    isDefault: false,
-    isActive: 1,
+  // Get user id from redux or localstorage
+  const userId = localStorage.getItem("userId");
+  const { data: paymentMethodsData, isLoading: isPaymentMethodsLoading } = useGetPaymentMethodsQuery();
+  const { data: bankAccountsData, refetch } = useGetUserBankAccountQuery(userId);
+  const [addUserBankAccount, { isLoading: isAdding }] = useAddUserBankAccountMutation();
+
+  const [form, setForm] = useState({
+    bank_name: "",
+    type: "",
+    account_no: "",
+    branch: "",
+    route: "",
+    payment_method_id: ""
   });
 
-  const [isMFS, setIsMFS] = useState(true); // Default to MFS
-
-  // Get payment method list
-  const { data: paymentMethods, isLoading: paymentMethodsLoading } = useGetPaymentMethodListQuery();
-
-  // Get seller's existing payment accounts
-  const { data: sellerAccounts, isLoading: sellerAccountsLoading , refetch} = useGetPaymentAccountByUserQuery(1); // Assuming seller_id = 1
-
-  // Create payment account mutation
-  const [createPaymentAccount, { isLoading: createLoading, error: createError }] = useAddPaymentAccountMutation();
-
-  const handleCheckboxChange = (e) => {
-    setIsMFS(e.target.checked);
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setAccountData({
-      ...accountData,
-      [name]: value,
+  const handlePaymentMethodChange = (e) => {
+    const method = paymentMethodsData?.data?.find(m => m.id === Number(e.target.value));
+    setForm({
+      ...form,
+      payment_method_id: e.target.value,
+      bank_name: method?.name || "",
+      type: method?.type || ""
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    const accountDataSubmit = {
-      seller_id: 1, // Assuming seller_id is static for now, or get it dynamically
-      account_name: accountData.account_name,
-      payment_method_id: accountData.payment_method_id,
-      account_number: accountData.account_number,
-      isDefault: accountData.isDefault ? 1 : 0,
-      type: "mfs", // Or whatever type you are using (mfs, bank, etc.)
-      isActive:1, // Or whatever type you are using (mfs, bank, etc.)
-    };
-  
     try {
-      await createPaymentAccount(accountDataSubmit).unwrap();
-      alert('Payment account added successfully');
+      await addUserBankAccount({
+        user_id: userId,
+        ...form
+      }).unwrap();
+      toast.success("ব্যাংক অ্যাকাউন্ট যোগ হয়েছে!");
+      setForm({ bank_name: "", type: "", account_no: "", branch: "", route: "", payment_method_id: "" });
       refetch();
     } catch (err) {
-      console.error('Error: ', err);
-      alert('Error adding payment account');
+      toast.error(err?.data?.message || "ব্যাংক অ্যাকাউন্ট যোগ ব্যর্থ হয়েছে!");
     }
   };
 
-  // Loading states for the API data
-  if (paymentMethodsLoading || sellerAccountsLoading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">Add Payment Account</h2>
-
-        {/* Payment Type Checkbox */}
-        <div className="flex items-center mb-6">
-          <input
-            type="checkbox"
-            checked={isMFS}
-            onChange={handleCheckboxChange}
-            className="mr-2"
-          />
-          <span className="font-semibold text-gray-700">MFS</span>
-          <input
-            type="checkbox"
-            disabled
-            checked={!isMFS}
-            className="ml-6 mr-2"
-          />
-          <span className="font-semibold text-gray-700">Bank (Disabled)</span>
+    <div className="max-w-2xl mx-auto p-4">
+      <h2 className="text-lg font-bold mb-4">ব্যাংক অ্যাকাউন্ট যোগ করুন</h2>
+      <form onSubmit={handleSubmit} className="space-y-4 bg-white p-4 rounded shadow">
+        <div>
+          <label className="block mb-1 text-sm">পেমেন্ট মেথড</label>
+          <select
+            name="payment_method_id"
+            value={form.payment_method_id}
+            onChange={handlePaymentMethodChange}
+            className="w-full border rounded px-3 py-2"
+            required
+            disabled={isPaymentMethodsLoading}
+          >
+            <option value="">নির্বাচন করুন</option>
+            {paymentMethodsData?.data?.map((method) => (
+              <option key={method.id} value={method.id}>{method.name}</option>
+            ))}
+          </select>
         </div>
+        <div>
+          <label className="block mb-1 text-sm">অ্যাকাউন্ট নম্বর</label>
+          <input
+            type="text"
+            name="account_no"
+            value={form.account_no}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+            required
+          />
+        </div>
+        <div>
+          <label className="block mb-1 text-sm">ব্রাঞ্চ</label>
+          <input
+            type="text"
+            name="branch"
+            value={form.branch}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <div>
+          <label className="block mb-1 text-sm">রাউট</label>
+          <input
+            type="text"
+            name="route"
+            value={form.route}
+            onChange={handleChange}
+            className="w-full border rounded px-3 py-2"
+          />
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
+          disabled={isAdding}
+        >
+          {isAdding ? "যোগ হচ্ছে..." : "যোগ করুন"}
+        </button>
+      </form>
 
-        {/* MFS Form (only visible if MFS is selected) */}
-        {isMFS && (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex space-x-4">
-              {/* Account Name */}
-              <div className="w-full">
-                <label className="block text-gray-600">Account Name</label>
-                <input
-                  type="text"
-                  name="account_name"
-                  value={accountData.account_name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  required
-                />
-              </div>
-              {/* Payment Method Dropdown */}
-              <div className="w-full">
-                <label className="block text-gray-600">Payment Method</label>
-                <select
-                  name="payment_method_id"
-                  value={accountData.payment_method_id}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select Payment Method</option>
-                  {paymentMethods?.data.map((method) => (
-                    <option key={method.id} value={method.id}>
-                      {method.payment_method_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Account Number */}
-            <div>
-              <label className="block text-gray-600">Account Number</label>
-              <input
-                type="text"
-                name="account_number"
-                value={accountData.account_number}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-md"
-                required
-              />
-            </div>
-
-            {/* Is Default */}
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="isDefault"
-                checked={accountData.isDefault}
-                onChange={(e) => setAccountData({ ...accountData, isDefault: e.target.checked })}
-                className="mr-2"
-              />
-              <span className="text-gray-600">Set as Default Account</span>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-md"
-              disabled={createLoading}
-            >
-              {createLoading ? 'Adding...' : 'Add Payment Account'}
-            </button>
-          </form>
-        )}
-
-        {/* Table for showing existing payment accounts */}
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold text-gray-800 mb-4">My Accounts</h3>
-          <table className="min-w-full table-auto bg-white shadow-lg rounded-lg">
+      <h2 className="text-lg font-bold mt-8 mb-4">আপনার ব্যাংক অ্যাকাউন্টসমূহ</h2>
+      <div className="bg-white p-4 rounded shadow">
+        {bankAccountsData?.data?.length ? (
+          <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-left">Account Name</th>
-                <th className="px-4 py-2 text-left">Payment Method</th>
-                <th className="px-4 py-2 text-left">Account Number</th>
-                <th className="px-4 py-2 text-left">Is Default</th>
+              <tr>
+                <th className="text-left">#</th>
+                <th className="text-left">পেমেন্ট মেথড</th>
+                <th className="text-left">অ্যাকাউন্ট নম্বর</th>
+                <th className="text-left">ব্রাঞ্চ</th>
+                <th className="text-left">রাউট</th>
+                <th className="text-left">স্ট্যাটাস</th>
               </tr>
             </thead>
             <tbody>
-              {sellerAccounts?.data.map((account) => (
-                <tr key={account.id} className="border-t">
-                  <td className="px-4 py-2">{account.account_name}</td>
-                  <td className="px-4 py-2">{account.payment_method.payment_method_name}</td>
-                  <td className="px-4 py-2">{account.account_number}</td>
-                  <td className="px-4 py-2">{account.isDefault ? 'Yes' : 'No'}</td>
+              {bankAccountsData.data.map((acc, i) => (
+                <tr key={acc.id}>
+                  <td>{i + 1}</td>
+                  <td>{acc.payment_method?.name || acc.bank_name}</td>
+                  <td>{acc.account_no}</td>
+                  <td>{acc.branch || "-"}</td>
+                  <td>{acc.route || "-"}</td>
+                  <td>{acc.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
+        ) : (
+          <div className="text-gray-500">কোনো ব্যাংক অ্যাকাউন্ট পাওয়া যায়নি।</div>
+        )}
       </div>
     </div>
   );

@@ -36,6 +36,11 @@ const vendorMenuLinks = [
     icon: <Wallet className="w-5 h-5" />,
   },
   {
+    path: "/vendor-panel/bank-account",
+    label: "Bank Account",
+    icon: <Wallet className="w-5 h-5" />,
+  },
+  {
     path: "/vendor-panel/settings",
     label: "সেটিংস",
     icon: <Settings className="w-5 h-5" />,

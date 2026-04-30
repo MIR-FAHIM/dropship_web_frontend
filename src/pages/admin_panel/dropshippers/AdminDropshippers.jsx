@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Truck, Search, Users, UserCheck, UserX, Loader2, XCircle } from "lucide-react";
-import { useGetDropshippersQuery } from "../../../redux/features/user";
+import { useGetDropshippersQuery, useUserBanMutation } from "../../../redux/features/user";
 
 const AdminDropshippers = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const { data, isLoading, error } = useGetDropshippersQuery(page);
+  const [userBan, { isLoading: isBanLoading }] = useUserBanMutation();
+  const [banUserId, setBanUserId] = useState(null);
 
   const pagination = data?.data || {};
   const dropshippers = pagination.data || [];
@@ -115,15 +117,44 @@ const AdminDropshippers = () => {
                     <td className="py-3 text-gray-600">{user.address || "—"}</td>
                     <td className="py-3 text-gray-600">৳{user.balance}</td>
                     <td className="py-3">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          user.banned
-                            ? "bg-red-100 text-red-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
-                        {user.banned ? "নিষিদ্ধ" : "সক্রিয়"}
-                      </span>
+                      <label className="inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={!!user.banned}
+                          disabled={isBanLoading && banUserId === user.id}
+                          onChange={async (e) => {
+                            setBanUserId(user.id);
+                            try {
+                              if (!user.banned && e.target.checked) {
+                                await userBan(user.id);
+                              } else  {
+                                await userBan(user.id);
+                              }
+                              // Optionally, implement unban logic if available
+                            } finally {
+                              setBanUserId(null);
+                            }
+                          }}
+                        />
+                        <div
+                          className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer peer-checked:bg-red-500 transition-colors duration-200 relative`}
+                        >
+                          <div
+                            className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${user.banned ? 'translate-x-5' : ''}`}
+                          ></div>
+                        </div>
+                        <span
+                          className={`ml-2 text-xs font-medium ${
+                            user.banned ? "text-red-700" : "text-green-700"
+                          }`}
+                        >
+                          {user.banned ? "নিষিদ্ধ" : "সক্রিয়"}
+                        </span>
+                        {isBanLoading && banUserId === user.id && (
+                          <Loader2 className="w-4 h-4 ml-2 text-gray-400 animate-spin" />
+                        )}
+                      </label>
                     </td>
                     <td className="py-3 text-gray-500 text-xs">
                       {new Date(user.created_at).toLocaleDateString("bn-BD")}

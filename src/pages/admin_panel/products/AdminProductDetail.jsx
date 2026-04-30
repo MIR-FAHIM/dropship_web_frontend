@@ -11,7 +11,8 @@ import FormikInput from "../../../components/formik/FormikInput";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGetProductDetailsQuery, useAddProductImageMutation } from "../../../redux/features/product";
+import { useGetProductDetailsQuery, useAddProductImageMutation, useApproveProductMutation } from "../../../redux/features/product";
+import Switch from "@mui/material/Switch";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
 import { imgBaseUrl } from "../../../../config";
 
@@ -44,6 +45,9 @@ const AdminProductDetail = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("basic");
   // Gallery image assignment state
+    // Approval switch state
+    const [approveProduct, { isLoading: approving }] = useApproveProductMutation();
+    const [approvalChecked, setApprovalChecked] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [addProductImage] = useAddProductImageMutation();
@@ -107,6 +111,24 @@ const AdminProductDetail = () => {
   const { data, isLoading, isError } = useGetProductDetailsQuery(id);
   const product = data?.data;
 
+  React.useEffect(() => {
+    if (product) {
+      setApprovalChecked(!!product.approved);
+    }
+  }, [product]);
+
+  const handleApprovalChange = async (e) => {
+    const checked = e.target.checked;
+    setApprovalChecked(checked);
+    try {
+      await approveProduct({ id, approved: checked ? 1 : 0 }).unwrap();
+      toast.success(checked ? "Product approved" : "Approval removed");
+    } catch {
+      toast.error("Approval update failed");
+      setApprovalChecked(!checked); // revert
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-32">
@@ -147,6 +169,16 @@ const AdminProductDetail = () => {
         <div className="flex items-center gap-2">
           <Badge active={product.published} trueLabel="পাবলিশড" falseLabel="ড্রাফট" />
           <Badge active={product.approved} trueLabel="অনুমোদিত" falseLabel="অপেক্ষমান" />
+          <div className="flex items-center ml-2">
+            <span className="text-xs mr-1">Approve</span>
+            <Switch
+              checked={approvalChecked}
+              onChange={handleApprovalChange}
+              color="success"
+              disabled={approving}
+              inputProps={{ "aria-label": "Approve Product" }}
+            />
+          </div>
         </div>
       </div>
 

@@ -1,3 +1,4 @@
+
 import baseApi from "../../api/baseApi";
 import API_ENDPOINTS, { buildEndpointPath } from "../../api/apiEndpoints";
 
@@ -32,7 +33,7 @@ const productApi = baseApi.injectEndpoints({
     listHomeProducts: builder.query({
       query: (page = 1) => ({
         url: API_ENDPOINTS.products.listhome.path,
-        params: { page },
+        params: { page, },
       }),
       providesTags: ["Product"],
     }),
@@ -104,6 +105,15 @@ const productApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.products.deleteImage.method,
       }),
     }),
+
+    approveProduct: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.products.approval.path, { id }),
+        method: API_ENDPOINTS.products.approval.method,
+        body: payload,
+      }),
+      invalidatesTags: ["Product"],
+    }),
   }),
 });
 
@@ -123,6 +133,7 @@ export const {
   useAddWishListMutation,
   useDeleteProductImageMutation,
   useDeleteWishProductMutation,
+  useApproveProductMutation,
 } = productApi;
 
 export default productApi;

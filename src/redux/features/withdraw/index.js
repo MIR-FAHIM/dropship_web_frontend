@@ -1,46 +1,46 @@
 import baseApi from "../../api/baseApi";
+import { API_ENDPOINTS, buildEndpointPath } from "../../api/apiEndpoints";
 
 const withdrawApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    addWithdrawReq: builder.mutation({
-      query: (data) => ({
-        url: "/add-withdraw",
-        method: "POST",
-        body: data,
+    addWithdrawRequest: builder.mutation({
+      query: (body) => ({
+          url: API_ENDPOINTS.withdraws.addWithdrawRequest.path,
+         method: API_ENDPOINTS.withdraws.addWithdrawRequest.method,
+        body,
       }),
+      invalidatesTags: ["Request"],
     }),
-   
-    addPaymentAccount: builder.mutation({
-      query: (data) => ({
-        url: "/add-seller-payment-account",
-        method: "POST",
-        body: data,
+    getUserWithdrawRequests: builder.query({
+      query: (userId) => ({
+        url: API_ENDPOINTS.withdraws.getUserWithdrawRequests.path.replace("{userId}", userId),
+        method: API_ENDPOINTS.withdraws.getUserWithdrawRequests.method,
       }),
+      providesTags: ["Request"],
     }),
-   
-    getWithdrawReq: builder.query({
-      query: () => `/get-all-withdraw`,
+    
+    getAllWithdraws: builder.query({
+      query: () => ({
+        url: API_ENDPOINTS.withdraws.getAllWithdraws.path,
+        method: API_ENDPOINTS.withdraws.getAllWithdraws.method,
+      }),
+      providesTags: ["Request"],
     }),
-    getWithdrawReqByUser: builder.query({
-      query: (id) => `/get-withdraw-user/${id}`,
-    }),
-    getPaymentAccountByUser: builder.query({
-      query: (id) => `/get-seller-payment-account/${id}`,
-    }),
-    getPaymentMethodList: builder.query({
-      query: () => `/get-active-payment-method`,
+
+    changeWithdrawStatus: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: API_ENDPOINTS.withdraws.changeStatus.path.replace("{id}", id),
+        method:API_ENDPOINTS.withdraws.changeStatus.method,
+        body: payload,
+      }),
+      invalidatesTags: ["Request"],
     }),
   }),
 });
 
 export const {
-  useGetWithdrawReqByUserQuery,
-  useGetWithdrawReqQuery,
-  useAddWithdrawReqMutation,
-
-
-  useAddPaymentAccountMutation,
-  useGetPaymentMethodListQuery,
-  useGetPaymentAccountByUserQuery,
- 
+  useAddWithdrawRequestMutation,
+  useGetUserWithdrawRequestsQuery,
+  useGetAllWithdrawsQuery,
+  useChangeWithdrawStatusMutation,
 } = withdrawApi;

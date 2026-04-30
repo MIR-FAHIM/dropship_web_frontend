@@ -10,6 +10,13 @@ const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    loginAsVendor: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.auth.loginAsVendor.path,
+        method: API_ENDPOINTS.auth.loginAsVendor.method,
+        body: data,
+      }),
+    }),
     register: builder.mutation({
       query: (data) => ({
         url: "/register",
@@ -29,6 +36,7 @@ const authApi = baseApi.injectEndpoints({
 
 export const {
   useLoginMutation,
+  useLoginAsVendorMutation,
   useRegisterMutation,
   useDropshipperRegisterMutation,
 } = authApi;

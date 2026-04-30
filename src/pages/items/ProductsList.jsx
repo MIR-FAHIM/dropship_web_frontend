@@ -11,6 +11,7 @@ const ProductsList = () => {
 
   const { data: products, isLoading, isError, error } = useListProductsQuery({
     page,
+    is_active: 1,
   });
   const productList = useMemo(() => {
     const list = products?.data?.data || [];
