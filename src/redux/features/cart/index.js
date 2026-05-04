@@ -39,6 +39,20 @@ const cartApi = baseApi.injectEndpoints({
         })(),
       }),
     }),
+    addNote: builder.mutation({
+      query: ({ itemId, note }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.carts.addNote.path, {
+          itemId,
+        }),
+        method: API_ENDPOINTS.carts.addNote.method,
+        params: { note },
+        body: (() => {
+          const formData = new FormData();
+          formData.append("note", note);
+          return formData;
+        })(),
+      }),
+    }),
 
     clearCart: builder.mutation({
       query: (userId) => ({
@@ -54,6 +68,7 @@ export const {
   useGetCartQuery,
   useDeleteCartMutation,
   useUpdateCartMutation,
+  useAddNoteMutation,
   useClearCartMutation,
 } = cartApi;
 

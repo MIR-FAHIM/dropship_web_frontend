@@ -43,6 +43,7 @@ import {
 	useDeleteCartMutation,
 } from "../../redux/features/cart";
 import CustomerAddress from "./address/customer_address";
+import { imgBaseUrl } from "../../../config";
 
 const safeArray = (value) => (Array.isArray(value) ? value : []);
 
@@ -121,32 +122,35 @@ const StatCard = ({ icon, label, value, color }) => {
 				flex: 1,
 				p: 1.5,
 				borderRadius: 3,
-				border: `1px solid ${theme.palette.divider}`,
-				background: theme.palette.background.paper,
+				border: `1px solid ${color}30`,
+				background: `linear-gradient(135deg, ${color}0d 0%, ${color}05 100%)`,
 				display: "flex",
 				alignItems: "center",
 				gap: 1.2,
+				transition: "box-shadow .2s",
+				"&:hover": { boxShadow: `0 4px 16px ${color}22` },
 			}}
 		>
 			<Box
 				sx={{
-					width: 36,
-					height: 36,
+					width: 38,
+					height: 38,
 					borderRadius: 2.5,
 					display: "grid",
 					placeItems: "center",
-					background: `${color}18`,
+					background: `${color}22`,
 					color: color,
 					flexShrink: 0,
+					border: `1px solid ${color}30`,
 				}}
 			>
 				{icon}
 			</Box>
 			<Box sx={{ minWidth: 0 }}>
-				<Typography sx={{ fontSize: 10, fontWeight: 800, color: theme.palette.text.secondary, textTransform: "uppercase", letterSpacing: 0.5 }}>
+				<Typography sx={{ fontSize: 10, fontWeight: 800, color: `${color}cc`, textTransform: "uppercase", letterSpacing: 0.6 }}>
 					{label}
 				</Typography>
-				<Typography sx={{ fontWeight: 950, fontSize: 14, color: theme.palette.text.primary, lineHeight: 1.2 }}>
+				<Typography sx={{ fontWeight: 950, fontSize: 14, color: color, lineHeight: 1.2 }}>
 					{value}
 				</Typography>
 			</Box>
@@ -162,6 +166,9 @@ const CartItemRow = ({ it, processing, onUpdate, onDelete, money, theme }) => {
 		(it?.qty || 1) * (Number(it?.product?.unit_price ?? it?.product?.price ?? 0) || 0);
 
 	const isProcessing = processing[it.id];
+	const imgSrc = it?.product?.primary_image?.file_name
+		? `${imgBaseUrl}/${it.product.primary_image.file_name}`
+		: (it?.product?.image || it?.product?.thumbnail || null);
 
 	return (
 		<Fade in>
@@ -170,11 +177,11 @@ const CartItemRow = ({ it, processing, onUpdate, onDelete, money, theme }) => {
 					p: 1.5,
 					borderRadius: 3,
 					border: `1px solid ${theme.palette.divider}`,
-					background: theme.palette.action.hover,
+					background: theme.palette.background.paper,
 					position: "relative",
 					overflow: "hidden",
-					transition: "box-shadow .2s",
-					"&:hover": { boxShadow: `0 2px 12px ${theme.palette.primary.main}18` },
+					transition: "box-shadow .2s, border-color .2s",
+					"&:hover": { boxShadow: `0 4px 16px ${theme.palette.primary.main}1a`, borderColor: `${theme.palette.primary.main}44` },
 				}}
 			>
 				{isProcessing && (
@@ -191,17 +198,18 @@ const CartItemRow = ({ it, processing, onUpdate, onDelete, money, theme }) => {
 				)}
 
 				<Stack direction="row" spacing={1.5} alignItems="center">
-					{/* Product avatar */}
+					{/* Product image */}
 					<Avatar
-						src={it?.product?.image || it?.product?.thumbnail}
+						src={imgSrc}
 						variant="rounded"
 						sx={{
-							width: 48,
-							height: 48,
+							width: 52,
+							height: 52,
 							borderRadius: 2.5,
 							border: `1px solid ${theme.palette.divider}`,
-							background: theme.palette.background.paper,
-							fontSize: 20,
+							background: theme.palette.action.hover,
+							flexShrink: 0,
+							"& img": { objectFit: "cover" },
 						}}
 					>
 						<Inventory2Icon fontSize="small" sx={{ color: theme.palette.text.disabled }} />
@@ -222,78 +230,87 @@ const CartItemRow = ({ it, processing, onUpdate, onDelete, money, theme }) => {
 						>
 							{it.product?.name || "Item"}
 						</Typography>
-						<Typography variant="caption" sx={{ color: theme.palette.secondary.main, fontWeight: 800 }}>
-							{money(lineTotal)}
-						</Typography>
+						<Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 0.3 }}>
+							<Typography variant="caption" sx={{ color: theme.palette.primary.main, fontWeight: 900, fontSize: 13 }}>
+								{money(lineTotal)}
+							</Typography>
+							{it.qty > 1 && (
+								<Typography variant="caption" sx={{ color: theme.palette.text.disabled, fontWeight: 700, fontSize: 11 }}>
+									× {it.qty}
+								</Typography>
+							)}
+						</Stack>
 					</Box>
 
 					{/* Qty controls */}
-					<Stack direction="row" spacing={0.4} alignItems="center">
-						<IconButton
-							size="small"
-							onClick={() => onUpdate(it, (it.qty || 1) - 1)}
-							disabled={isProcessing || (it.qty || 1) <= 1}
-							sx={{
-								borderRadius: 2,
-								border: `1px solid ${theme.palette.divider}`,
-								background: theme.palette.background.paper,
-								width: 28,
-								height: 28,
-								"&:hover": { background: theme.palette.action.hover },
-							}}
-						>
-							<RemoveCircleOutlineIcon sx={{ fontSize: 15 }} />
-						</IconButton>
+					<Stack direction="column" spacing={0.5} alignItems="flex-end" flexShrink={0}>
+						<Stack direction="row" spacing={0.4} alignItems="center">
+							<IconButton
+								size="small"
+								onClick={() => onUpdate(it, (it.qty || 1) - 1)}
+								disabled={isProcessing || (it.qty || 1) <= 1}
+								sx={{
+									borderRadius: 2,
+									border: `1px solid ${theme.palette.divider}`,
+									background: theme.palette.background.paper,
+									width: 26,
+									height: 26,
+									"&:hover": { background: theme.palette.action.hover },
+								}}
+							>
+								<RemoveCircleOutlineIcon sx={{ fontSize: 14 }} />
+							</IconButton>
 
-						<Box
-							sx={{
-								minWidth: 30,
-								height: 28,
-								borderRadius: 2,
-								border: `1px solid ${theme.palette.divider}`,
-								background: theme.palette.background.paper,
-								display: "grid",
-								placeItems: "center",
-								fontWeight: 950,
-								fontSize: 13,
-								color: theme.palette.text.primary,
-							}}
-						>
-							{it.qty || 1}
-						</Box>
+							<Box
+								sx={{
+									minWidth: 28,
+									height: 26,
+									borderRadius: 2,
+									border: `1px solid ${theme.palette.divider}`,
+									background: theme.palette.background.paper,
+									display: "grid",
+									placeItems: "center",
+									fontWeight: 950,
+									fontSize: 12,
+									color: theme.palette.text.primary,
+								}}
+							>
+								{it.qty || 1}
+							</Box>
 
-						<IconButton
-							size="small"
-							onClick={() => onUpdate(it, (it.qty || 1) + 1)}
-							disabled={isProcessing}
-							sx={{
-								borderRadius: 2,
-								border: `1px solid ${theme.palette.divider}`,
-								background: theme.palette.background.paper,
-								width: 28,
-								height: 28,
-								"&:hover": { background: theme.palette.action.hover },
-							}}
-						>
-							<AddCircleOutlineIcon sx={{ fontSize: 15 }} />
-						</IconButton>
+							<IconButton
+								size="small"
+								onClick={() => onUpdate(it, (it.qty || 1) + 1)}
+								disabled={isProcessing}
+								sx={{
+									borderRadius: 2,
+									border: `1px solid ${theme.palette.divider}`,
+									background: theme.palette.background.paper,
+									width: 26,
+									height: 26,
+									"&:hover": { background: theme.palette.action.hover },
+								}}
+							>
+								<AddCircleOutlineIcon sx={{ fontSize: 14 }} />
+							</IconButton>
+						</Stack>
 
-						<IconButton
-							size="small"
-							onClick={() => onDelete(it)}
-							disabled={isProcessing}
-							sx={{
-								borderRadius: 2,
-								width: 28,
-								height: 28,
-								background: theme.palette.mode === "dark" ? "rgba(250,92,92,0.12)" : "rgba(250,92,92,0.08)",
-								"&:hover": {
-									background: theme.palette.mode === "dark" ? "rgba(250,92,92,0.2)" : "rgba(250,92,92,0.16)",
-								},
-							}}
-						>
-							<DeleteOutlineIcon sx={{ fontSize: 15, color: theme.palette.error.main }} />
-						</IconButton>
+						<Tooltip title="Remove item" placement="left">
+							<IconButton
+								size="small"
+								onClick={() => onDelete(it)}
+								disabled={isProcessing}
+								sx={{
+									borderRadius: 2,
+									width: 26,
+									height: 26,
+									background: "rgba(250,92,92,0.08)",
+									"&:hover": { background: "rgba(250,92,92,0.18)" },
+								}}
+							>
+								<DeleteOutlineIcon sx={{ fontSize: 13, color: theme.palette.error.main }} />
+							</IconButton>
+						</Tooltip>
 					</Stack>
 				</Stack>
 			</Box>
@@ -437,7 +454,8 @@ const CheckoutPage = () => {
 					p: { xs: 1.5, md: 2 },
 					borderRadius: 4,
 					border: `1px solid ${divider}`,
-					background: surface,
+					background: `linear-gradient(135deg, ${surface} 60%, ${theme.palette.primary.main}08 100%)`,
+					boxShadow: `0 1px 12px ${theme.palette.primary.main}0e`,
 				}}
 			>
 				<Stack
@@ -551,8 +569,9 @@ const CheckoutPage = () => {
 						sx={{
 							p: 2,
 							borderRadius: 4,
-							border: `1px solid ${divider}`,
-							background: surface,
+							border: `1px solid ${theme.palette.primary.main}28`,
+							background: `linear-gradient(160deg, ${surface} 70%, ${theme.palette.primary.main}06 100%)`,
+							boxShadow: `0 4px 24px ${theme.palette.primary.main}0d`,
 							position: { md: "sticky" },
 							top: { md: 86 },
 						}}
@@ -638,30 +657,63 @@ const CheckoutPage = () => {
 								<Divider sx={{ my: 1.5, opacity: 0.15 }} />
 
 								{/* Totals */}
-								<Stack spacing={0.8} sx={{ mb: 2 }}>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
-										<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Subtotal</Typography>
-										<Typography variant="body1" sx={{ fontWeight: 950, color: theme.palette.secondary.main }}>
-											{money(subtotal)}
-										</Typography>
-									</Stack>
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
-										<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Your Profit</Typography>
-										<Chip
-											label={money(resellerProfitTotal)}
-											size="small"
-											sx={{
-												fontWeight: 950,
-												fontSize: 12,
-												background: `${theme.palette.success.main}18`,
-												color: theme.palette.success.main,
-												border: `1px solid ${theme.palette.success.main}30`,
-												borderRadius: 999,
-											}}
-										/>
-									</Stack>
-								</Stack>
-
+									<Box
+										sx={{
+											mb: 2,
+											p: 1.5,
+											borderRadius: 3,
+											border: `1px solid ${divider}`,
+											background: surface2,
+										}}
+									>
+										<Stack spacing={1}>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Subtotal</Typography>
+												<Typography variant="body2" sx={{ fontWeight: 950, color: ink }}>
+													{money(subtotal)}
+												</Typography>
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Shipping</Typography>
+												<Chip
+													label="Free"
+													size="small"
+													icon={<LocalShippingIcon sx={{ fontSize: "13px !important", color: `${theme.palette.success.main} !important` }} />}
+													sx={{
+														fontWeight: 900,
+														fontSize: 11,
+														background: `${theme.palette.success.main}14`,
+														color: theme.palette.success.main,
+														border: `1px solid ${theme.palette.success.main}30`,
+														borderRadius: 999,
+													}}
+												/>
+											</Stack>
+											<Divider sx={{ opacity: 0.2 }} />
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="body1" sx={{ fontWeight: 950, color: ink }}>Total</Typography>
+												<Typography variant="body1" sx={{ fontWeight: 950, fontSize: 16, color: theme.palette.primary.main }}>
+													{money(subtotal)}
+												</Typography>
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography variant="caption" sx={{ fontWeight: 800, color: subInk }}>Your Profit</Typography>
+												<Chip
+													label={`+${money(resellerProfitTotal)}`}
+													size="small"
+													icon={<TrendingUpIcon sx={{ fontSize: "13px !important", color: `${theme.palette.success.main} !important` }} />}
+													sx={{
+														fontWeight: 950,
+														fontSize: 12,
+														background: `${theme.palette.success.main}18`,
+														color: theme.palette.success.main,
+														border: `1px solid ${theme.palette.success.main}30`,
+														borderRadius: 999,
+													}}
+												/>
+											</Stack>
+										</Stack>
+									</Box>
 								{/* Note field */}
 								<TextField
 									label="Order Note (optional)"
@@ -670,9 +722,9 @@ const CheckoutPage = () => {
 									size="small"
 									fullWidth
 									multiline
-									minRows={1}
-									maxRows={3}
-									placeholder="Any special instructions..."
+									minRows={2}
+									maxRows={4}
+									placeholder="Any special instructions for the delivery or packaging..."
 									sx={{
 										mb: 2,
 										"& .MuiOutlinedInput-root": {
@@ -680,13 +732,15 @@ const CheckoutPage = () => {
 											background: surface,
 											fontSize: 13,
 											"& fieldset": { borderColor: divider },
-											"&:hover fieldset": { borderColor: theme.palette.primary.light },
+											"&:hover fieldset": { borderColor: theme.palette.primary.main },
+											"&.Mui-focused fieldset": { borderColor: theme.palette.primary.main },
 										},
 										"& .MuiInputLabel-root": { fontSize: 13 },
+										"& .MuiInputLabel-root.Mui-focused": { color: theme.palette.primary.main },
 									}}
 									InputProps={{
 										startAdornment: (
-											<Box sx={{ mr: 1, display: "grid", placeItems: "center", color: subInk, alignSelf: "flex-start", pt: 1 }}>
+											<Box sx={{ mr: 1, display: "grid", placeItems: "center", color: theme.palette.primary.main, alignSelf: "flex-start", pt: 1.2 }}>
 												<NotesIcon fontSize="small" />
 											</Box>
 										),
@@ -694,11 +748,41 @@ const CheckoutPage = () => {
 								/>
 
 								{/* Action buttons */}
-								<Stack direction="row" spacing={1}>
+								<Stack spacing={1.5}>
+									<Button
+										variant="contained"
+										onClick={handleCheckout}
+										disabled={loadingCheckout || !selectedAddress || !cartItems.length}
+										startIcon={loadingCheckout ? null : <LockIcon />}
+										fullWidth
+										size="large"
+										sx={{
+											borderRadius: 999,
+											textTransform: "none",
+											fontWeight: 950,
+											fontSize: 14,
+											py: 1.4,
+											background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+											boxShadow: `0 4px 18px ${theme.palette.primary.main}44`,
+											"&:hover": { opacity: 0.92, boxShadow: `0 6px 24px ${theme.palette.primary.main}55` },
+											"&.Mui-disabled": { opacity: 0.4, background: theme.palette.action.disabledBackground },
+										}}
+									>
+										{loadingCheckout ? (
+											<Stack direction="row" spacing={1} alignItems="center">
+												<CircularProgress size={14} color="inherit" />
+												<span>Placing Order...</span>
+											</Stack>
+										) : (
+											"Place Order"
+										)}
+									</Button>
+
 									<Button
 										variant="outlined"
 										onClick={() => navigate(-1)}
 										startIcon={<ArrowBackIcon />}
+										fullWidth
 										sx={{
 											borderRadius: 999,
 											textTransform: "none",
@@ -709,43 +793,34 @@ const CheckoutPage = () => {
 											"&:hover": { background: surface2, borderColor: theme.palette.primary.main },
 										}}
 									>
-										Back
-									</Button>
-
-									<Button
-										variant="contained"
-										onClick={handleCheckout}
-										disabled={loadingCheckout || !selectedAddress || !cartItems.length}
-										startIcon={loadingCheckout ? null : <LockIcon />}
-										fullWidth
-										sx={{
-											borderRadius: 999,
-											textTransform: "none",
-											fontWeight: 950,
-											fontSize: 13,
-											boxShadow: "none",
-											"&:hover": { opacity: 0.92, boxShadow: "none" },
-											"&.Mui-disabled": { opacity: 0.45 },
-										}}
-									>
-										{loadingCheckout ? (
-											<Stack direction="row" spacing={1} alignItems="center">
-												<CircularProgress size={14} color="inherit" />
-												<span>Placing...</span>
-											</Stack>
-										) : (
-											"Place Order"
-										)}
+										Back to Cart
 									</Button>
 								</Stack>
 
 								{!selectedAddress && cartItems.length > 0 && (
-									<Typography
-										sx={{ mt: 1, fontSize: 11, color: theme.palette.warning.main, fontWeight: 800, textAlign: "center" }}
+									<Box
+										sx={{
+											mt: 1.5,
+											p: 1,
+											borderRadius: 2.5,
+											background: `${theme.palette.warning.main}12`,
+											border: `1px solid ${theme.palette.warning.main}30`,
+											textAlign: "center",
+										}}
 									>
-										⚠ Select a shipping address to continue
-									</Typography>
+										<Typography sx={{ fontSize: 11, color: theme.palette.warning.dark, fontWeight: 800 }}>
+											⚠ Please select a shipping address to continue
+										</Typography>
+									</Box>
 								)}
+
+								{/* Secure badge */}
+								<Stack direction="row" spacing={0.6} alignItems="center" justifyContent="center" sx={{ mt: 1, opacity: 0.55 }}>
+									<LockIcon sx={{ fontSize: 12, color: subInk }} />
+									<Typography sx={{ fontSize: 11, fontWeight: 700, color: subInk }}>
+										Secure &amp; encrypted checkout
+									</Typography>
+								</Stack>
 							</Box>
 						)}
 					</Paper>

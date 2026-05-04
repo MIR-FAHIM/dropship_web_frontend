@@ -353,10 +353,10 @@ const VendorProductCreate = () => {
                 <label className={labelClass}>Dropshipping Price *</label>
                 <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
-              <div>
+              {/* <div>
                 <label className={labelClass}>Base Price (৳)</label>
                 <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
+              </div> */}
               <div>
                 <label className={labelClass}>Max Resell Price (৳)</label>
                 <input type="number" name="max_resell_price" value={formData.max_resell_price} onChange={handleChange} placeholder="0" className={inputClass} />
@@ -365,7 +365,7 @@ const VendorProductCreate = () => {
                 <label className={labelClass}>বর্তমান স্টক</label>
                 <input type="number" name="current_stock" value={formData.current_stock} onChange={handleChange} placeholder="0" className={inputClass} />
               </div>
-              <div>
+              {/* <div>
                 <label className={labelClass}>ইউনিট</label>
                 <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder="যেমন: pcs, kg" className={inputClass} />
               </div>
@@ -412,7 +412,7 @@ const VendorProductCreate = () => {
                   <option value="flat">Flat (৳)</option>
                   <option value="percent">Percent (%)</option>
                 </select>
-              </div>
+              </div> */}
             </div>
           )}
 

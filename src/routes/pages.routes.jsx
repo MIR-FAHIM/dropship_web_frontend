@@ -26,6 +26,7 @@ import AddPaymentAccount from "../pages/billing/payment_account/add_payment_acco
 import ProductAssistant from "../pages/product_assistant/product_assistant";
 import ContactUsPage from "../pages/contactus/contact_us_form";
 import CheckoutPage from "../pages/checkout/checkout";
+import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 
 export const pagePaths = [
   { path: "dashboard-new",          element: <Overview /> },
@@ -58,4 +59,5 @@ export const pagePaths = [
   { path: "order-success",          element: <SuccessPage /> },
   { path: "sale-guide-line",        element: <SalesGuidelines /> },
   { path: "add-payment-account",    element: <AddPaymentAccount /> },
+  { path: "all-product-category",   element: <AllProductCategoryTab /> },
 ];

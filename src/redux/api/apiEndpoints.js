@@ -86,6 +86,7 @@ export const API_ENDPOINTS = {
     updateItemQty: define("PUT", "/carts/items/update/{itemId}"),
     removeItem: define("DELETE", "/carts/items/delete/{itemId}"),
     clear: define("DELETE", "/carts/clear/{userId}"),
+    addNote: define("PATCH", "/carts/items/note/{itemId}"),
   },
 
   orders: {

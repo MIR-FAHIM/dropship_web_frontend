@@ -36,8 +36,13 @@ const menuLinks = [
     icon: <HiOutlineSquares2X2 />,
   },
   {
-    path: "/app/items/category",
+    path: "/app/all-product-category",
     label: "All Products",
+    icon: <LuArchive />,
+  },
+  {
+    path: "/app/items/category",
+    label: "All Categories",
     icon: <LuArchive />,
   },
   {

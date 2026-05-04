@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../redux/features/cart";
+import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation, useAddNoteMutation } from "../../redux/features/cart";
 import { imgBaseUrl } from "../../../config";
 import { getFromLocalstorage } from "../../utils/localstorage.utils";
 const CartPage = () => {
@@ -9,6 +9,9 @@ const CartPage = () => {
   const { data: cartList, error, isLoading, refetch } = useGetCartQuery(getFromLocalstorage("userId") || 1);
   const [deleteCart, { isLoading: isDeleting }] = useDeleteCartMutation();
   const [updateCart, { isLoading: isUpdating }] = useUpdateCartMutation();
+  const [addNote] = useAddNoteMutation();
+  const [notes, setNotes] = useState({});
+  const [savingNote, setSavingNote] = useState({});
 
   // Handle loading state for fetching cart data
   if (isLoading) {
@@ -50,6 +53,21 @@ const CartPage = () => {
       .catch(() => alert("Error updating quantity"));
   };
 
+  const handleNoteChange = (itemId, value) => {
+    setNotes((prev) => ({ ...prev, [itemId]: value }));
+  };
+
+  const handleSaveNote = async (itemId) => {
+    setSavingNote((prev) => ({ ...prev, [itemId]: true }));
+    try {
+      await addNote({ itemId, note: notes[itemId] ?? "" }).unwrap();
+    } catch {
+      alert("Failed to save note");
+    } finally {
+      setSavingNote((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
       <h2 className="text-xl font-bold mb-4">Reseller Cart</h2>
@@ -65,53 +83,73 @@ const CartPage = () => {
               return (
                 <div
                   key={item.id}
-                  className="flex flex-col sm:flex-row gap-4 items-center justify-between border rounded-lg p-4"
+                  className="flex flex-col gap-3 border rounded-lg p-4"
                 >
-                  <div className="flex items-center gap-4 w-full">
-                    <img
-                      src={imageUrl}
-                      alt={item?.product?.name}
-                      className="w-20 h-20 object-cover rounded-md"
+                  <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+                    <div className="flex items-center gap-4 w-full">
+                      <img
+                        src={imageUrl}
+                        alt={item?.product?.name}
+                        className="w-20 h-20 object-cover rounded-md"
+                      />
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-800">
+                          {item?.product?.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">৳ {item?.unit_price}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleDecrease(item)}
+                        className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+                        disabled={item.qty <= 1 || isUpdating}
+                      >
+                        -
+                      </button>
+                      <div className="w-10 text-center font-semibold">{item.qty}</div>
+                      <button
+                        type="button"
+                        onClick={() => handleIncrease(item)}
+                        className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
+                        disabled={isUpdating}
+                      >
+                        +
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm font-semibold text-gray-700">
+                        ৳ {item?.line_total}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item.id)}
+                        className="text-red-500 hover:text-red-700"
+                        disabled={isDeleting}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+                    <textarea
+                      rows={2}
+                      placeholder="Please provide any additional information about customers and delivery"
+                      value={notes[item.id] ?? (item.note || "")}
+                      onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                      className="flex-1 w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-800">
-                        {item?.product?.name}
-                      </h3>
-                      <p className="text-sm text-gray-500">৳ {item?.unit_price}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => handleDecrease(item)}
-                      className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
-                      disabled={item.qty <= 1 || isUpdating}
+                      onClick={() => handleSaveNote(item.id)}
+                      disabled={savingNote[item.id]}
+                      className="shrink-0 px-4 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 disabled:opacity-50"
                     >
-                      -
-                    </button>
-                    <div className="w-10 text-center font-semibold">{item.qty}</div>
-                    <button
-                      type="button"
-                      onClick={() => handleIncrease(item)}
-                      className="px-3 py-1 rounded-md border border-gray-300 hover:bg-gray-100"
-                      disabled={isUpdating}
-                    >
-                      +
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-sm font-semibold text-gray-700">
-                      ৳ {item?.line_total}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(item.id)}
-                      className="text-red-500 hover:text-red-700"
-                      disabled={isDeleting}
-                    >
-                      <FaTrash />
+                      {savingNote[item.id] ? "Saving..." : "Save Note"}
                     </button>
                   </div>
                 </div>

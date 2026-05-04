@@ -46,6 +46,7 @@ import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
 import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
+import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -55,16 +56,22 @@ export const router = createBrowserRouter([
     element: <HomePage />,
   },
 
-    {
+  {
     path: "/picnic-registration",
     element: <PicnicRegistration />,
   },
 
-  
+
   {
     path: "/registered-members",
     element: <RegisteredMembersTable />,
   },
+  {
+    path: "/all-product-category",
+    element: <AllProductCategoryTab />,
+  },
+
+
   {
     path: "/contact-us",
     element: <ContactPage />,
@@ -85,7 +92,7 @@ export const router = createBrowserRouter([
     path: "/vendor",
     element: <VendorLanding />,
   },
-    {
+  {
     path: "/admin-login",
     element: <AdminLogin />,
   },
@@ -94,8 +101,9 @@ export const router = createBrowserRouter([
     element: <VendorLogin />,
   },
 
-  { path: "task-share-detail/:id", 
-    element: <TaskShareDetail /> 
+  {
+    path: "task-share-detail/:id",
+    element: <TaskShareDetail />
   },
 
   {
@@ -161,11 +169,11 @@ export const router = createBrowserRouter([
     element: <Login />,
   },
 
-      {
-        path: "/register",
-        element: <RegisterPage />,
-      },
-  
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+
   {
     path: "*",
     element: <p>Page not found!</p>,
