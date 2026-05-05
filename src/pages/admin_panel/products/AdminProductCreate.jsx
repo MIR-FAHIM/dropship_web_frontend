@@ -254,7 +254,7 @@ const AdminProductCreate = () => {
                 <select name="vendor_id" value={formData.vendor_id} onChange={handleChange} className={inputClass}>
                   <option value="">ভেন্ডর নির্বাচন করুন</option>
                   {vendors.map((v) => (
-                    <option key={v.id} value={v.id}>{v.name || v.shop_name || v.email}</option>
+                    <option key={v.id} value={v.user_id || v.id}>{ v.shop_name || v.user?.email}</option>
                   ))}
                 </select>
               </div>

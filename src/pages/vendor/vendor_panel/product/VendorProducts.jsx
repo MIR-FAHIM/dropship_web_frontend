@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useGetVendorProductsQuery } from "../../../redux/features/vendor_api";
-import { useDeleteProductMutation } from "../../../redux/features/product";
-import { getFromLocalstorage } from "../../../utils/localstorage.utils";
-import { imgBaseUrl } from "../../../../config";
+import { useGetVendorProductsQuery } from "../../../../redux/features/vendor_api";
+import { useDeleteProductMutation } from "../../../../redux/features/product";
+import { getFromLocalstorage } from "../../../../utils/localstorage.utils";
+import { imgBaseUrl } from "../../../../../config";
 import { toast } from "sonner";
 
 const VendorProducts = () => {

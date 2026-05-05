@@ -196,6 +196,7 @@ export const API_ENDPOINTS = {
     list: define("GET", "/vendors/list"),
     isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),
+    dashboardReport: define("GET", "/vendors/dashboard/report/{vendorId}"),
   },
 
   tasks: {

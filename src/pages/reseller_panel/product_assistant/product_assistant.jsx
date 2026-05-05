@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGetFavProductsQuery } from "../../redux/features/product"; // Assuming this query is defined in your redux slice
+import { useGetFavProductsQuery } from "../../../redux/features/product"; // Assuming this query is defined in your redux slice
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 

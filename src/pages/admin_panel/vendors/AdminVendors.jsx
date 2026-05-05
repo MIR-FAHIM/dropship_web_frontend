@@ -118,7 +118,7 @@ const AdminVendors = () => {
               <tbody>
                 {filtered.map((vendor, i) => (
                   <tr key={vendor.id} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="py-3 text-gray-600">{i + 1}</td>
+                    <td className="py-3 text-gray-600">{vendor.id} user: {vendor.user_id}</td>
                     <td className="py-3 font-medium text-gray-800">{vendor.shop_name}</td>
                     <td className="py-3 text-gray-600">{vendor.owner_name}</td>
                     <td className="py-3 text-gray-600">{vendor.user?.email}</td>

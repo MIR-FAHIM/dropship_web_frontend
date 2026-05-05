@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useListCategoriesWithChildrenQuery } from "../../redux/features/category";
 import { useListProductsCategoryWiseQuery } from "../../redux/features/product";
 import ProductCard from "./product_card_component";
@@ -6,17 +7,11 @@ import Pagination from "../../components/shared/Pagination";
 import TabHeading from "../../components/shared/TabHeading";
 
 const AllProductCategoryTab = () => {
+	const navigate = useNavigate();
 	const { data, isLoading, error } = useListCategoriesWithChildrenQuery();
 	const categories = data?.data?.data ?? data?.data ?? [];
-	const [selectedCategory, setSelectedCategory] = useState(categories[0]?.id || null);
+	const [selectedCategory, setSelectedCategory] = useState(null); // null = All
 	const [page, setPage] = useState(1);
-
-	// Update selectedCategory when categories load
-	React.useEffect(() => {
-		if (categories.length && !selectedCategory) {
-			setSelectedCategory(categories[0].id);
-		}
-	}, [categories, selectedCategory]);
 
 	const {
 		data: products,
@@ -26,7 +21,12 @@ const AllProductCategoryTab = () => {
 	} = useListProductsCategoryWiseQuery(
 		selectedCategory ? { category_id: selectedCategory, page } : { page }
 	);
-
+  const handleDownloadImage = (image) => {
+    const link = document.createElement('a');
+    link.href = image;
+    link.download = 'product-image';
+    link.click();
+  };
 	const productList = products?.data?.data || [];
 	const currentPage = products?.data?.current_page ?? page;
 	const totalPages = products?.data?.last_page ?? 1;
@@ -39,6 +39,16 @@ const AllProductCategoryTab = () => {
 			<div className="max-w-7xl mx-auto">
 			
 				<div className="flex flex-wrap gap-2 mb-8">
+					<button
+						onClick={() => { setSelectedCategory(null); setPage(1); }}
+						className={`px-4 py-2 rounded-full border transition font-semibold text-sm ${
+							selectedCategory === null
+								? "bg-blue-600 text-white border-blue-600"
+								: "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600"
+						}`}
+					>
+						All Products
+					</button>
 					{categories.map((cat) => (
 						<button
 							key={cat.id}
@@ -68,7 +78,8 @@ const AllProductCategoryTab = () => {
 								<ProductCard
 									key={product.id}
 									product={product}
-									onClick={() => {}}
+									onClick={(p) => navigate(`/app/productdetails/${p.id}`)}
+									onDownload={handleDownloadImage}
 								/>
 							))}
 						</div>

@@ -17,7 +17,7 @@ import VendorLogin from "../pages/vendor/VendorLogin";
 import VendorRegister from "../pages/vendor/VendorRegister";
 import VendorPanelLayout from "../pages/vendor/vendor_panel/VendorPanelLayout";
 import VendorDashboard from "../pages/vendor/vendor_panel/VendorDashboard";
-import VendorProducts from "../pages/vendor/vendor_panel/VendorProducts";
+import VendorProducts from "../pages/vendor/vendor_panel/product/VendorProducts";
 import VendorProductCreate from "../pages/vendor/vendor_panel/VendorProductCreate";
 import VendorProductDetail from "../pages/vendor/vendor_panel/VendorProductDetail";
 import VendorBankAccount from "../pages/vendor/vendor_panel/bank_account/VendorBankAccount";
@@ -47,6 +47,7 @@ import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
 import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
+import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
   {
     path: "/all-product-category",
     element: <AllProductCategoryTab />,
+  },
+  {
+    path: "/product-assistant",
+    element: <ProductAssistantPage />,
   },
 
 

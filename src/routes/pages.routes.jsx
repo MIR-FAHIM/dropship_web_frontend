@@ -6,7 +6,7 @@ import FavProducts from "../pages/favproduct/FavProducts";
 import Invoice from "../pages/billing/Invoice/Invoice";
 import InvoiceInPDF from "../pages/billing/Invoice/InvoiceInPDF";
 import ItemsCategory from "../pages/product/items/Items_category";
-import ProfilePage from "../pages/profile/Profile";
+import ProfilePage from "../pages/reseller_panel/profile/Profile";
 import CartPage from "../pages/cart/Cart";
 import SuccessPage from "../pages/product/items/order_success";
 import ProductsList from "../pages/product/items/ProductsList";
@@ -14,19 +14,20 @@ import ProductDetails from "../pages/product/items/ProductDetails";
 import AdminActivity from "../pages/activity/AdminActivity";
 import OrderDetailsPage from "../pages/orders/OrderDetails";
 import Order from "../pages/orders/Orders";
-import Overview from "../pages/overview/Overview";
+import Overview from "../pages/reseller_panel/overview/Overview";
 import SalesAndProfit from "../pages/billing/saleandprofit/SaleAndProfit";
-import Users from "../pages/supports/SupportTicket";
-import FAQPage from "../pages/supports/GeneralQuestions";
+import Users from "../pages/reseller_panel/supports/SupportTicket";
+import FAQPage from "../pages/reseller_panel/supports/GeneralQuestions";
 import Post from "../pages/post/Post";
 import WarehouseDetails from "../pages/post/WarehouseDetails";
-import SalesGuidelines from "../pages/saleguideline/saleguideline";
+import SalesGuidelines from "../pages/reseller_panel/saleguideline/saleguideline";
 import WithdrawPage from "../pages/billing/withdraw/withdraw_req";
 import AddPaymentAccount from "../pages/billing/payment_account/add_payment_account";
-import ProductAssistant from "../pages/product_assistant/product_assistant";
+
 import ContactUsPage from "../pages/contactus/contact_us_form";
 import CheckoutPage from "../pages/checkout/checkout";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
+import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 
 export const pagePaths = [
   { path: "dashboard-new",          element: <Overview /> },
@@ -44,7 +45,7 @@ export const pagePaths = [
   { path: "users",                  element: <Users /> },
   { path: "profile",                element: <ProfilePage /> },
   { path: "items/category",         element: <ItemsCategory /> },
-  { path: "product-assistant",      element: <ProductAssistant /> },
+  { path: "product-assistant",      element: <ProductAssistantPage /> },
   { path: "cart",                   element: <CartPage /> },
   { path: "checkout",               element: <CheckoutPage /> },
   { path: "productlist/:id",        element: <ProductsList /> },
@@ -60,4 +61,5 @@ export const pagePaths = [
   { path: "sale-guide-line",        element: <SalesGuidelines /> },
   { path: "add-payment-account",    element: <AddPaymentAccount /> },
   { path: "all-product-category",   element: <AllProductCategoryTab /> },
+
 ];

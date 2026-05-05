@@ -58,6 +58,7 @@ const productApi = baseApi.injectEndpoints({
     getProductDetails: builder.query({
       query: (id) =>
         buildEndpointPath(API_ENDPOINTS.products.details.path, { id }),
+      providesTags: (result, error, id) => [{ type: "Product", id }],
     }),
 
     updateProduct: builder.mutation({
@@ -66,6 +67,7 @@ const productApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.products.update.method,
         body: productData,
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
     }),
 
     deleteProduct: builder.mutation({
@@ -88,6 +90,7 @@ const productApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.products.addImage.method,
         body: payload,
       }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
     }),
     addWishList: builder.mutation({
       query: ({ id, ...payload }) => ({

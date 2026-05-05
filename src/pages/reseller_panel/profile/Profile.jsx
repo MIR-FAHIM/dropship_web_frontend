@@ -1,6 +1,6 @@
 import React from 'react';
-import { useGetUserDetailsQuery } from '../../redux/features/user';
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
+import { useGetUserDetailsQuery } from '../../../redux/features/user';
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=Playfair+Display:wght@600;700&display=swap');

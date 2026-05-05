@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useButtonClickMutation } from "../../redux/features/user";
+import { useButtonClickMutation } from "../../../redux/features/user";
 import { Outlet } from "react-router-dom";
 import {
   FaBoxOpen, FaTrophy, FaRocket, FaBook, FaVideo,
