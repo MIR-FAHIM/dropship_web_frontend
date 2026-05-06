@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
 import { imgBaseUrl } from "../../../../config";
@@ -9,6 +10,7 @@ import ProductGallery from "./product_gallery";
 
 const ProductDetails = () => {
   const { id } = useParams();
+  const { t } = useTranslation();
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
@@ -54,7 +56,7 @@ const ProductDetails = () => {
     const imageUrl = buildImageUrl(fileName, fallbackImageUrl);
 
     if (!imageUrl) {
-      alert("Image not available");
+      alert(t("product_details.image_not_available"));
       return;
     }
 
@@ -121,12 +123,12 @@ const ProductDetails = () => {
     try {
       const res = await createCart(cartItem);
       if (res?.data?.status === 200 || res?.data?.status === "success") {
-        alert("Product added to cart!");
+        alert(t("product_details.added_to_cart"));
         window.dispatchEvent(new Event("cart-updated"));
       }
     } catch (error) {
       console.error("Error adding product to cart:", error);
-      alert('Failed to add product to cart');
+      alert(t("product_details.add_to_cart_failed"));
     }
   };
 
@@ -184,7 +186,7 @@ const ProductDetails = () => {
 
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>{t("product_details.loading")}</div>;
   }
 
   if (isError) {
@@ -215,21 +217,21 @@ const ProductDetails = () => {
               onClick={() => handleDownloadAssets(product, primaryImageUrl)}
             >
               <FaDownload />
-              Download assets
+              {t("product_details.download_assets")}
             </button>
             <button
               type="button"
               className="action-btn secondary"
               onClick={() => handleCopyText(product?.name)}
             >
-              Copy title
+              {t("product_details.copy_title")}
             </button>
             <button
               type="button"
               className="action-btn secondary"
               onClick={() => handleCopyText(product?.description)}
             >
-              Copy description
+              {t("product_details.copy_description")}
             </button>
           </div>
         </div>
@@ -237,15 +239,15 @@ const ProductDetails = () => {
         <div className="product-info-column">
           <div className="product-title-row">
             <div>
-              <p className="product-kicker">Reseller workspace</p>
+              <p className="product-kicker">{t("product_details.reseller_workspace")}</p>
               <h1 className="product-name">{product?.name}</h1>
-              <p className="product-sku">SKU: {product?.barcode || "N/A"}</p>
+              <p className="product-sku">{t("product_details.sku")}: {product?.barcode || "N/A"}</p>
             </div>
             <button
               type="button"
               className={`favorite-toggle ${isFavorite ? "active" : ""}`}
               onClick={toggleFavorite}
-              title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+              title={isFavorite ? t("product_details.remove_from_favorites") : t("product_details.add_to_favorites")}
             >
               <FaHeart />
             </button>
@@ -253,31 +255,31 @@ const ProductDetails = () => {
 
           <div className="product-meta-grid">
             <div className="meta-card">
-              <p className="meta-label">Base price</p>
+              <p className="meta-label">{t("product_details.base_price")}</p>
               <p className="meta-value">৳ {basePrice}</p>
             </div>
             <div className="meta-card">
-              <p className="meta-label">Stock</p>
+              <p className="meta-label">{t("product_details.stock")}</p>
               <p className="meta-value">{product?.current_stock ?? 0}</p>
             </div>
             <div className="meta-card">
-              <p className="meta-label">Category</p>
+              <p className="meta-label">{t("product_details.category")}</p>
               <p className="meta-value">{product?.category?.name || "N/A"}</p>
             </div>
             <div className="meta-card">
-              <p className="meta-label">Unit</p>
+              <p className="meta-label">{t("product_details.unit")}</p>
               <p className="meta-value">{product?.unit || "N/A"}</p>
             </div>
           </div>
 
           <div className="reseller-panel">
             <div className="reseller-head">
-              <h2>Set your selling price</h2>
-              <p>Use this price on your own store or marketplace.</p>
+              <h2>{t("product_details.set_selling_price")}</h2>
+              <p>{t("product_details.set_selling_price_sub")} {product?.max_resell_price}৳</p>
             </div>
 
             <div className="price-input-row">
-              <label htmlFor="reseller-price">Your price</label>
+              <label htmlFor="reseller-price">{t("product_details.your_price")}</label>
               <div className="price-input">
                 <span>৳</span>
                 <input
@@ -286,24 +288,24 @@ const ProductDetails = () => {
                   value={resellerPrice}
                   onChange={handleResellerPriceInput}
                   min="0"
-                  placeholder="Enter your price"
+                  placeholder={t("product_details.enter_price_placeholder")}
                 />
               </div>
             </div>
 
             <div className="price-stats">
               <div className={`stat-card ${profitValue >= 0 ? "positive" : "negative"}`}>
-                <p>Profit per item</p>
+                <p>{t("product_details.profit_per_item")}</p>
                 <strong>৳ {Number.isFinite(profitValue) ? profitValue.toFixed(0) : 0}</strong>
               </div>
               <div className="stat-card">
-                <p>Margin on base</p>
+                <p>{t("product_details.margin_on_base")}</p>
                 <strong>{Number.isFinite(marginValue) ? marginValue.toFixed(1) : 0}%</strong>
               </div>
             </div>
 
             <div className="quantity-selection">
-              <label>Quantity</label>
+              <label>{t("product_details.quantity")}</label>
               <div className="qty-controls">
                 <button type="button" onClick={handleDecreaseQty}>
                   -
@@ -323,15 +325,15 @@ const ProductDetails = () => {
 
             <div className="price-stats totals">
               <div className="stat-card">
-                <p>Total sell value</p>
+                <p>{t("product_details.total_sell_value")}</p>
                 <strong>৳ {Number.isFinite(totalSellValue) ? totalSellValue.toFixed(0) : 0}</strong>
               </div>
               <div className="stat-card">
-                <p>Total base cost</p>
+                <p>{t("product_details.total_base_cost")}</p>
                 <strong>৳ {Number.isFinite(totalBaseValue) ? totalBaseValue.toFixed(0) : 0}</strong>
               </div>
               <div className={`stat-card ${totalProfitValue >= 0 ? "positive" : "negative"}`}>
-                <p>Total profit</p>
+                <p>{t("product_details.total_profit")}</p>
                 <strong>৳ {Number.isFinite(totalProfitValue) ? totalProfitValue.toFixed(0) : 0}</strong>
               </div>
             </div>
@@ -341,7 +343,7 @@ const ProductDetails = () => {
               disabled={isAddingToCart}
               className={`primary-btn ${isAddingToCart ? "disabled" : ""}`}
             >
-              {isAddingToCart ? "Adding..." : "Add to cart at your price"}
+              {isAddingToCart ? t("product_details.adding") : t("product_details.add_to_cart")}
             </button>
           </div>
         </div>
@@ -350,24 +352,24 @@ const ProductDetails = () => {
       <div className="reseller-steps">
         <div className="step-card">
           <span className="step-number">01</span>
-          <h3>Copy & download</h3>
-          <p>Grab product title, description, and images for your store.</p>
+          <h3>{t("product_details.step1_title")}</h3>
+          <p>{t("product_details.step1_desc")}</p>
         </div>
         <div className="step-card">
           <span className="step-number">02</span>
-          <h3>Set your price</h3>
-          <p>Adjust selling price based on your margin and market.</p>
+          <h3>{t("product_details.step2_title")}</h3>
+          <p>{t("product_details.step2_desc")}</p>
         </div>
         <div className="step-card">
           <span className="step-number">03</span>
-          <h3>Order when sold</h3>
-          <p>Come back and place your order using your selling price.</p>
+          <h3>{t("product_details.step3_title")}</h3>
+          <p>{t("product_details.step3_desc")}</p>
         </div>
       </div>
 
       {/* Product Description Section */}
       <div className="product-description">
-        <h2>Description</h2>
+        <h2>{t("product_details.description")}</h2>
         <div dangerouslySetInnerHTML={{ __html: product?.description || "" }} />
       </div>
 
@@ -378,13 +380,13 @@ const ProductDetails = () => {
             className={`tab ${activeTab === "images" ? "active" : ""}`}
             onClick={() => handleTabClick("images")}
           >
-            Image assets
+            {t("product_details.image_assets")}
           </button>
           <button
             className={`tab ${activeTab === "details" ? "active" : ""}`}
             onClick={() => handleTabClick("details")}
           >
-            Details
+            {t("product_details.details")}
           </button>
         </div>
 
@@ -400,7 +402,7 @@ const ProductDetails = () => {
                   className="tab-image"
                 />
                 <button className="download-btn" onClick={() => handleDownloadAssets(product, primaryImageUrl)}>
-                  Download
+                  {t("product_details.download")}
                 </button>
               </div>
               {/* Gallery grid */}
@@ -413,15 +415,15 @@ const ProductDetails = () => {
           {activeTab === "details" && (
             <div className="strategy-tab-content">
               <div className="strategy-card">
-                <h3 className="strategy-title">Category</h3>
+                <h3 className="strategy-title">{t("product_details.category")}</h3>
                 <p className="strategy-subtitle">{product?.category?.name || "N/A"}</p>
               </div>
               <div className="strategy-card">
-                <h3 className="strategy-title">Sub Category</h3>
+                <h3 className="strategy-title">{t("product_details.sub_category")}</h3>
                 <p className="strategy-subtitle">{product?.sub_category?.name || "N/A"}</p>
               </div>
               <div className="strategy-card">
-                <h3 className="strategy-title">Shop</h3>
+                <h3 className="strategy-title">{t("product_details.shop")}</h3>
                 <p className="strategy-subtitle">{product?.shop?.name || "N/A"}</p>
               </div>
             </div>

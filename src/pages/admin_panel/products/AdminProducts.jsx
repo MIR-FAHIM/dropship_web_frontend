@@ -1,17 +1,63 @@
 import React, { useState } from "react";
 import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useListProductsQuery, useDeleteProductMutation } from "../../../redux/features/product";
+import { useDispatch } from "react-redux";
+import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation } from "../../../redux/features/product";
+import productApi from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
 
 const AdminProducts = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data, isLoading, isFetching } = useListProductsQuery(currentPage);
   const [deleteProduct] = useDeleteProductMutation();
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+
+  const [editingCell, setEditingCell] = useState(null); // { productId, field }
+  const [editValue, setEditValue] = useState("");
+
+  const startEdit = (productId, field, currentValue) => {
+    setEditingCell({ productId, field });
+    setEditValue(String(currentValue ?? ""));
+  };
+
+  const cancelEdit = () => {
+    setEditingCell(null);
+    setEditValue("");
+  };
+
+  const commitEdit = async (product) => {
+    const field = editingCell?.field;
+    const parsed = parseFloat(editValue);
+    if (isNaN(parsed) || parsed < 0) {
+      toast.error("সঠিক মূল্য দিন");
+      cancelEdit();
+      return;
+    }
+    if (parsed === parseFloat(product[field])) {
+      cancelEdit();
+      return;
+    }
+    // Optimistically patch the cache so the UI updates instantly
+    const patchResult = dispatch(
+      productApi.util.updateQueryData("listProducts", currentPage, (draft) => {
+        const item = draft?.data?.data?.find((p) => p.id === product.id);
+        if (item) item[field] = parsed;
+      })
+    );
+    try {
+      await updateProduct({ id: product.id, [field]: parsed }).unwrap();
+      toast.success("মূল্য আপডেট হয়েছে!");
+    } catch (err) {
+      patchResult.undo();
+      toast.error(err?.data?.message || "আপডেট ব্যর্থ!");
+    }
+    cancelEdit();
+  };
 
   const products = data?.data?.data || [];
   const totalPages = data?.data?.last_page || 1;
@@ -82,6 +128,7 @@ const AdminProducts = () => {
                     <th className="pb-3 font-medium">ক্যাটাগরি</th>
                     <th className="pb-3 font-medium">ব্র্যান্ড</th>
                     <th className="pb-3 font-medium">মূল্য</th>
+                    <th className="pb-3 font-medium">Max Sell মূল্য</th>
                     <th className="pb-3 font-medium">স্টক</th>
                     <th className="pb-3 font-medium">স্ট্যাটাস</th>
                     <th className="pb-3 font-medium">তারিখ</th>
@@ -110,7 +157,54 @@ const AdminProducts = () => {
                       </td>
                       <td className="py-3 text-gray-600">{product.category?.name || "—"}</td>
                       <td className="py-3 text-gray-600">{product.brand?.name || "—"}</td>
-                      <td className="py-3 text-gray-800 font-medium">৳{product.unit_price}</td>
+                      <td
+                        className="py-3 text-gray-800 font-medium cursor-pointer"
+                        onClick={() => startEdit(product.id, "unit_price", product.unit_price)}
+                      >
+                        {editingCell?.productId === product.id && editingCell?.field === "unit_price" ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => commitEdit(product)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") commitEdit(product);
+                              if (e.key === "Escape") cancelEdit();
+                            }}
+                            className="w-24 border border-blue-400 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">৳{product.unit_price}</span>
+                        )}
+                      </td>
+                      <td
+                        className="py-3 text-gray-800 font-medium cursor-pointer"
+                        onClick={() => startEdit(product.id, "max_resell_price", product.max_resell_price)}
+                      >
+                        {editingCell?.productId === product.id && editingCell?.field === "max_resell_price" ? (
+                          <input
+                            autoFocus
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => commitEdit(product)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") commitEdit(product);
+                              if (e.key === "Escape") cancelEdit();
+                            }}
+                            className="w-24 border border-blue-400 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">৳{product.max_resell_price}</span>
+                        )}
+                      </td>
                       <td className="py-3">
                         <span
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { useParams } from "react-router-dom";
-import { useGetOrderDetailsQuery } from "../../redux/features/order";
+import { useGetOrderDetailsQuery } from "../../../redux/features/order";
 
 const OrderDetailsPage = () => {
   const { id } = useParams();

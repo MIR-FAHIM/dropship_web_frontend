@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useListOrdersByUserQuery } from "../../redux/features/order";
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
-import Pagination from "../../components/shared/Pagination";
+import { useListOrdersByUserQuery } from "../../../redux/features/order";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+import Pagination from "../../../components/shared/Pagination";
 
 const Order = () => {
   const navigate = useNavigate();
