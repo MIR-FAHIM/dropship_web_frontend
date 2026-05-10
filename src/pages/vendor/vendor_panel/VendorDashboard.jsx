@@ -3,16 +3,18 @@ import {
   ShoppingBag, Package, TrendingUp, DollarSign, ClipboardList, Clock,
   CheckCircle2, XCircle, AlertTriangle, BarChart2, Loader2, Star,
 } from "lucide-react";
-import { useGetVendorDashboardReportQuery } from "../../../redux/features/vendor_api";
+import { useGetVendorDashboardReportQuery , useGetVendorIdQuery} from "../../../redux/features/vendor_api";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { useNavigate } from "react-router-dom";
 
 const VendorDashboard = () => {
   const userId = getFromLocalstorage("userId");
+    const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
+    const vendorId = vendorIdData?.data?.vendor_id;
   const navigate = useNavigate();
 
-  const { data: reportData, isLoading } = useGetVendorDashboardReportQuery(userId, {
-    skip: !userId,
+  const { data: reportData, isLoading } = useGetVendorDashboardReportQuery(vendorId, {
+    skip: !vendorId,
   });
 
   const report = reportData?.data;

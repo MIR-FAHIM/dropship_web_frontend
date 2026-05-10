@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import AdminNotification from "./notification/AdminNotification";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useGetUserDetailsQuery } from "../../redux/features/user";
+import { getFromLocalstorage } from "../../utils/localstorage.utils";
 import {
   LayoutDashboard,
   Package,
@@ -110,6 +112,40 @@ const adminMenuLinks = [
   },
 ];
 
+const productManagerMenuLinks = [
+  {
+    label: "পণ্য সমূহ",
+    icon: <Package className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/products",
+        label: "সকল পণ্য",
+        icon: <Package className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/categories",
+        label: "ক্যাটাগরি",
+        icon: <FolderTree className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/brands",
+        label: "ব্র্যান্ড",
+        icon: <Tag className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/attributes",
+        label: "অ্যাট্রিবিউট",
+        icon: <SlidersHorizontal className="w-4 h-4" />,
+      },
+    ],
+  },
+  {
+    path: "/admin-panel/media",
+    label: "মিডিয়া",
+    icon: <ImageIcon className="w-5 h-5" />,
+  },
+];
+
 const AdminPanelLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -117,6 +153,14 @@ const AdminPanelLayout = () => {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const userId = getFromLocalstorage("userId");
+  const { data: userDetailsData } = useGetUserDetailsQuery(userId, { skip: !userId });
+  const currentUser = userDetailsData?.data || userDetailsData?.user || null;
+
+  const isAdmin = currentUser?.user_type === "admin" && currentUser?.role === "admin";
+  const isProductManager = currentUser?.role === "product manager";
+  const menuLinks = isProductManager ? productManagerMenuLinks : adminMenuLinks;
 
   const toggleMenu = (label) => {
     setExpandedMenus((prev) => ({ ...prev, [label]: !prev[label] }));
@@ -152,7 +196,7 @@ const AdminPanelLayout = () => {
 
       {/* Menu Links */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {adminMenuLinks.map((item) =>
+        {menuLinks.map((item) =>
           item.children ? (
             <div key={item.label}>
               <button

@@ -33,6 +33,13 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Vendor"],
     }),
+    getVendorId: builder.query({
+      query: (id) => ({
+        url: buildEndpointPath(API_ENDPOINTS.vendors.getVendorId.path, { id }),
+        method: API_ENDPOINTS.vendors.getVendorId.method,
+      }),
+      providesTags: ["Vendor"],
+    }),
     getVendorDashboardReport: builder.query({
       query: (vendorId) => ({
         url: buildEndpointPath(API_ENDPOINTS.vendors.dashboardReport.path, { vendorId }),
@@ -69,6 +76,7 @@ export const {
   useVendorRegisterMutation,
   useVendorLoginMutation,
   useGetVendorProfileQuery,
+  useGetVendorIdQuery,
   useGetVendorListQuery,
   useGetVendorProductsQuery,
   useGetVendorDashboardReportQuery,

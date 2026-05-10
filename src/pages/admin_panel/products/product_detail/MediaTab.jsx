@@ -1,14 +1,35 @@
 import React, { useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useAddProductImageMutation } from "../../../../redux/features/product";
+import {
+  useAddProductImageMutation,
+  useUpdateProductMutation,
+} from "../../../../redux/features/product";
 import MediaPickerModal from "../../../../components/shared/MediaPickerModal";
 import { imgBaseUrl } from "../../../../../config";
 
 const MediaTab = ({ product, productId }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [thumbOpen, setThumbOpen] = useState(false);
+  const [updatingThumb, setUpdatingThumb] = useState(false);
+
   const [addProductImage] = useAddProductImageMutation();
+  const [updateProduct] = useUpdateProductMutation();
+
+  const handleThumbnailSelect = async (file) => {
+    if (!file?.id) return;
+    setUpdatingThumb(true);
+    try {
+      await updateProduct({ id: productId, thumbnail_img: file.id }).unwrap();
+      toast.success("থাম্বনেইল আপডেট হয়েছে!");
+    } catch (err) {
+      toast.error(err?.data?.message || "থাম্বনেইল আপডেট ব্যর্থ হয়েছে!");
+    } finally {
+      setUpdatingThumb(false);
+      setThumbOpen(false);
+    }
+  };
 
   const handleGalleryImageSelect = async (file) => {
     if (!file?.id) return;
@@ -28,7 +49,17 @@ const MediaTab = ({ product, productId }) => {
     <div className="space-y-6">
       {/* Primary Image */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">থাম্বনেইল</h3>
+        <div className="flex items-center gap-3 mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">থাম্বনেইল</h3>
+          <button
+            type="button"
+            className="text-xs text-blue-600 hover:underline border px-2 py-1 rounded disabled:opacity-50"
+            onClick={() => setThumbOpen(true)}
+            disabled={updatingThumb}
+          >
+            {updatingThumb ? "আপডেট হচ্ছে..." : "পরিবর্তন করুন"}
+          </button>
+        </div>
         {product.primary_image?.file_name ? (
           <img
             src={`${imgBaseUrl}/${product.primary_image.file_name}`}
@@ -40,6 +71,11 @@ const MediaTab = ({ product, productId }) => {
             <ImageIcon className="w-8 h-8 text-gray-300" />
           </div>
         )}
+        <MediaPickerModal
+          open={thumbOpen}
+          onClose={() => setThumbOpen(false)}
+          onSelect={handleThumbnailSelect}
+        />
       </div>
 
       {/* Gallery */}

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation } from "../../../redux/features/product";
+import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation } from "../../../redux/features/product";
 import productApi from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
@@ -12,10 +12,12 @@ const AdminProducts = () => {
   const dispatch = useDispatch();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [vendorSearch, setVendorSearch] = useState("");
 
   const { data, isLoading, isFetching } = useListProductsQuery(currentPage);
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const [approveProduct] = useApproveProductMutation();
 
   const [editingCell, setEditingCell] = useState(null); // { productId, field }
   const [editValue, setEditValue] = useState("");
@@ -63,8 +65,18 @@ const AdminProducts = () => {
   const totalPages = data?.data?.last_page || 1;
 
   const filtered = products.filter((p) =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    (p.vendor?.shop_name ?? "").toLowerCase().includes(vendorSearch.toLowerCase())
   );
+
+  const handleApprove = async (product) => {
+    try {
+      await approveProduct({ id: product.id, approved: product.approved ? 0 : 1 }).unwrap();
+      toast.success("স্ট্যাটাস আপডেট হয়েছে!");
+    } catch (err) {
+      toast.error(err?.data?.message || "স্ট্যাটাস আপডেট ব্যর্থ!");
+    }
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm("এই পণ্যটি মুছে ফেলতে চান?")) return;
@@ -92,6 +104,16 @@ const AdminProducts = () => {
               className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-64"
             />
           </div>
+          <div className="relative flex-1 sm:flex-none">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Vendor খুঁজুন..."
+              value={vendorSearch}
+              onChange={(e) => setVendorSearch(e.target.value)}
+              className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-56"
+            />
+          </div>
           <button
             onClick={() => navigate("/admin-panel/products/create")}
             className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition shrink-0"
@@ -112,7 +134,7 @@ const AdminProducts = () => {
           <div className="text-center py-16">
             <Package className="w-14 h-14 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm font-medium">
-              {searchTerm ? "কোনো পণ্য পাওয়া যায়নি।" : "এখনো কোনো পণ্য যোগ করা হয়নি।"}
+              {searchTerm || vendorSearch ? "কোনো পণ্য পাওয়া যায়নি।" : "এখনো কোনো পণ্য যোগ করা হয়নি।"}
             </p>
             <p className="text-gray-400 text-xs mt-1">উপরের বাটনে ক্লিক করে নতুন পণ্য যোগ করুন।</p>
           </div>
@@ -126,7 +148,7 @@ const AdminProducts = () => {
                     <th className="pb-3 font-medium">ছবি</th>
                     <th className="pb-3 font-medium">নাম</th>
                     <th className="pb-3 font-medium">ক্যাটাগরি</th>
-                    <th className="pb-3 font-medium">ব্র্যান্ড</th>
+                    <th className="pb-3 font-medium">Vendor</th>
                     <th className="pb-3 font-medium">মূল্য</th>
                     <th className="pb-3 font-medium">Max Sell মূল্য</th>
                     <th className="pb-3 font-medium">স্টক</th>
@@ -156,7 +178,7 @@ const AdminProducts = () => {
                         {product.name}
                       </td>
                       <td className="py-3 text-gray-600">{product.category?.name || "—"}</td>
-                      <td className="py-3 text-gray-600">{product.brand?.name || "—"}</td>
+                      <td className="py-3 text-gray-600">{product.vendor?.shop_name || "—"}</td>
                       <td
                         className="py-3 text-gray-800 font-medium cursor-pointer"
                         onClick={() => startEdit(product.id, "unit_price", product.unit_price)}
@@ -217,15 +239,19 @@ const AdminProducts = () => {
                         </span>
                       </td>
                       <td className="py-3">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            product.published
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                        <button
+                          onClick={() => handleApprove(product)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${
+                            product.approved ? "bg-green-500" : "bg-gray-300"
                           }`}
+                          title={product.approved ? "পাবলিশড — ক্লিক করে ড্রাফটে নিন" : "ড্রাফট — ক্লিক করে পাবলিশ করুন"}
                         >
-                          {product.published ? "পাবলিশড" : "ড্রাফট"}
-                        </span>
+                          <span
+                            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
+                              product.approved ? "translate-x-4" : "translate-x-1"
+                            }`}
+                          />
+                        </button>
                       </td>
                       <td className="py-3 text-gray-500 text-xs">
                         {new Date(product.created_at).toLocaleDateString("bn-BD")}

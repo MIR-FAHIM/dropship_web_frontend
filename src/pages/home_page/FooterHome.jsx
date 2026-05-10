@@ -12,6 +12,7 @@ const FooterHome = () => (
       <div className="flex flex-col md:flex-row gap-2 md:gap-6 text-sm items-center">
         <Link to="/privacy-policy" className="hover:text-white transition">Privacy Policy</Link>
         <Link to="/terms-and-conditions" className="hover:text-white transition">Terms &amp; Conditions</Link>
+        <Link to="/about-us" className="hover:text-white transition">About Us</Link>
         <Link to="/contact-us" className="hover:text-white transition">Contact Us</Link>
       </div>
     </div>

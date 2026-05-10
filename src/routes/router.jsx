@@ -9,6 +9,7 @@ import PrivacyPolicySalon from "../pages/privacy_policy/salon_privacy_policy";
 import ProductsListHomePage from "../pages/home_page/product_list_home";
 import ProductDetailsHomePage from "../pages/home_page/product_detail_home";
 import ContactPage from "../pages/home_page/contact_us";
+import AboutUs from "../pages/home_page/AboutUs";
 import SoftwareSell from "../pages/myzoo/software_sale";
 import PicnicRegistration from "../pages/kazi_bari/add_member";
 import RegisteredMembersTable from "../pages/kazi_bari/registered_table";
@@ -80,6 +81,10 @@ export const router = createBrowserRouter([
   {
     path: "/contact-us",
     element: <ContactPage />,
+  },
+  {
+    path: "/about-us",
+    element: <AboutUs />,
   },
   {
     path: "/salon-privacy-policy",

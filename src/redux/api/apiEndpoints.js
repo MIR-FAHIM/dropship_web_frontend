@@ -193,6 +193,7 @@ export const API_ENDPOINTS = {
   vendors: {
     register: define("POST", "/vendors/register"),
     profile: define("GET", "/vendors/profile/{id}"),
+    getVendorId: define("GET", "/vendors/vendor/id/{id}"),
     list: define("GET", "/vendors/list"),
     isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),
