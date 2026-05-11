@@ -25,6 +25,7 @@ import {
   ImageIcon,
   ListChecks,
   Bell,
+  Building2,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -109,6 +110,17 @@ const adminMenuLinks = [
     path: "/admin-panel/my-business-info",
     label: "My Business Info",
     icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    label: "ডেলিভারি",
+    icon: <Truck className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/delivery/companies",
+        label: "কোম্পানি",
+        icon: <Building2 className="w-4 h-4" />,
+      },
+    ],
   },
 ];
 

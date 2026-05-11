@@ -234,6 +234,19 @@ export const API_ENDPOINTS = {
     getAllWithdraws: define("GET", "/withdraws/all"),
     changeStatus: define("POST", "/withdraws/status-change/{id}"),
   },
+
+  deliveryCompanies: {
+    list: define("GET", "/delivery-companies/list"),
+    carrybeeCities:       define("GET",  "/delivery-companies/carrybee/cities"),
+    carrybeeZones:        define("GET",  "/delivery-companies/carrybee/{companyId}/cities/{cityId}/zones"),
+    carrybeeAreas:        define("GET",  "/delivery-companies/carrybee/{companyId}/cities/{cityId}/zones/{zoneId}/areas"),
+    carrybeeAreaSuggestion: define("GET", "/delivery-companies/carrybee/{companyId}/area-suggestion"),
+    carrybeeStores:       define("GET",  "/delivery-companies/carrybee/{companyId}/stores"),
+    carrybeeStoreCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/stores"),
+    carrybeeOrderCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/orders"),
+    carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/cancel"),
+    carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/1/orders/{consignmentId}/details"),
+  },
 };
 
 export const buildEndpointPath = (template, params = {}) =>
