@@ -1,25 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-	Box,
-	Card,
-	CardContent,
-	Typography,
-	IconButton,
-	Chip,
-	Stack,
-	Tooltip,
-	Rating,
-	useTheme,
-} from "@mui/material";
-import {
-	FavoriteBorder,
-	Favorite,
-	ShoppingCartOutlined,
-	ShoppingCart,
-	LocalOffer,
-	VisibilityOutlined,
-	Download,
-} from "@mui/icons-material";
+import { Heart, ShoppingCart, Eye, Download, Star, Tag } from "lucide-react";
 import { imgBaseUrl } from "../../../config";
 import { useAddWishListMutation, useDeleteWishProductMutation } from "../../redux/features/product";
 import { useCreateCartMutation } from "../../redux/features/cart";
@@ -57,7 +37,6 @@ const ProductCard = ({
 	onToggleWish,
 	onAddToCart,
 }) => {
-	const theme = useTheme();
 	const [userId, setUserId] = useState(() => {
 		const id = localStorage.getItem("userId");
 		return id ? String(id) : null;
@@ -257,227 +236,130 @@ const ProductCard = ({
 		onClick?.(product);
 	};
 
-	return (
-		<Card
-			onClick={() => onClick?.(product)}
-			sx={{
-				borderRadius: 3,
-				overflow: "hidden",
-				border: `1px solid ${theme.palette.divider}`,
-				background: theme.palette.background.paper,
-				transition: "transform 140ms ease, box-shadow 220ms ease, border-color 220ms ease",
-				position: "relative",
-				cursor: "pointer",
-				"&:hover": {
-					transform: "translateY(-3px)",
-					boxShadow:
-						theme.palette.mode === "dark"
-							? "0 14px 32px rgba(0,0,0,0.32)"
-							: "0 14px 32px rgba(0,0,0,0.1)",
-					borderColor: theme.palette.primary.main,
-				},
-			}}
+	const ActionBtn = ({ onClick: btnClick, title, children, disabled, active }) => (
+		<button
+			title={title}
+			disabled={disabled}
+			onClick={btnClick}
+			className={`w-8 h-8 flex items-center justify-center rounded-lg border transition-colors
+				${disabled ? "opacity-40 cursor-not-allowed border-gray-200 bg-white" :
+				active ? "border-red-200 bg-red-50 text-red-500" :
+				"border-gray-200 bg-white hover:bg-gray-50 text-gray-500 hover:text-gray-700"}`}
 		>
-			<Box sx={{ p: 1 }}>
-				<Box
-					sx={{
-						height: 300,
-						borderRadius: 1,
-						overflow: "hidden",
-						border: `1px solid ${theme.palette.divider}`,
-						background: theme.palette.action.hover,
-						display: "grid",
-						placeItems: "center",
-						position: "relative",
-					}}
-				>
-					<Box
-						component="img"
-						src={imageUrl}
-						alt={product?.name || "product"}
-						loading="lazy"
-						onError={(event) => {
-							event.currentTarget.onerror = null;
-							event.currentTarget.src = defaultImageUrl;
-						}}
-						sx={{
-							width: "100%",
-							height: "100%",
-							objectFit: "cover",
-							transition: "transform 240ms ease",
-							".MuiCard-root:hover &": { transform: "scale(1.05)" },
-						}}
-					/>
+			{children}
+		</button>
+	);
 
-					<Stack direction="row" spacing={0.5} sx={{ position: "absolute", left: 8, top: 8 }}>
-						{discountLabel ? (
-							<Chip
-								icon={<LocalOffer fontSize="small" />}
-								label={discountLabel}
-								size="small"
-								sx={{
-									borderRadius: 999,
-									fontWeight: 800,
-									background: theme.palette.primary.main,
-									color: "#fff",
-									border: `1px solid ${theme.palette.divider}`,
-								}}
-							/>
-						) : null}
+	return (
+		<div
+			onClick={() => onClick?.(product)}
+			className="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer
+				transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:border-gray-200 flex flex-col"
+		>
+			{/* Image — square ratio */}
+			<div className="relative overflow-hidden bg-gray-50 w-full" style={{ paddingBottom: "100%" }}>
+				<img
+					src={imageUrl}
+					alt={product?.name || "product"}
+					loading="lazy"
+					onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = defaultImageUrl; }}
+					className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+				/>
 
-						{outOfStock ? (
-							<Chip
-								label="Out of stock"
-								size="small"
-								color="error"
-								sx={{ borderRadius: 999, fontWeight: 800 }}
-							/>
-						) : (
-							<Chip
-								label="In stock"
-								size="small"
-								variant="outlined"
-								sx={{
-									borderRadius: 999,
-									fontWeight: 800,
-									color: theme.palette.text.secondary,
-									borderColor: theme.palette.divider,
-									background: theme.palette.background.paper,
-								}}
-							/>
+				{/* Badges */}
+				<div className="absolute top-2 left-2 flex flex-col gap-1">
+					{discountLabel && (
+						<span className="flex items-center gap-0.5 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full leading-tight">
+							<Tag className="w-2.5 h-2.5 flex-shrink-0" /> {discountLabel}
+						</span>
+					)}
+					<span className={`text-[10px] font-bold px-2 py-0.5 rounded-full leading-tight
+						${outOfStock ? "bg-gray-700 text-white" : "bg-green-500 text-white"}`}>
+						{outOfStock ? "Out of stock" : "In stock"}
+					</span>
+				</div>
+
+				{/* Quick-action overlay — desktop hover only */}
+				<div className="absolute top-2 right-2 hidden sm:flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+					{!hideFav && (
+						<ActionBtn title={inWish ? "Remove from wishlist" : "Add to wishlist"} btnClick={handleToggleWish} active={inWish}>
+							<Heart className={`w-3.5 h-3.5 ${inWish ? "fill-current" : ""}`} />
+						</ActionBtn>
+					)}
+					<ActionBtn title="Quick view" btnClick={handleView}>
+						<Eye className="w-3.5 h-3.5" />
+					</ActionBtn>
+					{!hideDownload && (
+						<ActionBtn title="Download image" btnClick={(e) => { e.stopPropagation(); onDownload?.(imageUrl); }}>
+							<Download className="w-3.5 h-3.5" />
+						</ActionBtn>
+					)}
+				</div>
+			</div>
+
+			{/* Content */}
+			<div className="p-3 flex flex-col gap-1.5 flex-1">
+				<span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide truncate">
+					{categoryLabel}
+				</span>
+
+				<p className="text-sm font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
+					{product?.name || "Unnamed product"}
+				</p>
+
+				<div className="flex items-baseline gap-1.5">
+					<span className="text-base font-black text-red-600">
+						৳{(hasSale ? salePrice : price).toLocaleString()}
+					</span>
+					{hasSale && (
+						<span className="text-xs text-gray-400 line-through font-medium">
+							৳{price.toLocaleString()}
+						</span>
+					)}
+				</div>
+
+				<div className="flex items-center gap-1">
+					{[1,2,3,4,5].map((s) => (
+						<Star key={s} className={`w-3 h-3 ${s <= Math.round(ratingValue) ? "text-amber-400 fill-current" : "text-gray-200 fill-current"}`} />
+					))}
+					<span className="text-[10px] text-gray-400 ml-0.5">({reviewsCount})</span>
+				</div>
+
+				{/* Bottom action bar */}
+				<div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-50">
+					<div className="flex items-center gap-1.5">
+						{!hideFav && (
+							<ActionBtn title={inWish ? "Remove from wishlist" : "Add to wishlist"} btnClick={handleToggleWish} active={inWish} disabled={false}>
+								<Heart className={`w-3.5 h-3.5 ${inWish ? "fill-current" : ""}`} />
+							</ActionBtn>
 						)}
-					</Stack>
-				</Box>
-			</Box>
+						<ActionBtn title="Quick view" btnClick={handleView}>
+							<Eye className="w-3.5 h-3.5" />
+						</ActionBtn>
+						{!hideDownload && (
+							<ActionBtn title="Download" btnClick={(e) => { e.stopPropagation(); onDownload?.(imageUrl); }}>
+								<Download className="w-3.5 h-3.5" />
+							</ActionBtn>
+						)}
+					</div>
 
-			<CardContent sx={{ p: 1.5 }}>
-				<Stack spacing={0.75}>
-					<Typography
-						fontWeight={900}
-						sx={{
-							lineHeight: 1.2,
-							fontSize: 14,
-							display: "-webkit-box",
-							WebkitLineClamp: 2,
-							WebkitBoxOrient: "vertical",
-							overflow: "hidden",
-						}}
+					<button
+						disabled={outOfStock}
+						onClick={handleAddToCart}
+						title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}
+						className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors
+							${outOfStock
+								? "opacity-40 cursor-not-allowed bg-gray-100 text-gray-400"
+								: inCart
+								? "bg-green-50 text-green-600 border border-green-200 hover:bg-green-100"
+								: "bg-red-600 text-white hover:bg-red-700"}`}
 					>
-						{product?.name || "Unnamed product"}
-					</Typography>
-
-					<Typography variant="caption" color="text.secondary">
-						{categoryLabel}
-					</Typography>
-
-					<Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-						<Typography fontWeight={900} sx={{ fontSize: 16, color: theme.palette.primary.main }}>
-							৳ {hasSale ? salePrice : price}
-						</Typography>
-						{hasSale ? (
-							<Typography
-								variant="caption"
-								sx={{
-									fontWeight: 800,
-									color: theme.palette.text.secondary,
-									textDecoration: "line-through",
-								}}
-							>
-								৳ {price}
-							</Typography>
-						) : null}
-					</Box>
-
-					<Stack direction="row" spacing={0.75} alignItems="center">
-						<Rating value={ratingValue} precision={0.5} size="small" readOnly />
-						<Typography variant="caption" sx={{ fontWeight: 700, color: theme.palette.text.secondary }}>
-							({reviewsCount})
-						</Typography>
-					</Stack>
-
-					<Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between">
-						<Stack direction="row" spacing={0.5} alignItems="center">
-							{!hideFav && (	
-							<Tooltip title={inWish ? "Already in wishlist" : "Add to wishlist"}>
-								<span>
-
-									<IconButton
-										onClick={handleToggleWish}
-										sx={{
-											size: "small",
-											width: 32,
-											height: 32,
-											borderRadius: 1,
-											border: `1px solid ${theme.palette.divider}`,
-											background: theme.palette.background.paper,
-											"&:hover": { background: theme.palette.action.hover },
-										}}
-									>
-										{inWish ? <Favorite color="error" fontSize="small" /> : <FavoriteBorder fontSize="small" />}
-									</IconButton>
-								</span>
-							</Tooltip>
-							)}
-							<Tooltip title="Quick view">
-								<IconButton
-									onClick={handleView}
-									sx={{
-										width: 32,
-										height: 32,
-										borderRadius: 2,
-										border: `1px solid ${theme.palette.divider}`,
-										background: theme.palette.background.paper,
-										"&:hover": { background: theme.palette.action.hover },
-									}}
-								>
-									<VisibilityOutlined fontSize="small" />
-								</IconButton>
-							</Tooltip>
-							{!hideDownload && (
-							<Tooltip title="Download image">
-								<IconButton
-									onClick={(event) => {
-									event.stopPropagation();
-									onDownload?.(imageUrl);
-								}}
-									sx={{
-										width: 32,
-										height: 32,
-										borderRadius: 2,
-										border: `1px solid ${theme.palette.divider}`,
-										background: theme.palette.background.paper,
-										"&:hover": { background: theme.palette.action.hover },
-									}}
-								>
-									<Download fontSize="small" />
-								</IconButton>
-							</Tooltip>
-							)}
-						</Stack>
-								
-						<Tooltip title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}>
-							<span>
-								<IconButton
-									disabled={outOfStock}
-									onClick={handleAddToCart}
-									sx={{
-										width: 36,
-										height: 36,
-										borderRadius: 2.5,
-										border: `1px solid ${theme.palette.divider}`,
-										background: theme.palette.background.paper,
-										"&:hover": { background: theme.palette.action.hover },
-										"&.Mui-disabled": { opacity: 0.5 },
-									}}
-								>
-									{inCart ? <ShoppingCart fontSize="small" /> : <ShoppingCartOutlined fontSize="small" />}
-								</IconButton>
-							</span>
-						</Tooltip>
-					</Stack>
-				</Stack>
-			</CardContent>
-		</Card>
+						<ShoppingCart className="w-3.5 h-3.5" />
+						<span className="hidden sm:inline">{inCart ? "In Cart" : "Add"}</span>
+					</button>
+				</div>
+			</div>
+		</div>
 	);
 };
 
