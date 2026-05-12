@@ -18,6 +18,9 @@ import FormikInput from "../../../components/formik/FormikInput";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
+import {  useGetVendorIdQuery} from "../../../redux/features/vendor_api";
+
+
 
 const tabs = [
   { id: "basic", label: "মৌলিক তথ্য" },
@@ -105,6 +108,8 @@ const VendorProductCreate = () => {
   const [createProduct, { isLoading: creating }] = useCreateProductMutation();
   const { data: catData } = useListCategoriesQuery(1);
   const { data: brandData } = useListBrandsQuery(1);
+  const userId = getFromLocalstorage("userId");
+  const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
 
   const categories = catData?.data?.data || [];
   const brands = brandData?.data?.data || [];
@@ -144,13 +149,13 @@ const VendorProductCreate = () => {
     if (!formData.category_id) return toast.error("ক্যাটাগরি নির্বাচন করুন");
     if (!formData.unit_price) return toast.error("বিক্রয় মূল্য দিন");
 
-    const userId = getFromLocalstorage("userId");
+        const vendorId = vendorIdData?.data?.vendor_id;
     const payload = new FormData();
 
     payload.append("name", formData.name);
     payload.append("added_by", userId || 1);
     payload.append("user_id", userId || 1);
-    payload.append("vendor_id", userId || 1);
+    payload.append("vendor_id", vendorId || 1);
     payload.append("category_id", formData.category_id);
     if (formData.brand_id) payload.append("brand_id", formData.brand_id);
     if (formData.photos) payload.append("photos", formData.photos);
