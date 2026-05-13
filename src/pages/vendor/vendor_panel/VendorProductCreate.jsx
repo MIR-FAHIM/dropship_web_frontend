@@ -37,6 +37,7 @@ const initialForm = {
   tags: "",
   description: "",
  // slug: "",
+  sku: "",
   barcode: "",
   thumbnail_img: null,
   thumbnailPreview: null,
@@ -187,6 +188,7 @@ const VendorProductCreate = () => {
     payload.append("approved", formData.approved);
     payload.append("stock_visibility_state", formData.stock_visibility_state);
    // payload.append("slug", formData.slug);
+    payload.append("sku", formData.sku);
     payload.append("barcode", formData.barcode);
 
     try {
@@ -285,7 +287,7 @@ const VendorProductCreate = () => {
               </div> */}
               <div>
                 <label className={labelClass}>SKU</label>
-                <input type="text" name="barcode" value={formData.barcode} onChange={handleChange} placeholder="বারকোড" className={inputClass} />
+                <input type="text" name="sku" value={formData.sku} onChange={handleChange} placeholder="SKU" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>ট্যাগ</label>

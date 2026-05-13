@@ -27,7 +27,7 @@ const BasicInfoTab = ({ product, productId }) => {
   const startEdit = () => {
     setForm({
       name: product.name || "",
-      barcode: product.barcode || "",
+      sku: product.sku || "",
       tags: product.tags || "",
       unit: product.unit || "",
       weight: product.weight || "",
@@ -111,7 +111,7 @@ const BasicInfoTab = ({ product, productId }) => {
           </div>
           <div>
             <label className={labelCls}>SKU / বারকোড</label>
-            <input name="barcode" value={form.barcode} onChange={handleChange} className={inputCls} />
+            <input name="sku" value={form.sku} onChange={handleChange} className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>ট্যাগ (কমা দিয়ে আলাদা)</label>
@@ -152,10 +152,12 @@ const BasicInfoTab = ({ product, productId }) => {
       </div>
       <InfoRow label="পণ্যের নাম" value={product.name} />
       <InfoRow label="স্লাগ" value={product.slug} />
-      <InfoRow label="বারকোড" value={product.barcode} />
+      <InfoRow label="SKU" value={product.sku} />
       <InfoRow label="ক্যাটাগরি" value={product.category?.name} />
       <InfoRow label="সাব-ক্যাটাগরি" value={product.sub_category?.name} />
       <InfoRow label="ব্র্যান্ড" value={product.brand?.name} />
+      <InfoRow label="Total Clicks" value={product.product_clicks?.clicks_count ? `${product.product_clicks.clicks_count}` : null} />
+       
       <InfoRow label="ভেন্ডর">
         {product.vendor ? (
           <span>
@@ -185,6 +187,7 @@ const BasicInfoTab = ({ product, productId }) => {
       </InfoRow>
       <InfoRow label="ইউনিট" value={product.unit} />
       <InfoRow label="ওজন" value={product.weight ? `${product.weight} kg` : null} />
+  
     </div>
   );
 };

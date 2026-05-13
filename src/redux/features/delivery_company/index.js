@@ -7,9 +7,13 @@ const deliveryCompanyApi = baseApi.injectEndpoints({
       query: () => API_ENDPOINTS.deliveryCompanies.list.path,
       providesTags: ["DeliveryCompany"],
     }),
+    getAssignedOrderOfCompany: builder.query({
+      query: (companyId) => API_ENDPOINTS.deliveryCompanies.getAssignedOrderOfCompany.path.replace("{companyId}", companyId),
+      providesTags: ["DeliveryCompany"],
+    }),
   }),
 });
 
-export const { useListDeliveryCompaniesQuery } = deliveryCompanyApi;
+export const { useListDeliveryCompaniesQuery, useGetAssignedOrderOfCompanyQuery } = deliveryCompanyApi;
 
 export default deliveryCompanyApi;

@@ -245,7 +245,8 @@ export const API_ENDPOINTS = {
     carrybeeStoreCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/stores"),
     carrybeeOrderCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/orders"),
     carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/cancel"),
-    carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/1/orders/{consignmentId}/details"),
+    carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/details"),
+    getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{companyId}"),
   },
 };
 

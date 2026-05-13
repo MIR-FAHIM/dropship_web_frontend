@@ -48,7 +48,7 @@ import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
 import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
 import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanies";
-import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/AdminDeliveryCompanyDetails";
+import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 // route generator func

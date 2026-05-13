@@ -40,25 +40,34 @@ const VendorProducts = () => {
 
   const commitEdit = async (product) => {
     const field = editingCell?.field;
-    const parsed = parseFloat(editValue);
-    if (isNaN(parsed) || parsed < 0) {
-      toast.error("সঠিক মূল্য দিন");
+    const numericFields = ["unit_price", "max_resell_price"];
+    const isNumeric = numericFields.includes(field);
+
+    let finalValue = editValue;
+    if (isNumeric) {
+      const parsed = parseFloat(editValue);
+      if (isNaN(parsed) || parsed < 0) {
+        toast.error("সঠিক মূল্য দিন");
+        cancelEdit();
+        return;
+      }
+      finalValue = parsed;
+    }
+
+    if (finalValue === (isNumeric ? parseFloat(product[field]) : product[field])) {
       cancelEdit();
       return;
     }
-    if (parsed === parseFloat(product[field])) {
-      cancelEdit();
-      return;
-    }
+
     const patchResult = dispatch(
       vendorApi.util.updateQueryData("getVendorProducts", { vendorId, page: currentPage }, (draft) => {
         const item = draft?.data?.data?.find((p) => p.id === product.id);
-        if (item) item[field] = parsed;
+        if (item) item[field] = finalValue;
       })
     );
     try {
-      await updateProduct({ id: product.id, [field]: parsed }).unwrap();
-      toast.success("মূল্য আপডেট হয়েছে!");
+      await updateProduct({ id: product.id, [field]: finalValue }).unwrap();
+      toast.success("আপডেট হয়েছে!");
     } catch (err) {
       patchResult.undo();
       toast.error(err?.data?.message || "আপডেট ব্যর্থ!");
@@ -133,7 +142,7 @@ const VendorProducts = () => {
                     <th className="pb-3 font-medium">ছবি</th>
                     <th className="pb-3 font-medium">নাম</th>
                     <th className="pb-3 font-medium">ক্যাটাগরি</th>
-                    <th className="pb-3 font-medium">ব্র্যান্ড</th>
+                    <th className="pb-3 font-medium">SKU</th>
                     <th className="pb-3 font-medium">মূল্য</th>
                     <th className="pb-3 font-medium">Max Sell মূল্য</th>
                     <th className="pb-3 font-medium">স্টক</th>
@@ -163,7 +172,28 @@ const VendorProducts = () => {
                         {product.name}
                       </td>
                       <td className="py-3 text-gray-600">{product.category?.name || "—"}</td>
-                      <td className="py-3 text-gray-600">{product.brand?.name || "—"}</td>
+                      <td
+                        className="py-3 text-gray-600 cursor-pointer"
+                        onClick={() => startEdit(product.id, "sku", product.sku)}
+                      >
+                        {editingCell?.productId === product.id && editingCell?.field === "sku" ? (
+                          <input
+                            autoFocus
+                            type="text"
+                            value={editValue}
+                            onChange={(e) => setEditValue(e.target.value)}
+                            onBlur={() => commitEdit(product)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") commitEdit(product);
+                              if (e.key === "Escape") cancelEdit();
+                            }}
+                            className="w-28 border border-blue-400 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        ) : (
+                          <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">{product.sku || "—"}</span>
+                        )}
+                      </td>
                       <td
                         className="py-3 text-gray-800 font-medium cursor-pointer"
                         onClick={() => startEdit(product.id, "unit_price", product.unit_price)}

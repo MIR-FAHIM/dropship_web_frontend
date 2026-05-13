@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { FolderTree, Plus, Search, Trash2, Pencil, Loader2, XCircle, X, ImagePlus } from "lucide-react";
+import { FolderTree, Plus, Search, Trash2, Pencil, Loader2, XCircle, X, ImagePlus, GitBranch } from "lucide-react";
 import {
   useListCategoriesQuery,
+  useGetCategoryChildrenQuery,
   useCreateCategoryMutation,
   useDeleteCategoryMutation,
+  useUpdateCategoryMutation,
 } from "../../../redux/features/category";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
@@ -14,11 +16,24 @@ const AdminCategories = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", icon: null, iconPreview: null });
+  const [formData, setFormData] = useState({ name: "", icon: null, iconPreview: null, parent_id: null, parentName: "" });
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editMediaOpen, setEditMediaOpen] = useState(false);
+  const [editData, setEditData] = useState({ id: null, name: "", slug: "", icon: null, iconPreview: null, sort_order: "", status: "active" });
+
+  const [showChildrenModal, setShowChildrenModal] = useState(false);
+  const [childrenCat, setChildrenCat] = useState(null);
 
   const { data, isLoading, isFetching } = useListCategoriesQuery(currentPage);
   const [createCategory, { isLoading: creating }] = useCreateCategoryMutation();
   const [deleteCategory] = useDeleteCategoryMutation();
+  const [updateCategory, { isLoading: updating }] = useUpdateCategoryMutation();
+  const { data: childrenData, isLoading: childrenLoading } = useGetCategoryChildrenQuery(
+    childrenCat?.id,
+    { skip: !childrenCat?.id }
+  );
+  const children = childrenData?.data || [];
 
   const categories = data?.data?.data || [];
   const totalPages = data?.data?.last_page || 1;
@@ -33,15 +48,25 @@ const AdminCategories = () => {
     try {
       const payload = new FormData();
       payload.append("name", formData.name);
-     
+      if (formData.parent_id) payload.append("parent_id", formData.parent_id);
       if (formData.icon) payload.append("icon", formData.icon);
       await createCategory(payload).unwrap();
       toast.success("ক্যাটাগরি তৈরি হয়েছে!");
-      setFormData({ name: "", icon: null, iconPreview: null });
+      setFormData({ name: "", icon: null, iconPreview: null, parent_id: null, parentName: "" });
       setShowCreateModal(false);
     } catch (err) {
       toast.error(err?.data?.message || "ক্যাটাগরি তৈরি ব্যর্থ!");
     }
+  };
+
+  const handleAddSubcategory = (cat) => {
+    setFormData({ name: "", icon: null, iconPreview: null, parent_id: cat.id, parentName: cat.name });
+    setShowCreateModal(true);
+  };
+
+  const handleViewChildren = (cat) => {
+    setChildrenCat(cat);
+    setShowChildrenModal(true);
   };
 
   const handleDelete = async (id) => {
@@ -51,6 +76,36 @@ const AdminCategories = () => {
       toast.success("ক্যাটাগরি মুছে ফেলা হয়েছে!");
     } catch (err) {
       toast.error(err?.data?.message || "মুছে ফেলা ব্যর্থ!");
+    }
+  };
+
+  const handleEdit = (cat) => {
+    setEditData({
+      id: cat.id,
+      name: cat.name || "",
+      slug: cat.slug || "",
+      icon: cat.icon?.id || null,
+      iconPreview: cat.icon?.file_name || null,
+      sort_order: cat.sort_order ?? "",
+      status: cat.status || "active",
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    if (!editData.name.trim()) return toast.error("ক্যাটাগরির নাম দিন");
+    try {
+      const payload = { id: editData.id, name: editData.name };
+      if (editData.slug) payload.slug = editData.slug;
+      if (editData.icon) payload.icon = editData.icon;
+      if (editData.sort_order !== "") payload.sort_order = Number(editData.sort_order);
+      if (editData.status) payload.status = editData.status;
+      await updateCategory(payload).unwrap();
+      toast.success("ক্যাটাগরি আপডেট হয়েছে!");
+      setShowEditModal(false);
+    } catch (err) {
+      toast.error(err?.data?.message || "আপডেট ব্যর্থ!");
     }
   };
 
@@ -71,7 +126,7 @@ const AdminCategories = () => {
             />
           </div>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => { setFormData({ name: "", icon: null, iconPreview: null, parent_id: null, parentName: "" }); setShowCreateModal(true); }}
             className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition shrink-0"
           >
             <Plus className="w-4 h-4" />
@@ -145,6 +200,20 @@ const AdminCategories = () => {
                       <td className="py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
+                            onClick={() => handleViewChildren(cat)}
+                            className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition"
+                            title="সাবক্যাটাগরি যোগ করুন"
+                          >
+                            <GitBranch className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleEdit(cat)}
+                            className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition"
+                            title="সম্পাদনা"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleDelete(cat.id)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
                             title="মুছুন"
@@ -185,13 +254,95 @@ const AdminCategories = () => {
         )}
       </div>
 
+      {/* Children Modal */}
+      {showChildrenModal && childrenCat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowChildrenModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">সাবক্যাটাগরি</h2>
+                <p className="text-xs text-gray-500 mt-0.5">মূল: <span className="font-medium text-gray-700">{childrenCat.name}</span></p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => { setShowChildrenModal(false); handleAddSubcategory(childrenCat); }}
+                  className="flex items-center gap-1.5 bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-semibold hover:bg-red-700 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  সাবক্যাটাগরি যোগ
+                </button>
+                <button onClick={() => setShowChildrenModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {childrenLoading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+              </div>
+            ) : children.length === 0 ? (
+              <div className="text-center py-10">
+                <FolderTree className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">এই ক্যাটাগরির কোনো সাবক্যাটাগরি নেই।</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                {children.map((child) => (
+                  <div key={child.id} className="flex items-center justify-between py-3">
+                    <div className="flex items-center gap-3">
+                      {child.icon?.file_name ? (
+                        <img
+                          src={`${imgBaseUrl}/${child.icon.file_name}`}
+                          alt={child.name}
+                          className="w-8 h-8 rounded-lg object-cover border border-gray-200"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <FolderTree className="w-3.5 h-3.5 text-gray-400" />
+                        </div>
+                      )}
+                      <span className="text-sm font-medium text-gray-800">{child.name}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => { setShowChildrenModal(false); handleEdit(child); }}
+                        className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition"
+                        title="সম্পাদনা"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(child.id)}
+                        className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
+                        title="মুছুন"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Create Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreateModal(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-gray-800">নতুন ক্যাটাগরি</h2>
+              <div>
+                <h2 className="text-lg font-bold text-gray-800">
+                  {formData.parent_id ? "সাবক্যাটাগরি যোগ" : "নতুন ক্যাটাগরি"}
+                </h2>
+                {formData.parent_id && (
+                  <p className="text-xs text-gray-500 mt-0.5">মূল: <span className="font-medium text-gray-700">{formData.parentName}</span></p>
+                )}
+              </div>
               <button onClick={() => setShowCreateModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
@@ -215,11 +366,16 @@ const AdminCategories = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">আইকন</label>
                 {formData.icon ? (
                   <div className="flex items-center gap-3">
-                    <img
-                      src={`${imgBaseUrl}/${formData.iconPreview}`}
-                      alt="icon"
-                      className="w-16 h-16 rounded-lg object-cover border border-gray-200"
-                    />
+                    <button type="button" onClick={() => setMediaOpen(true)} className="relative group shrink-0">
+                      <img
+                        src={`${imgBaseUrl}/${formData.iconPreview}`}
+                        alt="icon"
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-200 group-hover:opacity-70 transition"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                        <ImagePlus className="w-5 h-5 text-gray-700" />
+                      </span>
+                    </button>
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -272,11 +428,148 @@ const AdminCategories = () => {
         </div>
       )}
 
-      {/* Media Picker */}
+      {/* Media Picker (Create) */}
       <MediaPickerModal
         open={mediaOpen}
         onClose={() => setMediaOpen(false)}
         onSelect={(file) => setFormData({ ...formData, icon: file.id, iconPreview: file.file_name })}
+      />
+
+      {/* Edit Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowEditModal(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-bold text-gray-800">ক্যাটাগরি সম্পাদনা</h2>
+              <button onClick={() => setShowEditModal(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleUpdate} className="space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">ক্যাটাগরি নাম</label>
+                <input
+                  type="text"
+                  value={editData.name}
+                  onChange={(e) => setEditData({ ...editData, name: e.target.value })}
+                  placeholder="যেমন: Electronics"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  required
+                />
+              </div>
+
+              {/* Slug */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">স্লাগ</label>
+                <input
+                  type="text"
+                  value={editData.slug}
+                  onChange={(e) => setEditData({ ...editData, slug: e.target.value })}
+                  placeholder="যেমন: electronics"
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                />
+              </div>
+
+              {/* Sort Order & Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">ক্রম</label>
+                  <input
+                    type="number"
+                    value={editData.sort_order}
+                    onChange={(e) => setEditData({ ...editData, sort_order: e.target.value })}
+                    placeholder="0"
+                    min="0"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">স্ট্যাটাস</label>
+                  <select
+                    value={editData.status}
+                    onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  >
+                    <option value="active">সক্রিয়</option>
+                    <option value="inactive">নিষ্ক্রিয়</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Icon via Media Picker */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">আইকন</label>
+                {editData.icon ? (
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => setEditMediaOpen(true)} className="relative group shrink-0">
+                      <img
+                        src={`${imgBaseUrl}/${editData.iconPreview}`}
+                        alt="icon"
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-200 group-hover:opacity-70 transition"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                        <ImagePlus className="w-5 h-5 text-gray-700" />
+                      </span>
+                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditMediaOpen(true)}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        পরিবর্তন
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditData({ ...editData, icon: null, iconPreview: null })}
+                        className="text-xs text-red-500 hover:underline"
+                      >
+                        মুছুন
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditMediaOpen(true)}
+                    className="flex items-center gap-2 px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-red-400 hover:text-red-500 transition w-full justify-center text-sm"
+                  >
+                    <ImagePlus className="w-4 h-4" />
+                    মিডিয়া থেকে নির্বাচন করুন
+                  </button>
+                )}
+              </div>
+
+              {/* Submit */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="px-4 py-2.5 rounded-lg text-sm font-medium text-gray-600 border border-gray-300 hover:bg-gray-50 transition"
+                >
+                  বাতিল
+                </button>
+                <button
+                  type="submit"
+                  disabled={updating}
+                  className="px-5 py-2.5 rounded-lg text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition disabled:opacity-50 flex items-center gap-2"
+                >
+                  {updating && <Loader2 className="w-4 h-4 animate-spin" />}
+                  আপডেট করুন
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Media Picker (Edit) */}
+      <MediaPickerModal
+        open={editMediaOpen}
+        onClose={() => setEditMediaOpen(false)}
+        onSelect={(file) => setEditData({ ...editData, icon: file.id, iconPreview: file.file_name })}
       />
     </div>
   );

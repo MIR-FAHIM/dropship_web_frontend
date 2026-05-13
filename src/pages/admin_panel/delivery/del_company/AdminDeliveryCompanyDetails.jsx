@@ -16,8 +16,9 @@ import {
   Wallet,
   KeyRound,
 } from "lucide-react";
-import { useListDeliveryCompaniesQuery } from "../../../redux/features/delivery_company";
-import TabStore from "./TabStore";
+import { useListDeliveryCompaniesQuery } from "../../../../redux/features/delivery_company";
+import TabStore from "../TabStore";
+import TabOrders from "./components/order/TabOrders";
 
 const TABS = [
   { key: "dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -28,12 +29,6 @@ const TABS = [
   { key: "notes",     label: "Notes",     icon: <StickyNote className="w-4 h-4" /> },
 ];
 
-/* ── Tab content placeholders ── */
-const TabOrders  = ({ company }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-8 flex items-center justify-center text-gray-400 text-sm">
-    অর্ডার তথ্য শীঘ্রই আসছে।
-  </div>
-);
 const TabReturn  = ({ company }) => (
   <div className="bg-white rounded-xl border border-gray-200 p-8 flex items-center justify-center text-gray-400 text-sm">
     রিটার্ন তথ্য শীঘ্রই আসছে।

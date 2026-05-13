@@ -147,6 +147,7 @@ const AdminProducts = () => {
                     <th className="pb-3 font-medium">#</th>
                     <th className="pb-3 font-medium">ছবি</th>
                     <th className="pb-3 font-medium">নাম</th>
+                    <th className="pb-3 font-medium">SKU</th>
                     <th className="pb-3 font-medium">ক্যাটাগরি</th>
                     <th className="pb-3 font-medium">Vendor</th>
                     <th className="pb-3 font-medium">মূল্য</th>
@@ -176,6 +177,9 @@ const AdminProducts = () => {
                       </td>
                       <td className="py-3 font-medium text-gray-800 max-w-[200px] truncate">
                         {product.name}
+                      </td>
+                      <td className="py-3 font-medium text-gray-800 max-w-[200px] truncate">
+                        {product.sku}
                       </td>
                       <td className="py-3 text-gray-600">{product.category?.name || "—"}</td>
                       <td className="py-3 text-gray-600">{product.vendor?.shop_name || "—"}</td>

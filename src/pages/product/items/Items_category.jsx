@@ -56,7 +56,7 @@ const ItemsCategory = () => {
                   >
                     <div className="h-20 w-20 overflow-hidden rounded-2xl border border-gray-200 bg-gray-100">
                       <img
-                        src={category?.banner?.file_name ? `${imgBaseUrl}/${category.banner.file_name}` : defaultImageUrl}
+                        src={category?.icon?.file_name ? `${imgBaseUrl}/${category.icon.file_name}` : defaultImageUrl}
                         alt={category.name}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         onError={handleImageError}

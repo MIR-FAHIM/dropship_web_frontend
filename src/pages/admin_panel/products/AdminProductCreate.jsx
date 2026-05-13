@@ -32,6 +32,7 @@ const initialForm = {
   description: "",
   // slug: "",
   barcode: "",
+  sku: "",
   // media
   thumbnail_img: null,
   thumbnailPreview: null,
@@ -159,6 +160,7 @@ const AdminProductCreate = () => {
     payload.append("stock_visibility_state", formData.stock_visibility_state);
     // payload.append("slug", formData.slug);
     payload.append("barcode", formData.barcode);
+    payload.append("sku", formData.sku);
 
     try {
       const res = await createProduct(payload).unwrap();
@@ -264,7 +266,7 @@ const AdminProductCreate = () => {
               </div> */}
               <div>
                 <label className={labelClass}>SKU</label>
-                <input type="text" name="barcode" value={formData.barcode} onChange={handleChange} placeholder="বারকোড" className={inputClass} />
+                <input type="text" name="sku" value={formData.sku} onChange={handleChange} placeholder="SKU" className={inputClass} />
               </div>
               <div>
                 <label className={labelClass}>ট্যাগ</label>

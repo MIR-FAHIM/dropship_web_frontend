@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
 import ProductGallery from "./product_gallery";
 
@@ -15,8 +16,9 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
   const [resellerPrice, setResellerPrice] = useState("");
+  const userId = getFromLocalstorage("userId");
 
-  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
+  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery({ id, user_id: userId });
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
   const normalizeImageUrl = (rawUrl) => {
     if (!rawUrl) return null;

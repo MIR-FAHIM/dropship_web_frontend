@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'; // If you're using 
 import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation } from "../../../redux/features/cart";
 
 const SuccessPage = () => {
-  const navigate = useNavigate();
+const navigate = useNavigate();
 const location = useLocation();
 const order = location.state?.order;
 const { data: cartList, error, isLoading, refetch } = useGetCartQuery(1);
