@@ -118,7 +118,10 @@ const VendorOrders = () => {
                           <p className="font-medium text-gray-800 text-xs truncate max-w-[130px]">{order.customer_name}</p>
                           <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
                             <Phone className="w-3 h-3 flex-shrink-0" />
-                            <span>{order.customer_phone}</span>
+                            <span>
+                              {order.customer_phone?.slice(0, -6)}
+                              <span className="blur-sm select-none">{order.customer_phone?.slice(-6)}</span>
+                            </span>
                           </div>
                           {order.zone && (
                             <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">

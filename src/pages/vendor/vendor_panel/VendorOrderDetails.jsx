@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -12,6 +12,95 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { useGetOrderDetailsQuery } from "../../../redux/features/order";
+import { useLazyGetCarryBeeOrderDetailsQuery } from "../../../redux/features/delivery_company/carrybeeStoreApi";
+
+const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
+  if (isLoading)
+    return (
+      <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
+        <Loader2 className="w-4 h-4 animate-spin" /> লোড হচ্ছে...
+      </div>
+    );
+
+  if (isError || !details)
+    return (
+      <div className="px-5 py-4 text-sm text-red-500 flex items-center justify-between">
+        <span>ডেটা লোড করা যায়নি।</span>
+        <button onClick={onRetry} className="text-xs text-red-600 underline">আবার চেষ্টা করুন</button>
+      </div>
+    );
+
+  const statusColor =
+    details.transfer_status === "Delivered"
+      ? "bg-teal-100 text-teal-700 border-teal-200"
+      : details.transfer_status === "Cancelled"
+      ? "bg-red-100 text-red-700 border-red-200"
+      : "bg-yellow-100 text-yellow-700 border-yellow-200";
+
+  return (
+    <div className="border-t border-teal-100 px-5 py-4 space-y-3 text-sm bg-teal-50/40">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">লাইভ স্ট্যাটাস</span>
+        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
+          {details.transfer_status}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
+        <div>
+          <p className="text-xs text-gray-400">Consignment ID</p>
+          <p className="font-mono font-bold text-gray-900 text-xs tracking-wide">{details.consignment_id}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-400">Store ID</p>
+          <p className="font-medium text-gray-700 text-xs">{details.store_id}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-400">প্রাপক</p>
+          <p className="font-medium text-gray-700">{details.recipient_name}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-400">ফোন</p>
+          <p className="text-gray-700">
+            {details.recipient_phone?.slice(0, -8)}
+            <span className="blur-sm select-none">{details.recipient_phone?.slice(-8)}</span>
+          </p>
+        </div>
+        <div className="col-span-2">
+          <p className="text-xs text-gray-400">ঠিকানা</p>
+          <p className="text-gray-700">{details.recipient_address}</p>
+        </div>
+      </div>
+
+      <div className="border-t border-teal-100 pt-3 space-y-1.5">
+        <div className="flex justify-between text-gray-600">
+          <span className="text-gray-400">COD</span>
+          <span className="font-medium text-gray-800">৳{details.collectable_amount}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span className="text-gray-400">সংগৃহীত</span>
+          <span>৳{details.collected_amount}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span className="text-gray-400">ডেলিভারি ফি</span>
+          <span>৳{details.delivery_fee}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span className="text-gray-400">COD ফি</span>
+          <span>৳{details.cod_fee}</span>
+        </div>
+        <div className="flex justify-between text-gray-600">
+          <span className="text-gray-400">ডেলিভারি প্রচেষ্টা</span>
+          <span>{details.attempt}</span>
+        </div>
+        <div className="flex justify-between text-gray-400 text-xs pt-1">
+          <span>সর্বশেষ আপডেট</span>
+          <span>{new Date(details.updated_at).toLocaleString("en-US")}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const STATUS_COLOR = {
   Pending:           "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -40,6 +129,20 @@ const VendorOrderDetails = () => {
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useGetOrderDetailsQuery(id);
   const order = data?.data || null;
+  const [showCarryBeeDetails, setShowCarryBeeDetails] = useState(false);
+  const [fetchCarryBeeDetails, { data: cbDetailsData, isLoading: cbDetailsLoading, isError: cbDetailsError }] =
+    useLazyGetCarryBeeOrderDetailsQuery();
+  const cbDetails = cbDetailsData?.data?.data;
+
+  const handleShowCarryBeeDetails = () => {
+    if (!showCarryBeeDetails && order?.delivery_information) {
+      fetchCarryBeeDetails({
+        companyId: order.delivery_information.delivery_company_id,
+        consignmentId: order.delivery_information.consignment_id,
+      });
+    }
+    setShowCarryBeeDetails((p) => !p);
+  };
 
   if (isLoading) {
     return (
@@ -223,9 +326,17 @@ const VendorOrderDetails = () => {
           {/* Delivery Info */}
           {delivery && (
             <div className="bg-white rounded-xl border border-teal-200 shadow-sm overflow-hidden">
-              <div className="px-5 py-4 border-b border-teal-100 bg-teal-50 flex items-center gap-2">
-                <Truck className="w-4 h-4 text-teal-700" />
-                <h2 className="text-sm font-semibold text-teal-800">ডেলিভারি তথ্য</h2>
+              <div className="px-5 py-4 border-b border-teal-100 bg-teal-50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Truck className="w-4 h-4 text-teal-700" />
+                  <h2 className="text-sm font-semibold text-teal-800">ডেলিভারি তথ্য</h2>
+                </div>
+                <button
+                  onClick={handleShowCarryBeeDetails}
+                  className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition"
+                >
+                  {showCarryBeeDetails ? "লুকান" : "লাইভ স্ট্যাটাস দেখুন"}
+                </button>
               </div>
               <div className="px-5 py-4 space-y-3 text-sm">
                 <div className="grid grid-cols-1 gap-3">
@@ -241,7 +352,10 @@ const VendorOrderDetails = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">ফোন</span>
-                    <span>{delivery.recipient_phone}</span>
+                    <span>
+                      {delivery.recipient_phone?.slice(0, -8)}
+                      <span className="blur-sm select-none">{delivery.recipient_phone?.slice(-8)}</span>
+                    </span>
                   </div>
                 </div>
                 <div className="border-t border-gray-100 pt-3 space-y-1.5 text-gray-600">
@@ -259,6 +373,17 @@ const VendorOrderDetails = () => {
                   </div>
                 </div>
               </div>
+              {showCarryBeeDetails && (
+                <CarryBeeDetailsPanel
+                  details={cbDetails}
+                  isLoading={cbDetailsLoading}
+                  isError={cbDetailsError}
+                  onRetry={() => fetchCarryBeeDetails({
+                    companyId: delivery.delivery_company_id,
+                    consignmentId: delivery.consignment_id,
+                  })}
+                />
+              )}
             </div>
           )}
         </div>
