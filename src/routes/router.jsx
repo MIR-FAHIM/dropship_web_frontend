@@ -23,6 +23,7 @@ import VendorProductCreate from "../pages/vendor/vendor_panel/VendorProductCreat
 import VendorProductDetail from "../pages/vendor/vendor_panel/VendorProductDetail";
 import VendorBankAccount from "../pages/vendor/vendor_panel/bank_account/VendorBankAccount";
 import VendorOrders from "../pages/vendor/vendor_panel/VendorOrders";
+import VendorOrderDetails from "../pages/vendor/vendor_panel/VendorOrderDetails";
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
 import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
@@ -131,6 +132,7 @@ export const router = createBrowserRouter([
       { path: "products/create", element: <VendorProductCreate /> },
       { path: "products/:id", element: <VendorProductDetail /> },
       { path: "orders", element: <VendorOrders /> },
+      { path: "orders/:id", element: <VendorOrderDetails /> },
       { path: "accounting", element: <VendorAccounting /> },
       { path: "bank-account", element: <VendorBankAccount /> },
       { path: "settings", element: <VendorSettings /> },

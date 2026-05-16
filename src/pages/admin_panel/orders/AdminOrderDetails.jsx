@@ -16,6 +16,7 @@ import {
 import { toast } from "react-toastify";
 import {
   useGetOrderDetailsQuery,
+  useUpdateOrderInfoMutation,
   useUpdateOrderStatusMutation,
   useGetOrderStatusSummaryQuery,
 } from "../../../redux/features/order";
@@ -54,15 +55,15 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
   if (isLoading)
     return (
       <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
-        <Loader2 className="w-4 h-4 animate-spin" /> লোড হচ্ছে...
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading...
       </div>
     );
 
   if (isError || !details)
     return (
       <div className="px-5 py-4 text-sm text-red-500 flex items-center justify-between">
-        <span>ডেটা লোড হয়নি।</span>
-        <button onClick={onRetry} className="text-xs text-red-600 underline">আবার চেষ্টা</button>
+        <span>Failed to load data.</span>
+        <button onClick={onRetry} className="text-xs text-red-600 underline">Retry</button>
       </div>
     );
 
@@ -76,7 +77,7 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
   return (
     <div className="border-t border-teal-100 px-5 py-4 space-y-3 text-sm bg-teal-50/40">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">লাইভ স্ট্যাটাস</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live Status</span>
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
           {details.transfer_status}
         </span>
@@ -92,48 +93,82 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
           <p className="font-medium text-gray-700 text-xs">{details.store_id}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400">প্রাপক</p>
+          <p className="text-xs text-gray-400">Recipient</p>
           <p className="font-medium text-gray-700">{details.recipient_name}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-400">ফোন</p>
+          <p className="text-xs text-gray-400">Phone</p>
           <p className="text-gray-700">{details.recipient_phone}</p>
         </div>
         <div className="col-span-2">
-          <p className="text-xs text-gray-400">ঠিকানা</p>
+          <p className="text-xs text-gray-400">Address</p>
           <p className="text-gray-700">{details.recipient_address}</p>
         </div>
       </div>
 
       <div className="border-t border-teal-100 pt-3 space-y-1.5">
         <div className="flex justify-between text-gray-600">
-          <span className="text-gray-400">কালেক্টেবল</span>
+          <span className="text-gray-400">Collectable</span>
           <span className="font-medium text-gray-800">৳{details.collectable_amount}</span>
         </div>
         <div className="flex justify-between text-gray-600">
-          <span className="text-gray-400">কালেক্টেড</span>
+          <span className="text-gray-400">Collected</span>
           <span>৳{details.collected_amount}</span>
         </div>
         <div className="flex justify-between text-gray-600">
-          <span className="text-gray-400">ডেলিভারি ফি</span>
+          <span className="text-gray-400">Delivery Fee</span>
           <span>৳{details.delivery_fee}</span>
         </div>
         <div className="flex justify-between text-gray-600">
-          <span className="text-gray-400">COD ফি</span>
+          <span className="text-gray-400">COD Fee</span>
           <span>৳{details.cod_fee}</span>
         </div>
         <div className="flex justify-between text-gray-600">
-          <span className="text-gray-400">ডেলিভারি প্রচেষ্টা</span>
+          <span className="text-gray-400">Delivery Attempts</span>
           <span>{details.attempt}</span>
         </div>
         <div className="flex justify-between text-gray-400 text-xs pt-1">
-          <span>সর্বশেষ আপডেট</span>
-          <span>{new Date(details.updated_at).toLocaleString("bn-BD")}</span>
+          <span>Last Updated</span>
+          <span>{new Date(details.updated_at).toLocaleString("en-US")}</span>
         </div>
       </div>
     </div>
   );
 };
+
+/* ──────────────────────────────────────────
+   Stable sub-components (must live outside modal
+   so React doesn't remount them on every render)
+────────────────────────────────────────── */
+const SL = ({ label, value, onChange, options, placeholder, disabled }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-xs font-medium text-gray-600">{label}</label>
+    <div className="relative">
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
+        className="w-full appearance-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 pr-7">
+        <option value="">{placeholder}</option>
+        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+    </div>
+  </div>
+);
+
+const FLD = ({ label, value, onChange, type = "text" }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-xs font-medium text-gray-600">{label}</label>
+    <input type={type} value={value} onChange={onChange}
+      className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
+  </div>
+);
+
+const CHK = ({ label, checked, onChange }) => (
+  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+    <input type="checkbox" checked={checked} onChange={onChange}
+      className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
+    {label}
+  </label>
+);
 
 /* ──────────────────────────────────────────
    CarryBee Assignment Modal
@@ -195,11 +230,11 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!companyId || !storeId || !cityId || !zoneId || !areaId) {
-      toast.error("সব তথ্য পূরণ করুন।");
+      toast.error("Please fill in all required fields.");
       return;
     }
     const confirmed = window.confirm(
-      `অর্ডার ${order.order_number} কি CarryBee-তে অ্যাসাইন করবেন?`
+      `Assign order ${order.order_number} to CarryBee?`
     );
     if (!confirmed) return;
     try {
@@ -226,41 +261,11 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         is_exchange: form.is_exchange,
       }).unwrap();
       setCreatedOrder(res?.data?.data?.order || null);
-      toast.success("CarryBee-তে অর্ডার সফলভাবে অ্যাসাইন হয়েছে!");
+      toast.success("Order successfully assigned to CarryBee!");
     } catch (err) {
-      toast.error(err?.data?.message || "অ্যাসাইন করতে সমস্যা হয়েছে।");
+      toast.error(err?.data?.message || "Failed to assign order.");
     }
   };
-
-  const SL = ({ label, value, onChange, options, placeholder, disabled }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-600">{label}</label>
-      <div className="relative">
-        <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
-          className="w-full appearance-none border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100 pr-7">
-          <option value="">{placeholder}</option>
-          {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-        <ChevronDown className="w-3.5 h-3.5 absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-      </div>
-    </div>
-  );
-
-  const FLD = ({ label, name, type = "text", small }) => (
-    <div className="flex flex-col gap-1">
-      <label className="text-xs font-medium text-gray-600">{label}</label>
-      <input type={type} value={form[name]} onChange={setField(name)}
-        className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500" />
-    </div>
-  );
-
-  const CHK = ({ label, name }) => (
-    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-      <input type="checkbox" checked={form[name]} onChange={setField(name)}
-        className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500" />
-      {label}
-    </label>
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -268,7 +273,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
             <Truck className="w-5 h-5 text-red-500" />
-            {createdOrder ? "CarryBee অর্ডার তৈরি হয়েছে" : "CarryBee-তে অ্যাসাইন করুন"}
+            {createdOrder ? "CarryBee Order Created" : "Assign to CarryBee"}
           </h2>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100">
             <X className="w-5 h-5 text-gray-500" />
@@ -286,8 +291,8 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-semibold text-green-800">অর্ডার সফলভাবে তৈরি হয়েছে!</p>
-                <p className="text-xs text-green-600 mt-0.5">CarryBee-এ অ্যাসাইন সম্পন্ন হয়েছে।</p>
+                <p className="text-sm font-semibold text-green-800">Order created successfully!</p>
+                <p className="text-xs text-green-600 mt-0.5">Assignment to CarryBee completed.</p>
               </div>
             </div>
 
@@ -314,7 +319,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
             {/* Recipient */}
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">প্রাপকের তথ্য</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Recipient Info</p>
               </div>
               <div className="px-4 py-3 space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-700">
@@ -335,29 +340,29 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
             {/* Fees */}
             <div className="border border-gray-200 rounded-xl overflow-hidden">
               <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">চার্জ বিবরণ</p>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Charge Details</p>
               </div>
               <div className="px-4 py-3 space-y-2 text-sm">
                 <div className="flex justify-between text-gray-600">
-                  <span>কালেক্টেবল অ্যামাউন্ট</span>
+                  <span>Collectable Amount</span>
                   <span className="font-medium text-gray-800">৳{createdOrder.collectable_amount}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>ডেলিভারি ফি</span>
+                  <span>Delivery Fee</span>
                   <span>৳{createdOrder.delivery_fee}</span>
                 </div>
                 <div className="flex justify-between text-gray-600">
-                  <span>COD ফি</span>
+                  <span>COD Fee</span>
                   <span>৳{createdOrder.cod_fee}</span>
                 </div>
                 {Number(createdOrder.discount) > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>ডিসকাউন্ট</span>
+                    <span>Discount</span>
                     <span>-৳{createdOrder.discount}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-semibold text-gray-800 pt-2 border-t border-gray-100">
-                  <span>মোট ফি</span>
+                  <span>Total Fee</span>
                   <span>৳{createdOrder.total_fee}</span>
                 </div>
               </div>
@@ -387,36 +392,36 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Company & Store */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <SL label="ডেলিভারি কোম্পানি *" value={companyId} onChange={setCompanyId}
+            <SL label="Delivery Company *" value={companyId} onChange={setCompanyId}
               options={companies.map((c) => ({ value: c.id, label: c.company_name }))}
-              placeholder="কোম্পানি বেছে নিন" />
-            <SL label="স্টোর *" value={storeId} onChange={setStoreId}
+              placeholder="Select company" />
+            <SL label="Store *" value={storeId} onChange={setStoreId}
               options={stores.map((s) => ({ value: s.id, label: s.name }))}
-              placeholder={!companyId ? "আগে কোম্পানি বেছে নিন" : "স্টোর বেছে নিন"}
+              placeholder={!companyId ? "Select company first" : "Select store"}
               disabled={!companyId} />
           </div>
 
           {/* Recipient */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FLD label="প্রাপকের নাম *" name="recipient_name" />
-            <FLD label="প্রাপকের ফোন *" name="recipient_phone" />
-            <FLD label="সেকেন্ডারি ফোন" name="recipient_secendary_phone" />
-            <FLD label="প্রাপকের ঠিকানা *" name="recipient_address" />
+            <FLD label="Recipient Name *" value={form.recipient_name} onChange={setField("recipient_name")} />
+            <FLD label="Recipient Phone *" value={form.recipient_phone} onChange={setField("recipient_phone")} />
+            <FLD label="Secondary Phone" value={form.recipient_secendary_phone} onChange={setField("recipient_secendary_phone")} />
+            <FLD label="Recipient Address *" value={form.recipient_address} onChange={setField("recipient_address")} />
           </div>
 
           {/* Geo */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <SL label="শহর *" value={cityId} onChange={setCityId}
+            <SL label="City *" value={cityId} onChange={setCityId}
               options={cityOptions}
-              placeholder={!companyId ? "আগে কোম্পানি" : citiesLoading ? "লোড হচ্ছে..." : "শহর বেছে নিন"}
+              placeholder={!companyId ? "Select company first" : citiesLoading ? "Loading..." : "Select city"}
               disabled={!companyId || citiesLoading} />
-            <SL label="জোন *" value={zoneId} onChange={setZoneId}
+            <SL label="Zone *" value={zoneId} onChange={setZoneId}
               options={zoneOptions}
-              placeholder={!cityId ? "আগে শহর" : zonesLoading ? "লোড হচ্ছে..." : "জোন বেছে নিন"}
+              placeholder={!cityId ? "Select city first" : zonesLoading ? "Loading..." : "Select zone"}
               disabled={!cityId || zonesLoading} />
-            <SL label="এলাকা *" value={areaId} onChange={setAreaId}
+            <SL label="Area *" value={areaId} onChange={setAreaId}
               options={areaOptions}
-              placeholder={!zoneId ? "আগে জোন" : areasLoading ? "লোড হচ্ছে..." : "এলাকা বেছে নিন"}
+              placeholder={!zoneId ? "Select zone first" : areasLoading ? "Loading..." : "Select area"}
               disabled={!zoneId || areasLoading} />
           </div>
 
@@ -439,31 +444,31 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
                 <option value={3}>Fragile</option>
               </select>
             </div>
-            <FLD label="ওজন (গ্রাম) *" name="item_weight" type="number" />
-            <FLD label="পরিমাণ *" name="item_quantity" type="number" />
+            <FLD label="Weight (grams) *" value={form.item_weight} onChange={setField("item_weight")} type="number" />
+            <FLD label="Quantity *" value={form.item_quantity} onChange={setField("item_quantity")} type="number" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FLD label="কালেক্টেবল অ্যামাউন্ট *" name="collectable_amount" type="number" />
-            <FLD label="Product Description" name="product_description" />
+            <FLD label="Collectable Amount *" value={form.collectable_amount} onChange={setField("collectable_amount")} type="number" />
+            <FLD label="Product Description" value={form.product_description} onChange={setField("product_description")} />
           </div>
 
-          <FLD label="Special Instruction" name="special_instruction" />
+          <FLD label="Special Instruction" value={form.special_instruction} onChange={setField("special_instruction")} />
 
           <div className="flex items-center gap-6">
-            <CHK label="Closed Box" name="is_closed_box" />
-            <CHK label="Exchange" name="is_exchange" />
+            <CHK label="Closed Box" checked={form.is_closed_box} onChange={setField("is_closed_box")} />
+            <CHK label="Exchange" checked={form.is_exchange} onChange={setField("is_exchange")} />
           </div>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
-              বাতিল
+              Cancel
             </button>
             <button type="submit" disabled={submitting}
               className="px-5 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              CarryBee-তে অ্যাসাইন করুন
+              Assign to CarryBee
             </button>
           </div>
           </form>
@@ -480,6 +485,10 @@ const AdminOrderDetails = () => {
   const { data: summaryData } = useGetOrderStatusSummaryQuery();
   const [updateStatus, { isLoading: isUpdating }] =
     useUpdateOrderStatusMutation();
+  const [updateOrderInfo, { isLoading: isSavingInfo }] =
+    useUpdateOrderInfoMutation();
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [infoForm, setInfoForm] = useState({});
   const [carryBeeOpen, setCarryBeeOpen] = useState(false);
   const [showCarryBeeDetails, setShowCarryBeeDetails] = useState(false);
   const [fetchCarryBeeDetails, { data: cbDetailsData, isLoading: cbDetailsLoading, isError: cbDetailsError }] =
@@ -501,7 +510,7 @@ const AdminOrderDetails = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("bn-BD", {
+    return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -511,7 +520,7 @@ const AdminOrderDetails = () => {
   };
 
   const formatCurrency = (amount) =>
-    `৳${Number(amount || 0).toLocaleString("bn-BD")}`;
+    `৳${Number(amount || 0).toLocaleString("en-US")}`;
 
   const getCurrentStatusName = () => {
     if (!order) return "";
@@ -528,6 +537,28 @@ const AdminOrderDetails = () => {
     if (typeof order.status === "object" && order.status?.id)
       return order.status.id;
     return order.status;
+  };
+
+  const handleEditInfo = () => {
+    setInfoForm({
+      customer_name: order.customer_name || "",
+      customer_phone: order.customer_phone || "",
+      shipping_address: order.shipping_address || "",
+      zone: order.zone || "",
+      note: order.note || "",
+    });
+    setEditingInfo(true);
+  };
+
+  const handleSaveInfo = async () => {
+    try {
+      await updateOrderInfo({ id: order.id, ...infoForm }).unwrap();
+      toast.success("Order info updated.");
+      setEditingInfo(false);
+      refetch();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update.");
+    }
   };
 
   const handleStatusChange = async (newStatusId) => {
@@ -557,13 +588,13 @@ const AdminOrderDetails = () => {
       <div className="text-center py-32 space-y-3">
         <ClipboardList className="w-14 h-14 text-red-300 mx-auto" />
         <p className="text-red-500 text-sm font-medium">
-          অর্ডার লোড করতে সমস্যা হয়েছে।
+          Failed to load order.
         </p>
         <button
           onClick={refetch}
           className="text-sm text-red-600 underline hover:text-red-700"
         >
-          আবার চেষ্টা করুন
+          Try again
         </button>
       </div>
     );
@@ -609,14 +640,14 @@ const AdminOrderDetails = () => {
           </span>
           {order.delivery_information ? (
             <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full">
-              <Truck className="w-3.5 h-3.5" /> CarryBee অ্যাসাইন হয়েছে
+              <Truck className="w-3.5 h-3.5" /> CarryBee Assigned
             </span>
           ) : (
             <button
               onClick={() => setCarryBeeOpen(true)}
               className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition"
             >
-              <Truck className="w-4 h-4" /> CarryBee অ্যাসাইন
+              <Truck className="w-4 h-4" /> Assign CarryBee
             </button>
           )}
         </div>
@@ -630,7 +661,7 @@ const AdminOrderDetails = () => {
             <div className="px-5 py-4 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                 <Package className="w-4 h-4" />
-                অর্ডার আইটেম
+                Order Items
               </h2>
             </div>
             <div className="divide-y divide-gray-100">
@@ -640,22 +671,38 @@ const AdminOrderDetails = () => {
                   className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
                   <div className="flex-1">
-                    <p className="font-medium text-gray-800">
-                      {item.product_name}
-                    </p>
+                    {item.product_id ? (
+                      <button
+                        onClick={() => navigate(`/admin-panel/products/${item.product_id}`)}
+                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
+                      >
+                        {item.product_name}
+                      </button>
+                    ) : (
+                      <p className="font-medium text-gray-800">{item.product_name}</p>
+                    )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
                       {item.sku && <span>SKU: {item.sku}</span>}
-                      <span>পরিমাণ: {item.qty}</span>
-                      <span>একক মূল্য: {formatCurrency(item.unit_price)}</span>
+                      <span>Qty: {item.qty}</span>
+                      <span>Unit price: {formatCurrency(item.unit_price)}</span>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-gray-800 text-sm">
                       {formatCurrency(item.line_total)}
                     </p>
-                    {Number(item.line_total_reseller_profit) > 0 && (
-                      <p className="text-xs text-green-600 mt-0.5">
-                        মুনাফা: {formatCurrency(item.line_total_reseller_profit)}
+                    {item.shop && (
+                      <p className="text-xs mt-0.5">
+                        {item.shop.id ? (
+                          <button
+                            onClick={() => navigate(`/admin-panel/vendors/${item.shop.id}`)}
+                            className="text-blue-500 hover:text-blue-700 hover:underline"
+                          >
+                            Shop: {item.shop.shop_name}
+                          </button>
+                        ) : (
+                          <span className="text-green-600">Shop: {item.shop.shop_name}</span>
+                        )}
                       </p>
                     )}
                   </div>
@@ -665,26 +712,26 @@ const AdminOrderDetails = () => {
             {/* Totals */}
             <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
-                <span>সাবটোটাল</span>
+                <span>Subtotal</span>
                 <span>{formatCurrency(order.subtotal)}</span>
               </div>
               <div className="flex justify-between text-gray-600">
-                <span>শিপিং ফি</span>
+                <span>Shipping Fee</span>
                 <span>{formatCurrency(order.shipping_fee)}</span>
               </div>
               {Number(order.discount) > 0 && (
                 <div className="flex justify-between text-gray-600">
-                  <span>ডিসকাউন্ট</span>
+                  <span>Discount</span>
                   <span>-{formatCurrency(order.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between font-bold text-gray-800 pt-2 border-t border-gray-200">
-                <span>মোট</span>
+                <span>Total</span>
                 <span className="text-base">{formatCurrency(order.total)}</span>
               </div>
               {Number(order.reseller_profit) > 0 && (
                 <div className="flex justify-between text-green-600 font-medium">
-                  <span>রিসেলার মুনাফা</span>
+                  <span>Reseller Profit</span>
                   <span>{formatCurrency(order.reseller_profit)}</span>
                 </div>
               )}
@@ -697,7 +744,7 @@ const AdminOrderDetails = () => {
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  স্ট্যাটাস হিস্টোরি
+                  Status History
                 </h2>
               </div>
               <div className="px-5 py-4">
@@ -751,7 +798,7 @@ const AdminOrderDetails = () => {
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-5 py-4 border-b border-gray-100">
               <h2 className="text-sm font-semibold text-gray-800">
-                স্ট্যাটাস পরিবর্তন
+                Update Status
               </h2>
             </div>
             <div className="px-5 py-4">
@@ -772,7 +819,7 @@ const AdminOrderDetails = () => {
               {isUpdating && (
                 <p className="text-xs text-gray-400 mt-2 flex items-center gap-1">
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  আপডেট হচ্ছে...
+                  Updating...
                 </p>
               )}
             </div>
@@ -780,38 +827,111 @@ const AdminOrderDetails = () => {
 
           {/* Customer Info */}
           <div className="bg-white rounded-xl border border-gray-200">
-            <div className="px-5 py-4 border-b border-gray-100">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                 <User className="w-4 h-4" />
-                কাস্টমার তথ্য
+                Customer Info
               </h2>
+              {!editingInfo ? (
+                <button
+                  onClick={handleEditInfo}
+                  className="text-xs text-red-600 hover:text-red-700 font-medium border border-red-200 rounded-lg px-2.5 py-1 hover:bg-red-50 transition"
+                >
+                  Edit
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setEditingInfo(false)}
+                    disabled={isSavingInfo}
+                    className="text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1 hover:bg-gray-50 transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveInfo}
+                    disabled={isSavingInfo}
+                    className="text-xs text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-1 font-medium transition disabled:opacity-60 flex items-center gap-1"
+                  >
+                    {isSavingInfo && <Loader2 className="w-3 h-3 animate-spin" />}
+                    Save
+                  </button>
+                </div>
+              )}
             </div>
             <div className="px-5 py-4 space-y-3 text-sm">
-              <div className="flex items-start gap-3">
-                <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-gray-800">
-                    {order.customer_name}
-                  </p>
+              {editingInfo ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Customer Name</label>
+                    <input
+                      value={infoForm.customer_name}
+                      onChange={(e) => setInfoForm((p) => ({ ...p, customer_name: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Phone</label>
+                    <input
+                      value={infoForm.customer_phone}
+                      onChange={(e) => setInfoForm((p) => ({ ...p, customer_phone: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Shipping Address</label>
+                    <textarea
+                      rows={3}
+                      value={infoForm.shipping_address}
+                      onChange={(e) => setInfoForm((p) => ({ ...p, shipping_address: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Zone</label>
+                    <input
+                      value={infoForm.zone}
+                      onChange={(e) => setInfoForm((p) => ({ ...p, zone: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-500 mb-1 block">Note</label>
+                    <textarea
+                      rows={2}
+                      value={infoForm.note}
+                      onChange={(e) => setInfoForm((p) => ({ ...p, note: e.target.value }))}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <p className="text-gray-600">{order.customer_phone}</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-gray-600 whitespace-pre-line">
-                    {order.shipping_address}
-                  </p>
-                  {order.zone && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      জোন: {order.zone}
-                    </p>
+              ) : (
+                <>
+                  <div className="flex items-start gap-3">
+                    <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <p className="font-medium text-gray-800">{order.customer_name}</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <Phone className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-gray-600">{order.customer_phone}</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-gray-600 whitespace-pre-line">{order.shipping_address}</p>
+                      {order.zone && (
+                        <p className="text-xs text-gray-400 mt-1">Zone: {order.zone}</p>
+                      )}
+                    </div>
+                  </div>
+                  {order.note && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-gray-400 text-xs mt-0.5 flex-shrink-0">Note</span>
+                      <p className="text-gray-600 text-xs">{order.note}</p>
+                    </div>
                   )}
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -821,11 +941,11 @@ const AdminOrderDetails = () => {
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                   <Truck className="w-4 h-4" />
-                  ড্রপশিপার
+                  Dropshipper
                 </h2>
               </div>
               <div className="px-5 py-4 text-sm text-gray-600">
-                <p>User ID: {order.user_id}</p>
+                <p>Order By: {order.user.name}</p>
               </div>
             </div>
           )}
@@ -836,7 +956,7 @@ const AdminOrderDetails = () => {
               <div className="px-5 py-4 border-b border-gray-100">
                 <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                   <Truck className="w-4 h-4" />
-                  ডেলিভারি ম্যান
+                  Delivery Man
                 </h2>
               </div>
               <div className="px-5 py-4 text-sm text-gray-600">
@@ -851,13 +971,13 @@ const AdminOrderDetails = () => {
               <div className="px-5 py-4 border-b border-teal-100 bg-teal-50 rounded-t-xl flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-teal-800 flex items-center gap-2">
                   <Truck className="w-4 h-4" />
-                  CarryBee ডেলিভারি তথ্য
+                  CarryBee Delivery Info
                 </h2>
                 <button
                   onClick={handleShowCarryBeeDetails}
                   className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition"
                 >
-                  {showCarryBeeDetails ? "লুকান" : "ডেলিভারি ডিটেইলস দেখুন"}
+                  {showCarryBeeDetails ? "Hide" : "View delivery details"}
                 </button>
               </div>
               <div className="px-5 py-4 space-y-3 text-sm">
@@ -873,29 +993,29 @@ const AdminOrderDetails = () => {
                 </div>
                 <div className="space-y-1.5 text-gray-600">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">প্রাপক</span>
+                    <span className="text-gray-400">Recipient</span>
                     <span className="font-medium text-gray-800">{order.delivery_information.recipient_name}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">ফোন</span>
+                    <span className="text-gray-400">Phone</span>
                     <span>{order.delivery_information.recipient_phone}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">ঠিকানা</span>
+                    <span className="text-gray-400">Address</span>
                     <span className="text-right max-w-[55%]">{order.delivery_information.recipient_address}</span>
                   </div>
                 </div>
                 <div className="border-t border-gray-100 pt-3 space-y-1.5 text-gray-600">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">কালেক্টেবল</span>
+                    <span className="text-gray-400">Collectable</span>
                     <span className="font-medium text-gray-800">৳{order.delivery_information.collectable_amount}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">ডেলিভারি ফি</span>
+                    <span className="text-gray-400">Delivery Fee</span>
                     <span>৳{order.delivery_information.delivery_fee}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-gray-800">
-                    <span>মোট ফি</span>
+                    <span>Total Fee</span>
                     <span>৳{order.delivery_information.total_fee}</span>
                   </div>
                 </div>
@@ -918,7 +1038,7 @@ const AdminOrderDetails = () => {
           {order.note && (
             <div className="bg-white rounded-xl border border-gray-200">
               <div className="px-5 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-800">নোট</h2>
+                <h2 className="text-sm font-semibold text-gray-800">Note</h2>
               </div>
               <div className="px-5 py-4 text-sm text-gray-600">
                 <p>{order.note}</p>

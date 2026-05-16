@@ -25,6 +25,12 @@ const orderApi = baseApi.injectEndpoints({
         params: page ? { page } : undefined,
       }),
     }),
+    vendorOrders: builder.query({
+      query: ({ vendorId, page }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.vendorOrders.path, { vendorId }),
+        params: page ? { page } : undefined,
+      }),
+    }),
 
     listAllOrders: builder.query({
       query: () => API_ENDPOINTS.orders.allOrders.path,
@@ -68,6 +74,13 @@ const orderApi = baseApi.injectEndpoints({
         body: payload,
       }),
     }),
+    updateOrderInfo: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.update.path, { id }),
+        method: API_ENDPOINTS.orders.update.method,
+        body: payload,
+      }),
+    }),
     createContactUs: builder.mutation({
       query: (orderData) => ({
         url: "https://hrmapi.biswasandbrothers.com/api/add-contact-us",
@@ -99,6 +112,8 @@ export const {
   useGetOrderDetailsQuery,
   useUpdateOrderStatusMutation,
   useUpdateOrderItemStatusMutation,
+  useUpdateOrderInfoMutation,
+  useVendorOrdersQuery,
 
 } = orderApi;
 

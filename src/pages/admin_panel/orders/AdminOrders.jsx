@@ -187,6 +187,7 @@ const AdminOrders = () => {
                     <th className="text-left py-3 px-4 font-semibold">
                       ড্রপশিপার
                     </th>
+                    <th className="text-left py-3 px-4 font-semibold">Items</th>
                     <th className="text-left py-3 px-4 font-semibold">তারিখ</th>
                     <th className="text-right py-3 px-4 font-semibold">মোট</th>
                     <th className="text-center py-3 px-4 font-semibold">
@@ -235,6 +236,43 @@ const AdminOrders = () => {
                                 {order.user.phone}
                               </p>
                             </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 max-w-[220px]">
+                        {order.items?.length > 0 ? (
+                          <div className="space-y-1">
+                            <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-600 mb-1">
+                              {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                            </span>
+                            {order.items.map((item) => (
+                              <div key={item.id}>
+                                {item.product_id ? (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/products/${item.product_id}`); }}
+                                    className="text-xs font-medium text-blue-600 hover:text-blue-800 hover:underline leading-snug line-clamp-1 text-left"
+                                  >
+                                    {item.product_name}
+                                  </button>
+                                ) : (
+                                  <p className="text-xs font-medium text-gray-800 leading-snug line-clamp-1">{item.product_name}</p>
+                                )}
+                                {item.shop && (
+                                  item.shop.id ? (
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/vendors/${item.shop.id}`); }}
+                                      className="text-[11px] text-orange-400 hover:text-orange-600 hover:underline leading-tight text-left"
+                                    >
+                                      {item.shop.shop_name}
+                                    </button>
+                                  ) : (
+                                    <p className="text-[11px] text-gray-400 leading-tight">{item.shop.shop_name}</p>
+                                  )
+                                )}
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <span className="text-xs text-gray-400">—</span>
@@ -335,6 +373,41 @@ const AdminOrders = () => {
                       <span className="text-xs text-gray-600">
                         {order.user.name} &middot; {order.user.phone}
                       </span>
+                    </div>
+                  )}
+
+                  {/* Items */}
+                  {order.items?.length > 0 && (
+                    <div className="bg-gray-50 rounded-lg px-3 py-2 space-y-1">
+                      <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                        {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                      </p>
+                      {order.items.map((item) => (
+                        <div key={item.id} className="flex items-start justify-between gap-2">
+                          {item.product_id ? (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/products/${item.product_id}`); }}
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline leading-snug flex-1 text-left"
+                            >
+                              {item.product_name}
+                            </button>
+                          ) : (
+                            <p className="text-xs text-gray-800 leading-snug flex-1">{item.product_name}</p>
+                          )}
+                          {item.shop && (
+                            item.shop.id ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/vendors/${item.shop.id}`); }}
+                                className="text-[11px] text-blue-400 hover:text-blue-600 hover:underline whitespace-nowrap"
+                              >
+                                {item.shop.shop_name}
+                              </button>
+                            ) : (
+                              <p className="text-[11px] text-gray-400 whitespace-nowrap">{item.shop.shop_name}</p>
+                            )
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
 

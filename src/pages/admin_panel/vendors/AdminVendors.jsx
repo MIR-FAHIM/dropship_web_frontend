@@ -190,7 +190,7 @@ const AdminVendors = () => {
                     </td>
                     <td className="py-3">
                       <button
-                        onClick={() => navigate(`/admin-panel/vendors/${vendor.user_id || vendor.id}`)}
+                        onClick={() => navigate(`/admin-panel/vendors/${vendor.id}`)}
                         className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium"
                       >
                         <Eye className="w-4 h-4" />
