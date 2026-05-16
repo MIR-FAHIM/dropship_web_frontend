@@ -1,39 +1,39 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+	Alert,
+	Avatar,
 	Box,
 	Button,
-	Chip,
 	CircularProgress,
 	Divider,
+	FormControlLabel,
 	Grid,
 	IconButton,
-	Paper,
-	Snackbar,
-	Alert,
-	Stack,
-	TextField,
-	Tooltip,
-	Typography,
-	useTheme,
-	Avatar,
-	Badge,
-	Fade,
+	InputAdornment,
 	LinearProgress,
+	MenuItem,
+	Paper,
+	Radio,
+	RadioGroup,
+	Select,
+	Snackbar,
+	Stack,
+	Table,
+	TableBody,
+	TableCell,
+	TableContainer,
+	TableHead,
+	TableRow,
+	TextField,
+	Typography,
 } from "@mui/material";
 import {
-	Add as AddIcon,
-	AddCircleOutline as AddCircleOutlineIcon,
 	ArrowBack as ArrowBackIcon,
 	DeleteOutline as DeleteOutlineIcon,
 	LocalShipping as LocalShippingIcon,
-	Lock as LockIcon,
-	Notes as NotesIcon,
-	RemoveCircleOutline as RemoveCircleOutlineIcon,
-	ShoppingCart as ShoppingCartIcon,
-	CheckCircle as CheckCircleIcon,
+	Person as PersonIcon,
+	Phone as PhoneIcon,
 	LocationOn as LocationOnIcon,
-	Inventory2 as Inventory2Icon,
-	TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useCheckoutOrderMutation } from "../../redux/features/order";
@@ -42,319 +42,49 @@ import {
 	useUpdateCartMutation,
 	useDeleteCartMutation,
 } from "../../redux/features/cart";
-import CustomerAddress from "./address/customer_address";
 import { imgBaseUrl } from "../../../config";
 
-const safeArray = (value) => (Array.isArray(value) ? value : []);
+const safeArray = (v) => (Array.isArray(v) ? v : []);
 
-/* ── Step indicator ── */
-const steps = ["Address", "Review", "Confirm"];
-
-const StepBar = ({ active }) => {
-	const theme = useTheme();
-	return (
-		<Stack direction="row" alignItems="center" spacing={0} sx={{ mt: 0.5 }}>
-			{steps.map((label, i) => {
-				const done = i < active;
-				const current = i === active;
-				return (
-					<React.Fragment key={label}>
-						<Stack alignItems="center" spacing={0.4}>
-							<Box
-								sx={{
-									width: 28,
-									height: 28,
-									borderRadius: "50%",
-									display: "grid",
-									placeItems: "center",
-									fontWeight: 900,
-									fontSize: 12,
-									background: done
-										? theme.palette.success.main
-										: current
-										? theme.palette.primary.main
-										: theme.palette.action.hover,
-									color: done || current ? "#fff" : theme.palette.text.disabled,
-									border: current ? `2px solid ${theme.palette.primary.light}` : "2px solid transparent",
-									transition: "all .3s",
-								}}
-							>
-								{done ? <CheckCircleIcon sx={{ fontSize: 16 }} /> : i + 1}
-							</Box>
-							<Typography
-								sx={{
-									fontSize: 10,
-									fontWeight: current ? 900 : 700,
-									color: current ? theme.palette.primary.main : theme.palette.text.disabled,
-									whiteSpace: "nowrap",
-								}}
-							>
-								{label}
-							</Typography>
-						</Stack>
-						{i < steps.length - 1 && (
-							<Box
-								sx={{
-									flex: 1,
-									height: 2,
-									mx: 0.5,
-									mb: 2,
-									borderRadius: 1,
-									background: done ? theme.palette.success.main : theme.palette.divider,
-									transition: "background .3s",
-									minWidth: 24,
-								}}
-							/>
-						)}
-					</React.Fragment>
-				);
-			})}
-		</Stack>
-	);
-};
-
-/* ── Stat card ── */
-const StatCard = ({ icon, label, value, color }) => {
-	const theme = useTheme();
-	return (
-		<Box
-			sx={{
-				flex: 1,
-				p: 1.5,
-				borderRadius: 3,
-				border: `1px solid ${color}30`,
-				background: `linear-gradient(135deg, ${color}0d 0%, ${color}05 100%)`,
-				display: "flex",
-				alignItems: "center",
-				gap: 1.2,
-				transition: "box-shadow .2s",
-				"&:hover": { boxShadow: `0 4px 16px ${color}22` },
-			}}
-		>
-			<Box
-				sx={{
-					width: 38,
-					height: 38,
-					borderRadius: 2.5,
-					display: "grid",
-					placeItems: "center",
-					background: `${color}22`,
-					color: color,
-					flexShrink: 0,
-					border: `1px solid ${color}30`,
-				}}
-			>
-				{icon}
-			</Box>
-			<Box sx={{ minWidth: 0 }}>
-				<Typography sx={{ fontSize: 10, fontWeight: 800, color: `${color}cc`, textTransform: "uppercase", letterSpacing: 0.6 }}>
-					{label}
-				</Typography>
-				<Typography sx={{ fontWeight: 950, fontSize: 14, color: color, lineHeight: 1.2 }}>
-					{value}
-				</Typography>
-			</Box>
-		</Box>
-	);
-};
-
-/* ── Cart Item Row ── */
-const CartItemRow = ({ it, processing, onUpdate, onDelete, money, theme }) => {
-	const lineTotal =
-		it?.line_total ??
-		it?.total ??
-		(it?.qty || 1) * (Number(it?.product?.unit_price ?? it?.product?.price ?? 0) || 0);
-
-	const isProcessing = processing[it.id];
-	const imgSrc = it?.product?.primary_image?.file_name
-		? `${imgBaseUrl}/${it.product.primary_image.file_name}`
-		: (it?.product?.image || it?.product?.thumbnail || null);
-
-	return (
-		<Fade in>
-			<Box
-				sx={{
-					p: 1.5,
-					borderRadius: 3,
-					border: `1px solid ${theme.palette.divider}`,
-					background: theme.palette.background.paper,
-					position: "relative",
-					overflow: "hidden",
-					transition: "box-shadow .2s, border-color .2s",
-					"&:hover": { boxShadow: `0 4px 16px ${theme.palette.primary.main}1a`, borderColor: `${theme.palette.primary.main}44` },
-				}}
-			>
-				{isProcessing && (
-					<LinearProgress
-						sx={{
-							position: "absolute",
-							top: 0,
-							left: 0,
-							right: 0,
-							height: 2,
-							borderRadius: "3px 3px 0 0",
-						}}
-					/>
-				)}
-
-				<Stack direction="row" spacing={1.5} alignItems="center">
-					{/* Product image */}
-					<Avatar
-						src={imgSrc}
-						variant="rounded"
-						sx={{
-							width: 52,
-							height: 52,
-							borderRadius: 2.5,
-							border: `1px solid ${theme.palette.divider}`,
-							background: theme.palette.action.hover,
-							flexShrink: 0,
-							"& img": { objectFit: "cover" },
-						}}
-					>
-						<Inventory2Icon fontSize="small" sx={{ color: theme.palette.text.disabled }} />
-					</Avatar>
-
-					{/* Name + price */}
-					<Box sx={{ flex: 1, minWidth: 0 }}>
-						<Typography
-							sx={{
-								fontWeight: 900,
-								color: theme.palette.text.primary,
-								fontSize: 13,
-								lineHeight: 1.3,
-								whiteSpace: "nowrap",
-								overflow: "hidden",
-								textOverflow: "ellipsis",
-							}}
-						>
-							{it.product?.name || "Item"}
-						</Typography>
-						<Stack direction="row" spacing={0.8} alignItems="center" sx={{ mt: 0.3 }}>
-							<Typography variant="caption" sx={{ color: theme.palette.primary.main, fontWeight: 900, fontSize: 13 }}>
-								{money(lineTotal)}
-							</Typography>
-							{it.qty > 1 && (
-								<Typography variant="caption" sx={{ color: theme.palette.text.disabled, fontWeight: 700, fontSize: 11 }}>
-									× {it.qty}
-								</Typography>
-							)}
-						</Stack>
-					</Box>
-
-					{/* Qty controls */}
-					<Stack direction="column" spacing={0.5} alignItems="flex-end" flexShrink={0}>
-						<Stack direction="row" spacing={0.4} alignItems="center">
-							<IconButton
-								size="small"
-								onClick={() => onUpdate(it, (it.qty || 1) - 1)}
-								disabled={isProcessing || (it.qty || 1) <= 1}
-								sx={{
-									borderRadius: 2,
-									border: `1px solid ${theme.palette.divider}`,
-									background: theme.palette.background.paper,
-									width: 26,
-									height: 26,
-									"&:hover": { background: theme.palette.action.hover },
-								}}
-							>
-								<RemoveCircleOutlineIcon sx={{ fontSize: 14 }} />
-							</IconButton>
-
-							<Box
-								sx={{
-									minWidth: 28,
-									height: 26,
-									borderRadius: 2,
-									border: `1px solid ${theme.palette.divider}`,
-									background: theme.palette.background.paper,
-									display: "grid",
-									placeItems: "center",
-									fontWeight: 950,
-									fontSize: 12,
-									color: theme.palette.text.primary,
-								}}
-							>
-								{it.qty || 1}
-							</Box>
-
-							<IconButton
-								size="small"
-								onClick={() => onUpdate(it, (it.qty || 1) + 1)}
-								disabled={isProcessing}
-								sx={{
-									borderRadius: 2,
-									border: `1px solid ${theme.palette.divider}`,
-									background: theme.palette.background.paper,
-									width: 26,
-									height: 26,
-									"&:hover": { background: theme.palette.action.hover },
-								}}
-							>
-								<AddCircleOutlineIcon sx={{ fontSize: 14 }} />
-							</IconButton>
-						</Stack>
-
-						<Tooltip title="Remove item" placement="left">
-							<IconButton
-								size="small"
-								onClick={() => onDelete(it)}
-								disabled={isProcessing}
-								sx={{
-									borderRadius: 2,
-									width: 26,
-									height: 26,
-									background: "rgba(250,92,92,0.08)",
-									"&:hover": { background: "rgba(250,92,92,0.18)" },
-								}}
-							>
-								<DeleteOutlineIcon sx={{ fontSize: 13, color: theme.palette.error.main }} />
-							</IconButton>
-						</Tooltip>
-					</Stack>
-				</Stack>
-			</Box>
-		</Fade>
-	);
-};
+const DELIVERY_AREAS = [
+	{ label: "Inside Dhaka", charge: 100 },
+	{ label: "Outside Dhaka", charge: 150 },
+	{ label: "Chittagong", charge: 120 },
+	{ label: "Sylhet", charge: 130 },
+	{ label: "Rajshahi", charge: 130 },
+	{ label: "Khulna", charge: 130 },
+	{ label: "Barishal", charge: 130 },
+	{ label: "Rangpur", charge: 140 },
+	{ label: "Mymensingh", charge: 120 },
+];
 
 /* ══════════════════════════════════════
    Main Component
 ══════════════════════════════════════ */
 const CheckoutPage = () => {
-	const theme = useTheme();
 	const navigate = useNavigate();
-
-	const divider = theme.palette.divider;
-	const surface = theme.palette.background.paper;
-	const surface2 = theme.palette.action.hover;
-	const ink = theme.palette.text.primary;
-	const subInk = theme.palette.text.secondary;
 
 	const userId = useMemo(() => {
 		const id = localStorage.getItem("userId");
 		return id ? String(id) : null;
 	}, []);
 
-	const money = (n) =>
-		new Intl.NumberFormat("en-BD", { style: "currency", currency: "BDT" }).format(Number(n || 0));
-
-	const [selectedAddress, setSelectedAddress] = useState(null);
-	const [addresses, setAddresses] = useState([]);
-	const [addrLoading, setAddrLoading] = useState(false);
-	const [note, setNote] = useState("");
+	/* ── form state ── */
+	const [fullName, setFullName] = useState("");
+	const [phone, setPhone] = useState("");
+	const [address, setAddress] = useState("");
+	const [deliveryArea, setDeliveryArea] = useState(DELIVERY_AREAS[0]);
+	const [paymentMethod, setPaymentMethod] = useState("cod");
+	const [coupon, setCoupon] = useState("");
+	const [couponApplied, setCouponApplied] = useState(false);
+	const [discount, setDiscount] = useState(0);
+	const [note] = useState("");
 	const [processing, setProcessing] = useState({});
-	const [openAddressModal, setOpenAddressModal] = useState(false);
 	const [msg, setMsg] = useState({ text: "", severity: "info" });
 
 	const notify = (text, severity = "info") => setMsg({ text, severity });
 
-	/* active step: 0=address, 1=review(has address), 2=ready to place */
-	const activeStep = useMemo(() => {
-		if (!selectedAddress) return 0;
-		return 1;
-	}, [selectedAddress]);
-
+	/* ── cart ── */
 	const {
 		data: cartResponse,
 		isLoading: cartLoading,
@@ -367,8 +97,8 @@ const CheckoutPage = () => {
 	);
 
 	const cartItems = safeArray(cart?.items ?? cart?.data?.items ?? []);
-	const subtotal = cart?.subtotal ?? cart?.sub_total ?? 0;
-	const resellerProfitTotal = cart?.reseller_profit_total ?? 0;
+	const subtotal = Number(cart?.subtotal ?? cart?.sub_total ?? 0);
+	const resellerProfit = Number(cart?.reseller_profit_total ?? 0);
 
 	useEffect(() => {
 		const total = cart?.total_items ?? cartItems.length;
@@ -380,19 +110,19 @@ const CheckoutPage = () => {
 	const [deleteCart] = useDeleteCartMutation();
 	const [checkoutOrder, { isLoading: loadingCheckout }] = useCheckoutOrderMutation();
 
+	const grandTotal = subtotal - discount + deliveryArea.charge;
+
+	/* ── handlers ── */
 	const handleUpdateQty = async (item, newQty) => {
 		if (newQty < 1) return;
 		setProcessing((p) => ({ ...p, [item.id]: true }));
 		try {
 			const res = await updateCart({ itemId: item.id, qty: newQty });
-			const ok = res?.data?.status === "success" || res?.status === "success" || res?.status === 200;
-			notify(res?.data?.message || (ok ? "Quantity updated" : "Failed to update"), ok ? "success" : "error");
+			const ok = res?.data?.status === "success" || res?.status === 200;
 			if (ok) await refetchCart();
-		} catch {
-			notify("Error updating quantity", "error");
-		} finally {
-			setProcessing((p) => ({ ...p, [item.id]: false }));
-		}
+			else notify(res?.data?.message || "Failed to update", "error");
+		} catch { notify("Error updating quantity", "error"); }
+		finally { setProcessing((p) => ({ ...p, [item.id]: false })); }
 	};
 
 	const handleDeleteItem = async (item) => {
@@ -400,30 +130,35 @@ const CheckoutPage = () => {
 		setProcessing((p) => ({ ...p, [item.id]: true }));
 		try {
 			const res = await deleteCart(item.id);
-			const ok = res?.data?.status === "success" || res?.status === "success" || res?.status === 200;
-			notify(res?.data?.message || (ok ? "Item removed" : "Failed to remove"), ok ? "success" : "error");
+			const ok = res?.data?.status === "success" || res?.status === 200;
 			if (ok) await refetchCart();
-		} catch {
-			notify("Error removing item", "error");
-		} finally {
-			setProcessing((p) => ({ ...p, [item.id]: false }));
-		}
+			else notify(res?.data?.message || "Failed to remove", "error");
+		} catch { notify("Error removing item", "error"); }
+		finally { setProcessing((p) => ({ ...p, [item.id]: false })); }
 	};
 
-	const handleCheckout = async () => {
+	const handleApplyCoupon = () => {
+		if (!coupon.trim()) return;
+		// Placeholder — wire to coupon API when available
+		notify("Coupon not recognised", "warning");
+	};
+
+	const handlePlaceOrder = async () => {
 		if (!userId) return notify("Please login to place an order.", "warning");
 		if (!cartItems.length) return notify("Your cart is empty.", "warning");
-
-		const addrObj = selectedAddress ? addresses.find((a) => String(a.id) === String(selectedAddress)) : null;
-		if (!addrObj) return notify("Select or add a shipping address.", "warning");
+		if (!fullName.trim()) return notify("Please enter your full name.", "warning");
+		if (!phone.trim()) return notify("Please enter your phone number.", "warning");
+		if (!address.trim()) return notify("Please enter your full address.", "warning");
 
 		try {
 			const payload = {
 				user_id: userId,
-				customer_name: addrObj.name || "",
-				customer_phone: addrObj.mobile || "",
-				shipping_address: `${addrObj.address}${addrObj.area ? `, ${addrObj.area}` : ""}${addrObj.district ? `, ${addrObj.district}` : ""}`,
-				zone: addrObj.district || "",
+				customer_name: fullName.trim(),
+				customer_phone: phone.trim(),
+				shipping_address: `${address.trim()}, ${deliveryArea.label}`,
+				zone: deliveryArea.label,
+				delivery_charge: deliveryArea.charge,
+				payment_method: paymentMethod,
 				note: note || "",
 			};
 
@@ -434,392 +169,369 @@ const CheckoutPage = () => {
 				notify(res?.data?.message || "Order placed successfully!", "success");
 				localStorage.setItem("cart", JSON.stringify(0));
 				window.dispatchEvent(new Event("cart-updated"));
-				setTimeout(() => navigate("/app/order"), 1000);
+				setTimeout(() => navigate("/app/order"), 1200);
 			} else {
 				notify(res?.data?.message || "Failed to place order.", "error");
 			}
-		} catch {
-			notify("Error placing order.", "error");
-		}
+		} catch { notify("Error placing order.", "error"); }
 	};
 
+	const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
+
+	/* ── render ── */
 	return (
-		<Box sx={{ minHeight: "100vh", background: theme.palette.background.default, p: { xs: 1.5, md: 2.5 } }}>
+		<Box sx={{ minHeight: "100vh", background: "#f5f6fa", p: { xs: 1.5, sm: 2.5 } }}>
 
-			{/* ── Top Header Bar ── */}
-			<Paper
-				elevation={0}
-				sx={{
-					mb: 2.5,
-					p: { xs: 1.5, md: 2 },
-					borderRadius: 4,
-					border: `1px solid ${divider}`,
-					background: `linear-gradient(135deg, ${surface} 60%, ${theme.palette.primary.main}08 100%)`,
-					boxShadow: `0 1px 12px ${theme.palette.primary.main}0e`,
-				}}
-			>
-				<Stack
-					direction={{ xs: "column", sm: "row" }}
-					alignItems={{ xs: "flex-start", sm: "center" }}
-					justifyContent="space-between"
-					gap={2}
+			{/* Back button */}
+			<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
+				<IconButton
+					onClick={() => navigate(-1)}
+					sx={{ borderRadius: 2, border: "1px solid #e0e0e0", background: "#fff", "&:hover": { background: "#f0f0f0" } }}
 				>
-					{/* Left: back + title + stepper */}
-					<Stack direction="row" spacing={1.5} alignItems="flex-start">
-						<IconButton
-							onClick={() => navigate(-1)}
-							sx={{
-								borderRadius: 2.5,
-								border: `1px solid ${divider}`,
-								background: surface,
-								mt: 0.3,
-								"&:hover": { background: surface2 },
-							}}
-						>
-							<ArrowBackIcon fontSize="small" />
-						</IconButton>
-						<Box>
-							<Stack direction="row" spacing={1} alignItems="center">
-								<Typography
-									variant="h5"
-									sx={{ fontWeight: 950, letterSpacing: -0.5, color: theme.palette.primary.main, lineHeight: 1 }}
-								>
-									Checkout
-								</Typography>
-								<Badge
-									badgeContent={cartItems.length}
-									color="primary"
-									sx={{ "& .MuiBadge-badge": { fontWeight: 900, fontSize: 10 } }}
-								>
-									<ShoppingCartIcon fontSize="small" sx={{ color: subInk }} />
-								</Badge>
-							</Stack>
-							<Typography variant="body2" sx={{ color: subInk, fontWeight: 700, mt: 0.3 }}>
-								Complete your order in a few steps
+					<ArrowBackIcon fontSize="small" />
+				</IconButton>
+				<Typography sx={{ fontWeight: 900, fontSize: 20, color: "#1a1a2e" }}>Checkout</Typography>
+			</Stack>
+
+			<Grid container spacing={3} alignItems="flex-start">
+
+				{/* ════ LEFT — Address Form ════ */}
+				<Grid item xs={12} sm={6} lg={4}>
+					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", overflow: "hidden", background: "#fff" }}>
+
+						{/* Purple header */}
+						<Box sx={{ background: "linear-gradient(135deg, #5b21b6 0%, #4338ca 100%)", px: 3, py: 2 }}>
+							<Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.5 }}>
+								Complete your order by filling in the details and clicking the order button.
 							</Typography>
-							<Box sx={{ mt: 1 }}>
-								<StepBar active={activeStep} />
-							</Box>
 						</Box>
-					</Stack>
 
-					{/* Right: address chip + add button */}
-					<Stack direction="row" spacing={1} alignItems="center" flexShrink={0}>
-						<Chip
-							icon={<LocationOnIcon sx={{ fontSize: "14px !important" }} />}
-							label={
-								addrLoading
-									? "Loading..."
-									: addresses.length
-									? `${addresses.length} saved address${addresses.length > 1 ? "es" : ""}`
-									: "No address saved"
-							}
-							size="small"
-							sx={{
-								borderRadius: 999,
-								fontWeight: 800,
-								fontSize: 11,
-								background: surface2,
-								border: `1px solid ${divider}`,
-								color: ink,
-							}}
-						/>
-						<Button
-							onClick={() => setOpenAddressModal(true)}
-							startIcon={<AddIcon />}
-							variant="contained"
-							size="small"
-							sx={{
-								borderRadius: 999,
-								textTransform: "none",
-								fontWeight: 900,
-								fontSize: 12,
-								px: 2,
-								boxShadow: "none",
-								"&:hover": { opacity: 0.9, boxShadow: "none" },
-							}}
-						>
-							Add Address
-						</Button>
-					</Stack>
-				</Stack>
-			</Paper>
+						<Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2.5 }}>
 
-			{/* ── Main Grid ── */}
-			<Grid container spacing={2.5}>
-
-				{/* Left: Address */}
-				<Grid item xs={12} md={7}>
-					<CustomerAddress
-						userId={userId}
-						selectedAddress={selectedAddress}
-						onSelectAddress={setSelectedAddress}
-						onAddressesChange={setAddresses}
-						onLoadingChange={setAddrLoading}
-						openAddressModal={openAddressModal}
-						setOpenAddressModal={setOpenAddressModal}
-						setMsg={(m) => notify(m, "info")}
-					/>
-				</Grid>
-
-				{/* Right: Order Summary */}
-				<Grid item xs={12} md={5}>
-					<Paper
-						elevation={0}
-						sx={{
-							p: 2,
-							borderRadius: 4,
-							border: `1px solid ${theme.palette.primary.main}28`,
-							background: `linear-gradient(160deg, ${surface} 70%, ${theme.palette.primary.main}06 100%)`,
-							boxShadow: `0 4px 24px ${theme.palette.primary.main}0d`,
-							position: { md: "sticky" },
-							top: { md: 86 },
-						}}
-					>
-						{/* Summary header */}
-						<Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 2 }}>
-							<Box
-								sx={{
-									width: 40,
-									height: 40,
-									borderRadius: 3,
-									display: "grid",
-									placeItems: "center",
-									background: `${theme.palette.primary.main}18`,
-									color: theme.palette.primary.main,
-								}}
-							>
-								<LockIcon fontSize="small" />
-							</Box>
+							{/* Full Name */}
 							<Box>
-								<Typography variant="h6" sx={{ fontWeight: 950, color: ink, lineHeight: 1.1 }}>
-									Order Summary
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									Full Name <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
-								<Typography variant="caption" sx={{ color: subInk, fontWeight: 700 }}>
-									Review items before placing order
-								</Typography>
-							</Box>
-						</Stack>
-
-						{!userId ? (
-							<Alert severity="warning" sx={{ borderRadius: 3, fontWeight: 800 }}>
-								Please login to checkout.
-							</Alert>
-						) : cartLoading ? (
-							<Stack spacing={1}>
-								{[1, 2].map((i) => (
-									<Box key={i} sx={{ p: 1.5, borderRadius: 3, background: surface2, border: `1px solid ${divider}` }}>
-										<LinearProgress sx={{ borderRadius: 2 }} />
-									</Box>
-								))}
-							</Stack>
-						) : cartItems.length === 0 ? (
-							<Stack alignItems="center" spacing={1.5} sx={{ py: 4 }}>
-								<ShoppingCartIcon sx={{ fontSize: 48, color: theme.palette.text.disabled }} />
-								<Typography sx={{ fontWeight: 800, color: subInk }}>Your cart is empty.</Typography>
-								<Button variant="outlined" size="small" onClick={() => navigate("/app/items/category")} sx={{ borderRadius: 999, textTransform: "none", fontWeight: 900 }}>
-									Browse Products
-								</Button>
-							</Stack>
-						) : (
-							<Box>
-								{/* Stat row */}
-								<Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-									<StatCard
-										icon={<Inventory2Icon fontSize="small" />}
-										label="Items"
-										value={cartItems.length}
-										color={theme.palette.primary.main}
-									/>
-									<StatCard
-										icon={<TrendingUpIcon fontSize="small" />}
-										label="Your Profit"
-										value={money(resellerProfitTotal)}
-										color={theme.palette.success.main}
-									/>
-								</Stack>
-
-								{/* Cart items */}
-								<Stack spacing={1} sx={{ mb: 2 }}>
-									{cartItems.map((it) => (
-										<CartItemRow
-											key={it.id}
-											it={it}
-											processing={processing}
-											onUpdate={handleUpdateQty}
-											onDelete={handleDeleteItem}
-											money={money}
-											theme={theme}
-										/>
-									))}
-								</Stack>
-
-								<Divider sx={{ my: 1.5, opacity: 0.15 }} />
-
-								{/* Totals */}
-									<Box
-										sx={{
-											mb: 2,
-											p: 1.5,
-											borderRadius: 3,
-											border: `1px solid ${divider}`,
-											background: surface2,
-										}}
-									>
-										<Stack spacing={1}>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Subtotal</Typography>
-												<Typography variant="body2" sx={{ fontWeight: 950, color: ink }}>
-													{money(subtotal)}
-												</Typography>
-											</Stack>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="body2" sx={{ fontWeight: 800, color: subInk }}>Shipping</Typography>
-												<Chip
-													label="Free"
-													size="small"
-													icon={<LocalShippingIcon sx={{ fontSize: "13px !important", color: `${theme.palette.success.main} !important` }} />}
-													sx={{
-														fontWeight: 900,
-														fontSize: 11,
-														background: `${theme.palette.success.main}14`,
-														color: theme.palette.success.main,
-														border: `1px solid ${theme.palette.success.main}30`,
-														borderRadius: 999,
-													}}
-												/>
-											</Stack>
-											<Divider sx={{ opacity: 0.2 }} />
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="body1" sx={{ fontWeight: 950, color: ink }}>Total</Typography>
-												<Typography variant="body1" sx={{ fontWeight: 950, fontSize: 16, color: theme.palette.primary.main }}>
-													{money(subtotal)}
-												</Typography>
-											</Stack>
-											<Stack direction="row" justifyContent="space-between" alignItems="center">
-												<Typography variant="caption" sx={{ fontWeight: 800, color: subInk }}>Your Profit</Typography>
-												<Chip
-													label={`+${money(resellerProfitTotal)}`}
-													size="small"
-													icon={<TrendingUpIcon sx={{ fontSize: "13px !important", color: `${theme.palette.success.main} !important` }} />}
-													sx={{
-														fontWeight: 950,
-														fontSize: 12,
-														background: `${theme.palette.success.main}18`,
-														color: theme.palette.success.main,
-														border: `1px solid ${theme.palette.success.main}30`,
-														borderRadius: 999,
-													}}
-												/>
-											</Stack>
-										</Stack>
-									</Box>
-								{/* Note field */}
 								<TextField
-									label="Order Note (optional)"
-									value={note}
-									onChange={(e) => setNote(e.target.value)}
-									size="small"
 									fullWidth
-									multiline
-									minRows={2}
-									maxRows={4}
-									placeholder="Any special instructions for the delivery or packaging..."
-									sx={{
-										mb: 2,
-										"& .MuiOutlinedInput-root": {
-											borderRadius: 3,
-											background: surface,
-											fontSize: 13,
-											"& fieldset": { borderColor: divider },
-											"&:hover fieldset": { borderColor: theme.palette.primary.main },
-											"&.Mui-focused fieldset": { borderColor: theme.palette.primary.main },
-										},
-										"& .MuiInputLabel-root": { fontSize: 13 },
-										"& .MuiInputLabel-root.Mui-focused": { color: theme.palette.primary.main },
-									}}
+									size="small"
+									placeholder="Enter your full name"
+									value={fullName}
+									onChange={(e) => setFullName(e.target.value)}
 									InputProps={{
 										startAdornment: (
-											<Box sx={{ mr: 1, display: "grid", placeItems: "center", color: theme.palette.primary.main, alignSelf: "flex-start", pt: 1.2 }}>
-												<NotesIcon fontSize="small" />
-											</Box>
+											<InputAdornment position="start">
+												<PersonIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
+											</InputAdornment>
 										),
 									}}
+									sx={fieldSx}
 								/>
+							</Box>
 
-								{/* Action buttons */}
-								<Stack spacing={1.5}>
-									<Button
-										variant="contained"
-										onClick={handleCheckout}
-										disabled={loadingCheckout || !selectedAddress || !cartItems.length}
-										startIcon={loadingCheckout ? null : <LockIcon />}
-										fullWidth
-										size="large"
-										sx={{
-											borderRadius: 999,
-											textTransform: "none",
-											fontWeight: 950,
-											fontSize: 14,
-											py: 1.4,
-											background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-											boxShadow: `0 4px 18px ${theme.palette.primary.main}44`,
-											"&:hover": { opacity: 0.92, boxShadow: `0 6px 24px ${theme.palette.primary.main}55` },
-											"&.Mui-disabled": { opacity: 0.4, background: theme.palette.action.disabledBackground },
-										}}
-									>
-										{loadingCheckout ? (
-											<Stack direction="row" spacing={1} alignItems="center">
-												<CircularProgress size={14} color="inherit" />
-												<span>Placing Order...</span>
-											</Stack>
-										) : (
-											"Place Order"
+							{/* Phone */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									Phone Number <span style={{ color: "#ef4444" }}>*</span>
+								</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									placeholder="Enter your mobile number"
+									value={phone}
+									onChange={(e) => setPhone(e.target.value)}
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<PhoneIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
+											</InputAdornment>
+										),
+									}}
+									sx={fieldSx}
+								/>
+							</Box>
+
+							{/* Address */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									Full Address <span style={{ color: "#ef4444" }}>*</span>
+								</Typography>
+								<TextField
+									fullWidth
+									size="small"
+									placeholder="Enter your full address"
+									value={address}
+									onChange={(e) => setAddress(e.target.value)}
+									InputProps={{
+										startAdornment: (
+											<InputAdornment position="start">
+												<LocationOnIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
+											</InputAdornment>
+										),
+									}}
+									sx={fieldSx}
+								/>
+							</Box>
+
+							{/* Delivery Area */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									Select Delivery Area <span style={{ color: "#ef4444" }}>*</span>
+								</Typography>
+								<Select
+									fullWidth
+									size="small"
+									value={deliveryArea.label}
+									onChange={(e) => setDeliveryArea(DELIVERY_AREAS.find((a) => a.label === e.target.value))}
+									startAdornment={
+										<InputAdornment position="start">
+											<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
+										</InputAdornment>
+									}
+									sx={{
+										borderRadius: 2,
+										fontSize: 14,
+										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
+										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+									}}
+								>
+									{DELIVERY_AREAS.map((a) => (
+										<MenuItem key={a.label} value={a.label} sx={{ fontSize: 14 }}>
+											{a.label} — {money(a.charge)}
+										</MenuItem>
+									))}
+								</Select>
+							</Box>
+
+							{/* Payment Method */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
+									Payment Method
+								</Typography>
+								<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+									<Paper elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: 2, px: 2, py: 1, mb: 1 }}>
+										<FormControlLabel
+											value="cod"
+											control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
+											label={<Typography sx={{ fontSize: 14, fontWeight: 700 }}>Cash on delivery</Typography>}
+										/>
+										{paymentMethod === "cod" && (
+											<Typography sx={{ fontSize: 12, color: "#6b7280", ml: 4, mb: 0.5 }}>
+												Pay with cash upon delivery.
+											</Typography>
 										)}
-									</Button>
+									</Paper>
+								</RadioGroup>
+								<Typography sx={{ fontSize: 11, color: "#6b7280", mt: 0.5 }}>
+									This data will be used to process your order, support your experience throughout this website.
+								</Typography>
+							</Box>
 
-									<Button
-										variant="outlined"
-										onClick={() => navigate(-1)}
-										startIcon={<ArrowBackIcon />}
-										fullWidth
-										sx={{
-											borderRadius: 999,
-											textTransform: "none",
-											fontWeight: 900,
-											fontSize: 13,
-											borderColor: divider,
-											color: ink,
-											"&:hover": { background: surface2, borderColor: theme.palette.primary.main },
-										}}
-									>
-										Back to Cart
-									</Button>
+							{/* Place Order */}
+							<Button
+								variant="contained"
+								fullWidth
+								size="large"
+								disabled={loadingCheckout || !cartItems.length}
+								onClick={handlePlaceOrder}
+								sx={{
+									borderRadius: 2,
+									textTransform: "none",
+									fontWeight: 900,
+									fontSize: 15,
+									py: 1.5,
+									background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+									boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
+									"&:hover": { background: "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)", boxShadow: "0 6px 20px rgba(99,102,241,0.45)" },
+									"&.Mui-disabled": { opacity: 0.5, background: "#e5e7eb", color: "#9ca3af" },
+								}}
+							>
+								{loadingCheckout ? (
+									<Stack direction="row" spacing={1} alignItems="center">
+										<CircularProgress size={16} color="inherit" />
+										<span>Placing Order…</span>
+									</Stack>
+								) : "Place Order"}
+							</Button>
+
+						</Box>
+					</Paper>
+				</Grid>
+
+				{/* ════ RIGHT — Order Information ════ */}
+				<Grid item xs={12} sm={7} lg={8}>
+					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", background: "#fff" }}>
+
+						<Box sx={{ px: 3, pt: 2.5, pb: 1 }}>
+							<Typography sx={{ fontWeight: 900, fontSize: 17, color: "#1a1a2e" }}>
+								Order Information
+							</Typography>
+						</Box>
+
+						{/* Cart table */}
+						{cartLoading ? (
+							<Box sx={{ p: 3 }}><LinearProgress /></Box>
+						) : cartItems.length === 0 ? (
+							<Box sx={{ p: 4, textAlign: "center" }}>
+								<Typography sx={{ color: "#9ca3af", fontWeight: 700 }}>Your cart is empty.</Typography>
+							</Box>
+						) : (
+							<TableContainer>
+								<Table size="small">
+									<TableHead>
+										<TableRow sx={{ background: "#f9fafb" }}>
+											{["Delete", "Product", "Quantity", "Price"].map((h) => (
+												<TableCell key={h} align={h === "Price" ? "right" : h === "Quantity" ? "center" : "center"}
+													sx={{ fontWeight: 900, fontSize: 13, color: "#374151", borderBottom: "1px solid #e5e7eb", py: 1.5 }}>
+													{h}
+												</TableCell>
+											))}
+										</TableRow>
+									</TableHead>
+									<TableBody>
+										{cartItems.map((it) => {
+											const imgSrc = it?.product?.primary_image?.file_name
+												? `${imgBaseUrl}/${it.product.primary_image.file_name}`
+												: null;
+											const linePrice =
+												it?.line_total ?? it?.total ??
+												(it?.qty || 1) * Number(it?.product?.unit_price ?? it?.product?.price ?? 0);
+											const isProc = processing[it.id];
+											return (
+												<TableRow key={it.id} sx={{ "&:hover": { background: "#fafafa" }, position: "relative" }}>
+													{/* Delete */}
+													<TableCell align="center" sx={{ borderBottom: "1px solid #f3f4f6", width: 48 }}>
+														<IconButton size="small" onClick={() => handleDeleteItem(it)} disabled={isProc}
+															sx={{ color: "#ef4444", background: "#fef2f2", borderRadius: 1.5, width: 30, height: 30,
+																"&:hover": { background: "#fee2e2" } }}>
+															<DeleteOutlineIcon sx={{ fontSize: 16 }} />
+														</IconButton>
+													</TableCell>
+
+													{/* Product */}
+													<TableCell sx={{ borderBottom: "1px solid #f3f4f6" }}>
+														<Stack direction="row" spacing={1.2} alignItems="center">
+															<Avatar src={imgSrc} variant="rounded"
+																sx={{ width: 44, height: 44, borderRadius: 1.5, border: "1px solid #e5e7eb",
+																	background: "#f3f4f6", "& img": { objectFit: "cover" } }} />
+															<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#1f2937",
+																maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+																{it.product?.name || "Item"}
+															</Typography>
+														</Stack>
+													</TableCell>
+
+													{/* Quantity */}
+													<TableCell align="center" sx={{ borderBottom: "1px solid #f3f4f6", width: 110 }}>
+														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
+															<IconButton size="small" disabled={isProc || (it.qty || 1) <= 1}
+																onClick={() => handleUpdateQty(it, (it.qty || 1) - 1)}
+																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																	"&:hover": { background: "#f3f4f6" } }}>
+																<Typography sx={{ fontSize: 16, lineHeight: 1, color: "#374151" }}>−</Typography>
+															</IconButton>
+															<Box sx={{ minWidth: 28, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																display: "grid", placeItems: "center", fontSize: 13, fontWeight: 900, color: "#1f2937" }}>
+																{it.qty || 1}
+															</Box>
+															<IconButton size="small" disabled={isProc}
+																onClick={() => handleUpdateQty(it, (it.qty || 1) + 1)}
+																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																	"&:hover": { background: "#f3f4f6" } }}>
+																<Typography sx={{ fontSize: 16, lineHeight: 1, color: "#374151" }}>+</Typography>
+															</IconButton>
+														</Stack>
+													</TableCell>
+
+													{/* Price */}
+													<TableCell align="right" sx={{ borderBottom: "1px solid #f3f4f6", width: 80 }}>
+														<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#1f2937" }}>
+															{money(linePrice)}
+														</Typography>
+													</TableCell>
+												</TableRow>
+											);
+										})}
+									</TableBody>
+								</Table>
+							</TableContainer>
+						)}
+
+						{/* Summary */}
+						{cartItems.length > 0 && (
+							<Box sx={{ px: 3, pb: 3, pt: 1 }}>
+								<Divider sx={{ mb: 2 }} />
+
+								<Stack spacing={1.2} sx={{ mb: 2 }}>
+									{[
+										{ label: "Subtotal", value: money(subtotal) },
+										{ label: "Discount", value: money(discount) },
+										{ label: "Delivery Charge", value: money(deliveryArea.charge) },
+									].map(({ label, value }) => (
+										<Stack key={label} direction="row" justifyContent="space-between" alignItems="center">
+											<Typography sx={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{label}</Typography>
+											<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#1f2937" }}>{value}</Typography>
+										</Stack>
+									))}
+
+									{/* Reseller Profit highlight */}
+									{resellerProfit > 0 && (
+										<Box sx={{
+											display: "flex", justifyContent: "space-between", alignItems: "center",
+											background: "linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%)",
+											border: "1px solid #86efac", borderRadius: 2, px: 2, py: 1,
+										}}>
+											<Stack direction="row" spacing={0.8} alignItems="center">
+												<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#15803d" }}>
+													💰 Your Profit
+												</Typography>
+											</Stack>
+											<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#16a34a" }}>
+												+{money(resellerProfit)}
+											</Typography>
+										</Box>
+									)}
+
+									<Divider />
+									<Stack direction="row" justifyContent="space-between" alignItems="center">
+										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#1f2937" }}>Grand Total</Typography>
+										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#4f46e5" }}>{money(grandTotal)}</Typography>
+									</Stack>
 								</Stack>
 
-								{!selectedAddress && cartItems.length > 0 && (
-									<Box
+								{/* Coupon */}
+								<Stack direction="row" spacing={1} alignItems="center">
+									<TextField
+										fullWidth
+										size="small"
+										placeholder="Apply Coupon"
+										value={coupon}
+										onChange={(e) => setCoupon(e.target.value)}
+										disabled={couponApplied}
 										sx={{
-											mt: 1.5,
-											p: 1,
-											borderRadius: 2.5,
-											background: `${theme.palette.warning.main}12`,
-											border: `1px solid ${theme.palette.warning.main}30`,
-											textAlign: "center",
+											"& .MuiOutlinedInput-root": {
+												borderRadius: 2, fontSize: 14,
+												"& fieldset": { borderColor: "#e5e7eb" },
+												"&:hover fieldset": { borderColor: "#6366f1" },
+												"&.Mui-focused fieldset": { borderColor: "#6366f1" },
+											},
+										}}
+									/>
+									<Button
+										variant="contained"
+										onClick={handleApplyCoupon}
+										disabled={couponApplied}
+										sx={{
+											borderRadius: 2, textTransform: "none", fontWeight: 900, fontSize: 13,
+											px: 2.5, whiteSpace: "nowrap", flexShrink: 0,
+											background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
+											boxShadow: "none", "&:hover": { boxShadow: "none", opacity: 0.9 },
 										}}
 									>
-										<Typography sx={{ fontSize: 11, color: theme.palette.warning.dark, fontWeight: 800 }}>
-											⚠ Please select a shipping address to continue
-										</Typography>
-									</Box>
-								)}
-
-								{/* Secure badge */}
-								<Stack direction="row" spacing={0.6} alignItems="center" justifyContent="center" sx={{ mt: 1, opacity: 0.55 }}>
-									<LockIcon sx={{ fontSize: 12, color: subInk }} />
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: subInk }}>
-										Secure &amp; encrypted checkout
-									</Typography>
+										APPLY
+									</Button>
 								</Stack>
 							</Box>
 						)}
@@ -827,23 +539,31 @@ const CheckoutPage = () => {
 				</Grid>
 			</Grid>
 
-			{/* ── Snackbar ── */}
+			{/* Snackbar */}
 			<Snackbar
 				open={!!msg.text}
 				autoHideDuration={3000}
 				onClose={() => setMsg({ text: "", severity: "info" })}
 				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
 			>
-				<Alert
-					severity={msg.severity}
-					onClose={() => setMsg({ text: "", severity: "info" })}
-					sx={{ borderRadius: 3, fontWeight: 800, boxShadow: 3 }}
-				>
+				<Alert severity={msg.severity} onClose={() => setMsg({ text: "", severity: "info" })}
+					sx={{ borderRadius: 3, fontWeight: 800, boxShadow: 3 }}>
 					{msg.text}
 				</Alert>
 			</Snackbar>
 		</Box>
 	);
 };
+
+const fieldSx = {
+	"& .MuiOutlinedInput-root": {
+		borderRadius: 2,
+		fontSize: 14,
+		"& fieldset": { borderColor: "#e5e7eb" },
+		"&:hover fieldset": { borderColor: "#6366f1" },
+		"&.Mui-focused fieldset": { borderColor: "#6366f1" },
+	},
+};
+
 
 export default CheckoutPage;

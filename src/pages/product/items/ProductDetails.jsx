@@ -18,7 +18,7 @@ const ProductDetails = () => {
   const [resellerPrice, setResellerPrice] = useState("");
   const userId = getFromLocalstorage("userId");
 
-  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery({ id, user_id: userId });
+  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
   const normalizeImageUrl = (rawUrl) => {
     if (!rawUrl) return null;
