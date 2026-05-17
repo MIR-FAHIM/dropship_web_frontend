@@ -39,6 +39,7 @@ import AdminSettings from "../pages/admin_panel/settings/AdminSettings";
 import AdminLogin from "../pages/admin_panel/auth/AdminLogin";
 import AdminCategories from "../pages/admin_panel/products/AdminCategories";
 import AdminBrands from "../pages/admin_panel/products/AdminBrands";
+import ProductClicksReport from "../pages/admin_panel/report/ProductClicksReport";
 import AdminAttributes from "../pages/admin_panel/products/AdminAttributes";
 import AdminMedia from "../pages/admin_panel/media/AdminMedia";
 import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate";
@@ -151,6 +152,7 @@ export const router = createBrowserRouter([
       { path: "brands", element: <AdminBrands /> },
       { path: "attributes", element: <AdminAttributes /> },
       { path: "media", element: <AdminMedia /> },
+      { path: "product/clicks", element: <ProductClicksReport /> },
       { path: "orders", element: <AdminOrders /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "vendors", element: <AdminVendors /> },

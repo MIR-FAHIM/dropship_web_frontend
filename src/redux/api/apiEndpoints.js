@@ -123,6 +123,13 @@ export const API_ENDPOINTS = {
     remove: define("DELETE", "/related-products/remove/{id}"),
   },
 
+  productClicks: {
+    monthwiseReport: define("GET", "/product-clicks/report/monthwise"),
+    daywiseReport: define("GET", "/product-clicks/report/daywise"),
+    last7DaysReport: define("GET", "/product-clicks/report/last-7-days"),
+    leaderboard: define("GET", "/product-clicks/leaderboard"),
+  },
+
   reviews: {
     add: define("POST", "/reviews/add"),
     list: define("GET", "/reviews/list"),

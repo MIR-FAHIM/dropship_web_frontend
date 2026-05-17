@@ -496,6 +496,16 @@ const ProductCard = ({
 				<span className="text-[10px] text-gray-400 font-semibold uppercase tracking-wide truncate">
 					{categoryLabel}
 				</span>
+				<div className="flex flex-col gap-0.5">
+					<span className="text-[10px] text-blue-400 font-semibold uppercase tracking-wide truncate">
+						{product?.vendor?.shop_name ?? "Unknown Shop"}
+					</span>
+					{product?.vendor?.district?.name && (
+						<span className="text-[10px] text-green-800 font-medium truncate">
+					{product.vendor.district.name}
+						</span>
+					)}
+				</div>
 
 				<p className="text-xs font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
 					{product?.name || "Unnamed product"}
@@ -536,7 +546,7 @@ const ProductCard = ({
 						Quick Order
 					</button>
 
-					<button
+					{/* <button
 						disabled={outOfStock}
 						onClick={handleAddToCart}
 						title={outOfStock ? "Out of stock" : inCart ? "In cart" : "Add to cart"}
@@ -549,7 +559,7 @@ const ProductCard = ({
 					>
 						<ShoppingCart className="w-3.5 h-3.5" />
 						{inCart ? "In Cart" : "Add to Cart"}
-					</button>
+					</button> */}
 				</div>
 			</div>
 		</div>

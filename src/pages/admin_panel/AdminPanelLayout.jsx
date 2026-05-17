@@ -96,6 +96,17 @@ const adminMenuLinks = [
     label: "হিসাব-নিকাশ",
     icon: <Wallet className="w-5 h-5" />,
   },
+   {
+    label: "Reports and Analytics",
+    icon: <Truck className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/product/clicks",
+        label: "Product Clicks Report",
+        icon: <Building2 className="w-4 h-4" />,
+      },
+    ],
+  },
   {
     path: "/admin-panel/tasks",
     label: "টাস্ক",
