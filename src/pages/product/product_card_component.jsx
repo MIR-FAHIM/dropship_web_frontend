@@ -497,17 +497,24 @@ const ProductCard = ({
 					{categoryLabel}
 				</span>
 
-				<p className="text-sm font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
+				<p className="text-xs font-bold text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">
 					{product?.name || "Unnamed product"}
 				</p>
 
-				<div className="flex items-baseline gap-1.5">
-					<span className="text-base font-black text-red-600">
-						৳{(hasSale ? salePrice : price).toLocaleString()}
-					</span>
-					{hasSale && (
-						<span className="text-xs text-gray-400 line-through font-medium">
-							৳{price.toLocaleString()}
+				<div className="flex items-baseline justify-between gap-1.5">
+					<div className="flex items-baseline gap-1.5">
+						<span className="text-base font-black text-red-600">
+							৳{(hasSale ? salePrice : price).toLocaleString()}
+						</span>
+						{hasSale && (
+							<span className="text-xs text-gray-400 line-through font-medium">
+								৳{price.toLocaleString()}
+							</span>
+						)}
+					</div>
+					{product?.sku && (
+						<span className="text-[10px] text-black-700 font-medium truncate max-w-[80px]" title={product.sku}>
+							{product.sku}
 						</span>
 					)}
 				</div>

@@ -12,6 +12,7 @@ const VendorBankAccount = () => {
 
 	const [form, setForm] = useState({
 		bank_name: "",
+		acc_name: "",
 		type: "",
 		account_no: "",
 		branch: "",
@@ -41,7 +42,7 @@ const VendorBankAccount = () => {
 				...form
 			}).unwrap();
 			toast.success("ব্যাংক অ্যাকাউন্ট যোগ হয়েছে!");
-			setForm({ bank_name: "", type: "", account_no: "", branch: "", route: "", payment_method_id: "" });
+			setForm({ bank_name: "", type: "", account_no: "", acc_name: "", branch: "", route: "", payment_method_id: "" });
 			refetch();
 		} catch (err) {
 			toast.error(err?.data?.message || "ব্যাংক অ্যাকাউন্ট যোগ ব্যর্থ হয়েছে!");
@@ -74,6 +75,17 @@ const VendorBankAccount = () => {
 						type="text"
 						name="account_no"
 						value={form.account_no}
+						onChange={handleChange}
+						className="w-full border rounded px-3 py-2"
+						required
+					/>
+				</div>
+				<div>
+					<label className="block mb-1 text-sm">অ্যাকাউন্টের নাম</label>
+					<input
+						type="text"
+						name="acc_name"
+						value={form.acc_name}
 						onChange={handleChange}
 						className="w-full border rounded px-3 py-2"
 						required
@@ -116,6 +128,7 @@ const VendorBankAccount = () => {
 							<tr>
 								<th className="text-left">#</th>
 								<th className="text-left">পেমেন্ট মেথড</th>
+								<th className="text-left">অ্যাকাউন্টের নাম</th>
 								<th className="text-left">অ্যাকাউন্ট নম্বর</th>
 								<th className="text-left">ব্রাঞ্চ</th>
 								<th className="text-left">রাউট</th>
@@ -127,10 +140,11 @@ const VendorBankAccount = () => {
 								<tr key={acc.id}>
 									<td>{i + 1}</td>
 									<td>{acc.payment_method?.name || acc.bank_name}</td>
+									<td>{acc.acc_name}</td>
 									<td>{acc.account_no}</td>
 									<td>{acc.branch || "-"}</td>
 									<td>{acc.route || "-"}</td>
-									<td>{acc.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}</td>
+									<td>{acc.is_active ? "Active" : "Inactive"}</td>
 								</tr>
 							))}
 						</tbody>

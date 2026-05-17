@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 
 const menuItems = [
-  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/app/items/category" },
+  { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/app/all-product-category" },
   { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/app/product-assistant" },
   { name: "Boosting Products", icon: <FaRocket className="text-red-500" />, route: "/app/favproducts" },
   { name: "Sales Guideline", icon: <FaBook className="text-green-600" />, route: "/app/sale-guide-line" },

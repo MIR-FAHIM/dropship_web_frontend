@@ -285,10 +285,10 @@ const VendorProductCreate = () => {
                 <label className={labelClass}>স্লাগ</label>
                 <input type="text" name="slug" value={formData.slug} onChange={handleChange} placeholder="product-slug" className={inputClass} />
               </div> */}
-              <div>
+              {/* <div>
                 <label className={labelClass}>SKU</label>
                 <input type="text" name="sku" value={formData.sku} onChange={handleChange} placeholder="SKU" className={inputClass} />
-              </div>
+              </div> */}
               <div>
                 <label className={labelClass}>ট্যাগ</label>
                 <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="কমা দিয়ে আলাদা করুন" className={inputClass} />
@@ -357,7 +357,7 @@ const VendorProductCreate = () => {
           {activeTab === "pricing" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <div>
-                <label className={labelClass}>Dropshipping Price *</label>
+                <label className={labelClass}>Vendor Price *</label>
                 <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
               {/* <div>

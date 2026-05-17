@@ -243,7 +243,9 @@ const ProductDetails = () => {
             <div>
               <p className="product-kicker">{t("product_details.reseller_workspace")}</p>
               <h1 className="product-name">{product?.name}</h1>
-              <p className="product-sku">{t("product_details.sku")}: {product?.barcode || "N/A"}</p>
+              <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#1d4ed8", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em" }}>
+                {t("product_details.sku")}: {product?.sku || "N/A"}
+              </span>
             </div>
             <button
               type="button"
@@ -277,7 +279,7 @@ const ProductDetails = () => {
           <div className="reseller-panel">
             <div className="reseller-head">
               <h2>{t("product_details.set_selling_price")}</h2>
-              <p>{t("product_details.set_selling_price_sub")} {product?.max_resell_price}৳</p>
+              <p>{t("product_details.set_selling_price_sub")} <span style={{ fontWeight: 700, color: "#16a34a", background: "#dcfce7", padding: "1px 8px", borderRadius: "999px", fontSize: "13px" }}>{product?.max_resell_price}৳</span></p>
             </div>
 
             <div className="price-input-row">

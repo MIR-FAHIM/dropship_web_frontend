@@ -73,11 +73,11 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
       </div>
 
       <div className="border-t border-teal-100 pt-3 space-y-1.5">
-        <div className="flex justify-between text-gray-600">
+        {/* <div className="flex justify-between text-gray-600">
           <span className="text-gray-400">COD</span>
           <span className="font-medium text-gray-800">৳{details.collectable_amount}</span>
-        </div>
-        <div className="flex justify-between text-gray-600">
+        </div> */}
+        {/* <div className="flex justify-between text-gray-600">
           <span className="text-gray-400">সংগৃহীত</span>
           <span>৳{details.collected_amount}</span>
         </div>
@@ -88,7 +88,7 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
         <div className="flex justify-between text-gray-600">
           <span className="text-gray-400">COD ফি</span>
           <span>৳{details.cod_fee}</span>
-        </div>
+        </div> */}
         <div className="flex justify-between text-gray-600">
           <span className="text-gray-400">ডেলিভারি প্রচেষ্টা</span>
           <span>{details.attempt}</span>
@@ -220,7 +220,7 @@ const VendorOrderDetails = () => {
                     )}
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="font-bold text-gray-800">{currency(item.line_total)}</p>
+                    <p className="font-bold text-gray-800">{currency(item.unit_price)}</p>
                     {item.shop?.shop_name && (
                       <p className="text-xs text-gray-400 mt-0.5">শপ: {item.shop.shop_name}</p>
                     )}
@@ -229,7 +229,7 @@ const VendorOrderDetails = () => {
               ))}
             </div>
             {/* Totals */}
-            <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl space-y-2 text-sm">
+            {/* <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl space-y-2 text-sm">
               <div className="flex justify-between text-gray-600">
                 <span>সাবটোটাল</span>
                 <span>{currency(order.subtotal)}</span>
@@ -248,7 +248,7 @@ const VendorOrderDetails = () => {
                 <span>মোট</span>
                 <span>{currency(order.total)}</span>
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Status History */}
@@ -358,7 +358,7 @@ const VendorOrderDetails = () => {
                     </span>
                   </div>
                 </div>
-                <div className="border-t border-gray-100 pt-3 space-y-1.5 text-gray-600">
+                {/* <div className="border-t border-gray-100 pt-3 space-y-1.5 text-gray-600">
                   <div className="flex justify-between">
                     <span className="text-gray-400">COD</span>
                     <span className="font-medium text-gray-800">৳{delivery.collectable_amount}</span>
@@ -371,7 +371,7 @@ const VendorOrderDetails = () => {
                     <span>মোট চার্জ</span>
                     <span>৳{delivery.total_fee}</span>
                   </div>
-                </div>
+                </div> */}
               </div>
               {showCarryBeeDetails && (
                 <CarryBeeDetailsPanel

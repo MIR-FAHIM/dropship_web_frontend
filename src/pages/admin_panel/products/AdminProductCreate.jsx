@@ -264,10 +264,10 @@ const AdminProductCreate = () => {
                 <label className={labelClass}>স্লাগ</label>
                 <input type="text" name="slug" value={formData.slug} onChange={handleChange} placeholder="product-slug" className={inputClass} />
               </div> */}
-              <div>
+              {/* <div>
                 <label className={labelClass}>SKU</label>
                 <input type="text" name="sku" value={formData.sku} onChange={handleChange} placeholder="SKU" className={inputClass} />
-              </div>
+              </div> */}
               <div>
                 <label className={labelClass}>ট্যাগ</label>
                 <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="কমা দিয়ে আলাদা করুন" className={inputClass} />

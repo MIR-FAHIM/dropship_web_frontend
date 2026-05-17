@@ -91,7 +91,7 @@ const VendorOrders = () => {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">পণ্য</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">স্ট্যাটাস</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">পেমেন্ট</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">মোট</th>
+            
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">ডেলিভারি</th>
                     <th className="px-4 py-3"></th>
                   </tr>
@@ -140,7 +140,8 @@ const VendorOrders = () => {
                                 <span className="text-gray-700 text-xs leading-tight line-clamp-1 max-w-[150px]">
                                   {item.product_name}
                                 </span>
-                                <span className="text-gray-400 text-xs whitespace-nowrap">×{item.qty}</span>
+                                <span className="text-gray-400 text-xs whitespace-nowrap">× {item.qty}</span>
+                                <span className="text-gray-400 text-xs whitespace-nowrap">× {item.unit_price} TK</span>
                               </div>
                             ))}
                           </div>
@@ -166,13 +167,7 @@ const VendorOrders = () => {
                           </span>
                         </td>
 
-                        {/* Total */}
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
-                          <p className="font-semibold text-gray-800 text-sm">৳{order.total}</p>
-                          {order.shipping_fee > 0 && (
-                            <p className="text-gray-400 text-xs">শিপিং: ৳{order.shipping_fee}</p>
-                          )}
-                        </td>
+                      
 
                         {/* Delivery */}
                         <td className="px-4 py-3 whitespace-nowrap">
