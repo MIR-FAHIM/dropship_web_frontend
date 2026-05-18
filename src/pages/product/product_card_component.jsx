@@ -497,9 +497,7 @@ const ProductCard = ({
 					{categoryLabel}
 				</span>
 				<div className="flex flex-col gap-0.5">
-					<span className="text-[10px] text-blue-400 font-semibold uppercase tracking-wide truncate">
-						{product?.vendor?.shop_name ?? "Unknown Shop"}
-					</span>
+					
 					{product?.vendor?.district?.name && (
 						<span className="text-[10px] text-green-800 font-medium truncate">
 					{product.vendor.district.name}

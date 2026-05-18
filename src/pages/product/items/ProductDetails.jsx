@@ -243,9 +243,7 @@ const ProductDetails = () => {
             <div>
               <p className="product-kicker">{t("product_details.reseller_workspace")}</p>
               <h1 className="product-name">{product?.name}</h1>
-               <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#1d4ed8", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em" }}>
-                Shop: {product?.vendor?.shop_name || "N/A"}
-              </span>
+              
              
               <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#052c03", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em" }}>
                 zone: {product?.vendor?.district?.name || "N/A"}

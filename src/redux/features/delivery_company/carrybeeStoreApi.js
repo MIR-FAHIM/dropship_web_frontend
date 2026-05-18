@@ -40,6 +40,14 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["CarryBeeOrder"],
     }),
+    carrybeeOrderDraftCreate: builder.mutation({
+      query: ({ ...body }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderDraftCreate.path),
+        method: API_ENDPOINTS.deliveryCompanies.carrybeeOrderDraftCreate.method,
+        body,
+      }),
+      invalidatesTags: ["CarryBeeOrder"],
+    }),
 
     cancelCarryBeeOrder: builder.mutation({
       query: ({ companyId, consignmentId }) => ({
@@ -54,6 +62,14 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
         buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderDetails.path, { companyId, consignmentId }),
       providesTags: ["CarryBeeOrder"],
     }),
+
+    getCarryBeeAreaDetails: builder.mutation({
+      query: ({ companyId, query }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.path, { companyId }),
+        method: API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.method,
+        body: { query },
+      }),
+    }),
   }),
 });
 
@@ -64,9 +80,11 @@ export const {
   useListCarryBeeStoresQuery,
   useCreateCarryBeeStoreMutation,
   useCreateCarryBeeOrderMutation,
+  useCarrybeeOrderDraftCreateMutation,
   useCancelCarryBeeOrderMutation,
   useGetCarryBeeOrderDetailsQuery,
   useLazyGetCarryBeeOrderDetailsQuery,
+  useGetCarryBeeAreaDetailsMutation,
 } = carrybeeStoreApi;
 
 export default carrybeeStoreApi;
