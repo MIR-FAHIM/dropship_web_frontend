@@ -12,6 +12,12 @@ const addressApi = baseApi.injectEndpoints({
     getDistricts: builder.query({
       query: (divisionId) => buildEndpointPath(API_ENDPOINTS.address.districts.path, { divisionId }),
     }),
+    calculateDeliveryCharge: builder.query({
+      query: (params) => ({
+        url: API_ENDPOINTS.deliveries.calculateDeliveryCharge.path,
+        params,
+      }),
+    }),
     addAddress: builder.mutation({
       query: (payload) => {
         const formData = new FormData();
@@ -31,6 +37,7 @@ const addressApi = baseApi.injectEndpoints({
   }),
 });
 
-export const { useGetDivisionsQuery, useGetDistrictsQuery, useAddAddressMutation, useGetUserAddressesQuery } = addressApi;
+export const { useGetDivisionsQuery, useGetDistrictsQuery,
+   useCalculateDeliveryChargeQuery, useAddAddressMutation, useGetUserAddressesQuery } = addressApi;
 
 export default addressApi;

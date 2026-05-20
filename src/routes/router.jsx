@@ -32,6 +32,7 @@ import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
 import AdminVendorDetails from "../pages/admin_panel/vendors/AdminVendorDetails";
+import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor_details_tab";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
@@ -156,7 +157,7 @@ export const router = createBrowserRouter([
       { path: "orders", element: <AdminOrders /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "vendors", element: <AdminVendors /> },
-      { path: "vendors/:id", element: <AdminVendorDetails /> },
+      { path: "vendors/:id", element: <VendorDetailsTab /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },

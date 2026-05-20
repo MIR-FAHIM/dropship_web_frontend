@@ -190,6 +190,7 @@ export const API_ENDPOINTS = {
     allByDeliveryMan: define("GET", "/deliveries/all/{deliveryManId}"),
     assignedByDeliveryMan: define("GET", "/deliveries/assigned/{deliveryManId}"),
     completedByDeliveryMan: define("GET", "/deliveries/completed/{deliveryManId}"),
+    calculateDeliveryCharge: define("GET", "/deliveries/delivery-charge"),
   },
 
   transactions: {
@@ -258,6 +259,13 @@ export const API_ENDPOINTS = {
     carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/cancel"),
     carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/details"),
     getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{companyId}"),
+  },
+  vendorCarryBeeCredentials: {
+    add:     define("POST",   "/vendor-carrybee-credentials/add"),
+    list:    define("GET",    "/vendor-carrybee-credentials/list"),
+    details: define("GET",    "/vendor-carrybee-credentials/{id}"),
+    update:  define("PUT",    "/vendor-carrybee-credentials/update/{id}"),
+    delete:  define("DELETE", "/vendor-carrybee-credentials/delete/{id}"),
   },
 };
 

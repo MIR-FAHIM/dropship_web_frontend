@@ -43,20 +43,9 @@ import {
 	useDeleteCartMutation,
 } from "../../redux/features/cart";
 import { imgBaseUrl } from "../../../config";
+import { useGetDivisionsQuery, useGetDistrictsQuery, useCalculateDeliveryChargeQuery } from "../../redux/features/address";
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
-
-const DELIVERY_AREAS = [
-	{ label: "Inside Dhaka", charge: 100 },
-	{ label: "Outside Dhaka", charge: 150 },
-	{ label: "Chittagong", charge: 120 },
-	{ label: "Sylhet", charge: 130 },
-	{ label: "Rajshahi", charge: 130 },
-	{ label: "Khulna", charge: 130 },
-	{ label: "Barishal", charge: 130 },
-	{ label: "Rangpur", charge: 140 },
-	{ label: "Mymensingh", charge: 120 },
-];
 
 /* ══════════════════════════════════════
    Main Component
@@ -73,7 +62,8 @@ const CheckoutPage = () => {
 	const [fullName, setFullName] = useState("");
 	const [phone, setPhone] = useState("");
 	const [address, setAddress] = useState("");
-	const [deliveryArea, setDeliveryArea] = useState(DELIVERY_AREAS[0]);
+	const [selectedDivisionId, setSelectedDivisionId] = useState("");
+	const [selectedDistrictId, setSelectedDistrictId] = useState("");
 	const [paymentMethod, setPaymentMethod] = useState("cod");
 	const [coupon, setCoupon] = useState("");
 	const [couponApplied, setCouponApplied] = useState(false);
@@ -100,6 +90,13 @@ const CheckoutPage = () => {
 	const subtotal = Number(cart?.subtotal ?? cart?.sub_total ?? 0);
 	const resellerProfit = Number(cart?.reseller_profit_total ?? 0);
 
+	const vendorDistrict = useMemo(
+		() => cartItems.find((it) => it?.shop?.district)?.shop?.district ?? null,
+		[cartItems]
+	);
+	const vendorDistrictId = vendorDistrict?.id ?? null;
+	const vendorDistrictName = vendorDistrict?.name ?? "";
+
 	useEffect(() => {
 		const total = cart?.total_items ?? cartItems.length;
 		localStorage.setItem("cart", JSON.stringify(Number(total || 0)));
@@ -110,7 +107,19 @@ const CheckoutPage = () => {
 	const [deleteCart] = useDeleteCartMutation();
 	const [checkoutOrder, { isLoading: loadingCheckout }] = useCheckoutOrderMutation();
 
-	const grandTotal = subtotal - discount + deliveryArea.charge;
+	const { data: divisionsData } = useGetDivisionsQuery();
+	const { data: districtsData } = useGetDistrictsQuery(selectedDivisionId, { skip: !selectedDivisionId });
+	const divisions = divisionsData?.data ?? [];
+	const districts = districtsData?.data ?? [];
+
+	const { data: deliveryChargeData, isFetching: fetchingCharge } = useCalculateDeliveryChargeQuery(
+		{ vendor_district_id: vendorDistrictId, customer_district_id: selectedDistrictId },
+		{ skip: !vendorDistrictId || !selectedDistrictId }
+	);
+	const deliveryCharge = Number(deliveryChargeData?.data?.charge ?? 0);
+	const deliveryZone = deliveryChargeData?.data?.zone ?? "";
+
+	const grandTotal = subtotal - discount + deliveryCharge;
 
 	/* ── handlers ── */
 	const handleUpdateQty = async (item, newQty) => {
@@ -146,18 +155,20 @@ const CheckoutPage = () => {
 	const handlePlaceOrder = async () => {
 		if (!userId) return notify("Please login to place an order.", "warning");
 		if (!cartItems.length) return notify("Your cart is empty.", "warning");
-		if (!fullName.trim()) return notify("Please enter your full name.", "warning");
-		if (!phone.trim()) return notify("Please enter your phone number.", "warning");
-		if (!address.trim()) return notify("Please enter your full address.", "warning");
+		if (!fullName.trim()) return notify("Please enter Customer full name.", "warning");
+		if (!phone.trim()) return notify("Please enter Customer phone number.", "warning");
+		if (!address.trim()) return notify("Please enter Customer full address.", "warning");
+		if (!selectedDistrictId) return notify("Please select Customer district.", "warning");
+		if (deliveryCharge <= 0) return notify("Please select Customer district to calculate the delivery charge.", "warning");
 
 		try {
 			const payload = {
 				user_id: userId,
 				customer_name: fullName.trim(),
 				customer_phone: phone.trim(),
-				shipping_address: `${address.trim()}, ${deliveryArea.label}`,
-				zone: deliveryArea.label,
-				delivery_charge: deliveryArea.charge,
+				shipping_address: address.trim(),
+				zone: deliveryZone,
+				delivery_charge: deliveryCharge,
 				payment_method: paymentMethod,
 				note: note || "",
 			};
@@ -216,7 +227,7 @@ const CheckoutPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter your full name"
+									placeholder="Enter customer full name"
 									value={fullName}
 									onChange={(e) => setFullName(e.target.value)}
 									InputProps={{
@@ -238,7 +249,7 @@ const CheckoutPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter your mobile number"
+									placeholder="Enter customer mobile number"
 									value={phone}
 									onChange={(e) => setPhone(e.target.value)}
 									InputProps={{
@@ -260,7 +271,7 @@ const CheckoutPage = () => {
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter your full address"
+									placeholder="Enter customer full address"
 									value={address}
 									onChange={(e) => setAddress(e.target.value)}
 									InputProps={{
@@ -274,43 +285,103 @@ const CheckoutPage = () => {
 								/>
 							</Box>
 
-							{/* Delivery Area */}
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									Select Delivery Area <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<Select
-									fullWidth
-									size="small"
-									value={deliveryArea.label}
-									onChange={(e) => setDeliveryArea(DELIVERY_AREAS.find((a) => a.label === e.target.value))}
-									startAdornment={
-										<InputAdornment position="start">
-											<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
-										</InputAdornment>
-									}
-									sx={{
-										borderRadius: 2,
-										fontSize: 14,
-										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
-										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-									}}
-								>
-									{DELIVERY_AREAS.map((a) => (
-										<MenuItem key={a.label} value={a.label} sx={{ fontSize: 14 }}>
-											{a.label} — {money(a.charge)}
-										</MenuItem>
+{/* Division */}
+				<Box>
+					<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+						Division <span style={{ color: "#ef4444" }}>*</span>
+					</Typography>
+					<Select
+						fullWidth
+						size="small"
+						displayEmpty
+						value={selectedDivisionId}
+						onChange={(e) => { setSelectedDivisionId(e.target.value); setSelectedDistrictId(""); }}
+						startAdornment={
+							<InputAdornment position="start">
+								<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
+							</InputAdornment>
+						}
+						sx={{
+							borderRadius: 2,
+							fontSize: 14,
+							"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
+							"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+							"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+						}}
+					>
+						<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select division</MenuItem>
+						{divisions.map((d) => (
+							<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
+						))}
+					</Select>
+				</Box>
+
+				{/* District */}
+				<Box>
+					<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+						District <span style={{ color: "#ef4444" }}>*</span>
+					</Typography>
+					<Select
+						fullWidth
+						size="small"
+						displayEmpty
+						disabled={!selectedDivisionId}
+						value={selectedDistrictId}
+						onChange={(e) => setSelectedDistrictId(e.target.value)}
+						sx={{
+							borderRadius: 2,
+							fontSize: 14,
+							"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
+							"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+							"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+						}}
+					>
+						<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select district</MenuItem>
+						{districts.map((d) => (
+							<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
 									))}
 								</Select>
+						{/* Vendor district info */}
+						{vendorDistrictName && (
+							<Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.6 }}>
+								<Typography sx={{ fontSize: 12, color: "#6b7280" }}>Vendor district is —</Typography>
+								<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#374151" }}>{vendorDistrictName}</Typography>
 							</Box>
+						)}
+							{/* Delivery charge feedback */}
+							{(fetchingCharge || deliveryCharge > 0) && (
+								<Box sx={{ mt: 1, borderRadius: 2, px: 2, py: 1.2,
+									background: fetchingCharge ? "#f9fafb" : "linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%)",
+									border: `1px solid ${fetchingCharge ? "#e5e7eb" : "#a5b4fc"}`,
+									display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+									{fetchingCharge ? (
+										<Stack direction="row" spacing={1} alignItems="center">
+											<CircularProgress size={14} sx={{ color: "#6366f1" }} />
+											<Typography sx={{ fontSize: 13, color: "#6b7280" }}>Calculating delivery charge…</Typography>
+										</Stack>
+									) : (
+										<>
+											<Stack direction="row" spacing={0.8} alignItems="center">
+												<LocalShippingIcon sx={{ fontSize: 16, color: "#6366f1" }} />
+												<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
+													{deliveryZone || "Delivery Charge"}
+												</Typography>
+											</Stack>
+											<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#4f46e5" }}>
+												{money(deliveryCharge)}
+											</Typography>
+										</>
+									)}
+								</Box>
+							)}
+						</Box>
 
-							{/* Payment Method */}
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
-									Payment Method
-								</Typography>
-								<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+						{/* Payment Method */}
+						<Box>
+							<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
+								Payment Method
+							</Typography>
+							<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
 									<Paper elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: 2, px: 2, py: 1, mb: 1 }}>
 										<FormControlLabel
 											value="cod"
@@ -468,7 +539,7 @@ const CheckoutPage = () => {
 									{[
 										{ label: "Subtotal", value: money(subtotal) },
 										{ label: "Discount", value: money(discount) },
-										{ label: "Delivery Charge", value: money(deliveryArea.charge) },
+										{ label: "Delivery Charge", value: fetchingCharge ? "…" : money(deliveryCharge) },
 									].map(({ label, value }) => (
 										<Stack key={label} direction="row" justifyContent="space-between" alignItems="center">
 											<Typography sx={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{label}</Typography>

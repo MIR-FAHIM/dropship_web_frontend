@@ -153,7 +153,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
   const [fetchDetails, { data: detailsData, isLoading, isError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
   const details = detailsData?.data?.data;
-
+    const userId = localStorage.getItem("userId");
   const handleToggle = () => {
     if (!showDetails && deliveryInfo) {
       fetchDetails({
@@ -240,6 +240,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
 ────────────────────────────────────────── */
 const AssignCarryBeeModal = ({ order, onClose }) => {
   const companyId = "1";
+  const userId = localStorage.getItem("userId");
   const [storeId, setStoreId] = useState("");
   const [cityId, setCityId] = useState("");
   const [zoneId, setZoneId] = useState("");
@@ -355,8 +356,8 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         collectable_amount: Number(form.collectable_amount),
         is_closed_box: form.is_closed_box,
         is_exchange: form.is_exchange,
-        own_vendor_id: form.own_vendor_id ? Number(form.own_vendor_id) : null,
-        own_created_by: form.own_created_by ? Number(form.own_created_by) : null,
+        own_vendor_id: order.vendor_id ? Number(order.vendor_id) : null,
+        own_created_by: userId ? Number(userId) : null,
         own_admin_status: form.own_admin_status || null,
         own_is_vendor_ready: form.own_is_vendor_ready,
         own_note: form.own_note || null,
@@ -508,12 +509,8 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
 
             {/* Internal / Admin */}
             <div className="space-y-3 border-t border-gray-100 pt-4">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Internal / Admin</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FLD label="Vendor ID" value={form.own_vendor_id} onChange={setField("own_vendor_id")} type="number" />
-                <FLD label="Created By (User ID)" value={form.own_created_by} onChange={setField("own_created_by")} type="number" />
-                <FLD label="Admin Status" value={form.own_admin_status} onChange={setField("own_admin_status")} />
-              </div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Internal / Admin Note</p>
+             
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-gray-600">Note</label>
                 <textarea
@@ -523,7 +520,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
                 />
               </div>
-              <CHK label="Vendor Ready" checked={form.own_is_vendor_ready} onChange={setField("own_is_vendor_ready")} />
+              {/* <CHK label="Vendor Ready" checked={form.own_is_vendor_ready} onChange={setField("own_is_vendor_ready")} /> */}
             </div>
 
             {formError && (

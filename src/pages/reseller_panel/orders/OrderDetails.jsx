@@ -76,7 +76,7 @@ const OrderDetailsPage = () => {
   const st = getStatus(order?.status);
   const subtotal = Number(order?.subtotal ?? 0);
   const profit   = Number(order?.reseller_profit ?? 0);
-  const delivery = Number(order?.delivery_charge ?? 0);
+  const delivery = Number(order?.shipping_fee ?? 0);
   const grand    = Number(order?.grand_total ?? order?.total ?? 0);
   const profitMargin = grand > 0 ? ((profit / grand) * 100).toFixed(1) : 0;
 

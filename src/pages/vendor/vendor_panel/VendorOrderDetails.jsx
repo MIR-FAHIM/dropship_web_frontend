@@ -11,8 +11,12 @@ import {
   Truck,
   ClipboardList,
 } from "lucide-react";
-import { useGetOrderDetailsQuery } from "../../../redux/features/order";
-import { useLazyGetCarryBeeOrderDetailsQuery } from "../../../redux/features/delivery_company/carrybeeStoreApi";
+import { toast } from "react-toastify";
+import { useGetOrderDetailsQuery, useUpdateOrderStatusMutation } from "../../../redux/features/order";
+import {
+  useLazyGetCarryBeeOrderDetailsQuery,
+  useCreateCarryBeeOrderMutation,
+} from "../../../redux/features/delivery_company/carrybeeStoreApi";
 
 const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
   if (isLoading)
@@ -133,6 +137,23 @@ const VendorOrderDetails = () => {
   const [fetchCarryBeeDetails, { data: cbDetailsData, isLoading: cbDetailsLoading, isError: cbDetailsError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
   const cbDetails = cbDetailsData?.data?.data;
+
+  const [createCarryBeeOrder, { isLoading: readySubmitting }] = useCreateCarryBeeOrderMutation();
+  const [updateStatus] = useUpdateOrderStatusMutation();
+
+  const handleReadyForCarryBee = async () => {
+    const confirmed = window.confirm(`Mark order ${order.order_number} as ready for CarryBee?`);
+    if (!confirmed) return;
+    try {
+      const { id, created_at, updated_at, ...draftPayload } = order.carry_bee_draft;
+      await createCarryBeeOrder({ companyId: "1", ...draftPayload }).unwrap();
+      await updateStatus({ id: order.id, status_id: 3 });
+      toast.success("Order successfully submitted to CarryBee!");
+      window.location.reload();
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to submit order to CarryBee.");
+    }
+  };
 
   const handleShowCarryBeeDetails = () => {
     if (!showCarryBeeDetails && order?.delivery_information) {
@@ -322,6 +343,29 @@ const VendorOrderDetails = () => {
               )}
             </div>
           </div>
+
+          {/* Ready for CarryBee */}
+          {order.carry_bee_draft && !delivery && (
+            <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-amber-100 bg-amber-50 flex items-center gap-2">
+                <Truck className="w-4 h-4 text-amber-600" />
+                <h2 className="text-sm font-semibold text-amber-800">CarryBee Delivery</h2>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-xs text-gray-500 mb-3">পণ্য প্রস্তুত হলে নিচের বাটন চাপুন।</p>
+                <button
+                  onClick={handleReadyForCarryBee}
+                  disabled={readySubmitting}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold transition disabled:opacity-60"
+                >
+                  {readySubmitting
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <Truck className="w-4 h-4" />}
+                  Ready Product For CarryBee
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Delivery Info */}
           {delivery && (

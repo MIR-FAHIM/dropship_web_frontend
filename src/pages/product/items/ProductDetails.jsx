@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
@@ -12,6 +13,7 @@ import ProductGallery from "./product_gallery";
 const ProductDetails = () => {
   const { id } = useParams();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
@@ -127,6 +129,7 @@ const ProductDetails = () => {
       if (res?.data?.status === 200 || res?.data?.status === "success") {
         alert(t("product_details.added_to_cart"));
         window.dispatchEvent(new Event("cart-updated"));
+        navigate("/app/checkout");
       }
     } catch (error) {
       console.error("Error adding product to cart:", error);

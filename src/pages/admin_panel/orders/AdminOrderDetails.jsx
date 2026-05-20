@@ -196,7 +196,7 @@ const AdminOrderDetails = () => {
               onClick={() => setCarryBeeOpen(true)}
               className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition"
             >
-              <Truck className="w-4 h-4" /> Assign CarryBee Order to Vendor
+              <Truck className="w-4 h-4" /> Assign CarryBee Order with {order.vendor.shop_name || "Vendor"}
             </button>
           )}
         </div>
