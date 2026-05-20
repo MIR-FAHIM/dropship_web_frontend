@@ -105,7 +105,7 @@ const AdminVendors = () => {
                   <th className="pb-3 font-medium">#</th>
                   <th className="pb-3 font-medium">দোকানের নাম</th>
                   <th className="pb-3 font-medium">মালিক</th>
-                  <th className="pb-3 font-medium">ইমেইল</th>
+                  <th className="pb-3 font-medium">Carrybee</th>
                   <th className="pb-3 font-medium">ফোন</th>
                   {/* <th className="pb-3 font-medium">জোন</th> */}
                   <th className="pb-3 font-medium">লগইন</th>
@@ -121,7 +121,13 @@ const AdminVendors = () => {
                     <td className="py-3 text-gray-600">{vendor.id} user: {vendor.user_id}</td>
                     <td className="py-3 font-medium text-gray-800">{vendor.shop_name}</td>
                     <td className="py-3 text-gray-600">{vendor.owner_name}</td>
-                    <td className="py-3 text-gray-600">{vendor.user?.email}</td>
+                    <td className="py-3">
+                      {vendor.carry_bee_info ? (
+                        <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{vendor.carry_bee_info.client_id}</span>
+                      ) : (
+                        <span className="text-xs text-red-400 italic">No CarryBee info added yet</span>
+                      )}
+                    </td>
                     <td className="py-3 text-gray-600">{vendor.user?.phone}</td>
                     {/* <td className="py-3 text-gray-600 capitalize">{vendor.zone}</td> */}
                     <td className="py-3">

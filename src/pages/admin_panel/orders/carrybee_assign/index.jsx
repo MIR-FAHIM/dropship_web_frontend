@@ -224,12 +224,12 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
         <CarryBeeDetailsPanel
           details={details}
           isLoading={isLoading}
-          isError={isError}
+          isError={isError}     
           onRetry={() => fetchDetails({
             companyId: deliveryInfo.delivery_company_id,
             consignmentId: deliveryInfo.consignment_id,
           })}
-        />
+        /> 
       )}
     </div>
   );
