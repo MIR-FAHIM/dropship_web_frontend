@@ -151,7 +151,7 @@ const HomePage = () => {
                         <button className="bg-white px-6 py-2.5 rounded-lg text-blue-900 font-bold text-base sm:text-lg transition duration-300 hover:bg-gray-200"
                             onClick={() => handleDashboard()}
                         >
-                            {t("Dropshipper Login")}
+                            {t("Dropshipper & Reseller Login")}
                         </button>
 
                     </div>

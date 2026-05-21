@@ -97,11 +97,11 @@ const VendorInfo = ({ vendorId }) => {
         <div className="px-5 py-2 grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
           <div className="py-3 sm:px-4 text-sm">
             <p className="text-xs text-gray-400 mb-1">Division</p>
-            <p className="font-medium text-gray-800">{vendor.division || "—"}</p>
+            <p className="font-medium text-gray-800">{vendor.division?.name || "—"}</p>
           </div>
           <div className="py-3 sm:px-4 text-sm">
             <p className="text-xs text-gray-400 mb-1">District</p>
-            <p className="font-medium text-gray-800">{vendor.district || "—"}</p>
+            <p className="font-medium text-gray-800">{vendor.district?.name || "—"}</p>
           </div>
           <div className="py-3 sm:px-4 text-sm">
             <p className="text-xs text-gray-400 mb-1">Zone</p>

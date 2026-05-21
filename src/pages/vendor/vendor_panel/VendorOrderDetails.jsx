@@ -145,8 +145,9 @@ const VendorOrderDetails = () => {
     const confirmed = window.confirm(`Mark order ${order.order_number} as ready for CarryBee?`);
     if (!confirmed) return;
     try {
+      const vendorId = String(order.vendor_id ?? "");
       const { id, created_at, updated_at, ...draftPayload } = order.carry_bee_draft;
-      await createCarryBeeOrder({ companyId: "1", ...draftPayload }).unwrap();
+      await createCarryBeeOrder({ vendorId, ...draftPayload }).unwrap();
       await updateStatus({ id: order.id, status_id: 3 });
       toast.success("Order successfully submitted to CarryBee!");
       window.location.reload();
@@ -158,7 +159,7 @@ const VendorOrderDetails = () => {
   const handleShowCarryBeeDetails = () => {
     if (!showCarryBeeDetails && order?.delivery_information) {
       fetchCarryBeeDetails({
-        companyId: order.delivery_information.delivery_company_id,
+        vendorId: order.delivery_information.delivery_company_id,
         consignmentId: order.delivery_information.consignment_id,
       });
     }
@@ -423,7 +424,7 @@ const VendorOrderDetails = () => {
                   isLoading={cbDetailsLoading}
                   isError={cbDetailsError}
                   onRetry={() => fetchCarryBeeDetails({
-                    companyId: delivery.delivery_company_id,
+                    vendorId: delivery.delivery_company_id,
                     consignmentId: delivery.consignment_id,
                   })}
                 />

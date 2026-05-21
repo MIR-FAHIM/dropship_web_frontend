@@ -157,7 +157,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
   const handleToggle = () => {
     if (!showDetails && deliveryInfo) {
       fetchDetails({
-        companyId: deliveryInfo.delivery_company_id,
+        vendorId: deliveryInfo.delivery_company_id,
         consignmentId: deliveryInfo.consignment_id,
       });
     }
@@ -226,7 +226,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
           isLoading={isLoading}
           isError={isError}     
           onRetry={() => fetchDetails({
-            companyId: deliveryInfo.delivery_company_id,
+            vendorId: deliveryInfo.delivery_company_id,
             consignmentId: deliveryInfo.consignment_id,
           })}
         /> 
@@ -239,7 +239,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
    Assign CarryBee Modal
 ────────────────────────────────────────── */
 const AssignCarryBeeModal = ({ order, onClose }) => {
-  const companyId = "1";
+  const vendorId = String(order.vendor_id ?? "");
   const userId = localStorage.getItem("userId");
   const [storeId, setStoreId] = useState("");
   const [cityId, setCityId] = useState("");
@@ -267,15 +267,15 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     own_note: "",
   });
 
-  const { data: storesData } = useListCarryBeeStoresQuery(companyId);
+  const { data: storesData } = useListCarryBeeStoresQuery(vendorId);
   const stores = Array.isArray(storesData?.data?.data?.stores) ? storesData.data.data.stores : [];
 
-  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(companyId);
+  const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(vendorId);
   const { data: zonesData, isLoading: zonesLoading } = useGetZonesQuery(
-    { companyId, cityId }, { skip: !cityId }
+    { vendorId, cityId }, { skip: !cityId }
   );
   const { data: areasData, isLoading: areasLoading } = useGetAreasQuery(
-    { companyId, cityId, zoneId }, { skip: !cityId || !zoneId }
+    { vendorId, cityId, zoneId }, { skip: !cityId || !zoneId }
   );
 
   const cityOptions = (citiesData?.data?.data?.cities || []).map((c) => ({ value: c.id, label: c.name }));
@@ -292,7 +292,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     const address = form.recipient_address?.trim();
     if (!address) return;
     try {
-      const res = await getAreaDetails({ companyId, query: address }).unwrap();
+      const res = await getAreaDetails({ vendorId, query: address }).unwrap();
       const { city_id, zone_id } = res?.data ?? {};
       if (city_id) {
         autoZoneRef.current = zone_id ? String(zone_id) : null;
@@ -336,7 +336,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     if (!confirmed) return;
     try {
       const res = await createOrder({
-        companyId,
+        vendorId,
         order_id: order.id,
         store_id: Number(storeId),
         merchant_order_id: order.order_number,

@@ -69,7 +69,7 @@ export const API_ENDPOINTS = {
     addImage: define("POST", "/products/images/add/{id}"),
     deleteImage: define("DELETE", "/products/images/delete/{imageId}"),
   },
-
+ 
   shops: {
     create: define("POST", "/shops/create"),
     list: define("GET", "/shops/list"),
@@ -248,17 +248,17 @@ export const API_ENDPOINTS = {
   deliveryCompanies: {
     list: define("GET", "/delivery-companies/list"),
     carrybeeCities:       define("GET",  "/delivery-companies/carrybee/cities"),
-    carrybeeZones:        define("GET",  "/delivery-companies/carrybee/{companyId}/cities/{cityId}/zones"),
-    carrybeeAreas:        define("GET",  "/delivery-companies/carrybee/{companyId}/cities/{cityId}/zones/{zoneId}/areas"),
-    carrybeeAreaSuggestion: define("GET", "/delivery-companies/carrybee/{companyId}/area-suggestion"),
-    carrybeeAreaDetails: define("POST", "/delivery-companies/carrybee/{companyId}/address-details"),
-    carrybeeStores:       define("GET",  "/delivery-companies/carrybee/{companyId}/stores"),
-    carrybeeStoreCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/stores"),
-    carrybeeOrderCreate:  define("POST", "/delivery-companies/carrybee/{companyId}/orders"),
+    carrybeeZones:        define("GET",  "/delivery-companies/carrybee/{vendorId}/cities/{cityId}/zones"),
+    carrybeeAreas:        define("GET",  "/delivery-companies/carrybee/{vendorId}/cities/{cityId}/zones/{zoneId}/areas"),
+    carrybeeAreaSuggestion: define("GET", "/delivery-companies/carrybee/{vendorId}/area-suggestion"),
+    carrybeeAreaDetails: define("POST", "/delivery-companies/carrybee/{vendorId}/address-details"),
+    carrybeeStores:       define("GET",  "/delivery-companies/carrybee/{vendorId}/stores"),
+    carrybeeStoreCreate:  define("POST", "/delivery-companies/carrybee/{vendorId}/stores"),
+    carrybeeOrderCreate:  define("POST", "/delivery-companies/carrybee/{vendorId}/orders"),
     carrybeeOrderDraftCreate:  define("POST", "/delivery-companies/carrybee/order-drafts"),
-    carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/cancel"),
-    carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{companyId}/orders/{consignmentId}/details"),
-    getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{companyId}"),
+    carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/cancel"),
+    carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/details"),
+    getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{vendorId}"),
   },
   vendorCarryBeeCredentials: {
     add:     define("POST",   "/vendor-carrybee-credentials/add"),

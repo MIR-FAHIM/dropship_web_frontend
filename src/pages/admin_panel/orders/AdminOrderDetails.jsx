@@ -191,12 +191,16 @@ const AdminOrderDetails = () => {
             <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full">
               <Truck className="w-3.5 h-3.5" /> CarryBee Assigned
             </span>
+          ) : order.carry_bee_draft != null ? (
+            <span className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-full">
+              <Truck className="w-3.5 h-3.5" /> CarryBee Order Draft Sent to {order.vendor?.shop_name || "Vendor"}
+            </span>
           ) : (
             <button
               onClick={() => setCarryBeeOpen(true)}
               className="flex items-center gap-2 px-4 py-1.5 text-sm font-medium text-white bg-red-600 rounded-full hover:bg-red-700 transition"
             >
-              <Truck className="w-4 h-4" /> Assign CarryBee Order with {order.vendor.shop_name || "Vendor"}
+              <Truck className="w-4 h-4" /> Assign CarryBee Order with {order.vendor?.shop_name || "Vendor"}
             </button>
           )}
         </div>

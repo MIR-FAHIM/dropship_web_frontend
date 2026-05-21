@@ -4,11 +4,13 @@ import { Store, Package, Truck } from "lucide-react";
 import VendorInfo from "./vendor_info";
 import Products from "./products";
 import CarryBeeInfo from "./carrybee_info";
+import CarryBeeStore from "./carrybee_store";
 
 const TABS = [
   { key: "info",     label: "Vendor Info",    icon: Store },
   { key: "products", label: "Products",        icon: Package },
   { key: "carrybee", label: "CarryBee Info",   icon: Truck },
+  { key: "carrybee_store", label: "CarryBee Store",   icon: Truck },
 ];
 
 const VendorDetailsTab = () => {
@@ -39,6 +41,7 @@ const VendorDetailsTab = () => {
       {activeTab === "info"     && <VendorInfo     vendorId={vendorId} />}
       {activeTab === "products" && <Products       vendorId={vendorId} />}
       {activeTab === "carrybee" && <CarryBeeInfo   vendorId={vendorId} />}
+      {activeTab === "carrybee_store" && <CarryBeeStore vendorId={vendorId} />}
     </div>
   );
 };

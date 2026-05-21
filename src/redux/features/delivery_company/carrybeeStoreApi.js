@@ -8,24 +8,24 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
     }),
 
     getZones: builder.query({
-      query: ({ companyId, cityId }) =>
-        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeZones.path, { companyId, cityId }),
+      query: ({ vendorId, cityId }) =>
+        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeZones.path, { vendorId, cityId }),
     }),
 
     getAreas: builder.query({
-      query: ({ companyId, cityId, zoneId }) =>
-        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreas.path, { companyId, cityId, zoneId }),
+      query: ({ vendorId, cityId, zoneId }) =>
+        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreas.path, { vendorId, cityId, zoneId }),
     }),
 
     listCarryBeeStores: builder.query({
-      query: (companyId) =>
-        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeStores.path, { companyId }),
+      query: (vendorId) =>
+        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeStores.path, { vendorId }),
       providesTags: ["CarryBeeStore"],
     }),
 
     createCarryBeeStore: builder.mutation({
-      query: ({ companyId, ...body }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeStoreCreate.path, { companyId }),
+      query: ({ vendorId, ...body }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeStoreCreate.path, { vendorId }),
         method: API_ENDPOINTS.deliveryCompanies.carrybeeStoreCreate.method,
         body,
       }),
@@ -33,8 +33,8 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
     }),
 
     createCarryBeeOrder: builder.mutation({
-      query: ({ companyId, ...body }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderCreate.path, { companyId }),
+      query: ({ vendorId, ...body }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderCreate.path, { vendorId }),
         method: API_ENDPOINTS.deliveryCompanies.carrybeeOrderCreate.method,
         body,
       }),
@@ -50,22 +50,22 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
     }),
 
     cancelCarryBeeOrder: builder.mutation({
-      query: ({ companyId, consignmentId }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderCancel.path, { companyId, consignmentId }),
+      query: ({ vendorId, consignmentId }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderCancel.path, { vendorId, consignmentId }),
         method: API_ENDPOINTS.deliveryCompanies.carrybeeOrderCancel.method,
       }),
       invalidatesTags: ["CarryBeeOrder"],
     }),
 
     getCarryBeeOrderDetails: builder.query({
-      query: ({ companyId, consignmentId }) =>
-        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderDetails.path, { companyId, consignmentId }),
+      query: ({ vendorId, consignmentId }) =>
+        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeOrderDetails.path, { vendorId, consignmentId }),
       providesTags: ["CarryBeeOrder"],
     }),
 
     getCarryBeeAreaDetails: builder.mutation({
-      query: ({ companyId, query }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.path, { companyId }),
+      query: ({ vendorId, query }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.path, { vendorId }),
         method: API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.method,
         body: { query },
       }),
