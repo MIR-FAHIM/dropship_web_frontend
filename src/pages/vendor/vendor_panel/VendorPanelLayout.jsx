@@ -10,6 +10,7 @@ import {
   Menu,
   LogOut,
   Store,
+  Tag,
   X,
 } from "lucide-react";
 
@@ -39,6 +40,11 @@ const vendorMenuLinks = [
     path: "/vendor-panel/bank-account",
     label: "Bank Account",
     icon: <Wallet className="w-5 h-5" />,
+  },
+  {
+    path: "/vendor-panel/brands",
+    label: "ব্র্যান্ড",
+    icon: <Tag className="w-5 h-5" />,
   },
   {
     path: "/vendor-panel/settings",

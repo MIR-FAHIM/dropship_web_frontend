@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ShieldCheck, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useVendorLoginMutation } from "../../redux/features/vendor_api";
 import { saveToLocalstorage } from "../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
@@ -11,6 +11,7 @@ const VendorLogin = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [vendorLogin, { isLoading }] = useVendorLoginMutation();
 
@@ -122,10 +123,33 @@ const VendorLogin = () => {
               </button>
             </div>
 
+            {/* Privacy Policy Agreement */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="privacy-policy"
+                checked={agreedToPolicy}
+                onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer accent-blue-600"
+              />
+              <label htmlFor="privacy-policy" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
+                আমি{" "}
+                <Link
+                  to="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline font-medium"
+                >
+                  Privacy Policy
+                </Link>{" "}
+                পড়েছি এবং সম্মত আছি।
+              </label>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !agreedToPolicy}
               className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-sm hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (

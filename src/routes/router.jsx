@@ -5,7 +5,8 @@ import RegisterPage from "../pages/auth/register";
 import PrivateRoute from "./PrivateRoute";
 import { pagePaths } from "./pages.routes";
 import HomePage from "../pages/home_page/home_page";
-import PrivacyPolicySalon from "../pages/privacy_policy/salon_privacy_policy";
+import PrivacyPolicyPage from "../pages/privacy_policy/privacy_policy";
+import TermsAndConditions from "../pages/terms/TermsAndConditions";
 import ProductsListHomePage from "../pages/home_page/product_list_home";
 import ProductDetailsHomePage from "../pages/home_page/product_detail_home";
 import ContactPage from "../pages/home_page/contact_us";
@@ -26,6 +27,7 @@ import VendorOrders from "../pages/vendor/vendor_panel/VendorOrders";
 import VendorOrderDetails from "../pages/vendor/vendor_panel/VendorOrderDetails";
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
+import VendorBrands from "../pages/vendor/vendor_panel/VendorBrands";
 import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
 import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
@@ -92,8 +94,12 @@ export const router = createBrowserRouter([
     element: <AboutUs />,
   },
   {
-    path: "/salon-privacy-policy",
-    element: <PrivacyPolicySalon />,
+    path: "/privacy-policy",
+    element: <PrivacyPolicyPage />,
+  },
+  {
+    path: "/terms-and-conditions",
+    element: <TermsAndConditions />,
   },
   {
     path: "/products-home/:id",
@@ -137,7 +143,9 @@ export const router = createBrowserRouter([
       { path: "orders/:id", element: <VendorOrderDetails /> },
       { path: "accounting", element: <VendorAccounting /> },
       { path: "bank-account", element: <VendorBankAccount /> },
+      { path: "brands", element: <VendorBrands /> },
       { path: "settings", element: <VendorSettings /> },
+   
     ],
   },
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { LogIn, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth";
 import { saveToLocalstorage } from "../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
@@ -11,6 +11,7 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
+  const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loginFunc, { isLoading }] = useLoginMutation();
 
@@ -120,10 +121,42 @@ const Login = () => {
               </button>
             </div>
 
+            {/* Privacy Policy & Terms Agreement */}
+            <div className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                id="agree-policy"
+                checked={agreedToPolicy}
+                onChange={(e) => setAgreedToPolicy(e.target.checked)}
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 cursor-pointer accent-[#158E72]"
+              />
+              <label htmlFor="agree-policy" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
+                আমি{" "}
+                <Link
+                  to="/privacy-policy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#158E72] hover:text-emerald-800 underline font-medium"
+                >
+                  Privacy Policy
+                </Link>
+                {" "}এবং{" "}
+                <Link
+                  to="/terms-and-conditions"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#158E72] hover:text-emerald-800 underline font-medium"
+                >
+                  Terms &amp; Conditions
+                </Link>
+                {" "}পড়েছি এবং সম্মত আছি।
+              </label>
+            </div>
+
             {/* Submit */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !agreedToPolicy}
               className="w-full bg-[#158E72] text-white py-3 rounded-lg font-semibold text-sm hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
