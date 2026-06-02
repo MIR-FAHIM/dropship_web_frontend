@@ -103,6 +103,7 @@ const AdminVendors = () => {
               <thead>
                 <tr className="border-b text-left text-gray-500">
                   <th className="pb-3 font-medium">#</th>
+                  <th className="pb-3 font-medium">Code</th>
                   <th className="pb-3 font-medium">দোকানের নাম</th>
                   <th className="pb-3 font-medium">মালিক</th>
                   <th className="pb-3 font-medium">Carrybee</th>
@@ -118,7 +119,8 @@ const AdminVendors = () => {
               <tbody>
                 {filtered.map((vendor, i) => (
                   <tr key={vendor.id} className="border-b last:border-0 hover:bg-gray-50">
-                    <td className="py-3 text-gray-600">{vendor.id} user: {vendor.user_id}</td>
+                    <td className="py-3 text-gray-600">{vendor.id} (u: {vendor.user_id})</td>
+                    <td className="py-3 text-gray-600">v{vendor.id}</td>
                     <td className="py-3 font-medium text-gray-800">{vendor.shop_name}</td>
                     <td className="py-3 text-gray-600">{vendor.owner_name}</td>
                     <td className="py-3">
@@ -137,16 +139,12 @@ const AdminVendors = () => {
                         onClick={async () => {
                           try {
                             const res = await loginAsVendor({ email: vendor.user?.email }).unwrap();
-                            dispatch(setToken({ token: res.data.token }));
                             saveToLocalstorage("token", res.data.token);
                             saveToLocalstorage("userId", res.data.user.id);
                             saveToLocalstorage("vendorUser", JSON.stringify(res.data.user));
                             toast.success(res?.message || "লগইন সফল হয়েছে!");
-                            if (res.data.user.user_type === "vendor") {
-                              navigate("/vendor-panel");
-                            } else {
-                              navigate("/");
-                            }
+                            const url = res.data.user.user_type === "vendor" ? "/vendor-panel" : "/";
+                            window.open(url, "_blank");
                           } catch (err) {
                             toast.error(err?.data?.message || "লগইন ব্যর্থ হয়েছে!");
                           }
@@ -200,7 +198,7 @@ const AdminVendors = () => {
                         className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium"
                       >
                         <Eye className="w-4 h-4" />
-                        বিস্তারিত
+                        Details
                       </button>
                     </td>
                   </tr>

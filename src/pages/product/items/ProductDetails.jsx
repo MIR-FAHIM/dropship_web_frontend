@@ -18,6 +18,7 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
   const [resellerPrice, setResellerPrice] = useState("");
+  const [selectedAttributes, setSelectedAttributes] = useState({});
   const userId = getFromLocalstorage("userId");
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
@@ -117,11 +118,21 @@ const ProductDetails = () => {
       return;
     }
 
+    const selectedAttributeId = (() => {
+      const valueId = Object.values(selectedAttributes).find((v) => v != null);
+      if (valueId == null) return null;
+      const match = product.product_attributes?.find(
+        (a) => Number(a.attribute_value_id) === Number(valueId)
+      );
+      return match ? match.id : null;
+    })();
+
     const cartItem = {
       user_id: localStorage.getItem("userId"),
       product_id: product.id,
       qty: quantity,
       reseller_price: resellerPriceValue || basePrice,
+      ...(selectedAttributeId != null && { attribute_id: selectedAttributeId }),
     };
 
     try {
@@ -284,6 +295,65 @@ const ProductDetails = () => {
               <p className="meta-value">{product?.unit || "N/A"}</p>
             </div>
           </div>
+
+          {/* Product Attributes */}
+          {product?.product_attributes?.length > 0 && (() => {
+            const grouped = product.product_attributes.reduce((acc, attr) => {
+              const name = attr.attribute?.name;
+              if (!name) return acc;
+              if (!acc[name]) acc[name] = [];
+              acc[name].push(attr);
+              return acc;
+            }, {});
+            return (
+              <div className="product-attributes" style={{ marginBottom: "16px" }}>
+                {Object.entries(grouped).map(([attrName, attrs]) => (
+                  <div key={attrName} style={{ marginBottom: "10px" }}>
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#374151", marginBottom: "6px" }}>
+                      {attrName}
+                    </p>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                      {attrs.map((attr) => {
+                        const isSelected = selectedAttributes[attrName] === attr.attribute_value_id;
+                        const isColor = attr.value?.color_code;
+                        return (
+                          <button
+                            key={attr.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedAttributes((prev) => ({
+                                ...prev,
+                                [attrName]: isSelected ? undefined : attr.attribute_value_id,
+                              }))
+                            }
+                            style={{
+                              padding: isColor ? "4px" : "4px 14px",
+                              borderRadius: isColor ? "50%" : "6px",
+                              border: isSelected ? "2px solid #2563eb" : "1.5px solid #d1d5db",
+                              background: isColor ? attr.value.color_code : isSelected ? "#eff6ff" : "#f9fafb",
+                              color: isColor ? "transparent" : isSelected ? "#1d4ed8" : "#374151",
+                              fontWeight: isSelected ? 700 : 500,
+                              fontSize: "13px",
+                              cursor: attr.stock > 0 ? "pointer" : "not-allowed",
+                              opacity: attr.stock > 0 ? 1 : 0.45,
+                              width: isColor ? "28px" : "auto",
+                              height: isColor ? "28px" : "auto",
+                              outline: isSelected && isColor ? "2px solid #2563eb" : "none",
+                              outlineOffset: "2px",
+                            }}
+                            disabled={attr.stock === 0}
+                            title={isColor ? attr.value?.value : undefined}
+                          >
+                            {!isColor && attr.value?.value}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
 
           <div className="reseller-panel">
             <div className="reseller-head">

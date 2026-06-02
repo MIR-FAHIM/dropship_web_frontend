@@ -285,103 +285,105 @@ const CheckoutPage = () => {
 								/>
 							</Box>
 
-{/* Division */}
-				<Box>
-					<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-						Division <span style={{ color: "#ef4444" }}>*</span>
-					</Typography>
-					<Select
-						fullWidth
-						size="small"
-						displayEmpty
-						value={selectedDivisionId}
-						onChange={(e) => { setSelectedDivisionId(e.target.value); setSelectedDistrictId(""); }}
-						startAdornment={
-							<InputAdornment position="start">
-								<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
-							</InputAdornment>
-						}
-						sx={{
-							borderRadius: 2,
-							fontSize: 14,
-							"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
-							"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-							"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-						}}
-					>
-						<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select division</MenuItem>
-						{divisions.map((d) => (
-							<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
-						))}
-					</Select>
-				</Box>
-
-				{/* District */}
-				<Box>
-					<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-						District <span style={{ color: "#ef4444" }}>*</span>
-					</Typography>
-					<Select
-						fullWidth
-						size="small"
-						displayEmpty
-						disabled={!selectedDivisionId}
-						value={selectedDistrictId}
-						onChange={(e) => setSelectedDistrictId(e.target.value)}
-						sx={{
-							borderRadius: 2,
-							fontSize: 14,
-							"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
-							"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-							"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-						}}
-					>
-						<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select district</MenuItem>
-						{districts.map((d) => (
-							<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
+							{/* Division */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									Division <span style={{ color: "#ef4444" }}>*</span>
+								</Typography>
+								<Select
+									fullWidth
+									size="small"
+									displayEmpty
+									value={selectedDivisionId}
+									onChange={(e) => { setSelectedDivisionId(e.target.value); setSelectedDistrictId(""); }}
+									startAdornment={
+										<InputAdornment position="start">
+											<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
+										</InputAdornment>
+									}
+									sx={{
+										borderRadius: 2,
+										fontSize: 14,
+										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
+										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+									}}
+								>
+									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select division</MenuItem>
+									{divisions.map((d) => (
+										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
 									))}
 								</Select>
-						{/* Vendor district info */}
-						{vendorDistrictName && (
-							<Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.6 }}>
-								<Typography sx={{ fontSize: 12, color: "#6b7280" }}>Vendor district is —</Typography>
-								<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#374151" }}>{vendorDistrictName}</Typography>
 							</Box>
-						)}
-							{/* Delivery charge feedback */}
-							{(fetchingCharge || deliveryCharge > 0) && (
-								<Box sx={{ mt: 1, borderRadius: 2, px: 2, py: 1.2,
-									background: fetchingCharge ? "#f9fafb" : "linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%)",
-									border: `1px solid ${fetchingCharge ? "#e5e7eb" : "#a5b4fc"}`,
-									display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-									{fetchingCharge ? (
-										<Stack direction="row" spacing={1} alignItems="center">
-											<CircularProgress size={14} sx={{ color: "#6366f1" }} />
-											<Typography sx={{ fontSize: 13, color: "#6b7280" }}>Calculating delivery charge…</Typography>
-										</Stack>
-									) : (
-										<>
-											<Stack direction="row" spacing={0.8} alignItems="center">
-												<LocalShippingIcon sx={{ fontSize: 16, color: "#6366f1" }} />
-												<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
-													{deliveryZone || "Delivery Charge"}
-												</Typography>
-											</Stack>
-											<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#4f46e5" }}>
-												{money(deliveryCharge)}
-											</Typography>
-										</>
-									)}
-								</Box>
-							)}
-						</Box>
 
-						{/* Payment Method */}
-						<Box>
-							<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
-								Payment Method
-							</Typography>
-							<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+							{/* District */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
+									District <span style={{ color: "#ef4444" }}>*</span>
+								</Typography>
+								<Select
+									fullWidth
+									size="small"
+									displayEmpty
+									disabled={!selectedDivisionId}
+									value={selectedDistrictId}
+									onChange={(e) => setSelectedDistrictId(e.target.value)}
+									sx={{
+										borderRadius: 2,
+										fontSize: 14,
+										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
+										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
+									}}
+								>
+									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select district</MenuItem>
+									{districts.map((d) => (
+										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
+									))}
+								</Select>
+								{/* Vendor district info */}
+								{vendorDistrictName && (
+									<Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.6 }}>
+										<Typography sx={{ fontSize: 12, color: "#6b7280" }}>Vendor district is —</Typography>
+										<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#374151" }}>{vendorDistrictName}</Typography>
+									</Box>
+								)}
+								{/* Delivery charge feedback */}
+								{(fetchingCharge || deliveryCharge > 0) && (
+									<Box sx={{
+										mt: 1, borderRadius: 2, px: 2, py: 1.2,
+										background: fetchingCharge ? "#f9fafb" : "linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%)",
+										border: `1px solid ${fetchingCharge ? "#e5e7eb" : "#a5b4fc"}`,
+										display: "flex", alignItems: "center", justifyContent: "space-between"
+									}}>
+										{fetchingCharge ? (
+											<Stack direction="row" spacing={1} alignItems="center">
+												<CircularProgress size={14} sx={{ color: "#6366f1" }} />
+												<Typography sx={{ fontSize: 13, color: "#6b7280" }}>Calculating delivery charge…</Typography>
+											</Stack>
+										) : (
+											<>
+												<Stack direction="row" spacing={0.8} alignItems="center">
+													<LocalShippingIcon sx={{ fontSize: 16, color: "#6366f1" }} />
+													<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
+														{deliveryZone || "Delivery Charge"}
+													</Typography>
+												</Stack>
+												<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#4f46e5" }}>
+													{money(deliveryCharge)}
+												</Typography>
+											</>
+										)}
+									</Box>
+								)}
+							</Box>
+
+							{/* Payment Method */}
+							<Box>
+								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
+									Payment Method
+								</Typography>
+								<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
 									<Paper elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: 2, px: 2, py: 1, mb: 1 }}>
 										<FormControlLabel
 											value="cod"
@@ -475,8 +477,10 @@ const CheckoutPage = () => {
 													{/* Delete */}
 													<TableCell align="center" sx={{ borderBottom: "1px solid #f3f4f6", width: 48 }}>
 														<IconButton size="small" onClick={() => handleDeleteItem(it)} disabled={isProc}
-															sx={{ color: "#ef4444", background: "#fef2f2", borderRadius: 1.5, width: 30, height: 30,
-																"&:hover": { background: "#fee2e2" } }}>
+															sx={{
+																color: "#ef4444", background: "#fef2f2", borderRadius: 1.5, width: 30, height: 30,
+																"&:hover": { background: "#fee2e2" }
+															}}>
 															<DeleteOutlineIcon sx={{ fontSize: 16 }} />
 														</IconButton>
 													</TableCell>
@@ -485,12 +489,27 @@ const CheckoutPage = () => {
 													<TableCell sx={{ borderBottom: "1px solid #f3f4f6" }}>
 														<Stack direction="row" spacing={1.2} alignItems="center">
 															<Avatar src={imgSrc} variant="rounded"
-																sx={{ width: 44, height: 44, borderRadius: 1.5, border: "1px solid #e5e7eb",
-																	background: "#f3f4f6", "& img": { objectFit: "cover" } }} />
-															<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#1f2937",
-																maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-																{it.product?.name || "Item"}
-															</Typography>
+																sx={{
+																	width: 44, height: 44, borderRadius: 1.5, border: "1px solid #e5e7eb",
+																	background: "#f3f4f6", "& img": { objectFit: "cover" }
+																}} />
+															<Box>
+																<Typography sx={{
+																	fontSize: 13, fontWeight: 700, color: "#1f2937",
+																	maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"
+																}}>
+																	{it.product?.name || "Item"}
+																</Typography>
+																{it.product_attribute?.attribute?.name && it.product_attribute?.value?.value && (
+																	<Typography sx={{
+																		fontSize: 11, fontWeight: 600, color: "#6366f1",
+																		background: "#ede9fe", borderRadius: "999px",
+																		px: 1, py: 0.2, display: "inline-block", mt: 0.4,
+																	}}>
+																		{it.product_attribute.attribute.name}: {it.product_attribute.value.value}
+																	</Typography>
+																)}
+															</Box>
 														</Stack>
 													</TableCell>
 
@@ -499,18 +518,24 @@ const CheckoutPage = () => {
 														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
 															<IconButton size="small" disabled={isProc || (it.qty || 1) <= 1}
 																onClick={() => handleUpdateQty(it, (it.qty || 1) - 1)}
-																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
-																	"&:hover": { background: "#f3f4f6" } }}>
+																sx={{
+																	width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																	"&:hover": { background: "#f3f4f6" }
+																}}>
 																<Typography sx={{ fontSize: 16, lineHeight: 1, color: "#374151" }}>−</Typography>
 															</IconButton>
-															<Box sx={{ minWidth: 28, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
-																display: "grid", placeItems: "center", fontSize: 13, fontWeight: 900, color: "#1f2937" }}>
+															<Box sx={{
+																minWidth: 28, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																display: "grid", placeItems: "center", fontSize: 13, fontWeight: 900, color: "#1f2937"
+															}}>
 																{it.qty || 1}
 															</Box>
 															<IconButton size="small" disabled={isProc}
 																onClick={() => handleUpdateQty(it, (it.qty || 1) + 1)}
-																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
-																	"&:hover": { background: "#f3f4f6" } }}>
+																sx={{
+																	width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1,
+																	"&:hover": { background: "#f3f4f6" }
+																}}>
 																<Typography sx={{ fontSize: 16, lineHeight: 1, color: "#374151" }}>+</Typography>
 															</IconButton>
 														</Stack>

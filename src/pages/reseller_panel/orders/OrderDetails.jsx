@@ -208,6 +208,11 @@ const OrderDetailsPage = () => {
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-gray-800 text-sm leading-tight">{item.product_name || "—"}</p>
                     {item.sku && <p className="text-[10px] text-gray-400 mt-0.5">SKU: {item.sku}</p>}
+                    {item.product_attribute?.attribute?.name && item.product_attribute?.value?.value && (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-semibold border border-indigo-200">
+                        {item.product_attribute.attribute.name}: {item.product_attribute.value.value}
+                      </span>
+                    )}
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-xs text-gray-500">Qty: <b className="text-gray-700">{item.qty}</b></span>
                       <span className="text-xs text-gray-500">{money(item.unit_price)} / pc</span>
@@ -252,6 +257,11 @@ const OrderDetailsPage = () => {
                           <div>
                             <p className="font-bold text-gray-800">{item.product_name || "—"}</p>
                             {item.sku && <p className="text-[10px] text-gray-400">SKU: {item.sku}</p>}
+                            {item.product_attribute?.attribute?.name && item.product_attribute?.value?.value && (
+                              <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-semibold border border-indigo-200">
+                                {item.product_attribute.attribute.name}: {item.product_attribute.value.value}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </td>

@@ -239,6 +239,11 @@ const AdminOrderDetails = () => {
                       <span>Qty: {item.qty}</span>
                       <span>Unit price: {formatCurrency(item.unit_price)}</span>
                     </div>
+                    {item.product_attribute?.attribute?.name && item.product_attribute?.value?.value && (
+                      <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold border border-indigo-200">
+                        {item.product_attribute.attribute.name}: {item.product_attribute.value.value}
+                      </span>
+                    )}
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-gray-800 text-sm">
