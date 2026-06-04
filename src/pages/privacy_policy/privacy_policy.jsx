@@ -7,7 +7,7 @@ const PrivacyPolicyPage = () => {
         {/* Header */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-100 mb-4">
-            <span className="text-2xl">ðŸ”</span>
+            <span className="text-2xl">&#128274;</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Privacy Policy</h1>
           <p className="text-base text-blue-600 font-semibold">Platform: Reseller Brain</p>
@@ -53,7 +53,7 @@ const PrivacyPolicyPage = () => {
                   <li>Bank account details (if provided)</li>
                 </ul>
                 <p className="text-xs text-blue-600 mt-2 bg-blue-50 rounded-lg px-3 py-2">
-                  ðŸ‘‰ Note: à¦†à¦®à¦°à¦¾ sensitive financial à¦¤à¦¥à§à¦¯ (like card details) directly store à¦•à¦°à¦¿ à¦¨à¦¾ à¦¯à¦¦à¦¿ third-party gateway à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦•à¦°à¦¾ à¦¹à¦¯à¦¼à¥¤
+                  Note: We do not directly store sensitive financial information (like card details) when a third-party payment gateway is used.
                 </p>
               </div>
               <div>
@@ -107,7 +107,7 @@ const PrivacyPolicyPage = () => {
                 <p className="text-sm text-gray-600">If required by law or investigation</p>
               </div>
               <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
-                ðŸ‘‰ We do not sell or rent your personal data.
+                We do not sell or rent your personal data.
               </p>
             </div>
           </div>
@@ -139,7 +139,7 @@ const PrivacyPolicyPage = () => {
               <li>Improve platform performance</li>
             </ul>
             <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
-              ðŸ‘‰ This data is collected in aggregate form and is not personally identifiable.
+              This data is collected in aggregate form and is not personally identifiable.
             </p>
           </div>
 
@@ -148,9 +148,9 @@ const PrivacyPolicyPage = () => {
             <h2 className="text-lg font-bold text-gray-800 mb-3">7. User Responsibilities</h2>
             <p className="text-sm text-gray-600 mb-2">Users must ensure:</p>
             <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-              <li>à¦¤à¦¥à§à¦¯ à¦¸à¦ à¦¿à¦•à¦­à¦¾à¦¬à§‡ à¦ªà§à¦°à¦¦à¦¾à¦¨ à¦•à¦°à¦¾</li>
-              <li>à¦…à¦¨à§à¦¯ à¦•à¦¾à¦°à§‹ à¦¤à¦¥à§à¦¯ à¦…à¦¨à§à¦®à¦¤à¦¿ à¦›à¦¾à¦¡à¦¼à¦¾ à¦¬à§à¦¯à¦¬à¦¹à¦¾à¦° à¦¨à¦¾ à¦•à¦°à¦¾</li>
-              <li>Account security à¦¬à¦œà¦¾à¦¯à¦¼ à¦°à¦¾à¦–à¦¾</li>
+              <li>Providing accurate and truthful information</li>
+              <li>Not using others&apos; data without their consent</li>
+              <li>Maintaining account security</li>
             </ul>
           </div>
 
@@ -174,13 +174,13 @@ const PrivacyPolicyPage = () => {
               <li>Request account deletion</li>
             </ul>
             <p className="text-xs text-blue-600 bg-blue-50 rounded-lg px-3 py-2">
-              ðŸ‘‰ Requests can be made via our support team.
+              Requests can be made via our support team.
             </p>
           </div>
 
           {/* Section 10 */}
           <div className="p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">10. Children's Privacy</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-3">10. Children&apos;s Privacy</h2>
             <p className="text-sm text-gray-600">
               Our platform is not intended for individuals under 18 years old. We do not knowingly collect data from minors.
             </p>
@@ -191,9 +191,9 @@ const PrivacyPolicyPage = () => {
             <h2 className="text-lg font-bold text-gray-800 mb-3">11. Data Breach Policy</h2>
             <p className="text-sm text-gray-600 mb-2">In case of any data breach:</p>
             <ul className="list-disc pl-5 text-sm text-gray-600 space-y-1">
-              <li>à¦†à¦®à¦°à¦¾ à¦¦à§à¦°à§à¦¤ à¦¤à¦¦à¦¨à§à¦¤ à¦•à¦°à¦¬à§‹</li>
-              <li>à¦ªà§à¦°à¦¯à¦¼à§‹à¦œà¦¨ à¦¹à¦²à§‡ affected users-à¦¦à§‡à¦° notify à¦•à¦°à¦¾ à¦¹à¦¬à§‡</li>
-              <li>Necessary corrective actions à¦¨à§‡à¦“à¦¯à¦¼à¦¾ à¦¹à¦¬à§‡</li>
+              <li>We will promptly investigate the incident</li>
+              <li>Affected users will be notified if necessary</li>
+              <li>Necessary corrective actions will be taken</li>
             </ul>
           </div>
 
@@ -210,9 +210,9 @@ const PrivacyPolicyPage = () => {
           <div className="p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-3">13. Contact Information</h2>
             <div className="text-sm text-gray-600 space-y-1">
-              <p>ðŸ“§ Email: <a href="mailto:Support@resellerbrain.com" className="text-blue-600 hover:underline">Support@resellerbrain.com</a></p>
-              <p>ðŸ“ž Phone: <a href="tel:+8801941606310" className="text-blue-600 hover:underline">+8801941606310</a></p>
-              <p>ðŸ“ Address: House 1, Road 13, Sector 13, Garib E Nawaz Avenue, Uttara, Dhaka-1230, Bangladesh</p>
+              <p>&#128231; Email: <a href="mailto:Support@resellerbrain.com" className="text-blue-600 hover:underline">Support@resellerbrain.com</a></p>
+              <p>&#128222; Phone: <a href="tel:+8801941606310" className="text-blue-600 hover:underline">+8801941606310</a></p>
+              <p>&#128205; Address: House 1, Road 13, Sector 13, Garib E Nawaz Avenue, Uttara, Dhaka-1230, Bangladesh</p>
             </div>
           </div>
 

@@ -267,6 +267,14 @@ export const API_ENDPOINTS = {
     update:  define("PUT",    "/vendor-carrybee-credentials/update/{id}"),
     delete:  define("DELETE", "/vendor-carrybee-credentials/delete/{id}"),
   },
+
+  supportTickets: {
+    add:          define("POST", "/support-tickets/add"),
+    byUser:       define("GET",  "/support-tickets/user/{userId}"),
+    edit:         define("PUT",  "/support-tickets/edit/{id}"),
+    all:          define("GET",  "/support-tickets/all"),
+    statusChange: define("POST", "/support-tickets/status-change/{id}"),
+  },
 };
 
 export const buildEndpointPath = (template, params = {}) =>

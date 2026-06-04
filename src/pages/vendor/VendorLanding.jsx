@@ -88,6 +88,12 @@ const VendorLanding = () => {
             কিভাবে কাজ করে
           </a>
           <button
+            onClick={() => navigate("/vendor-login")}
+            className="border border-blue-600 text-blue-600 px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-50 transition"
+          >
+            লগইন
+          </button>
+          <button
             onClick={() => navigate("/vendor-register")}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
           >

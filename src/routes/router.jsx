@@ -56,6 +56,7 @@ import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/Ad
 import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
+import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -174,6 +175,7 @@ export const router = createBrowserRouter([
       { path: "settings", element: <AdminSettings /> },
       { path: "my-business-info", element: <MyBusinessInfo /> },
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
+      { path: "support-tickets", element: <AdminSupportTickets /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
     ],

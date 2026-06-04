@@ -101,11 +101,7 @@ const menuLinks = [
     ]
    
   },
-  {
-    path: "/app/contact-us",
-    label: "Contact Developer",
-    icon: <PiUsers />,
-  },
+
 ];
 
 const App = () => {

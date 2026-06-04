@@ -26,6 +26,7 @@ import {
   ListChecks,
   Bell,
   Building2,
+  TicketCheck,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -106,6 +107,11 @@ const adminMenuLinks = [
         icon: <Building2 className="w-4 h-4" />,
       },
     ],
+  },
+  {
+    path: "/admin-panel/support-tickets",
+    label: "Support Tickets",
+    icon: <TicketCheck className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/tasks",
