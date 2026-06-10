@@ -1,26 +1,23 @@
 import React, { useState } from "react";
-import { Store, Search, CheckCircle, Clock, Loader2, Eye } from "lucide-react";
+import { Store, Search, XCircle, Loader2, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetVendorListQuery, useVendorIsActiveMutation, useLoginAsVendorMutation } from "../../../redux/features/vendor_api";
 import { useDispatch } from "react-redux";
-import { setToken } from "../../../redux/slices/authSlice";
 import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { toast } from "react-toastify";
 
-const AdminVendors = () => {
+const InactiveAdminVendors = () => {
   const { data, isLoading, error } = useGetVendorListQuery();
   const [vendorIsActive, { isLoading: isActiveLoading }] = useVendorIsActiveMutation();
   const [activeVendorId, setActiveVendorId] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [loginAsVendor, { isLoading: isLoginLoading }] = useLoginAsVendorMutation();
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const vendors = data?.data || [];
-  const activeVendors = vendors.filter((v) => v.is_active === 1);
-  const activeCount = activeVendors.length;
+  const inactive = vendors.filter((v) => v.is_active === 0);
 
-  const filtered = activeVendors.filter((v) => {
+  const filtered = inactive.filter((v) => {
     const term = searchTerm.toLowerCase();
     return (
       v.shop_name?.toLowerCase().includes(term) ||
@@ -34,7 +31,7 @@ const AdminVendors = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-xl font-bold text-gray-800">ভেন্ডর ব্যবস্থাপনা</h1>
+        <h1 className="text-xl font-bold text-gray-800">নিষ্ক্রিয় ভেন্ডর</h1>
         <div className="relative w-full sm:w-64">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -47,24 +44,15 @@ const AdminVendors = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Card */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center text-white">
-            <CheckCircle className="w-5 h-5" />
+          <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center text-white">
+            <XCircle className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-2xl font-bold text-gray-800">{activeCount}</p>
-            <p className="text-xs text-gray-500 font-medium">সক্রিয়</p>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-lg bg-yellow-500 flex items-center justify-center text-white">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-gray-800">{vendors.length}</p>
-            <p className="text-xs text-gray-500 font-medium">মোট ভেন্ডর</p>
+            <p className="text-2xl font-bold text-gray-800">{inactive.length}</p>
+            <p className="text-xs text-gray-500 font-medium">নিষ্ক্রিয় ভেন্ডর</p>
           </div>
         </div>
       </div>
@@ -84,9 +72,8 @@ const AdminVendors = () => {
           <div className="text-center py-16">
             <Store className="w-14 h-14 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm font-medium">
-              {searchTerm ? "কোনো ভেন্ডর পাওয়া যায়নি।" : "এখনো কোনো ভেন্ডর নেই।"}
+              {searchTerm ? "কোনো ভেন্ডর পাওয়া যায়নি।" : "কোনো নিষ্ক্রিয় ভেন্ডর নেই।"}
             </p>
-            <p className="text-gray-400 text-xs mt-1">ভেন্ডর রেজিস্টার করলে এখানে তালিকায় দেখা যাবে।</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -99,7 +86,6 @@ const AdminVendors = () => {
                   <th className="pb-3 font-medium">মালিক</th>
                   <th className="pb-3 font-medium">Carrybee</th>
                   <th className="pb-3 font-medium">ফোন</th>
-                  {/* <th className="pb-3 font-medium">জোন</th> */}
                   <th className="pb-3 font-medium">লগইন</th>
                   <th className="pb-3 font-medium">ধরন</th>
                   <th className="pb-3 font-medium">স্ট্যাটাস</th>
@@ -108,7 +94,7 @@ const AdminVendors = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((vendor, i) => (
+                {filtered.map((vendor) => (
                   <tr key={vendor.id} className="border-b last:border-0 hover:bg-gray-50">
                     <td className="py-3 text-gray-600">{vendor.id} (u: {vendor.user_id})</td>
                     <td className="py-3 text-gray-600">v{vendor.id}</td>
@@ -122,7 +108,6 @@ const AdminVendors = () => {
                       )}
                     </td>
                     <td className="py-3 text-gray-600">{vendor.user?.phone}</td>
-                    {/* <td className="py-3 text-gray-600 capitalize">{vendor.zone}</td> */}
                     <td className="py-3">
                       <button
                         className="px-3 py-1.5 text-xs rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 font-medium"
@@ -161,20 +146,12 @@ const AdminVendors = () => {
                             }
                           }}
                         />
-                        <div
-                          className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer peer-checked:bg-green-500 transition-colors duration-200 relative`}
-                        >
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-red-500 rounded-full peer peer-checked:bg-green-500 transition-colors duration-200 relative">
                           <div
-                            className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${vendor.is_active ? 'translate-x-5' : ''}`}
+                            className={`absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-200 ${vendor.is_active ? "translate-x-5" : ""}`}
                           ></div>
                         </div>
-                        <span
-                          className={`ml-2 text-xs font-medium ${
-                            vendor.is_active ? "text-green-700" : "text-red-700"
-                          }`}
-                        >
-                          {vendor.is_active ? "সক্রিয়" : "নিষ্ক্রিয়"}
-                        </span>
+                        <span className="ml-2 text-xs font-medium text-red-700">নিষ্ক্রিয়</span>
                         {isActiveLoading && activeVendorId === vendor.id && (
                           <Loader2 className="w-4 h-4 ml-2 text-gray-400 animate-spin" />
                         )}
@@ -203,4 +180,4 @@ const AdminVendors = () => {
   );
 };
 
-export default AdminVendors;
+export default InactiveAdminVendors;

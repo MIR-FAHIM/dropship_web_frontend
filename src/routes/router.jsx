@@ -33,6 +33,7 @@ import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
+import InactiveAdminVendors from "../pages/admin_panel/vendors/InactiveAdminVendors";
 import AdminVendorDetails from "../pages/admin_panel/vendors/AdminVendorDetails";
 import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor_details_tab";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
@@ -166,6 +167,7 @@ export const router = createBrowserRouter([
       { path: "orders", element: <AdminOrders /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "vendors", element: <AdminVendors /> },
+      { path: "vendors/inactive", element: <InactiveAdminVendors /> },
       { path: "vendors/:id", element: <VendorDetailsTab /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
       { path: "employees", element: <AdminEmployees /> },

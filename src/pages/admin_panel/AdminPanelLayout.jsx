@@ -74,7 +74,12 @@ const adminMenuLinks = [
   },
   {
     path: "/admin-panel/vendors",
-    label: "ভেন্ডর",
+    label: "সক্রিয় ভেন্ডর",
+    icon: <Store className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/vendors/inactive",
+    label: "নিষ্ক্রিয় ভেন্ডর",
     icon: <Store className="w-5 h-5" />,
   },
   {
