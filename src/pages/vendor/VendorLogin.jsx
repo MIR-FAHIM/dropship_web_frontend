@@ -61,7 +61,7 @@ const VendorLogin = () => {
               <ShieldCheck className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-800">ভেন্ডর লগইন</h2>
+              <h2 className="text-xl font-bold text-gray-800">Supplier লগইন</h2>
               <p className="text-xs text-gray-500">আপনার ভেন্ডর অ্যাকাউন্টে প্রবেশ করুন</p>
             </div>
           </div>

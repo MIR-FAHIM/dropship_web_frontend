@@ -249,6 +249,26 @@ const ProductDetails = () => {
             >
               {t("product_details.copy_description")}
             </button>
+            {product?.video_link && (
+              <div style={{ marginTop: "8px", display: "flex", alignItems: "center", gap: "8px", background: "#f1f5f9", borderRadius: "8px", padding: "8px 12px" }}>
+                <a
+                  href={product.video_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: "12px", color: "#2563eb", wordBreak: "break-all", flex: 1 }}
+                >
+                  {product.video_link}
+                </a>
+                <button
+                  type="button"
+                  className="action-btn secondary"
+                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                  onClick={() => handleCopyText(product.video_link)}
+                >
+                  ভিডিও লিংক কপি
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

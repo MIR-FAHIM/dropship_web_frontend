@@ -79,7 +79,7 @@ const VendorLanding = () => {
     <div className="bg-white min-h-screen font-sans">
       {/* Navbar */}
       <nav className="flex justify-between items-center px-6 sm:px-10 py-4 bg-white shadow-md sticky top-0 z-50">
-        <h1 className="text-2xl font-bold text-blue-600">ResellerBrain</h1>
+        <h1 className="text-2xl font-bold text-blue-600 cursor-pointer" onClick={() => navigate("/")}>ResellerBrain</h1>
         <div className="flex items-center gap-4">
           <a href="#benefits" className="hidden sm:inline text-gray-600 hover:text-blue-600 text-sm font-medium">
             সুবিধাসমূহ
@@ -97,7 +97,7 @@ const VendorLanding = () => {
             onClick={() => navigate("/vendor-register")}
             className="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
           >
-            ভেন্ডর হিসেবে রেজিস্টার করুন
+            Supplier হিসেবে রেজিস্টার করুন
           </button>
         </div>
       </nav>
@@ -106,7 +106,7 @@ const VendorLanding = () => {
       <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20 sm:py-28">
         <div className="max-w-5xl mx-auto px-6 text-center">
           <span className="inline-block bg-white/20 text-white text-xs sm:text-sm font-semibold px-4 py-1.5 rounded-full mb-6">
-            ভেন্ডর অনবোর্ডিং — দেশের দ্রুত বর্ধনশীল মার্কেটপ্লেসে যোগ দিন
+            Supplier অনবোর্ডিং — দেশের দ্রুত বর্ধনশীল মার্কেটপ্লেসে যোগ দিন
           </span>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold leading-tight">
             আপনার ব্যবসা বাড়ান <br className="hidden sm:block" />
@@ -121,7 +121,7 @@ const VendorLanding = () => {
               onClick={() => navigate("/vendor-register")}
               className="bg-yellow-400 text-blue-900 px-8 py-3.5 rounded-lg font-bold text-lg hover:bg-yellow-500 transition flex items-center justify-center gap-2"
             >
-              ভেন্ডর হোন <ArrowRight className="w-5 h-5" />
+              Supplier হোন <ArrowRight className="w-5 h-5" />
             </button>
             <a
               href="#how-it-works"
@@ -129,6 +129,28 @@ const VendorLanding = () => {
             >
               আরো জানুন
             </a>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Section */}
+      <section className="py-14 bg-white">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
+            কিভাবে ResellerBrain কাজ করে দেখুন
+          </h2>
+          <p className="text-gray-500 text-sm sm:text-base mb-8">
+            আমাদের প্ল্যাটফর্ম সম্পর্কে আরো জানতে ভিডিওটি দেখুন।
+          </p>
+          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+            <iframe
+              className="absolute top-0 left-0 w-full h-full rounded-2xl shadow-lg"
+              src="https://www.youtube.com/embed/AP5dFVjcCFI"
+              title="ResellerBrain Overview"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
           </div>
         </div>
       </section>
@@ -156,7 +178,7 @@ const VendorLanding = () => {
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">
-              ভেন্ডররা কেন ResellerBrain বেছে নেন
+              Suppliers কেন ResellerBrain বেছে নেন
             </h2>
             <p className="mt-3 text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
               ResellerBrain পণ্য সরবরাহকারীদের সরাসরি সারা বাংলাদেশের বিশাল রিসেলার নেটওয়ার্কের সাথে সংযুক্ত করে।
@@ -237,7 +259,7 @@ const VendorLanding = () => {
         <div className="max-w-5xl mx-auto px-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">কিভাবে কাজ করে</h2>
           <p className="mt-3 text-gray-600 text-sm sm:text-base">
-            ভেন্ডর হিসেবে শুরু করা খুবই সহজ — শুধু এই চারটি ধাপ অনুসরণ করুন।
+            Supplier হিসেবে শুরু করা খুবই সহজ — শুধু এই চারটি ধাপ অনুসরণ করুন।
           </p>
 
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -256,7 +278,7 @@ const VendorLanding = () => {
       <section className="py-16 bg-gray-50">
         <div className="max-w-5xl mx-auto px-6">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 text-center">
-            আমাদের ভেন্ডরদের অভিজ্ঞতা
+            আমাদের Supplierদের অভিজ্ঞতা
           </h2>
           <p className="mt-3 text-gray-600 text-center text-sm sm:text-base">
             যারা ইতোমধ্যে ResellerBrain-এর সাথে ব্যবসা বাড়াচ্ছেন, তাদের কথা শুনুন।

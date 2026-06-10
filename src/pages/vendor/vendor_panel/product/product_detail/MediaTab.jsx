@@ -1,14 +1,32 @@
 import React, { useState } from "react";
 import { Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useAddProductImageMutation } from "../../../../../redux/features/product";
+import { useAddProductImageMutation, useUpdateProductMutation } from "../../../../../redux/features/product";
 import MediaPickerModal from "../../../../../components/shared/MediaPickerModal";
 import { imgBaseUrl } from "../../../../../../config";
 
 const MediaTab = ({ product, productId }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [editingVideo, setEditingVideo] = useState(false);
+  const [videoLink, setVideoLink] = useState(product?.video_link || "");
+  const [updatingVideo, setUpdatingVideo] = useState(false);
+
   const [addProductImage] = useAddProductImageMutation();
+  const [updateProduct] = useUpdateProductMutation();
+
+  const handleVideoLinkSave = async () => {
+    setUpdatingVideo(true);
+    try {
+      await updateProduct({ id: productId, video_link: videoLink }).unwrap();
+      toast.success("ভিডিও লিংক আপডেট হয়েছে!");
+      setEditingVideo(false);
+    } catch (err) {
+      toast.error(err?.data?.message || "ভিডিও লিংক আপডেট ব্যর্থ হয়েছে!");
+    } finally {
+      setUpdatingVideo(false);
+    }
+  };
 
   const handleGalleryImageSelect = async (file) => {
     if (!file?.id) return;
@@ -78,8 +96,48 @@ const MediaTab = ({ product, productId }) => {
 
       {/* Video */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">ভিডিও লিংক</h3>
-        {product.video_link ? (
+        <div className="flex items-center gap-3 mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">ভিডিও লিংক</h3>
+          {!editingVideo && (
+            <button
+              type="button"
+              className="text-xs text-blue-600 hover:underline border px-2 py-1 rounded"
+              onClick={() => {
+                setVideoLink(product?.video_link || "");
+                setEditingVideo(true);
+              }}
+            >
+              {product?.video_link ? "পরিবর্তন করুন" : "যোগ করুন"}
+            </button>
+          )}
+        </div>
+        {editingVideo ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="url"
+              value={videoLink}
+              onChange={(e) => setVideoLink(e.target.value)}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className="flex-1 text-sm border border-gray-300 rounded px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+            <button
+              type="button"
+              onClick={handleVideoLinkSave}
+              disabled={updatingVideo}
+              className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 disabled:opacity-50"
+            >
+              {updatingVideo ? "সংরক্ষণ হচ্ছে..." : "সংরক্ষণ"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditingVideo(false)}
+              disabled={updatingVideo}
+              className="text-xs border px-3 py-1.5 rounded hover:bg-gray-50 disabled:opacity-50"
+            >
+              বাতিল
+            </button>
+          </div>
+        ) : product?.video_link ? (
           <a
             href={product.video_link}
             target="_blank"

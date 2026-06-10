@@ -78,7 +78,7 @@ const VendorPanelLayout = () => {
       {/* Vendor Badge */}
       {(sidebarOpen || isMobile) && (
         <div className="px-4 py-3 border-b border-gray-700">
-          <p className="text-xs text-gray-400 uppercase tracking-wide">ভেন্ডর প্যানেল</p>
+          <p className="text-xs text-gray-400 uppercase tracking-wide">Supplier প্যানেল</p>
         </div>
       )}
 
@@ -166,7 +166,7 @@ const VendorPanelLayout = () => {
                 }`}
               />
             </button>
-            <h2 className="text-base font-semibold text-gray-800">ভেন্ডর ড্যাশবোর্ড</h2>
+            <h2 className="text-base font-semibold text-gray-800">Supplier ড্যাশবোর্ড</h2>
           </div>
 
           <div className="flex items-center gap-3">

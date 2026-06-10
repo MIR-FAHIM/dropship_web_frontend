@@ -132,7 +132,7 @@ const HomePage = () => {
                                     <button onClick={() => handleChangeLanguage("en")} className="px-2.5 py-1 rounded-md hover:bg-white hover:shadow-sm transition-all">EN</button>
                                     <button onClick={() => handleChangeLanguage("bd")} className="px-2.5 py-1 rounded-md hover:bg-white hover:shadow-sm transition-all">বাং</button>
                                 </div>
-                                <button onClick={() => navigate("/vendor")} className="hidden sm:block text-sm font-medium text-gray-600 hover:text-blue-600 px-3 py-2 transition-colors">ভেন্ডর</button>
+                                <button onClick={() => navigate("/vendor")} className="text-sm font-semibold bg-orange-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">Supplier Panel</button>
                                 <button
                                     onClick={handleDashboard}
                                     className="text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
