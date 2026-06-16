@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useGetDivisionsQuery, useGetDistrictsQuery } from "../../redux/features/address";
 import { Store, ArrowRight, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useVendorRegisterMutation } from "../../redux/features/vendor_api";
 import { toast } from "sonner";
 
@@ -332,8 +332,14 @@ const VendorRegister = () => {
               />
               <label htmlFor="terms" className="text-xs text-gray-600 leading-relaxed">
                 আমি ResellerBrain-এর{" "}
-                <span className="text-blue-600 underline cursor-pointer">সেবার শর্তাবলী</span> এবং{" "}
-                <span className="text-blue-600 underline cursor-pointer">গোপনীয়তা নীতি</span> পড়েছি এবং সম্মত আছি।
+                <Link to="/terms-and-conditions" className="text-blue-600 underline cursor-pointer">
+                  সেবার শর্তাবলী
+                </Link>{" "}
+                এবং{" "}
+                <Link to="/privacy-policy" className="text-blue-600 underline cursor-pointer">
+                  গোপনীয়তা নীতি
+                </Link>{" "}
+                পড়েছি এবং সম্মত আছি।
               </label>
             </div>
 

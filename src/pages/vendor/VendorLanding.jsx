@@ -518,8 +518,8 @@ const VendorLanding = () => {
           <p className="text-sm">&copy; {new Date().getFullYear()} ResellerBrain। সর্বস্বত্ব সংরক্ষিত।</p>
           <div className="flex gap-6 text-sm">
             <a href="/contact-us-form" className="hover:text-white transition">যোগাযোগ করুন</a>
-            <a href="#" className="hover:text-white transition">গোপনীয়তা নীতি</a>
-            <a href="#" className="hover:text-white transition">সেবার শর্তাবলী</a>
+            <a href="/privacy-policy" className="hover:text-white transition">গোপনীয়তা নীতি</a>
+            <a href="/terms-and-conditions" className="hover:text-white transition">সেবার শর্তাবলী</a>
           </div>
         </div>
       </footer>
