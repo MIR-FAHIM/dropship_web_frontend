@@ -60,7 +60,7 @@ const initialForm = {
   shipping_cost: "",
   cash_on_delivery: 1,
   refundable: 0,
-  published: 0,
+  published: 1,
   featured: 0,
   seller_featured: 0,
   todays_deal: 0,
@@ -167,7 +167,7 @@ const VendorProductCreate = () => {
     payload.append("unit_price", formData.unit_price);
     payload.append("purchase_price", formData.purchase_price || "");
     payload.append("max_resell_price", formData.max_resell_price || "");
-    payload.append("current_stock", formData.current_stock || "");
+    payload.append("current_stock", formData.current_stock || "2");
     payload.append("unit", formData.unit);
     payload.append("weight", formData.weight);
     payload.append("discount", formData.discount);
@@ -222,14 +222,14 @@ const VendorProductCreate = () => {
           </button>
           <h1 className="text-xl font-bold text-gray-800">নতুন পণ্য তৈরি</h1>
         </div>
-        <button
+        {/* <button
           onClick={handleSubmit}
           disabled={creating}
           className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold hover:bg-blue-700 transition disabled:opacity-50"
         >
           {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           পণ্য তৈরি করুন
-        </button>
+        </button> */}
       </div>
 
       {/* Tabs */}

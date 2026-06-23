@@ -28,6 +28,8 @@ import ContactUsPage from "../pages/contactus/contact_us_form";
 import CheckoutPage from "../pages/checkout/checkout";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
+import AllStore from "../pages/reseller_panel/all_store/AllStore";
+import StoreProducts from "../pages/reseller_panel/all_store/StoreProducts";
 
 export const pagePaths = [
   { path: "dashboard-new",          element: <Overview /> },
@@ -61,5 +63,7 @@ export const pagePaths = [
   { path: "sale-guide-line",        element: <SalesGuidelines /> },
   { path: "add-payment-account",    element: <AddPaymentAccount /> },
   { path: "all-product-category",   element: <AllProductCategoryTab /> },
+  { path: "all-store",              element: <AllStore /> },
+  { path: "store-products/:id",     element: <StoreProducts /> },
 
 ];

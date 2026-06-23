@@ -4,6 +4,7 @@ import { useListUploadsQuery, useUploadImageMutation } from "../../redux/feature
 import { imgBaseUrl } from "../../../config";
 import { toast } from "sonner";
 import Pagination from "../shared/Pagination";
+import { getFromLocalstorage } from "../../utils/localstorage.utils";
 
 /**
  * Reusable Media Picker Modal.
@@ -35,6 +36,7 @@ const MediaPickerModal = ({
     skip: !open,
   });
   const [uploadImage] = useUploadImageMutation();
+  const userId = getFromLocalstorage("userId") || 0;
 
   const uploads = data?.data?.data || [];
   const totalPages = data?.data?.last_page || 1;
@@ -47,6 +49,7 @@ const MediaPickerModal = ({
       for (const file of files) {
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("user_id", userId);
         await uploadImage(formData).unwrap();
       }
       toast.success("আপলোড সফল হয়েছে!");

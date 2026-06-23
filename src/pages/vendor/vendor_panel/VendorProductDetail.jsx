@@ -127,7 +127,7 @@ const VendorProductDetail = () => {
         </div>
 
         <div className="p-6">
-          {activeTab === "basic" && <BasicInfoTab product={product} />}
+          {activeTab === "basic" && <BasicInfoTab product={product} productId={id} />}
           {activeTab === "media" && <MediaTab product={product} productId={id} />}
           {activeTab === "pricing" && <PricingTab product={product} />}
           {activeTab === "shipping" && <ShippingTab product={product} />}

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useGetVendorProductsQuery, useGetVendorIdQuery } from "../../../../redux/features/vendor_api";
 import vendorApi from "../../../../redux/features/vendor_api";
-import { useDeleteProductMutation, useUpdateProductMutation } from "../../../../redux/features/product";
+import { useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation } from "../../../../redux/features/product";
 import { getFromLocalstorage } from "../../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../../config";
 import { toast } from "sonner";
@@ -16,7 +16,7 @@ const VendorProducts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingCell, setEditingCell] = useState(null); // { productId, field }
   const [editValue, setEditValue] = useState("");
-
+  const [approveProduct] = useApproveProductMutation();
   const userId = getFromLocalstorage("userId");
   const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
   const vendorId = vendorIdData?.data?.vendor_id;
@@ -81,7 +81,14 @@ const VendorProducts = () => {
   const filtered = products.filter((p) =>
     p.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
+  const handleApprove = async (product) => {
+    try {
+      await approveProduct({ id: product.id, approved: product.approved ? 0 : 1 }).unwrap();
+      toast.success("স্ট্যাটাস আপডেট হয়েছে!");
+    } catch (err) {
+      toast.error(err?.data?.message || "স্ট্যাটাস আপডেট ব্যর্থ!");
+    }
+  };
   const handleDelete = async (id) => {
     if (!window.confirm("এই পণ্যটি মুছে ফেলতে চান?")) return;
     try {
@@ -244,25 +251,26 @@ const VendorProducts = () => {
                       </td>
                       <td className="py-3">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            product.current_stock > 0
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.current_stock > 0
                               ? "bg-green-100 text-green-700"
                               : "bg-red-100 text-red-600"
-                          }`}
+                            }`}
                         >
                           {product.current_stock ?? 0}
                         </span>
                       </td>
                       <td className="py-3">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            product.published
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
+                        <button
+                          onClick={() => handleApprove(product)}
+                          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${product.approved ? "bg-green-500" : "bg-gray-300"
+                            }`}
+                          title={product.approved ? "পাবলিশড — ক্লিক করে ড্রাফটে নিন" : "ড্রাফট — ক্লিক করে পাবলিশ করুন"}
                         >
-                          {product.published ? "পাবলিশড" : "ড্রাফট"}
-                        </span>
+                          <span
+                            className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${product.approved ? "translate-x-4" : "translate-x-1"
+                              }`}
+                          />
+                        </button>
                       </td>
                       <td className="py-3 text-gray-500 text-xs">
                         {new Date(product.created_at).toLocaleDateString("bn-BD")}

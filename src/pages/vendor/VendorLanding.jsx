@@ -24,9 +24,9 @@ import { useNavigate } from "react-router-dom";
 
 const stats = [
   { label: "মোট বিক্রয়", value: "৫০,০০০+", icon: <ShoppingBag className="w-7 h-7 text-blue-500" /> },
-  { label: "সক্রিয় ভেন্ডর", value: "২,৫০০+", icon: <Users className="w-7 h-7 text-green-500" /> },
-  { label: "মাসিক প্রবৃদ্ধি", value: "৩৫%", icon: <TrendingUp className="w-7 h-7 text-purple-500" /> },
-  { label: "তালিকাভুক্ত পণ্য", value: "১০,০০০+", icon: <Package className="w-7 h-7 text-orange-500" /> },
+  { label: "সক্রিয় DropShippers", value: "৪৫,০০+", icon: <Users className="w-7 h-7 text-green-500" /> },
+  { label: "মাসিক প্রবৃদ্ধি", value: "২২%", icon: <TrendingUp className="w-7 h-7 text-purple-500" /> },
+  { label: "তালিকাভুক্ত পণ্য", value: "২৭০০+", icon: <Package className="w-7 h-7 text-orange-500" /> },
 ];
 
 const benefits = [

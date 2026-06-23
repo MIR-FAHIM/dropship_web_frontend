@@ -6,26 +6,17 @@ import { useVendorRegisterMutation } from "../../redux/features/vendor_api";
 import { toast } from "sonner";
 
 const shopTypes = [
-  "ইলেকট্রনিক্স",
-  "ফ্যাশন ও পোশাক",
-  "হোম ও কিচেন",
-  "বিউটি ও হেলথ",
-  "গ্রোসারি ও ফুড",
-  "স্পোর্টস ও আউটডোর",
-  "বই ও স্টেশনারি",
-  "অন্যান্য",
+  "Electronics",
+  "Fashion & Apparel",
+  "Home & Kitchen",
+  "Beauty & Health",
+  "Grocery & Food",
+  "Sports & Outdoors",
+  "Books & Stationery",
+  "Others",
 ];
 
-const zones = [
-  "ঢাকা",
-  "চট্টগ্রাম",
-  "রাজশাহী",
-  "খুলনা",
-  "বরিশাল",
-  "সিলেট",
-  "রংপুর",
-  "ময়মনসিংহ",
-];
+
 
 // ✅ Moved OUTSIDE VendorRegister — prevents remount on every keystroke
 const InputField = ({ label, name, type = "text", placeholder, required = true, value, onChange }) => (
