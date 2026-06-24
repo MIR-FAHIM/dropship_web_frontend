@@ -117,6 +117,13 @@ const productApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Product"],
     }),
+
+    getPriceUpdateLogs: builder.query({
+      query: (params = {}) => ({
+        url: API_ENDPOINTS.products.priceUpdateLogs.path,
+        params,
+      }),
+    }),
   }),
 });
 
@@ -137,6 +144,7 @@ export const {
   useDeleteProductImageMutation,
   useDeleteWishProductMutation,
   useApproveProductMutation,
+  useGetPriceUpdateLogsQuery,
 } = productApi;
 
 export default productApi;

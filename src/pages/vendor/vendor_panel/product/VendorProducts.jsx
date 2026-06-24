@@ -66,7 +66,7 @@ const VendorProducts = () => {
       })
     );
     try {
-      await updateProduct({ id: product.id, [field]: finalValue }).unwrap();
+      await updateProduct({ id: product.id, [field]: finalValue, updated_by: userId }).unwrap();
       toast.success("আপডেট হয়েছে!");
     } catch (err) {
       patchResult.undo();

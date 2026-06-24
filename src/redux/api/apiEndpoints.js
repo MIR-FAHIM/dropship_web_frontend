@@ -68,6 +68,7 @@ export const API_ENDPOINTS = {
     delete: define("DELETE", "/products/delete/{id}"),
     addImage: define("POST", "/products/images/add/{id}"),
     deleteImage: define("DELETE", "/products/images/delete/{imageId}"),
+    priceUpdateLogs: define("GET", "/price-update-logs/list"),
   },
  
   shops: {
@@ -274,6 +275,14 @@ export const API_ENDPOINTS = {
     edit:         define("PUT",  "/support-tickets/edit/{id}"),
     all:          define("GET",  "/support-tickets/all"),
     statusChange: define("POST", "/support-tickets/status-change/{id}"),
+  },
+
+  errorLogs: {
+    productCreate: define("GET", "/error-logs/product-create"),
+    login: define("GET", "/error-logs/login"),
+    register: define("GET", "/error-logs/registration"),
+    order: define("GET", "/error-logs/order"),
+    overallReport: define("GET", "/error-logs/report/overall"),
   },
 };
 

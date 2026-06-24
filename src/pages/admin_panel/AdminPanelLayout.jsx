@@ -27,6 +27,7 @@ import {
   Bell,
   Building2,
   TicketCheck,
+  AlertTriangle,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -59,6 +60,12 @@ const adminMenuLinks = [
         path: "/admin-panel/attributes",
         label: "অ্যাট্রিবিউট",
         icon: <SlidersHorizontal className="w-4 h-4" />,
+      },
+
+            {
+        path: "/admin-panel/products/price-update-logs",
+        label: "Price Update Logs",
+        icon: <ListChecks className="w-4 h-4" />,
       },
     ],
   },
@@ -119,6 +126,11 @@ const adminMenuLinks = [
     icon: <TicketCheck className="w-5 h-5" />,
   },
   {
+    path: "/admin-panel/error-logs",
+    label: "Error Log",
+    icon: <AlertTriangle className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/tasks",
     label: "টাস্ক",
     icon: <ListChecks className="w-5 h-5" />,
@@ -170,6 +182,11 @@ const productManagerMenuLinks = [
         path: "/admin-panel/attributes",
         label: "অ্যাট্রিবিউট",
         icon: <SlidersHorizontal className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/products/price-update-logs",
+        label: "Price Update Logs",
+        icon: <ListChecks className="w-4 h-4" />,
       },
     ],
   },

@@ -48,6 +48,7 @@ import AdminAttributes from "../pages/admin_panel/products/AdminAttributes";
 import AdminMedia from "../pages/admin_panel/media/AdminMedia";
 import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate";
 import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail";
+import AdminPriceUpdateLogs from "../pages/admin_panel/products/AdminPriceUpdateLogs";
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
@@ -58,6 +59,7 @@ import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_compa
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
+import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -159,6 +161,7 @@ export const router = createBrowserRouter([
       { path: "products", element: <AdminProducts /> },
       { path: "products/create", element: <AdminProductCreate /> },
       { path: "products/:id", element: <AdminProductDetail /> },
+      { path: "products/price-update-logs", element: <AdminPriceUpdateLogs /> },
       { path: "categories", element: <AdminCategories /> },
       { path: "brands", element: <AdminBrands /> },
       { path: "attributes", element: <AdminAttributes /> },
@@ -178,6 +181,7 @@ export const router = createBrowserRouter([
       { path: "my-business-info", element: <MyBusinessInfo /> },
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
+      { path: "error-logs", element: <ErrorLog /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
     ],
