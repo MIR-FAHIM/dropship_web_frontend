@@ -29,6 +29,12 @@ const getStatus = (s) =>
   STATUS_STYLES[String(s || "").toLowerCase()] ??
   { pill: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-400" };
 
+const getStatusName = (status) => {
+  if (!status) return "";
+  if (typeof status === "string") return status;
+  return status?.name || "";
+};
+
 const PAY_STYLES = {
   paid:    "bg-green-100 text-green-700 border-green-200",
   unpaid:  "bg-red-100 text-red-600 border-red-200",
@@ -73,7 +79,8 @@ const OrderDetailsPage = () => {
     );
   }
 
-  const st = getStatus(order?.status);
+  const statusName = getStatusName(order?.status);
+  const st = getStatus(statusName);
   const subtotal = Number(order?.subtotal ?? 0);
   const profit   = Number(order?.reseller_profit ?? 0);
   const delivery = Number(order?.shipping_fee ?? 0);
@@ -98,7 +105,7 @@ const OrderDetailsPage = () => {
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize border ${st.pill}`}>
-              {order?.status || "—"}
+              {statusName || "—"}
             </span>
             <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize border ${getPayStyle(order?.payment_status)}`}>
               {order?.payment_status || "—"}
@@ -232,7 +239,7 @@ const OrderDetailsPage = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Product", "Qty", "Unit Price", "Line Total", "Status"].map((h) => (
+                  {["Product", "Qty", "Unit Price", "Line Total",].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-black text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -268,9 +275,7 @@ const OrderDetailsPage = () => {
                       <td className="px-4 py-3 font-bold text-gray-700">{item.qty}</td>
                       <td className="px-4 py-3 text-gray-600">{money(item.unit_price)}</td>
                       <td className="px-4 py-3 font-black text-indigo-700">{money(item.line_total)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize border ${ist.pill}`}>{item.status}</span>
-                      </td>
+             
                     </tr>
                   );
                 })}

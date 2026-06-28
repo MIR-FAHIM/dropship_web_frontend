@@ -33,15 +33,15 @@ const Payments = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 flex flex-col items-center shadow">
             <span className="text-lg font-semibold text-blue-700">Debit</span>
-            <span className="text-2xl font-bold text-blue-900 mt-2">${debit}</span>
+            <span className="text-2xl font-bold text-blue-900 mt-2">{debit} ৳</span>
           </div>
           <div className="bg-green-50 border border-green-200 rounded-lg p-6 flex flex-col items-center shadow">
             <span className="text-lg font-semibold text-green-700">Credit</span>
-            <span className="text-2xl font-bold text-green-900 mt-2">${credit}</span>
+            <span className="text-2xl font-bold text-green-900 mt-2">{credit} ৳</span>
           </div>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 flex flex-col items-center shadow">
             <span className="text-lg font-semibold text-yellow-700">Balance</span>
-            <span className="text-2xl font-bold text-yellow-900 mt-2">${balance}</span>
+            <span className="text-2xl font-bold text-yellow-900 mt-2">{balance} ৳</span>
           </div>
         </div>
         {/* Transaction Table */}

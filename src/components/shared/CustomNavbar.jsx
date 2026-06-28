@@ -19,7 +19,7 @@ const navLinks = [
 function NavList() {
   return (
     <ul className="my-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6 bg-white text-black px-4 lg:px-0">
-      <Link to={"/"}>
+      <Link>
         <LuBell />
       </Link>
       {navLinks.map((item, index) => {
@@ -142,7 +142,7 @@ const CustomNavbar = ({ onMenuToggle }) => {
 
           {showBalance && !isLoadingBal && !errorBal && (
             <div className="text-xl mt-2">
-              <span>Balance: ${balance?.data?.balance?.balance ?? 0}</span>
+              <span>Balance: {balance?.data?.balance?.balance ?? 0} ৳</span>
             </div>
           )}
         </div>

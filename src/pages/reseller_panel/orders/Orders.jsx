@@ -29,6 +29,12 @@ const PAY_STYLES = {
 const payStyle = (s) =>
   PAY_STYLES[String(s).toLowerCase()] ?? PAY_STYLES.default;
 
+const getStatusName = (status) => {
+  if (!status) return "";
+  if (typeof status === "string") return status;
+  return status?.name || "";
+};
+
 const fmt = (dateStr) => {
   if (!dateStr) return "—";
   const d = new Date(dateStr);
@@ -47,8 +53,14 @@ const Order = () => {
   const orders = ordersData?.data?.data || [];
   const totalPages = ordersData?.data?.last_page || 1;
 
-  const statuses = ["all", ...Array.from(new Set(orders.map((o) => o.status).filter(Boolean)))];
-  const filteredOrders = filter === "all" ? orders : orders.filter((o) => o.status === filter);
+  const statuses = [
+    "all",
+    ...Array.from(new Set(orders.map((o) => getStatusName(o.status)).filter(Boolean))),
+  ];
+  const filteredOrders =
+    filter === "all"
+      ? orders
+      : orders.filter((o) => getStatusName(o.status).toLowerCase() === filter.toLowerCase());
 
   /* loading */
   if (isLoading) {
@@ -62,7 +74,7 @@ const Order = () => {
   if (error) {
     return (
       <div className="p-6 text-center text-red-500 font-semibold">
-        Error loading orders: {error.message}
+        Error loading orders: {error?.data?.message || error?.message || "Something went wrong"}
       </div>
     );
   }
@@ -119,8 +131,8 @@ const Order = () => {
                       <p className="font-black text-gray-800 text-sm">{order.order_number || `#${order.id}`}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{fmt(order.created_at)}</p>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusStyle(order.status)}`}>
-                      {order.status || "—"}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusStyle(getStatusName(order.status))}`}>
+                      {getStatusName(order.status) || "—"}
                     </span>
                   </div>
 
@@ -153,7 +165,7 @@ const Order = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    {["Order", "Date", "Customer", "Phone", "Amount", "Status", "Payment", ""].map((h) => (
+                    {["Order", "Date", "Customer", "Phone", "Amount", "Profit", "Status", "Payment", ""].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-black text-gray-500 uppercase tracking-wide whitespace-nowrap">
                         {h}
                       </th>
@@ -177,9 +189,12 @@ const Order = () => {
                       <td className="px-4 py-3 font-black text-indigo-700 whitespace-nowrap">
                         {money(order.grand_total ?? order.total)}
                       </td>
+                      <td className="px-4 py-3 font-black text-indigo-700 whitespace-nowrap">
+                        {money(order.reseller_profit ?? order.reseller_profit)}
+                      </td>
                       <td className="px-4 py-3">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusStyle(order.status)}`}>
-                          {order.status || "—"}
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold capitalize ${statusStyle(getStatusName(order.status))}`}>
+                          {getStatusName(order.status) || "—"}
                         </span>
                       </td>
                       <td className="px-4 py-3">
