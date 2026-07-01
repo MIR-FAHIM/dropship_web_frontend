@@ -50,6 +50,8 @@ import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate
 import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail";
 import AdminPriceUpdateLogs from "../pages/admin_panel/products/AdminPriceUpdateLogs";
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
+import AdminSettlementOrders from "../pages/admin_panel/settlement_orders/AdminSettlementOrders";
+import AdminSettlementOrderDetails from "../pages/admin_panel/settlement_orders/AdminSettlementOrderDetails";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
@@ -169,6 +171,8 @@ export const router = createBrowserRouter([
       { path: "product/clicks", element: <ProductClicksReport /> },
       { path: "orders", element: <AdminOrders /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
+      { path: "settlement-orders", element: <AdminSettlementOrders /> },
+      { path: "settlement-orders/:orderId", element: <AdminSettlementOrderDetails /> },
       { path: "vendors", element: <AdminVendors /> },
       { path: "vendors/inactive", element: <InactiveAdminVendors /> },
       { path: "vendors/:id", element: <VendorDetailsTab /> },

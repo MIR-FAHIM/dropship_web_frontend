@@ -104,6 +104,13 @@ export const API_ENDPOINTS = {
     updateItemStatus: define("PATCH", "/orders/item/status/{id}"),
   },
 
+  orderSettlements: {
+    list: define("GET", "/order-settlements/list"),
+    byOrder: define("GET", "/order-settlements/order/{orderId}"),
+    settleNow: define("POST", "/order-settlements/settle-now/{id}"),
+    addSettledTrxId: define("POST", "/order-settlements/add-settled-trx-id/{id}"),
+  },
+
   addresses: {
     add: define("POST", "/addresses/add"),
     byUser: define("GET", "/addresses/user/{userId}"),

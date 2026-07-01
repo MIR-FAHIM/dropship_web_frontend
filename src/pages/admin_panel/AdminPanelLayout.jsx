@@ -80,6 +80,11 @@ const adminMenuLinks = [
     icon: <ClipboardList className="w-5 h-5" />,
   },
   {
+    path: "/admin-panel/settlement-orders",
+    label: "Settlement Orders",
+    icon: <Wallet className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/vendors",
     label: "সক্রিয় ভেন্ডর",
     icon: <Store className="w-5 h-5" />,
