@@ -43,6 +43,12 @@ const getApiErrorMessage = (error, fallback = "Something went wrong.") => {
   return error?.data?.message || fallback;
 };
 
+const canAddSettledTrxId = (settlement) =>
+  !(
+    settlement?.settlement_type === "reseller_profit" &&
+    settlement?.user_type === "dropshipper"
+  );
+
 const AdminSettlementOrderDetails = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -80,6 +86,8 @@ const AdminSettlementOrderDetails = () => {
   }, [settlements]);
 
   const openTrxEditor = (settlement) => {
+    if (!canAddSettledTrxId(settlement)) return;
+
     setTrxEditorId(settlement.id);
     setTrxValues((prev) => ({
       ...prev,
@@ -116,7 +124,10 @@ const AdminSettlementOrderDetails = () => {
       refetch();
     } catch (error) {
       const errorMessage = getApiErrorMessage(error, "Failed to settle now.");
-      if (errorMessage.toLowerCase().includes("settled_trx_id is required")) {
+      if (
+        canAddSettledTrxId(settlement) &&
+        errorMessage.toLowerCase().includes("settled_trx_id is required")
+      ) {
         openTrxEditor(settlement);
         toast.error("Add settled transaction id before settling.");
       } else {
@@ -128,6 +139,8 @@ const AdminSettlementOrderDetails = () => {
   };
 
   const handleSaveTrxAndSettle = async (settlement) => {
+    if (!canAddSettledTrxId(settlement)) return;
+
     const settledTrxId = String(trxValues[settlement.id] || "").trim();
 
     if (!settledTrxId) {
@@ -174,6 +187,7 @@ const AdminSettlementOrderDetails = () => {
     const settled = isSettlementSettled(settlement);
     const isCurrentSettling = settlingId === settlement.id;
     const isEditingTrx = trxEditorId === settlement.id;
+    const canUseTrxEditor = canAddSettledTrxId(settlement);
     const isSavingTrx = savingTrxId === settlement.id;
     const actionDisabled = settled || isCurrentSettling || isSavingTrx;
     const trxValue = trxValues[settlement.id] || "";
@@ -201,7 +215,7 @@ const AdminSettlementOrderDetails = () => {
           {settled ? "Settled" : isCurrentSettling ? "Settling..." : "Settle Now"}
         </button>
 
-        {isEditingTrx && !settled && (
+        {canUseTrxEditor && isEditingTrx && !settled && (
           <div className="rounded-lg border border-red-100 bg-red-50 p-2 shadow-sm">
             <label className="text-[11px] font-semibold text-red-700">
               Settled TRX ID
