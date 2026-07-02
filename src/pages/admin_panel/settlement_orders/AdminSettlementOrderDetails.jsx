@@ -4,12 +4,12 @@ import {
   ClipboardList,
   Loader2,
   Store,
-  Truck,
   User,
   Wallet,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { useGetUserBankAccountQuery } from "../../../redux/features/accounting";
 import {
   useAddSettledTrxIdOrderSettlementMutation,
   useGetOrderSettlementByOrderQuery,
@@ -49,6 +49,13 @@ const canAddSettledTrxId = (settlement) =>
     settlement?.user_type === "dropshipper"
   );
 
+const getBankAccountType = (account) =>
+  account?.payment_method?.type ||
+  account?.payment_method?.name ||
+  account?.payment_method ||
+  account?.type ||
+  "Bank";
+
 const AdminSettlementOrderDetails = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -67,7 +74,16 @@ const AdminSettlementOrderDetails = () => {
   const order = payload.order || null;
   const settlements = payload.settlements || [];
   const summary = payload.summary || {};
-  const settlementStatus = payload.settlement_status || {};
+  const vendorUserId = settlements.find((settlement) => settlement.vendor?.user_id)
+    ?.vendor?.user_id;
+
+  const {
+    data: vendorBankAccountsData,
+    isLoading: isVendorBankAccountsLoading,
+    isError: isVendorBankAccountsError,
+  } = useGetUserBankAccountQuery(vendorUserId, { skip: !vendorUserId });
+
+  const vendorBankAccounts = vendorBankAccountsData?.data || [];
 
   const fallbackSummary = useMemo(() => {
     return settlements.reduce(
@@ -517,43 +533,6 @@ const AdminSettlementOrderDetails = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                <Truck className="w-4 h-4" />
-                Settlement Status
-              </h2>
-            </div>
-            <div className="p-5 space-y-3">
-              {Object.entries(settlementStatus).length === 0 ? (
-                <p className="text-sm text-gray-500">No status summary found.</p>
-              ) : (
-                Object.entries(settlementStatus).map(([type, status]) => (
-                  <div
-                    key={type}
-                    className="flex items-start justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
-                  >
-                    <div>
-                      <p className="text-xs font-semibold text-gray-800">
-                        {formatSettlementLabel(type)}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {formatMoney(status?.settleable_amount)}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-flex px-2 py-0.5 rounded-full border text-[11px] font-semibold capitalize shrink-0 ${getSettlementStatusClass(
-                        status?.status
-                      )}`}
-                    >
-                      {status?.status || "-"}
-                    </span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
           {settlements.some((settlement) => settlement.payable_user) && (
             <div className="bg-white rounded-xl border border-gray-200">
               <div className="px-5 py-4 border-b border-gray-100">
@@ -605,7 +584,101 @@ const AdminSettlementOrderDetails = () => {
                         Phone: {settlement.vendor.emergency_contact || "-"}
                       </p>
                     </div>
-                  ))}
+                ))}
+              </div>
+            </div>
+          )}
+
+          {vendorUserId && (
+            <div className="bg-white rounded-xl border border-gray-200">
+              <div className="px-5 py-4 border-b border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                  <Wallet className="w-4 h-4" />
+                  Vendor Bank Account
+                </h2>
+              </div>
+
+              <div className="p-5">
+                {isVendorBankAccountsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+                  </div>
+                ) : isVendorBankAccountsError ? (
+                  <p className="text-sm text-red-500">
+                    Failed to load vendor bank accounts.
+                  </p>
+                ) : vendorBankAccounts.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    No vendor bank account found.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {vendorBankAccounts.map((account) => {
+                      const accountType = getBankAccountType(account);
+                      const isMfs = String(accountType).toLowerCase() === "mfs";
+
+                      return (
+                        <div
+                          key={account.id}
+                          className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-sm"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="font-semibold text-gray-800">
+                                {account.bank_name || accountType}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {account.acc_name || "-"}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                                isMfs
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}
+                            >
+                              {accountType}
+                            </span>
+                          </div>
+
+                          <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-gray-600">
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-400">Account No</span>
+                              <span className="font-semibold text-gray-800 text-right">
+                                {account.account_no || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-400">Branch</span>
+                              <span className="font-semibold text-gray-800 text-right">
+                                {account.branch || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-400">Route</span>
+                              <span className="font-semibold text-gray-800 text-right">
+                                {account.route || "-"}
+                              </span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span className="text-gray-400">Status</span>
+                              <span
+                                className={`font-semibold ${
+                                  account.is_active
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
+                                {account.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}
