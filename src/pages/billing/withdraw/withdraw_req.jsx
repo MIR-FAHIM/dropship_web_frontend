@@ -51,7 +51,7 @@ const WithdrawPage = () => {
       <h1 className="text-2xl font-bold mb-4">Withdraw Page</h1>
 
       {/* Withdraw Information Notes */}
-      <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-gray-800 rounded">
+      {/* <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 text-gray-800 rounded">
         <ul className="list-disc pl-5 space-y-2">
           <li>
             <span className="font-semibold">বিকাশ ইনস্ট্যান্ট পেমেন্ট</span><br />
@@ -72,7 +72,7 @@ const WithdrawPage = () => {
             সময় ২৪ ঘণ্টা, দ্রুত পেতে রিকোয়েস্ট দেওয়ার পর সাপোর্টে জানাবেন।
           </li>
         </ul>
-      </div>
+      </div> */}
 
       {/* Withdrawal Form */}
       <form onSubmit={handleWithdrawSubmit} className="mb-6">

@@ -33,6 +33,8 @@ const AdminAccounting = () => {
   const debitItems = debitData?.data?.items?.data || [];
   const totalCredit = creditData?.data?.total || 0;
   const totalDebit = debitData?.data?.total || 0;
+  const resellerLiabilityBalance =
+    report.reseller_liablity_balance ?? report.reseller_liability_balance ?? 0;
 
   const isLoading = creditLoading || debitLoading || reportLoading;
 
@@ -130,14 +132,14 @@ const AdminAccounting = () => {
       <h1 className="text-xl font-bold text-gray-800">হিসাব-নিকাশ</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-500 flex items-center justify-center text-white">
               <ArrowDownToLine className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              মোট ক্রেডিট
+              Credit
             </span>
           </div>
           <p className="text-xl sm:text-2xl font-bold text-green-600">
@@ -151,7 +153,7 @@ const AdminAccounting = () => {
               <ArrowUpFromLine className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              মোট ডেবিট
+             Debit
             </span>
           </div>
           <p className="text-xl sm:text-2xl font-bold text-red-600">
@@ -165,7 +167,7 @@ const AdminAccounting = () => {
               <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              নিট মুনাফা
+              Cash in hand
             </span>
           </div>
           <p
@@ -179,11 +181,25 @@ const AdminAccounting = () => {
 
         <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
           <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-red-500 flex items-center justify-center text-white">
+              <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+            <span className="text-xs sm:text-sm text-gray-500 font-medium">
+              Reseller Liability
+            </span>
+          </div>
+          <p className="text-xl sm:text-2xl font-bold text-red-600">
+            {formatCurrency(resellerLiabilityBalance)}
+          </p>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+          <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-purple-500 flex items-center justify-center text-white">
               <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              মার্জিন
+              Mergin
             </span>
           </div>
           <p className="text-xl sm:text-2xl font-bold text-purple-600">

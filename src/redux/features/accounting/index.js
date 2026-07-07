@@ -20,13 +20,12 @@ const accountingApi = baseApi.injectEndpoints({
         params: { page },
       }),
     }),
-    getResellerTransactions: builder.query({
-      query: (page = 1, reseller_id = 0) => ({
-        url: API_ENDPOINTS.transactions.reseller.path,
-        params: { page, reseller_id },
-      }),
-    }),
-
+getResellerTransactions: builder.query({
+  query: ({ page = 1, reseller_id } = {}) => ({
+    url: API_ENDPOINTS.transactions.reseller.path,
+    params: { page, reseller_id },
+  }),
+}),
     getTransactionReport: builder.query({
       query: () => API_ENDPOINTS.transactions.report.path,
     }),
