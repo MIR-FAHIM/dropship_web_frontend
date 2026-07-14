@@ -66,8 +66,9 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
         <div>
           <p className="text-xs text-gray-400">ফোন</p>
           <p className="text-gray-700">
-            {details.recipient_phone?.slice(0, -8)}
-            <span className="blur-sm select-none">{details.recipient_phone?.slice(-8)}</span>
+            {details.recipient_phone?.slice(0, 4)}
+            <span className="blur-sm select-none">{details.recipient_phone?.slice(4, -4)}</span>
+            {details.recipient_phone?.slice(-4)}
           </p>
         </div>
         <div className="col-span-2">
@@ -325,8 +326,9 @@ const VendorOrderDetails = () => {
               <div className="flex items-start gap-3">
                 <Phone className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
                 <p className="text-gray-600">
-                  {order.customer_phone?.slice(0, -6)}
-                  <span className="blur-sm select-none">{order.customer_phone?.slice(-6)}</span>
+                  {order.customer_phone?.slice(0, 4)}
+                  <span className="blur-sm select-none">{order.customer_phone?.slice(4, -4)}</span>
+                  {order.customer_phone?.slice(-4)}
                 </p>
               </div>
               <div className="flex items-start gap-3">
@@ -398,8 +400,9 @@ const VendorOrderDetails = () => {
                   <div className="flex justify-between">
                     <span className="text-gray-400">ফোন</span>
                     <span>
-                      {delivery.recipient_phone?.slice(0, -8)}
-                      <span className="blur-sm select-none">{delivery.recipient_phone?.slice(-8)}</span>
+                      {delivery.recipient_phone?.slice(0, 4)}
+                      <span className="blur-sm select-none">{delivery.recipient_phone?.slice(4, -4)}</span>
+                      {delivery.recipient_phone?.slice(-4)}
                     </span>
                   </div>
                 </div>

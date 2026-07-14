@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
+import { Copy, Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation } from "../../../redux/features/product";
+import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation, useDuplicateProductMutation } from "../../../redux/features/product";
+import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
 import productApi from "../../../redux/features/product";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
+import ConfirmModal from "../../../components/shared/ConfirmModal";
 
 const AdminProducts = () => {
   const navigate = useNavigate();
@@ -13,14 +15,23 @@ const AdminProducts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorSearch, setVendorSearch] = useState("");
+  const [selectedVendorId, setSelectedVendorId] = useState("");
 
-  const { data, isLoading, isFetching } = useListProductsQuery(currentPage);
+  const productListParams = {
+    page: currentPage,
+    ...(selectedVendorId ? { vendor_id: selectedVendorId } : {}),
+  };
+  const { data, isLoading, isFetching } = useListProductsQuery(productListParams);
+  const { data: vendorData, isLoading: isVendorLoading } = useGetVendorListQuery();
   const [deleteProduct] = useDeleteProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const [approveProduct] = useApproveProductMutation();
+  const [duplicateProduct] = useDuplicateProductMutation();
 
   const [editingCell, setEditingCell] = useState(null); // { productId, field }
   const [editValue, setEditValue] = useState("");
+  const [duplicatingProductId, setDuplicatingProductId] = useState(null);
+  const [duplicateTarget, setDuplicateTarget] = useState(null);
 
   const startEdit = (productId, field, currentValue) => {
     setEditingCell({ productId, field });
@@ -46,7 +57,7 @@ const AdminProducts = () => {
     }
     // Optimistically patch the cache so the UI updates instantly
     const patchResult = dispatch(
-      productApi.util.updateQueryData("listProducts", currentPage, (draft) => {
+      productApi.util.updateQueryData("listProducts", productListParams, (draft) => {
         const item = draft?.data?.data?.find((p) => p.id === product.id);
         if (item) item[field] = parsed;
       })
@@ -62,6 +73,7 @@ const AdminProducts = () => {
   };
 
   const products = data?.data?.data || [];
+  const shops = vendorData?.data?.data || vendorData?.data || [];
   const totalPages = data?.data?.last_page || 1;
 
   const filtered = products.filter((p) =>
@@ -85,6 +97,20 @@ const AdminProducts = () => {
       toast.success("পণ্য মুছে ফেলা হয়েছে!");
     } catch (err) {
       toast.error(err?.data?.message || "মুছে ফেলা ব্যর্থ!");
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!duplicateTarget?.id) return;
+    setDuplicatingProductId(duplicateTarget.id);
+    try {
+      await duplicateProduct(duplicateTarget.id).unwrap();
+      toast.success("Product duplicated successfully");
+      setDuplicateTarget(null);
+    } catch (err) {
+      toast.error(err?.data?.message || "Product duplicate failed");
+    } finally {
+      setDuplicatingProductId(null);
     }
   };
 
@@ -114,6 +140,24 @@ const AdminProducts = () => {
               className="pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-56"
             />
           </div>
+          <div className="relative flex-1 sm:flex-none">
+            <select
+              value={selectedVendorId}
+              onChange={(e) => {
+                setSelectedVendorId(e.target.value);
+                setCurrentPage(1);
+              }}
+              disabled={isVendorLoading}
+              className="px-3 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent w-full sm:w-56 bg-white disabled:bg-gray-100 disabled:text-gray-400"
+            >
+              <option value="">{isVendorLoading ? "Loading shops..." : "All shops"}</option>
+              {shops.map((shop) => (
+                <option key={shop.id} value={shop.id}>
+                  {shop.shop_name || shop.user?.email || `Shop #${shop.id}`}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={() => navigate("/admin-panel/products/create")}
             className="flex items-center gap-2 bg-red-600 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-red-700 transition shrink-0"
@@ -134,7 +178,7 @@ const AdminProducts = () => {
           <div className="text-center py-16">
             <Package className="w-14 h-14 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 text-sm font-medium">
-              {searchTerm || vendorSearch ? "কোনো পণ্য পাওয়া যায়নি।" : "এখনো কোনো পণ্য যোগ করা হয়নি।"}
+              {searchTerm || vendorSearch || selectedVendorId ? "কোনো পণ্য পাওয়া যায়নি।" : "এখনো কোনো পণ্য যোগ করা হয়নি।"}
             </p>
             <p className="text-gray-400 text-xs mt-1">উপরের বাটনে ক্লিক করে নতুন পণ্য যোগ করুন।</p>
           </div>
@@ -270,6 +314,18 @@ const AdminProducts = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => setDuplicateTarget(product)}
+                            disabled={duplicatingProductId === product.id}
+                            className="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Duplicate product"
+                          >
+                            {duplicatingProductId === product.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
                             onClick={() => handleDelete(product.id)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
                             title="মুছুন"
@@ -309,6 +365,15 @@ const AdminProducts = () => {
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={Boolean(duplicateTarget)}
+        title="Duplicate product"
+        message="Do you want to duplicate this product?"
+        confirmText="Duplicate"
+        loading={duplicatingProductId === duplicateTarget?.id}
+        onConfirm={handleDuplicate}
+        onClose={() => setDuplicateTarget(null)}
+      />
     </div>
   );
 };

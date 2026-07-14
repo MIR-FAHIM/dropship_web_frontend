@@ -56,6 +56,12 @@ const CHK = ({ label, checked, onChange }) => (
   </label>
 );
 
+const getOrderProductDescription = (order) =>
+  order?.items
+    ?.map((item) => item.product?.name || item.product_name || item.name)
+    .filter(Boolean)
+    .join(", ") || "";
+
 /* ──────────────────────────────────────────
    CarryBee Order Details Panel
 ────────────────────────────────────────── */
@@ -241,6 +247,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
 const AssignCarryBeeModal = ({ order, onClose }) => {
   const vendorId = String(order.vendor_id ?? "");
   const userId = localStorage.getItem("userId");
+  const orderProductDescription = getOrderProductDescription(order);
   const [storeId, setStoreId] = useState("");
   const [cityId, setCityId] = useState("");
   const [zoneId, setZoneId] = useState("");
@@ -254,7 +261,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     recipient_secendary_phone: "",
     recipient_address: order.shipping_address || "",
     special_instruction: "",
-    product_description: "",
+    product_description: orderProductDescription,
     item_weight: 500,
     item_quantity: order.items?.reduce((s, i) => s + Number(i.qty || 1), 0) || 1,
     collectable_amount: Number(order.total || 0),
@@ -350,7 +357,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         zone_id: Number(zoneId),
         area_id: areaId ? Number(areaId) : null,
         special_instruction: form.special_instruction || null,
-        product_description: form.product_description || null,
+        product_description: form.product_description || orderProductDescription || null,
         item_weight: Number(form.item_weight),
         item_quantity: Number(form.item_quantity),
         collectable_amount: Number(form.collectable_amount),

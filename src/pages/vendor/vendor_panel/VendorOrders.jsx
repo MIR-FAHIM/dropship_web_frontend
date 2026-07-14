@@ -119,8 +119,9 @@ const VendorOrders = () => {
                           <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
                             <Phone className="w-3 h-3 flex-shrink-0" />
                             <span>
-                              {order.customer_phone?.slice(0, -6)}
-                              <span className="blur-sm select-none">{order.customer_phone?.slice(-6)}</span>
+                              {order.customer_phone?.slice(0, 4)}
+                              <span className="blur-sm select-none">{order.customer_phone?.slice(4, -4)}</span>
+                              {order.customer_phone?.slice(-4)}
                             </span>
                           </div>
                           {order.zone && (
@@ -177,7 +178,6 @@ const VendorOrders = () => {
                                 <Truck className="w-3 h-3" />
                                 <span>{delivery.consignment_id}</span>
                               </div>
-                              <p className="text-gray-400 text-xs">COD: ৳{delivery.collectable_amount}</p>
                             </div>
                           ) : (
                             <span className="text-gray-400 text-xs">—</span>

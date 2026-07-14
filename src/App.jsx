@@ -21,7 +21,7 @@ import { MdOutlineProductionQuantityLimits, MdOutlineWarehouse } from "react-ico
 import { FaAngleDown } from "react-icons/fa6";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
-import { Heart, HomeIcon } from "lucide-react";
+import { Heart, HomeIcon, Store } from "lucide-react";
 import { FaProductHunt } from "react-icons/fa";
 // menu links
 const menuLinks = [
@@ -49,6 +49,11 @@ const menuLinks = [
     path: "/app/all-store",
     label: "All Stores",
     icon: <LuArchive />,
+  },
+  {
+    path: "/app/store-profile",
+    label: "Store Profile",
+    icon: <Store />,
   },
   {
     path: "/app/favproducts",

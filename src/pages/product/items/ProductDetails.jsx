@@ -6,9 +6,12 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
+import { useAddResellerProductPageMutation } from "../../../redux/features/resellerProductPage";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
 import ProductGallery from "./product_gallery";
+import ResellerProductPageModal from "../../../components/shared/ResellerProductPageModal";
+import { toast } from "sonner";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -18,11 +21,14 @@ const ProductDetails = () => {
   const [activeTab, setActiveTab] = useState("images");
   const [quantity, setQuantity] = useState(1);
   const [resellerPrice, setResellerPrice] = useState("");
+  const [productPageOpen, setProductPageOpen] = useState(false);
+  const [createdProductPage, setCreatedProductPage] = useState(null);
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const userId = getFromLocalstorage("userId");
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
+  const [addProductPage, { isLoading: creatingProductPage }] = useAddResellerProductPageMutation();
   const normalizeImageUrl = (rawUrl) => {
     if (!rawUrl) return null;
     let url = String(rawUrl);
@@ -197,6 +203,33 @@ const ProductDetails = () => {
       temp.remove();
     } catch (err) {
       console.error("Copy failed:", err);
+    }
+  };
+
+  const handleCreateProductPage = async (form) => {
+    if (!product?.id || !userId) return;
+    try {
+      const response = await addProductPage({
+        ...form,
+        reseller_id: Number(userId),
+        product_id: product.id,
+        selling_price: Number(form.selling_price),
+        discount_price: form.discount_price === "" ? null : Number(form.discount_price),
+        delivery_charge: Number(form.delivery_charge || 0),
+        template_id: Number(form.template_id || 1),
+      }).unwrap();
+      const page = response?.data?.data || response?.data || response;
+      setCreatedProductPage(page);
+      toast.success("Product page created successfully");
+      setProductPageOpen(false);
+    } catch (err) {
+      const message = err?.data?.message || "Product page creation failed";
+      if (/already|exists|duplicate/i.test(message)) {
+        toast.error(`${message}. Check Store Profile > Product Pages.`);
+        setProductPageOpen(false);
+      } else {
+        toast.error(message);
+      }
     }
   };
 
@@ -448,6 +481,28 @@ const ProductDetails = () => {
             >
               {isAddingToCart ? t("product_details.adding") : t("product_details.add_to_cart")}
             </button>
+            {userId && (
+              <button
+                type="button"
+                onClick={() => setProductPageOpen(true)}
+                className="action-btn secondary"
+                style={{ width: "100%", justifyContent: "center", marginTop: "10px" }}
+              >
+                Make Product Page
+              </button>
+            )}
+            {createdProductPage?.slug && (
+              <div style={{ marginTop: "10px", padding: "10px", borderRadius: "10px", background: "#eff6ff", color: "#1d4ed8", fontSize: "13px" }}>
+                <div style={{ fontWeight: 700, marginBottom: "4px" }}>Public product page</div>
+                <button
+                  type="button"
+                  onClick={() => handleCopyText(`${window.location.origin}/store/product/${createdProductPage.slug}`)}
+                  style={{ color: "#1d4ed8", textDecoration: "underline", wordBreak: "break-all", textAlign: "left" }}
+                >
+                  {window.location.origin}/store/product/{createdProductPage.slug}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -533,6 +588,14 @@ const ProductDetails = () => {
           )}
         </div>
       </div>
+      <ResellerProductPageModal
+        open={productPageOpen}
+        product={product}
+        loading={creatingProductPage}
+        title="Make Product Page"
+        onClose={() => setProductPageOpen(false)}
+        onSubmit={handleCreateProductPage}
+      />
     </div>
   );
 };

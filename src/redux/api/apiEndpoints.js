@@ -1,8 +1,6 @@
 // Centralized API endpoint definitions derived from backend routes.php
 // Base URL is configured in baseApi.js as `${imgBaseUrl}/api`
 
-import { DivideSquare } from "lucide-react";
-
 const define = (method, path) => ({ method, path });
 
 export const API_ENDPOINTS = {
@@ -64,6 +62,7 @@ export const API_ENDPOINTS = {
     listFeatured: define("GET", "/products/list/featured"),
     listTodayDeal: define("GET", "/products/list/today-deal"),
     details: define("GET", "/products/details/{id}"),
+    duplicate: define("POST", "/products/duplicate/{id}"),
     update: define("POST", "/products/update/{id}"),
     delete: define("DELETE", "/products/delete/{id}"),
     addImage: define("POST", "/products/images/add/{id}"),
@@ -208,6 +207,33 @@ export const API_ENDPOINTS = {
     report: define("GET", "/transactions/report"),
   },
 
+  resellerStoreProfiles: {
+    add: define("POST", "/reseller-store-profiles/add"),
+    update: define("PUT", "/reseller-store-profiles/update/{id}"),
+    byReseller: define("GET", "/reseller-store-profiles/reseller/{resellerId}"),
+    details: define("GET", "/reseller-store-profiles/{id}"),
+  },
+
+  resellerProductPages: {
+    add: define("POST", "/reseller-product-pages/add"),
+    create: define("POST", "/reseller-product-pages/create"),
+    update: define("PUT", "/reseller-product-pages/update/{id}"),
+    remove: define("DELETE", "/reseller-product-pages/remove/{id}"),
+    list: define("GET", "/reseller-product-pages/list"),
+    details: define("GET", "/reseller-product-pages/{id}"),
+    bySlug: define("GET", "/reseller-product-pages/slug/{slug}"),
+  },
+
+  landingPageOrders: {
+    add: define("POST", "/landing-page-orders/add"),
+    create: define("POST", "/landing-page-orders/create"),
+    list: define("GET", "/landing-page-orders/list"),
+    details: define("GET", "/landing-page-orders/details/{id}"),
+    update: define("PUT", "/landing-page-orders/update/{id}"),
+    delete: define("DELETE", "/landing-page-orders/delete/{id}"),
+    passToResellerBrain: define("POST", "/landing-page-orders/pass-order-to-reseller-brain/{id}"),
+  },
+
   vendors: {
     register: define("POST", "/vendors/register"),
     profile: define("GET", "/vendors/profile/{id}"),
@@ -240,6 +266,7 @@ export const API_ENDPOINTS = {
   address: {
     divisions: define("GET", "/address/divisions"),
     districts: define("GET", "/address/districts/{divisionId}"),
+    upazilas: define("GET", "/address/upazilas/{districtId}"),
   },
   bankAccounts: {
     addUserBankAccount: define("POST", "/paymentmethods/add-user-bank-account"),

@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getFromLocalstorage, removeFromLocalstorage } from "../../utils/localstorage.utils";
-import {imgBaseUrl, baseUrl} from '../../../config';
+import { baseUrl } from '../../../config';
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${baseUrl}/api`,
@@ -44,7 +44,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor", "Upload", "Category", "Brand", "Product", "CarryBeeStore", "CarryBeeOrder", "SupportTickets", "OrderSettlement"],
+  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor", "Upload", "Category", "Brand", "Product", "CarryBeeStore", "CarryBeeOrder", "SupportTickets", "OrderSettlement", "ResellerStoreProfile", "ResellerProductPage", "LandingPageOrder"],
   endpoints: () => ({}),
 });
 

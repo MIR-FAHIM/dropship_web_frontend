@@ -24,10 +24,18 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     listProducts: builder.query({
-      query: (page = 1) => ({
-        url: API_ENDPOINTS.products.list.path,
-        params: { page },
-      }),
+      query: (args = 1) => {
+        const page = typeof args === "object" ? args.page ?? 1 : args;
+        const vendorId = typeof args === "object" ? args.vendor_id : undefined;
+        const params = {
+          page,
+          ...(vendorId ? { vendor_id: vendorId } : {}),
+        };
+        return {
+          url: API_ENDPOINTS.products.list.path,
+          params,
+        };
+      },
       providesTags: ["Product"],
     }),
     listHomeProducts: builder.query({
@@ -70,6 +78,14 @@ const productApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
     }),
 
+    duplicateProduct: builder.mutation({
+      query: (id) => ({
+        url: buildEndpointPath(API_ENDPOINTS.products.duplicate.path, { id }),
+        method: API_ENDPOINTS.products.duplicate.method,
+      }),
+      invalidatesTags: ["Product"],
+    }),
+
     deleteProduct: builder.mutation({
       query: (id) => ({
         url: buildEndpointPath(API_ENDPOINTS.products.delete.path, { id }),
@@ -101,12 +117,19 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     deleteProductImage: builder.mutation({
-      query: (imageId) => ({
+      query: (arg) => {
+        const imageId = typeof arg === "object" ? arg.imageId : arg;
+        return {
         url: buildEndpointPath(API_ENDPOINTS.products.deleteImage.path, {
           imageId,
         }),
         method: API_ENDPOINTS.products.deleteImage.method,
-      }),
+        };
+      },
+      invalidatesTags: (result, error, arg) => {
+        const productId = typeof arg === "object" ? arg.productId : null;
+        return productId ? [{ type: "Product", id: productId }] : ["Product"];
+      },
     }),
 
     approveProduct: builder.mutation({
@@ -139,6 +162,7 @@ export const {
   useListTodayDealProductsQuery,
   useGetProductDetailsQuery,
   useUpdateProductMutation,
+  useDuplicateProductMutation,
   useDeleteProductMutation,
   useAddWishListMutation,
   useDeleteProductImageMutation,

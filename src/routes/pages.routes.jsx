@@ -30,6 +30,7 @@ import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AllStore from "../pages/reseller_panel/all_store/AllStore";
 import StoreProducts from "../pages/reseller_panel/all_store/StoreProducts";
+import StoreProfile from "../pages/reseller_panel/store_profile/StoreProfile";
 
 export const pagePaths = [
   { path: "dashboard-new",          element: <Overview /> },
@@ -46,6 +47,7 @@ export const pagePaths = [
   { path: "warehousedetails/:id",   element: <WarehouseDetails /> },
   { path: "users",                  element: <Users /> },
   { path: "profile",                element: <ProfilePage /> },
+  { path: "store-profile",          element: <StoreProfile /> },
   { path: "items/category",         element: <ItemsCategory /> },
   { path: "product-assistant",      element: <ProductAssistantPage /> },
   { path: "cart",                   element: <CartPage /> },

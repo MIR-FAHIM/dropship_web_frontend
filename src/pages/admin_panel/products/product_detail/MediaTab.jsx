@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAddProductImageMutation,
+  useDeleteProductImageMutation,
   useUpdateProductMutation,
 } from "../../../../redux/features/product";
 import MediaPickerModal from "../../../../components/shared/MediaPickerModal";
+import ConfirmModal from "../../../../components/shared/ConfirmModal";
 import { imgBaseUrl } from "../../../../../config";
 
 const MediaTab = ({ product, productId }) => {
@@ -16,9 +18,12 @@ const MediaTab = ({ product, productId }) => {
   const [editingVideo, setEditingVideo] = useState(false);
   const [videoLink, setVideoLink] = useState(product?.video_link || "");
   const [updatingVideo, setUpdatingVideo] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingImageId, setDeletingImageId] = useState(null);
 
   const [addProductImage] = useAddProductImageMutation();
   const [updateProduct] = useUpdateProductMutation();
+  const [deleteProductImage] = useDeleteProductImageMutation();
 
   const handleThumbnailSelect = async (file) => {
     if (!file?.id) return;
@@ -58,6 +63,24 @@ const MediaTab = ({ product, productId }) => {
     } finally {
       setAssigning(false);
       setMediaOpen(false);
+    }
+  };
+
+  const getGalleryImageId = (imageItem) =>
+    imageItem?.id || imageItem?.image_id || imageItem?.image?.id;
+
+  const handleDeleteGalleryImage = async () => {
+    const imageId = getGalleryImageId(deleteTarget);
+    if (!imageId) return;
+    setDeletingImageId(imageId);
+    try {
+      await deleteProductImage({ imageId, productId }).unwrap();
+      toast.success("Image deleted successfully!");
+      setDeleteTarget(null);
+    } catch (err) {
+      toast.error(err?.data?.message || "Image delete failed!");
+    } finally {
+      setDeletingImageId(null);
     }
   };
 
@@ -114,19 +137,45 @@ const MediaTab = ({ product, productId }) => {
         />
         {product.images && product.images.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {product.images.map((img, i) => (
-              <img
-                key={img.image.id || i}
-                src={`${imgBaseUrl}/${img.image.file_name}`}
-                alt={`photo-${i}`}
-                className="w-full aspect-square rounded-lg object-cover border border-gray-200"
-              />
-            ))}
+            {product.images.map((img, i) => {
+              const imageId = getGalleryImageId(img);
+              return (
+                <div key={imageId || i} className="relative group">
+                  <img
+                    src={`${imgBaseUrl}/${img.image.file_name}`}
+                    alt={`photo-${i}`}
+                    className="w-full aspect-square rounded-lg object-cover border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(img)}
+                    disabled={deletingImageId === imageId}
+                    className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-white/90 text-red-600 shadow border border-red-100 hover:bg-red-50 disabled:opacity-60"
+                    title="Delete image"
+                  >
+                    {deletingImageId === imageId ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-gray-400">কোনো গ্যালারি ছবি নেই।</p>
         )}
       </div>
+      <ConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Delete image"
+        message="Do you want to delete this product image?"
+        confirmText="Delete"
+        loading={deletingImageId === getGalleryImageId(deleteTarget)}
+        onConfirm={handleDeleteGalleryImage}
+        onClose={() => setDeleteTarget(null)}
+      />
 
       {/* Video */}
       <div>

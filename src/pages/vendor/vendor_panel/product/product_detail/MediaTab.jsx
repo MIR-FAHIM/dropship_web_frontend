@@ -1,19 +1,39 @@
 import React, { useState } from "react";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAddProductImageMutation, useUpdateProductMutation } from "../../../../../redux/features/product";
+import { useAddProductImageMutation, useDeleteProductImageMutation, useUpdateProductMutation } from "../../../../../redux/features/product";
 import MediaPickerModal from "../../../../../components/shared/MediaPickerModal";
+import ConfirmModal from "../../../../../components/shared/ConfirmModal";
 import { imgBaseUrl } from "../../../../../../config";
 
 const MediaTab = ({ product, productId }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [thumbOpen, setThumbOpen] = useState(false);
+  const [updatingThumb, setUpdatingThumb] = useState(false);
   const [editingVideo, setEditingVideo] = useState(false);
   const [videoLink, setVideoLink] = useState(product?.video_link || "");
   const [updatingVideo, setUpdatingVideo] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingImageId, setDeletingImageId] = useState(null);
 
   const [addProductImage] = useAddProductImageMutation();
   const [updateProduct] = useUpdateProductMutation();
+  const [deleteProductImage] = useDeleteProductImageMutation();
+
+  const handleThumbnailSelect = async (file) => {
+    if (!file?.id) return;
+    setUpdatingThumb(true);
+    try {
+      await updateProduct({ id: productId, thumbnail_img: file.id }).unwrap();
+      toast.success("থাম্বনেইল আপডেট হয়েছে!");
+    } catch (err) {
+      toast.error(err?.data?.message || "থাম্বনেইল আপডেট ব্যর্থ হয়েছে!");
+    } finally {
+      setUpdatingThumb(false);
+      setThumbOpen(false);
+    }
+  };
 
   const handleVideoLinkSave = async () => {
     setUpdatingVideo(true);
@@ -42,11 +62,39 @@ const MediaTab = ({ product, productId }) => {
     }
   };
 
+  const getGalleryImageId = (imageItem) =>
+    imageItem?.id || imageItem?.image_id || imageItem?.image?.id;
+
+  const handleDeleteGalleryImage = async () => {
+    const imageId = getGalleryImageId(deleteTarget);
+    if (!imageId) return;
+    setDeletingImageId(imageId);
+    try {
+      await deleteProductImage({ imageId, productId }).unwrap();
+      toast.success("Image deleted successfully!");
+      setDeleteTarget(null);
+    } catch (err) {
+      toast.error(err?.data?.message || "Image delete failed!");
+    } finally {
+      setDeletingImageId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Thumbnail */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">থাম্বনেইল</h3>
+        <div className="flex items-center gap-3 mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">থাম্বনেইল</h3>
+          <button
+            type="button"
+            className="text-xs text-blue-600 hover:underline border px-2 py-1 rounded disabled:opacity-50"
+            onClick={() => setThumbOpen(true)}
+            disabled={updatingThumb}
+          >
+            {updatingThumb ? "আপডেট হচ্ছে..." : "পরিবর্তন করুন"}
+          </button>
+        </div>
         {product.primary_image?.file_name ? (
           <img
             src={`${imgBaseUrl}/${product.primary_image.file_name}`}
@@ -58,6 +106,11 @@ const MediaTab = ({ product, productId }) => {
             <ImageIcon className="w-8 h-8 text-gray-300" />
           </div>
         )}
+        <MediaPickerModal
+          open={thumbOpen}
+          onClose={() => setThumbOpen(false)}
+          onSelect={handleThumbnailSelect}
+        />
       </div>
 
       {/* Gallery */}
@@ -80,19 +133,45 @@ const MediaTab = ({ product, productId }) => {
         />
         {product.images && product.images.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">
-            {product.images.map((img, i) => (
-              <img
-                key={img.image.id || i}
-                src={`${imgBaseUrl}/${img.image.file_name}`}
-                alt={`photo-${i}`}
-                className="w-full aspect-square rounded-lg object-cover border border-gray-200"
-              />
-            ))}
+            {product.images.map((img, i) => {
+              const imageId = getGalleryImageId(img);
+              return (
+                <div key={imageId || i} className="relative group">
+                  <img
+                    src={`${imgBaseUrl}/${img.image.file_name}`}
+                    alt={`photo-${i}`}
+                    className="w-full aspect-square rounded-lg object-cover border border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setDeleteTarget(img)}
+                    disabled={deletingImageId === imageId}
+                    className="absolute top-1.5 right-1.5 p-1.5 rounded-full bg-white/90 text-red-600 shadow border border-red-100 hover:bg-red-50 disabled:opacity-60"
+                    title="Delete image"
+                  >
+                    {deletingImageId === imageId ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <p className="text-sm text-gray-400">কোনো গ্যালারি ছবি নেই।</p>
         )}
       </div>
+      <ConfirmModal
+        open={Boolean(deleteTarget)}
+        title="Delete image"
+        message="Do you want to delete this product image?"
+        confirmText="Delete"
+        loading={deletingImageId === getGalleryImageId(deleteTarget)}
+        onConfirm={handleDeleteGalleryImage}
+        onClose={() => setDeleteTarget(null)}
+      />
 
       {/* Video */}
       <div>

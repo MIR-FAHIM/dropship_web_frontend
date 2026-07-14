@@ -62,6 +62,7 @@ import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
 import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
+import PublicStoreProductPage from "../pages/public_store/ProductPage";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -193,6 +194,10 @@ export const router = createBrowserRouter([
   {
     path: "/products-detail-home/:id",
     element: <ProductDetailsHomePage />,
+  },
+  {
+    path: "/store/product/:slug",
+    element: <PublicStoreProductPage />,
   },
   {
     path: "/app",

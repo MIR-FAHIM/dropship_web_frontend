@@ -1,13 +1,14 @@
 import React, { useState } from "react";
-import { Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
+import { Copy, Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useGetVendorProductsQuery, useGetVendorIdQuery } from "../../../../redux/features/vendor_api";
 import vendorApi from "../../../../redux/features/vendor_api";
-import { useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation } from "../../../../redux/features/product";
+import { useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation, useDuplicateProductMutation } from "../../../../redux/features/product";
 import { getFromLocalstorage } from "../../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../../config";
 import { toast } from "sonner";
+import ConfirmModal from "../../../../components/shared/ConfirmModal";
 
 const VendorProducts = () => {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ const VendorProducts = () => {
   const [editingCell, setEditingCell] = useState(null); // { productId, field }
   const [editValue, setEditValue] = useState("");
   const [approveProduct] = useApproveProductMutation();
+  const [duplicateProduct] = useDuplicateProductMutation();
+  const [duplicatingProductId, setDuplicatingProductId] = useState(null);
+  const [duplicateTarget, setDuplicateTarget] = useState(null);
   const userId = getFromLocalstorage("userId");
   const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
   const vendorId = vendorIdData?.data?.vendor_id;
@@ -96,6 +100,20 @@ const VendorProducts = () => {
       toast.success("পণ্য মুছে ফেলা হয়েছে!");
     } catch (err) {
       toast.error(err?.data?.message || "মুছে ফেলা ব্যর্থ!");
+    }
+  };
+
+  const handleDuplicate = async () => {
+    if (!duplicateTarget?.id) return;
+    setDuplicatingProductId(duplicateTarget.id);
+    try {
+      await duplicateProduct(duplicateTarget.id).unwrap();
+      toast.success("Product duplicated successfully");
+      setDuplicateTarget(null);
+    } catch (err) {
+      toast.error(err?.data?.message || "Product duplicate failed");
+    } finally {
+      setDuplicatingProductId(null);
     }
   };
 
@@ -285,6 +303,18 @@ const VendorProducts = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => setDuplicateTarget(product)}
+                            disabled={duplicatingProductId === product.id}
+                            className="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Duplicate product"
+                          >
+                            {duplicatingProductId === product.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Copy className="w-4 h-4" />
+                            )}
+                          </button>
+                          <button
                             onClick={() => handleDelete(product.id)}
                             className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
                             title="মুছুন"
@@ -324,6 +354,15 @@ const VendorProducts = () => {
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={Boolean(duplicateTarget)}
+        title="Duplicate product"
+        message="Do you want to duplicate this product?"
+        confirmText="Duplicate"
+        loading={duplicatingProductId === duplicateTarget?.id}
+        onConfirm={handleDuplicate}
+        onClose={() => setDuplicateTarget(null)}
+      />
     </div>
   );
 };
