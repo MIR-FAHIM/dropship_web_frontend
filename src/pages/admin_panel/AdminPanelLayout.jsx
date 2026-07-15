@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+/* eslint-disable react/prop-types */
+import { useState } from "react";
 import AdminNotification from "./notification/AdminNotification";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useGetUserDetailsQuery } from "../../redux/features/user";
@@ -17,7 +18,6 @@ import {
   ShieldCheck,
   Store,
   Users,
-  UserCog,
   Truck,
   FolderTree,
   Tag,
@@ -28,6 +28,7 @@ import {
   Building2,
   TicketCheck,
   AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -123,6 +124,11 @@ const adminMenuLinks = [
         label: "Product Clicks Report",
         icon: <Building2 className="w-4 h-4" />,
       },
+      {
+        path: "/admin-panel/reports/login-success",
+        label: "Login Success",
+        icon: <CheckCircle2 className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -214,7 +220,6 @@ const AdminPanelLayout = () => {
   const { data: userDetailsData } = useGetUserDetailsQuery(userId, { skip: !userId });
   const currentUser = userDetailsData?.data || userDetailsData?.user || null;
 
-  const isAdmin = currentUser?.user_type === "admin" && currentUser?.role === "admin";
   const isProductManager = currentUser?.role === "product manager";
   const menuLinks = isProductManager ? productManagerMenuLinks : adminMenuLinks;
 

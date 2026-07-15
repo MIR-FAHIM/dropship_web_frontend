@@ -209,7 +209,7 @@ export const API_ENDPOINTS = {
 
   resellerStoreProfiles: {
     add: define("POST", "/reseller-store-profiles/add"),
-    update: define("PUT", "/reseller-store-profiles/update/{id}"),
+    update: define("POST", "/reseller-store-profiles/update/{id}"),
     byReseller: define("GET", "/reseller-store-profiles/reseller/{resellerId}"),
     details: define("GET", "/reseller-store-profiles/{id}"),
   },
@@ -262,6 +262,9 @@ export const API_ENDPOINTS = {
   },
   notifications: {
     allList: define("GET", "/notifications/all-list"),
+    byUser: define("GET", "/notifications/user/{userId}"),
+    readUnread: define("PATCH", "/notifications/read-unread/{notificationId}"),
+    markAllRead: define("PATCH", "/notifications/mark-all-read/{userId}"),
   },
   address: {
     divisions: define("GET", "/address/divisions"),
@@ -314,6 +317,8 @@ export const API_ENDPOINTS = {
   errorLogs: {
     productCreate: define("GET", "/error-logs/product-create"),
     login: define("GET", "/error-logs/login"),
+    loginSuccess: define("GET", "/error-logs/login-success"),
+    loginSuccessReport: define("GET", "/error-logs/login-success/report"),
     register: define("GET", "/error-logs/registration"),
     order: define("GET", "/error-logs/order"),
     overallReport: define("GET", "/error-logs/report/overall"),

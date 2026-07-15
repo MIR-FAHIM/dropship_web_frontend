@@ -17,6 +17,20 @@ const errorLogApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getLoginSuccessLogs: builder.query({
+      query: (params = {}) => ({
+        url: API_ENDPOINTS.errorLogs.loginSuccess.path,
+        params,
+      }),
+    }),
+
+    getLoginSuccessReport: builder.query({
+      query: (params = {}) => ({
+        url: API_ENDPOINTS.errorLogs.loginSuccessReport.path,
+        params,
+      }),
+    }),
+
     getRegistrationErrorLogs: builder.query({
       query: (params = {}) => ({
         url: API_ENDPOINTS.errorLogs.register.path,
@@ -42,6 +56,8 @@ const errorLogApi = baseApi.injectEndpoints({
 export const {
   useGetProductCreateErrorLogsQuery,
   useGetLoginErrorLogsQuery,
+  useGetLoginSuccessLogsQuery,
+  useGetLoginSuccessReportQuery,
   useGetRegistrationErrorLogsQuery,
   useGetOrderErrorLogsQuery,
   useGetOverallErrorLogsReportQuery,

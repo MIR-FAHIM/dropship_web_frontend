@@ -34,7 +34,6 @@ import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
 import InactiveAdminVendors from "../pages/admin_panel/vendors/InactiveAdminVendors";
-import AdminVendorDetails from "../pages/admin_panel/vendors/AdminVendorDetails";
 import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor_details_tab";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
@@ -62,6 +61,7 @@ import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
 import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
+import LoginSuccessReport from "../pages/admin_panel/error_logs/LoginSuccessReport";
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
@@ -187,6 +187,7 @@ export const router = createBrowserRouter([
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
       { path: "error-logs", element: <ErrorLog /> },
+      { path: "reports/login-success", element: <LoginSuccessReport /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
     ],

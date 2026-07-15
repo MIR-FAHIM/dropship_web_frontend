@@ -39,6 +39,7 @@ const initialForm = {
 const inputClass =
   "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100";
 const labelClass = "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500";
+const allowedLogoTypes = ["image/jpeg", "image/png", "image/webp"];
 
 const getProfile = (response) => {
   const data = response?.data;
@@ -91,6 +92,33 @@ const getImageUrl = (page) => {
   if (!fileName) return null;
   if (/^https?:\/\//i.test(fileName)) return fileName;
   return `${String(imgBaseUrl).replace(/\/+$/, "")}/${String(fileName).replace(/^\/+/, "")}`;
+};
+
+const getLogoUrl = (logo) => {
+  if (!logo || typeof logo !== "string") return null;
+  if (/^https?:\/\//i.test(logo)) return logo;
+  return `${String(imgBaseUrl).replace(/\/+$/, "")}/${logo.replace(/^\/+/, "")}`;
+};
+
+const buildStoreProfileFormData = ({ form, resellerId, selectedLogoFile }) => {
+  const formData = new FormData();
+
+  formData.append("reseller_id", resellerId);
+  formData.append("shop_name", form.shop_name || "");
+  formData.append("phone", form.phone || "");
+  formData.append("whatsapp", form.whatsapp || "");
+  formData.append("address", form.address || "");
+  formData.append("details", form.details || "");
+  formData.append("facebook_url", form.facebook_url || "");
+  formData.append("website", form.website || "");
+  formData.append("theme", form.theme || "");
+  formData.append("status", form.status || "active");
+
+  if (selectedLogoFile) {
+    formData.append("logo", selectedLogoFile);
+  }
+
+  return formData;
 };
 
 const statusClass = {
@@ -608,6 +636,8 @@ const StoreProfile = () => {
   const [activeTab, setActiveTab] = useState("information");
   const [form, setForm] = useState(initialForm);
   const [apiErrors, setApiErrors] = useState([]);
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
+  const [selectedLogoPreview, setSelectedLogoPreview] = useState("");
 
   const {
     data,
@@ -623,10 +653,12 @@ const StoreProfile = () => {
   const [addProfile, { isLoading: creating }] = useAddResellerStoreProfileMutation();
   const [updateProfile, { isLoading: updating }] = useUpdateResellerStoreProfileMutation();
   const saving = creating || updating;
+  const logoPreviewUrl = selectedLogoPreview || getLogoUrl(form.logo);
 
   useEffect(() => {
     if (!profile) {
       setForm(initialForm);
+      setSelectedLogoFile(null);
       return;
     }
 
@@ -642,28 +674,60 @@ const StoreProfile = () => {
       theme: profile.theme || "default",
       status: profile.status || "active",
     });
+    setSelectedLogoFile(null);
   }, [profile]);
+
+  useEffect(() => {
+    if (!selectedLogoFile) {
+      setSelectedLogoPreview("");
+      return undefined;
+    }
+
+    const previewUrl = URL.createObjectURL(selectedLogoFile);
+    setSelectedLogoPreview(previewUrl);
+
+    return () => URL.revokeObjectURL(previewUrl);
+  }, [selectedLogoFile]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleLogoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setSelectedLogoFile(null);
+      return;
+    }
+
+    if (!allowedLogoTypes.includes(file.type)) {
+      toast.error("Please select a JPG, PNG, or WebP image");
+      event.target.value = "";
+      setSelectedLogoFile(null);
+      return;
+    }
+
+    setSelectedLogoFile(file);
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     setApiErrors([]);
 
-    const payload = {
-      ...form,
-      reseller_id: Number(resellerId),
-    };
+    const payload = buildStoreProfileFormData({
+      form,
+      resellerId: Number(resellerId),
+      selectedLogoFile,
+    });
 
     try {
       if (profile?.id) {
-        await updateProfile({ id: profile.id, ...payload }).unwrap();
+        await updateProfile({ id: profile.id, body: payload }).unwrap();
       } else {
         await addProfile(payload).unwrap();
       }
+      setSelectedLogoFile(null);
       toast.success("Store profile saved successfully");
     } catch (err) {
       setApiErrors(getErrorMessages(err));
@@ -748,8 +812,32 @@ const StoreProfile = () => {
                 <input name="shop_name" value={form.shop_name} onChange={handleChange} className={inputClass} />
               </div>
               <div>
-                <label className={labelClass}>Logo Path / URL</label>
-                <input name="logo" value={form.logo} onChange={handleChange} className={inputClass} placeholder="uploads/logo.png" />
+                <label className={labelClass}>Shop Logo</label>
+                <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  {logoPreviewUrl ? (
+                    <img
+                      src={logoPreviewUrl}
+                      alt="Store logo preview"
+                      className="h-16 w-16 shrink-0 rounded-lg border border-gray-200 bg-white object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-300 bg-white text-gray-400">
+                      <Store className="h-6 w-6" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleLogoChange}
+                      className="block w-full text-sm text-gray-700 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Accepted: JPG, PNG, WebP.</p>
+                    {selectedLogoFile && (
+                      <p className="mt-1 truncate text-xs font-semibold text-green-700">{selectedLogoFile.name}</p>
+                    )}
+                  </div>
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Phone</label>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
@@ -7,11 +7,20 @@ import { useTranslation } from "react-i18next";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
 import { useAddResellerProductPageMutation } from "../../../redux/features/resellerProductPage";
+import { useGetResellerStoreProfileByResellerQuery } from "../../../redux/features/resellerStoreProfile";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
 import ProductGallery from "./product_gallery";
 import ResellerProductPageModal from "../../../components/shared/ResellerProductPageModal";
 import { toast } from "sonner";
+
+const getStoreProfile = (response) => {
+  const data = response?.data;
+  if (!data) return null;
+  if (Array.isArray(data)) return data[0] || null;
+  if (Array.isArray(data?.data)) return data.data[0] || null;
+  return data?.data || data;
+};
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -27,6 +36,8 @@ const ProductDetails = () => {
   const userId = getFromLocalstorage("userId");
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
+  const { data: storeProfileData, isLoading: storeProfileLoading, isFetching: storeProfileFetching } =
+    useGetResellerStoreProfileByResellerQuery(userId, { skip: !userId });
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
   const [addProductPage, { isLoading: creatingProductPage }] = useAddResellerProductPageMutation();
   const normalizeImageUrl = (rawUrl) => {
@@ -107,6 +118,9 @@ const ProductDetails = () => {
   const totalBaseValue = basePrice * quantity;
   const totalSellValue = resellerPriceValue * quantity;
   const totalProfitValue = totalSellValue - totalBaseValue;
+  const storeProfile = getStoreProfile(storeProfileData);
+  const hasStoreProfile = Boolean(storeProfile?.id);
+  const checkingStoreProfile = storeProfileLoading || storeProfileFetching;
 
   useEffect(() => {
     console.log("product ID from URL:", id);
@@ -482,14 +496,41 @@ const ProductDetails = () => {
               {isAddingToCart ? t("product_details.adding") : t("product_details.add_to_cart")}
             </button>
             {userId && (
-              <button
-                type="button"
-                onClick={() => setProductPageOpen(true)}
-                className="action-btn secondary"
-                style={{ width: "100%", justifyContent: "center", marginTop: "10px" }}
-              >
-                Make Product Page
-              </button>
+              <div style={{ marginTop: "10px" }}>
+                {checkingStoreProfile ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="action-btn secondary"
+                    style={{ width: "100%", justifyContent: "center", opacity: 0.65, cursor: "not-allowed" }}
+                  >
+                    Checking shop setup...
+                  </button>
+                ) : hasStoreProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => setProductPageOpen(true)}
+                    className="action-btn secondary"
+                    style={{ width: "100%", justifyContent: "center" }}
+                  >
+                    Make Product Page
+                  </button>
+                ) : (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/app/store-profile")}
+                      className="action-btn secondary"
+                      style={{ width: "100%", justifyContent: "center" }}
+                    >
+                      Setup your own shop
+                    </button>
+                    <p style={{ margin: "8px 0 0", color: "#64748b", fontSize: "13px", lineHeight: 1.5 }}>
+                      After Setup your shop you can generate product landing page.
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
             {createdProductPage?.slug && (
               <div style={{ marginTop: "10px", padding: "10px", borderRadius: "10px", background: "#eff6ff", color: "#1d4ed8", fontSize: "13px" }}>

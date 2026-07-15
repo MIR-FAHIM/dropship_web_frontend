@@ -16,13 +16,11 @@ import {
 import { IoIosArrowBack } from "react-icons/io";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
-import { BiLogoProductHunt, BiTransferAlt } from "react-icons/bi";
-import { MdOutlineProductionQuantityLimits, MdOutlineWarehouse } from "react-icons/md";
+import { MdOutlineWarehouse } from "react-icons/md";
 import { FaAngleDown } from "react-icons/fa6";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
-import { Heart, HomeIcon, Store } from "lucide-react";
-import { FaProductHunt } from "react-icons/fa";
+import { Bell, Heart, HomeIcon, Store } from "lucide-react";
 // menu links
 const menuLinks = [
   {
@@ -50,11 +48,7 @@ const menuLinks = [
     label: "All Stores",
     icon: <LuArchive />,
   },
-  {
-    path: "/app/store-profile",
-    label: "Store Profile",
-    icon: <Store />,
-  },
+
   {
     path: "/app/favproducts",
     label: "Favourite Product",
@@ -110,6 +104,17 @@ const menuLinks = [
       },
     ]
    
+  },
+
+    {
+    path: "/app/store-profile",
+    label: "My Store",
+    icon: <Store />,
+  },
+  {
+    path: "/app/notifications",
+    label: "Notifications",
+    icon: <Bell />,
   },
 
 ];

@@ -13,10 +13,10 @@ const resellerStoreProfileApi = baseApi.injectEndpoints({
     }),
 
     updateResellerStoreProfile: builder.mutation({
-      query: ({ id, ...payload }) => ({
+      query: ({ id, body, ...payload }) => ({
         url: buildEndpointPath(API_ENDPOINTS.resellerStoreProfiles.update.path, { id }),
         method: API_ENDPOINTS.resellerStoreProfiles.update.method,
-        body: payload,
+        body: body || payload,
       }),
       invalidatesTags: (result, error, { id }) => [
         "ResellerStoreProfile",

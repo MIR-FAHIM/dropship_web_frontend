@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   ShoppingBag,
   Store,
-  Truck,
   X,
 } from "lucide-react";
 import { imgBaseUrl } from "../../../config";
@@ -440,7 +439,6 @@ const ProductPage = () => {
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <DetailPill icon={PackageCheck} title="Stock" value={stockLabel} />
-              <DetailPill icon={Truck} title="Delivery" value={Number(page?.delivery_charge) > 0 ? formatMoney(page.delivery_charge) : "Free delivery"} />
               <DetailPill icon={ShieldCheck} title="Status" value={isPublished ? "Published" : "Draft preview"} />
             </div>
 
