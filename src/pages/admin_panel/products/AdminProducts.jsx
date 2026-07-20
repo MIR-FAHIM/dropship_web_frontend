@@ -56,15 +56,6 @@ const AdminProducts = () => {
       cancelEdit();
       return;
     }
-    if (["unit_price", "admin_price"].includes(field)) {
-      const nextVendorPrice = field === "unit_price" ? parsed : Number(product.unit_price || 0);
-      const nextAdminPrice = field === "admin_price" ? parsed : Number(product.admin_price || 0);
-      if (nextAdminPrice && nextVendorPrice && nextAdminPrice < nextVendorPrice) {
-        toast.error("Admin/Base Price must be greater than or equal to Vendor Price");
-        cancelEdit();
-        return;
-      }
-    }
     // Optimistically patch the cache so the UI updates instantly
     const patchResult = dispatch(
       productApi.util.updateQueryData("listProducts", productListParams, (draft) => {

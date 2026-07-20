@@ -40,11 +40,6 @@ const PricingTab = ({ product, productId }) => {
   };
 
   const handleSave = async () => {
-    if (Number(form.admin_price || 0) < Number(form.unit_price || 0)) {
-      toast.error("Admin/Base Price must be greater than or equal to Vendor Price");
-      return;
-    }
-
     try {
       await updateProduct({ id: productId, ...form }).unwrap();
       toast.success("মূল্য ও স্টক আপডেট হয়েছে!");
@@ -88,9 +83,6 @@ const PricingTab = ({ product, productId }) => {
             <div>
               <label className={labelCls}>Admin/Base Price *</label>
               <input type="number" name="admin_price" value={form.admin_price} onChange={handleChange} className={inputCls} />
-              {form.admin_price && form.unit_price && Number(form.admin_price) < Number(form.unit_price) && (
-                <p className="mt-1 text-xs text-red-600">Must be greater than or equal to Vendor Price.</p>
-              )}
             </div>
             <div>
               <label className={labelCls}>Max Resell Price</label>

@@ -122,9 +122,6 @@ const AdminProductCreate = () => {
     if (!formData.category_id) return toast.error("ক্যাটাগরি নির্বাচন করুন");
     if (!formData.unit_price) return toast.error("Vendor Price is required");
     if (!formData.admin_price) return toast.error("Admin/Base Price is required");
-    if (Number(formData.admin_price) < Number(formData.unit_price)) {
-      return toast.error("Admin/Base Price must be greater than or equal to Vendor Price");
-    }
 
     const userId = getFromLocalstorage("userId");
     const payload = new FormData();
@@ -348,9 +345,6 @@ const AdminProductCreate = () => {
               <div>
                 <label className={labelClass}>Admin/Base Price (৳) *</label>
                 <input type="number" name="admin_price" value={formData.admin_price} onChange={handleChange} placeholder="0" className={inputClass} required />
-                {formData.admin_price && formData.unit_price && Number(formData.admin_price) < Number(formData.unit_price) && (
-                  <p className="mt-1 text-xs text-red-600">Admin/Base Price must be greater than or equal to Vendor Price.</p>
-                )}
               </div>
 
               {/* <div>
