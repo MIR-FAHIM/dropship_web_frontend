@@ -44,6 +44,7 @@ import {
 } from "../../redux/features/cart";
 import { imgBaseUrl } from "../../../config";
 import { useGetDivisionsQuery, useGetDistrictsQuery, useCalculateDeliveryChargeQuery } from "../../redux/features/address";
+import { getAdminBasePrice, getResellerSellingPrice } from "../../utils/pricing.utils";
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
 
@@ -87,8 +88,10 @@ const CheckoutPage = () => {
 	);
 
 	const cartItems = safeArray(cart?.items ?? cart?.data?.items ?? []);
-	const subtotal = Number(cart?.subtotal ?? cart?.sub_total ?? 0);
-	const resellerProfit = Number(cart?.reseller_profit_total ?? 0);
+	const calculatedSubtotal = cartItems.reduce((sum, item) => sum + getResellerSellingPrice(item) * Number(item?.qty || 1), 0);
+	const calculatedBaseTotal = cartItems.reduce((sum, item) => sum + getAdminBasePrice(item) * Number(item?.qty || 1), 0);
+	const subtotal = calculatedSubtotal;
+	const resellerProfit = calculatedSubtotal - calculatedBaseTotal;
 
 	const vendorDistrict = useMemo(
 		() => cartItems.find((it) => it?.shop?.district)?.shop?.district ?? null,
@@ -470,7 +473,7 @@ const CheckoutPage = () => {
 												: null;
 											const linePrice =
 												it?.line_total ?? it?.total ??
-												(it?.qty || 1) * Number(it?.product?.unit_price ?? it?.product?.price ?? 0);
+												(it?.qty || 1) * getResellerSellingPrice(it);
 											const isProc = processing[it.id];
 											return (
 												<TableRow key={it.id} sx={{ "&:hover": { background: "#fafafa" }, position: "relative" }}>

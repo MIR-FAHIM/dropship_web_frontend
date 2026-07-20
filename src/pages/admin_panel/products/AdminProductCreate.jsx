@@ -41,6 +41,7 @@ const initialForm = {
   video_link: "",
   // pricing
   unit_price: "",
+  admin_price: "",
   max_resell_price: "",
   purchase_price: "",
   current_stock: "",
@@ -119,7 +120,11 @@ const AdminProductCreate = () => {
   const handleSubmit = async () => {
     if (!formData.name.trim()) return toast.error("পণ্যের নাম দিন");
     if (!formData.category_id) return toast.error("ক্যাটাগরি নির্বাচন করুন");
-    if (!formData.unit_price) return toast.error("বিক্রয় মূল্য দিন");
+    if (!formData.unit_price) return toast.error("Vendor Price is required");
+    if (!formData.admin_price) return toast.error("Admin/Base Price is required");
+    if (Number(formData.admin_price) < Number(formData.unit_price)) {
+      return toast.error("Admin/Base Price must be greater than or equal to Vendor Price");
+    }
 
     const userId = getFromLocalstorage("userId");
     const payload = new FormData();
@@ -136,6 +141,7 @@ const AdminProductCreate = () => {
     payload.append("tags", formData.tags);
     payload.append("description", formData.description);
     payload.append("unit_price", formData.unit_price);
+    payload.append("admin_price", formData.admin_price);
     payload.append("max_resell_price", formData.max_resell_price);
     payload.append("purchase_price", formData.purchase_price || "");
     payload.append("current_stock", formData.current_stock || "");
@@ -336,8 +342,15 @@ const AdminProductCreate = () => {
           {activeTab === "pricing" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <div>
-                <label className={labelClass}>বিক্রয় মূল্য (৳) *</label>
+                <label className={labelClass}>Vendor Price (৳) *</label>
                 <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
+              </div>
+              <div>
+                <label className={labelClass}>Admin/Base Price (৳) *</label>
+                <input type="number" name="admin_price" value={formData.admin_price} onChange={handleChange} placeholder="0" className={inputClass} required />
+                {formData.admin_price && formData.unit_price && Number(formData.admin_price) < Number(formData.unit_price) && (
+                  <p className="mt-1 text-xs text-red-600">Admin/Base Price must be greater than or equal to Vendor Price.</p>
+                )}
               </div>
 
               {/* <div>
@@ -345,7 +358,7 @@ const AdminProductCreate = () => {
                 <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
               </div> */}
               <div>
-                <label className={labelClass}>সর্বাধিক পুনঃবিক্রয় মূল্য (৳) *</label>
+                <label className={labelClass}>Max Resell Price (৳) *</label>
                 <input type="number" name="max_resell_price" value={formData.max_resell_price} onChange={handleChange} placeholder="0" className={inputClass} required />
               </div>
               <div>

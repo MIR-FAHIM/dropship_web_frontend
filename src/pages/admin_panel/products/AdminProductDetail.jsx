@@ -13,6 +13,7 @@ import MediaTab from "./product_detail/MediaTab";
 import PricingTab from "./product_detail/PricingTab";
 import ShippingTab from "./product_detail/ShippingTab";
 import AttributesTab from "./product_detail/AttributesTab";
+import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const tabs = [
   { id: "basic", label: "মৌলিক তথ্য", icon: Package },
@@ -118,12 +119,12 @@ const AdminProductDetail = () => {
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500 mb-1">বিক্রয় মূল্য</p>
+            <p className="text-xs text-gray-500 mb-1">Vendor Price</p>
             <p className="text-lg font-bold text-gray-800">৳{product.unit_price}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500 mb-1">ক্রয় মূল্য</p>
-            <p className="text-lg font-bold text-gray-800">৳{product.purchase_price || 0}</p>
+            <p className="text-xs text-gray-500 mb-1">Admin/Base Price</p>
+            <p className="text-lg font-bold text-gray-800">৳{getAdminBasePrice(product)}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">স্টক</p>

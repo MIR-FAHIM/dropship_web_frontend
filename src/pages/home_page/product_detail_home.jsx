@@ -3,6 +3,7 @@ import { FaHeart, FaRegHeart, FaTag, FaBoxOpen, FaStore, FaLayerGroup, FaThLarge
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetProductDetailsQuery } from "../../redux/features/product";
 import { imgBaseUrl } from "../../../config";
+import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -531,7 +532,7 @@ const ProductDetailsHomePage = () => {
             <div className="pdp-stats">
               <div className="pdp-stat-card price">
                 <span className="pdp-stat-label"><FaTag size={10} /> Base Price</span>
-                <span className="pdp-stat-value">৳{product?.unit_price ?? 0}</span>
+                <span className="pdp-stat-value">৳{getAdminBasePrice(product)}</span>
               </div>
               <div className="pdp-stat-card">
                 <span className="pdp-stat-label"><FaBoxOpen size={10} /> In Stock</span>

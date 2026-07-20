@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetCartQuery, useDeleteCartMutation, useUpdateCartMutation, useAddNoteMutation } from "../../../redux/features/cart";
 import { imgBaseUrl } from "../../../../config";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+import { getAdminBasePrice, getResellerSellingPrice } from "../../../utils/pricing.utils";
 
 const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
 
@@ -35,9 +36,11 @@ const CartPage = () => {
   const cart = cartList?.data;
   const items = cart?.items || [];
   const totalItems = cart?.total_items ?? 0;
-  const subtotal = Number(cart?.subtotal ?? 0);
-  const resellerProfit = Number(cart?.reseller_profit_total ?? 0);
-  const totalCost = subtotal - resellerProfit; // vendor cost = selling - profit
+  const calculatedSubtotal = items.reduce((sum, item) => sum + getResellerSellingPrice(item) * Number(item?.qty || 1), 0);
+  const calculatedBaseTotal = items.reduce((sum, item) => sum + getAdminBasePrice(item) * Number(item?.qty || 1), 0);
+  const subtotal = calculatedSubtotal;
+  const resellerProfit = calculatedSubtotal - calculatedBaseTotal;
+  const totalCost = calculatedBaseTotal;
   const profitMargin = subtotal > 0 ? ((resellerProfit / subtotal) * 100).toFixed(1) : 0;
 
   const handleDelete = (itemId) => {
@@ -97,10 +100,10 @@ const CartPage = () => {
                   ? `${imgBaseUrl}/${item.product.primary_image.file_name}`
                   : null;
 
-                const costPrice = Number(item?.unit_price ?? 0);
-                const sellPrice = Number(item?.reseller_price ?? item?.unit_price ?? 0);
-                const itemProfit = Number(item?.line_total_reseller_profit ?? (item.qty * (sellPrice - costPrice)));
-                const lineTotal = Number(item?.line_total ?? (item.qty * sellPrice));
+                const costPrice = getAdminBasePrice(item);
+                const sellPrice = getResellerSellingPrice(item);
+                const itemProfit = item.qty * (sellPrice - costPrice);
+                const lineTotal = Number(item?.qty || 1) * sellPrice;
                 const itemMargin = sellPrice > 0 ? ((sellPrice - costPrice) / sellPrice * 100).toFixed(0) : 0;
 
                 return (
@@ -135,10 +138,10 @@ const CartPage = () => {
                         {/* Price badges */}
                         <div className="flex flex-wrap gap-1.5 mb-2">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-gray-500 text-xs font-semibold">
-                            Cost: {money(costPrice)}
+                            Base Price: {money(costPrice)}
                           </span>
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold">
-                            <FaTag className="text-[10px]" /> Sell: {money(sellPrice)}
+                            <FaTag className="text-[10px]" /> Selling Price: {money(sellPrice)}
                           </span>
                           {itemProfit > 0 && (
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-50 text-green-700 text-xs font-bold border border-green-200">
@@ -232,7 +235,7 @@ const CartPage = () => {
                   <span className="font-bold text-gray-800">{totalItems}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Product Cost</span>
+                  <span className="text-gray-500">Base Price Total</span>
                   <span className="font-bold text-gray-700">{money(totalCost)}</span>
                 </div>
                 <div className="flex justify-between">
@@ -251,7 +254,7 @@ const CartPage = () => {
                   <p className="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wide">Per Item</p>
                   <div className="space-y-1.5">
                     {items.map((item) => {
-                      const itemProfit = Number(item?.line_total_reseller_profit ?? 0);
+                      const itemProfit = (getResellerSellingPrice(item) - getAdminBasePrice(item)) * Number(item?.qty || 1);
                       return (
                         <div key={item.id} className="flex justify-between items-center">
                           <span className="text-xs text-gray-500 truncate max-w-[60%]">

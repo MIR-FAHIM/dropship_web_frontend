@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
+import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100";
@@ -10,7 +11,7 @@ const stripHtml = (value) => String(value || "").replace(/<[^>]*>/g, "").trim();
 
 const getInitialForm = ({ product, page }) => ({
   slug: page?.slug || "",
-  selling_price: page?.selling_price ?? product?.max_resell_price ?? product?.unit_price ?? "",
+  selling_price: page?.selling_price ?? getAdminBasePrice(product) ?? "",
   discount_price: page?.discount_price ?? "",
   custom_title: page?.custom_title || product?.name || "",
   custom_description: page?.custom_description || stripHtml(product?.description),
@@ -43,8 +44,18 @@ const ResellerProductPageModal = ({
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    const basePrice = getAdminBasePrice(product);
+    const sellingPrice = Number(form.selling_price || 0);
+    const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);
+    if (sellingPrice < basePrice) return;
+    if (discountPrice !== null && discountPrice < basePrice) return;
     onSubmit?.(form);
   };
+  const basePrice = getAdminBasePrice(product);
+  const sellingPrice = Number(form.selling_price || 0);
+  const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);
+  const hasPriceError = sellingPrice < basePrice;
+  const hasDiscountError = discountPrice !== null && discountPrice < basePrice;
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -81,11 +92,13 @@ const ResellerProductPageModal = ({
           </div>
           <div>
             <label className={labelClass}>Selling Price</label>
-            <input required type="number" name="selling_price" value={form.selling_price} onChange={handleChange} className={inputClass} />
+            <input required type="number" min={basePrice} name="selling_price" value={form.selling_price} onChange={handleChange} className={inputClass} />
+            {hasPriceError && <p className="mt-1 text-xs font-semibold text-red-600">Minimum admin/base price is ৳{basePrice.toLocaleString()}</p>}
           </div>
           <div>
             <label className={labelClass}>Discount Price</label>
-            <input type="number" name="discount_price" value={form.discount_price} onChange={handleChange} className={inputClass} />
+            <input type="number" min={basePrice} name="discount_price" value={form.discount_price} onChange={handleChange} className={inputClass} />
+            {hasDiscountError && <p className="mt-1 text-xs font-semibold text-red-600">Discount price must be at least ৳{basePrice.toLocaleString()}</p>}
           </div>
           <div>
             <label className={labelClass}>Delivery Charge</label>
@@ -112,7 +125,7 @@ const ResellerProductPageModal = ({
           </button>
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || hasPriceError || hasDiscountError}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}

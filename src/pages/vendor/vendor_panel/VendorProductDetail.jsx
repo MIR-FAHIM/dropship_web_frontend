@@ -84,7 +84,7 @@ const VendorProductDetail = () => {
         )}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 flex-1">
           <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-xs text-gray-500 mb-1">বিক্রয় মূল্য</p>
+            <p className="text-xs text-gray-500 mb-1">Vendor Price</p>
             <p className="text-lg font-bold text-gray-800">৳{product.unit_price}</p>
           </div>
           <div className="bg-gray-50 rounded-lg p-3">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const ResellerPriceModal = ({
   open,
@@ -9,7 +10,7 @@ const ResellerPriceModal = ({
   outOfStock,
   onSubmit,
 }) => {
-  const basePrice = Number(product?.unit_price ?? product?.price ?? 0);
+  const basePrice = getAdminBasePrice(product);
   const [resellerPrice, setResellerPrice] = useState(() =>
     basePrice > 0 ? String(basePrice) : ""
   );
@@ -20,7 +21,7 @@ const ResellerPriceModal = ({
       setResellerPrice(basePrice > 0 ? String(basePrice) : "");
       setQuantity(1);
     }
-  }, [open]);
+  }, [open, basePrice]);
 
   if (!open) return null;
 
@@ -52,7 +53,7 @@ const ResellerPriceModal = ({
 
         {/* Base price */}
         <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-          <span className="text-xs text-gray-500">Base Price</span>
+          <span className="text-xs text-gray-500">Admin/Base Price</span>
           <span className="text-sm font-black text-gray-800">৳{basePrice.toLocaleString()}</span>
         </div>
 
@@ -63,7 +64,7 @@ const ResellerPriceModal = ({
             <span className="px-3 text-sm font-bold text-gray-500 bg-gray-50 border-r border-gray-200 h-full flex items-center">৳</span>
             <input
               type="number"
-              min="0"
+              min={basePrice}
               value={resellerPrice}
               onChange={(e) => {
                 const v = e.target.value;
@@ -133,10 +134,10 @@ const ResellerPriceModal = ({
 
         {/* Submit */}
         <button
-          disabled={isSubmitting || outOfStock}
+          disabled={isSubmitting || outOfStock || resellerPriceVal < basePrice}
           onClick={() => onSubmit(resellerPriceVal, quantity)}
           className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all
-            ${isSubmitting || outOfStock
+            ${isSubmitting || outOfStock || resellerPriceVal < basePrice
               ? "opacity-50 cursor-not-allowed bg-gray-200 text-gray-400"
               : modalAction === "quickOrder"
               ? "bg-black text-white hover:bg-gray-800"

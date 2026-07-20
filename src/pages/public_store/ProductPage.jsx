@@ -23,6 +23,7 @@ import { getFromLocalstorage } from "../../utils/localstorage.utils";
 import { useGetDistrictsQuery, useGetDivisionsQuery, useGetUpazilasQuery } from "../../redux/features/address";
 import { useAddLandingPageOrderMutation } from "../../redux/features/landingPageOrder";
 import { useGetResellerProductPageBySlugQuery } from "../../redux/features/resellerProductPage";
+import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const getPayload = (response) => response?.data?.data || response?.data || response;
 
@@ -220,7 +221,7 @@ const ProductPage = () => {
   const phone = storeProfile?.phone || page?.phone;
   const whatsapp = storeProfile?.whatsapp || page?.whatsapp || phone;
   const logo = assetUrl(storeProfile?.logo || page?.logo);
-  const salePrice = page?.discount_price || page?.selling_price || product?.unit_price;
+  const salePrice = page?.discount_price || page?.selling_price || getAdminBasePrice(product);
   const hasDiscount = Number(page?.discount_price) > 0 && Number(page?.discount_price) < Number(page?.selling_price);
   const whatsappLink = makeWhatsAppLink({ phone: whatsapp, title, price: salePrice, storeName: shopName });
   const productUrl = typeof window !== "undefined" ? window.location.href : "";

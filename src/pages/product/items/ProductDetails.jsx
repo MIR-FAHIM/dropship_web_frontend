@@ -13,6 +13,7 @@ import { imgBaseUrl } from "../../../../config";
 import ProductGallery from "./product_gallery";
 import ResellerProductPageModal from "../../../components/shared/ResellerProductPageModal";
 import { toast } from "sonner";
+import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const getStoreProfile = (response) => {
   const data = response?.data;
@@ -111,7 +112,7 @@ const ProductDetails = () => {
   };
   
   const product = detail?.data;
-  const basePrice = Number(product?.unit_price ?? 0);
+  const basePrice = getAdminBasePrice(product);
   const resellerPriceValue = Number(resellerPrice || 0);
   const profitValue = resellerPriceValue - basePrice;
   const marginValue = basePrice > 0 ? (profitValue / basePrice) * 100 : 0;
@@ -147,11 +148,17 @@ const ProductDetails = () => {
       return match ? match.id : null;
     })();
 
+    const resolvedResellerPrice = resellerPriceValue || basePrice;
+    if (resolvedResellerPrice < basePrice) {
+      toast.error(`Selling price must be at least ৳${basePrice.toLocaleString()}`);
+      return;
+    }
+
     const cartItem = {
       user_id: localStorage.getItem("userId"),
       product_id: product.id,
       qty: quantity,
-      reseller_price: resellerPriceValue || basePrice,
+      reseller_price: resolvedResellerPrice,
       ...(selectedAttributeId != null && { attribute_id: selectedAttributeId }),
     };
 
@@ -222,13 +229,23 @@ const ProductDetails = () => {
 
   const handleCreateProductPage = async (form) => {
     if (!product?.id || !userId) return;
+    const sellingPrice = Number(form.selling_price);
+    const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);
+    if (sellingPrice < basePrice) {
+      toast.error(`Selling price must be at least ৳${basePrice.toLocaleString()}`);
+      return;
+    }
+    if (discountPrice !== null && discountPrice < basePrice) {
+      toast.error(`Discount price must be at least ৳${basePrice.toLocaleString()}`);
+      return;
+    }
     try {
       const response = await addProductPage({
         ...form,
         reseller_id: Number(userId),
         product_id: product.id,
-        selling_price: Number(form.selling_price),
-        discount_price: form.discount_price === "" ? null : Number(form.discount_price),
+        selling_price: sellingPrice,
+        discount_price: discountPrice,
         delivery_charge: Number(form.delivery_charge || 0),
         template_id: Number(form.template_id || 1),
       }).unwrap();
@@ -437,7 +454,7 @@ const ProductDetails = () => {
                   type="number"
                   value={resellerPrice}
                   onChange={handleResellerPriceInput}
-                  min="0"
+                  min={basePrice}
                   placeholder={t("product_details.enter_price_placeholder")}
                 />
               </div>

@@ -23,6 +23,7 @@ import {
 import { imgBaseUrl } from "../../../config";
 import { useAddWishListMutation, useDeleteWishProductMutation } from "../../redux/features/product";
 import { useCreateCartMutation } from "../../redux/features/cart";
+import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const defaultImageUrl =
     "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
@@ -74,8 +75,8 @@ const ProductCardHomePage = ({
         : defaultImageUrl;
 
     const price = useMemo(
-        () => Number(product?.unit_price ?? product?.price ?? 0),
-        [product?.unit_price, product?.price]
+        () => getAdminBasePrice(product),
+        [product]
     );
 
     const salePrice = useMemo(
@@ -231,6 +232,7 @@ const ProductCardHomePage = ({
                     user_id: userId,
                     product_id: product.id,
                     qty: 1,
+                    reseller_price: price,
                 });
 
                 if (res?.data?.status === 200 || res?.data?.status === "success") {
@@ -248,7 +250,7 @@ const ProductCardHomePage = ({
                 alert("Error adding to cart");
             }
         },
-        [createCart, onAddToCart, product, userId]
+        [createCart, onAddToCart, price, product, userId]
     );
 
     const handleView = (e) => {

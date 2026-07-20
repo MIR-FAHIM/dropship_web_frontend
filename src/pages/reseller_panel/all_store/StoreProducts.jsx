@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Loader2, Package, Search, Eye } from "lucide-react";
 import { useGetVendorProductsQuery } from "../../../redux/features/vendor_api";
 import { imgBaseUrl } from "../../../../config";
+import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const StoreProducts = () => {
   const navigate = useNavigate();
@@ -94,7 +95,7 @@ const StoreProducts = () => {
               <div className="p-3 space-y-2">
                 <p className="text-sm font-semibold text-gray-800 line-clamp-2">{product.name}</p>
                 <p className="text-xs text-gray-500">SKU: {product.sku || "—"}</p>
-                <p className="text-sm font-bold text-gray-800">৳{product.unit_price || 0}</p>
+                <p className="text-sm font-bold text-gray-800">৳{getAdminBasePrice(product).toLocaleString()}</p>
                 <button
                   onClick={() => navigate(`/app/productdetails/${product.id}`)}
                   className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50"

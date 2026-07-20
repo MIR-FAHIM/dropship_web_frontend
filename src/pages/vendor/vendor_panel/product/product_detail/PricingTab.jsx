@@ -4,7 +4,7 @@ import { InfoRow } from "./shared";
 const PricingTab = ({ product }) => (
   <div>
     <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">মূল্য</p>
-    <InfoRow label="বিক্রয় মূল্য" value={`৳${product.unit_price}`} />
+    <InfoRow label="Vendor Price" value={`৳${product.unit_price}`} />
     <InfoRow label="ক্রয় মূল্য" value={`৳${product.purchase_price || 0}`} />
 
     <div className="mt-6">

@@ -44,7 +44,7 @@ const VendorProducts = () => {
 
   const commitEdit = async (product) => {
     const field = editingCell?.field;
-    const numericFields = ["unit_price", "max_resell_price"];
+    const numericFields = ["unit_price"];
     const isNumeric = numericFields.includes(field);
 
     let finalValue = editValue;
@@ -168,8 +168,8 @@ const VendorProducts = () => {
                     <th className="pb-3 font-medium">নাম</th>
                     <th className="pb-3 font-medium">ক্যাটাগরি</th>
                     <th className="pb-3 font-medium">SKU</th>
-                    <th className="pb-3 font-medium">মূল্য</th>
-                    <th className="pb-3 font-medium">Max Sell মূল্য</th>
+                    <th className="pb-3 font-medium">Vendor Price</th>
+                    <th className="pb-3 font-medium">Max Resell Price</th>
                     <th className="pb-3 font-medium">স্টক</th>
                     <th className="pb-3 font-medium">স্ট্যাটাস</th>
                     <th className="pb-3 font-medium">তারিখ</th>
@@ -243,29 +243,8 @@ const VendorProducts = () => {
                           <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">৳{product.unit_price}</span>
                         )}
                       </td>
-                      <td
-                        className="py-3 text-gray-800 font-medium cursor-pointer"
-                        onClick={() => startEdit(product.id, "max_resell_price", product.max_resell_price)}
-                      >
-                        {editingCell?.productId === product.id && editingCell?.field === "max_resell_price" ? (
-                          <input
-                            autoFocus
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            onBlur={() => commitEdit(product)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") commitEdit(product);
-                              if (e.key === "Escape") cancelEdit();
-                            }}
-                            className="w-24 border border-blue-400 rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        ) : (
-                          <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">৳{product.max_resell_price}</span>
-                        )}
+                      <td className="py-3 text-gray-800 font-medium">
+                        ৳{product.max_resell_price || 0}
                       </td>
                       <td className="py-3">
                         <span

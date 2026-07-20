@@ -3,6 +3,7 @@ import { Pencil, Save, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { InfoRow, Badge } from "./shared";
 import { useUpdateProductMutation } from "../../../../redux/features/product";
+import { getAdminBasePrice } from "../../../../utils/pricing.utils";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent";
@@ -16,6 +17,8 @@ const PricingTab = ({ product, productId }) => {
   const startEdit = () => {
     setForm({
       unit_price: product.unit_price || "",
+      admin_price: product.admin_price ?? getAdminBasePrice(product) ?? "",
+      max_resell_price: product.max_resell_price || "",
       purchase_price: product.purchase_price || "",
       current_stock: product.current_stock ?? "",
       unit: product.unit || "",
@@ -37,6 +40,11 @@ const PricingTab = ({ product, productId }) => {
   };
 
   const handleSave = async () => {
+    if (Number(form.admin_price || 0) < Number(form.unit_price || 0)) {
+      toast.error("Admin/Base Price must be greater than or equal to Vendor Price");
+      return;
+    }
+
     try {
       await updateProduct({ id: productId, ...form }).unwrap();
       toast.success("মূল্য ও স্টক আপডেট হয়েছে!");
@@ -72,10 +80,21 @@ const PricingTab = ({ product, productId }) => {
         {/* Price */}
         <div>
           <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-3">মূল্য</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label className={labelCls}>বিক্রয় মূল্য *</label>
+              <label className={labelCls}>Vendor Price *</label>
               <input type="number" name="unit_price" value={form.unit_price} onChange={handleChange} className={inputCls} />
+            </div>
+            <div>
+              <label className={labelCls}>Admin/Base Price *</label>
+              <input type="number" name="admin_price" value={form.admin_price} onChange={handleChange} className={inputCls} />
+              {form.admin_price && form.unit_price && Number(form.admin_price) < Number(form.unit_price) && (
+                <p className="mt-1 text-xs text-red-600">Must be greater than or equal to Vendor Price.</p>
+              )}
+            </div>
+            <div>
+              <label className={labelCls}>Max Resell Price</label>
+              <input type="number" name="max_resell_price" value={form.max_resell_price} onChange={handleChange} className={inputCls} />
             </div>
             <div>
               <label className={labelCls}>ক্রয় মূল্য</label>
@@ -168,7 +187,8 @@ const PricingTab = ({ product, productId }) => {
         </button>
       </div>
       <p className="text-xs font-semibold text-red-600 uppercase tracking-wide mb-3">মূল্য</p>
-      <InfoRow label="বিক্রয় মূল্য" value={`৳${product.unit_price}`} />
+      <InfoRow label="Vendor Price" value={`৳${product.unit_price || 0}`} />
+      <InfoRow label="Admin/Base Price" value={`৳${getAdminBasePrice(product)}`} />
       <InfoRow label="Max Resell Price" value={`৳${product.max_resell_price || 0}`} />
 
       <div className="mt-6">

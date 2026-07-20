@@ -19,6 +19,13 @@ import {
   useGetOrderStatusSummaryQuery,
 } from "../../../redux/features/order";
 import AssignCarryBeeModal, { CarryBeeInfoCard } from "./carrybee_assign";
+import {
+  getAdminBasePrice,
+  getAdminCommission,
+  getResellerProfit,
+  getVendorPrice,
+  toNumber,
+} from "../../../utils/pricing.utils";
 
 const statusColorMap = {
   Pending: "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -70,6 +77,24 @@ const AdminOrderDetails = () => {
 
   const formatCurrency = (amount) =>
     `৳${Number(amount || 0).toLocaleString("en-US")}`;
+
+  const getOrderItemPricing = (item = {}) => {
+    const qty = Number(item?.qty || 1);
+    const vendorPrice = getVendorPrice(item);
+    const adminPrice = getAdminBasePrice(item);
+    const lineUnitPrice = qty > 0 ? Number(item?.line_total || 0) / qty : 0;
+    const sellingPrice = toNumber(item?.reseller_price ?? item?.selling_price ?? lineUnitPrice, adminPrice);
+
+    return {
+      qty,
+      vendorPrice,
+      adminPrice,
+      sellingPrice,
+      lineTotal: sellingPrice * qty,
+      resellerProfit: getResellerProfit({ resellerPrice: sellingPrice, adminPrice, qty }),
+      adminCommission: getAdminCommission({ adminPrice, unitPrice: vendorPrice, qty }),
+    };
+  };
 
   const getCurrentStatusName = () => {
     if (!order) return "";
@@ -218,54 +243,62 @@ const AdminOrderDetails = () => {
               </h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {order.items?.map((item) => (
-                <div
-                  key={item.id}
-                  className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-                >
-                  <div className="flex-1">
-                    {item.product_id ? (
-                      <button
-                        onClick={() => navigate(`/admin-panel/products/${item.product_id}`)}
-                        className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
-                      >
-                        {item.product_name}
-                      </button>
-                    ) : (
-                      <p className="font-medium text-gray-800">{item.product_name}</p>
-                    )}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
-                      {item.sku && <span>SKU: {item.sku}</span>}
-                      <span>Qty: {item.qty}</span>
-                      <span>Unit price: {formatCurrency(item.unit_price)}</span>
+              {order.items?.map((item) => {
+                const pricing = getOrderItemPricing(item);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                  >
+                    <div className="flex-1">
+                      {item.product_id ? (
+                        <button
+                          onClick={() => navigate(`/admin-panel/products/${item.product_id}`)}
+                          className="font-medium text-blue-600 hover:text-blue-800 hover:underline text-left"
+                        >
+                          {item.product_name}
+                        </button>
+                      ) : (
+                        <p className="font-medium text-gray-800">{item.product_name}</p>
+                      )}
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
+                        {item.sku && <span>SKU: {item.sku}</span>}
+                        <span>Qty: {pricing.qty}</span>
+                        <span>Vendor Price: {formatCurrency(pricing.vendorPrice)}</span>
+                        <span>Admin/Base Price: {formatCurrency(pricing.adminPrice)}</span>
+                        <span>Selling Price: {formatCurrency(pricing.sellingPrice)}</span>
+                        <span>Reseller Profit: {formatCurrency(pricing.resellerProfit)}</span>
+                        <span>Admin Commission: {formatCurrency(pricing.adminCommission)}</span>
+                      </div>
+                      {item.product_attribute?.attribute?.name && item.product_attribute?.value?.value && (
+                        <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold border border-indigo-200">
+                          {item.product_attribute.attribute.name}: {item.product_attribute.value.value}
+                        </span>
+                      )}
                     </div>
-                    {item.product_attribute?.attribute?.name && item.product_attribute?.value?.value && (
-                      <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 text-xs font-semibold border border-indigo-200">
-                        {item.product_attribute.attribute.name}: {item.product_attribute.value.value}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-gray-800 text-sm">
-                      {formatCurrency(item.line_total)}
-                    </p>
-                    {item.shop && (
-                      <p className="text-xs mt-0.5">
-                        {item.shop.id ? (
-                          <button
-                            onClick={() => navigate(`/admin-panel/vendors/${item.shop.id}`)}
-                            className="text-blue-500 hover:text-blue-700 hover:underline"
-                          >
-                            Shop: {item.shop.shop_name}
-                          </button>
-                        ) : (
-                          <span className="text-green-600">Shop: {item.shop.shop_name}</span>
-                        )}
+                    <div className="text-right">
+                      <p className="font-bold text-gray-800 text-sm">
+                        {formatCurrency(pricing.lineTotal)}
                       </p>
-                    )}
+                      {item.shop && (
+                        <p className="text-xs mt-0.5">
+                          {item.shop.id ? (
+                            <button
+                              onClick={() => navigate(`/admin-panel/vendors/${item.shop.id}`)}
+                              className="text-blue-500 hover:text-blue-700 hover:underline"
+                            >
+                              Shop: {item.shop.shop_name}
+                            </button>
+                          ) : (
+                            <span className="text-green-600">Shop: {item.shop.shop_name}</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {/* Totals */}
             <div className="px-5 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl space-y-2 text-sm">

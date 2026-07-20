@@ -5,6 +5,7 @@ import { imgBaseUrl } from "../../../config";
 import { useAddWishListMutation, useDeleteWishProductMutation } from "../../redux/features/product";
 import { useCreateCartMutation } from "../../redux/features/cart";
 import ResellerPriceModal from "./components/quick_order_reseller_price";
+import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const defaultImageUrl =
 	"https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
@@ -65,8 +66,8 @@ const ProductCard = ({
 		: defaultImageUrl;
 
 	const price = useMemo(
-		() => Number(product?.unit_price ?? product?.price ?? 0),
-		[product?.unit_price, product?.price]
+		() => getAdminBasePrice(product),
+		[product]
 	);
 
 	const salePrice = useMemo(
@@ -218,8 +219,12 @@ const ProductCard = ({
 	const handleModalSubmit = useCallback(
 		async (rPrice, qty) => {
 			if (!product?.id) return;
-			const base = Number(product?.unit_price ?? product?.price ?? 0);
+			const base = getAdminBasePrice(product);
 			const resolvedPrice = rPrice ?? base;
+			if (resolvedPrice < base) {
+				alert(`Selling price must be at least ৳${base.toLocaleString()}`);
+				return;
+			}
 			setIsSubmitting(true);
 			try {
 				if (onAddToCart && modalAction === "cart") { onAddToCart(product); setModalOpen(false); return; }

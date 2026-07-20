@@ -45,7 +45,6 @@ const initialForm = {
   photosPreview: null,
   video_link: "",
   unit_price: "",
-  max_resell_price: "",
   purchase_price: "",
   current_stock: "",
   unit: "",
@@ -166,7 +165,6 @@ const VendorProductCreate = () => {
     payload.append("description", formData.description);
     payload.append("unit_price", formData.unit_price);
     payload.append("purchase_price", formData.purchase_price || "");
-    payload.append("max_resell_price", formData.max_resell_price || "");
     payload.append("current_stock", formData.current_stock || "2");
     payload.append("unit", formData.unit);
     payload.append("weight", formData.weight);
@@ -364,10 +362,6 @@ const VendorProductCreate = () => {
                 <label className={labelClass}>Base Price (৳)</label>
                 <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
               </div> */}
-              <div>
-                <label className={labelClass}>Max Resell Price (৳)</label>
-                <input type="number" name="max_resell_price" value={formData.max_resell_price} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
               <div>
                 <label className={labelClass}>বর্তমান স্টক</label>
                 <input type="number" name="current_stock" value={formData.current_stock} onChange={handleChange} placeholder="0" className={inputClass} />

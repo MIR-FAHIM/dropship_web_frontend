@@ -6,6 +6,12 @@ import {
   FaArrowLeft, FaBoxOpen, FaUser, FaPhone, FaMapMarkerAlt,
   FaCalendarAlt, FaStickyNote, FaChartLine, FaCheckCircle, FaClock,
 } from "react-icons/fa";
+import {
+  getAdminBasePrice,
+  getResellerProfit,
+  getVendorPrice,
+  toNumber,
+} from "../../../utils/pricing.utils";
 
 /* ── helpers ── */
 const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
@@ -28,6 +34,22 @@ const STATUS_STYLES = {
 const getStatus = (s) =>
   STATUS_STYLES[String(s || "").toLowerCase()] ??
   { pill: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-400" };
+
+const getOrderItemPricing = (item = {}) => {
+  const qty = Number(item?.qty || 1);
+  const vendorPrice = getVendorPrice(item);
+  const adminPrice = getAdminBasePrice(item);
+  const lineUnitPrice = qty > 0 ? Number(item?.line_total || 0) / qty : 0;
+  const sellingPrice = toNumber(item?.reseller_price ?? item?.selling_price ?? lineUnitPrice, adminPrice);
+
+  return {
+    qty,
+    vendorPrice,
+    sellingPrice,
+    lineTotal: sellingPrice * qty,
+    resellerProfit: getResellerProfit({ resellerPrice: sellingPrice, adminPrice, qty }),
+  };
+};
 
 const getStatusName = (status) => {
   if (!status) return "";
@@ -203,6 +225,7 @@ const OrderDetailsPage = () => {
                 ? `${imgBaseUrl}/${item.product.primary_image.file_name}`
                 : null;
               const ist = getStatus(item.status);
+              const pricing = getOrderItemPricing(item);
               return (
                 <div key={item.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
                   {imgSrc ? (
@@ -222,11 +245,15 @@ const OrderDetailsPage = () => {
                     )}
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-xs text-gray-500">Qty: <b className="text-gray-700">{item.qty}</b></span>
-                      <span className="text-xs text-gray-500">{money(item.unit_price)} / pc</span>
+                      <span className="text-xs text-gray-500">Selling: {money(pricing.sellingPrice)} / pc</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1.5 mt-2 text-[10px] text-gray-500">
+                      <span>Vendor: <b>{money(pricing.vendorPrice)}</b></span>
+                      <span>Profit: <b className="text-green-600">{money(pricing.resellerProfit)}</b></span>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${ist.pill}`}>{item.status}</span>
-                      <span className="font-black text-indigo-700 text-sm">{money(item.line_total)}</span>
+                      <span className="font-black text-indigo-700 text-sm">{money(pricing.lineTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -239,7 +266,7 @@ const OrderDetailsPage = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Product", "Qty", "Unit Price", "Line Total",].map((h) => (
+                  {["Product", "Qty", "Vendor Price", "Selling Price", "Reseller Profit", "Line Total"].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-black text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -249,7 +276,7 @@ const OrderDetailsPage = () => {
                   const imgSrc = item?.product?.primary_image?.file_name
                     ? `${imgBaseUrl}/${item.product.primary_image.file_name}`
                     : null;
-                  const ist = getStatus(item.status);
+                  const pricing = getOrderItemPricing(item);
                   return (
                     <tr key={item.id} className="border-b border-gray-50 hover:bg-indigo-50/20 transition">
                       <td className="px-4 py-3">
@@ -273,8 +300,10 @@ const OrderDetailsPage = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 font-bold text-gray-700">{item.qty}</td>
-                      <td className="px-4 py-3 text-gray-600">{money(item.unit_price)}</td>
-                      <td className="px-4 py-3 font-black text-indigo-700">{money(item.line_total)}</td>
+                      <td className="px-4 py-3 text-gray-600">{money(pricing.vendorPrice)}</td>
+                      <td className="px-4 py-3 text-gray-600">{money(pricing.sellingPrice)}</td>
+                      <td className="px-4 py-3 font-bold text-green-600">{money(pricing.resellerProfit)}</td>
+                      <td className="px-4 py-3 font-black text-indigo-700">{money(pricing.lineTotal)}</td>
              
                     </tr>
                   );
