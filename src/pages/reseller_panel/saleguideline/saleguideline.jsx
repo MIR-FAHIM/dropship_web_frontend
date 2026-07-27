@@ -46,7 +46,7 @@ const SalesGuidelines = () => {
           {[
             { num: '১', color: '#1D9E75', bg: '#E1F5EE', textColor: '#085041', borderColor: '#1D9E75', title: 'পণ্য বাছাই করুন', desc: 'ভেরিফাইড এবং রেটিং দেখা পণ্যগুলো বেছে নিন। ৪-৫ স্টার পণ্য সবচেয়ে নিরাপদ।' },
             { num: '২', color: '#BA7517', bg: '#FAEEDA', textColor: '#633806', borderColor: '#BA7517', title: 'অর্ডার কনফার্ম করুন', desc: 'অ্যাপে অর্ডার দেওয়ার আগে ফোনে কাস্টমারের সাথে কথা বলে নিশ্চিত করুন।' },
-            { num: '৩', color: '#185FA5', bg: '#E6F1FB', textColor: '#0C447C', borderColor: '#185FA5', title: 'অগ্রিম চার্জ নিন', desc: 'ডেলিভারি চার্জ আগেই নিন। এতে ফেক অর্ডার এবং লোকসান কমবে।' },
+            { num: '৩', color: '#185FA5', bg: '#E6F1FB', textColor: '#0C447C', borderColor: '#185FA5', title: 'অগ্রিম চার্জ নিন (Optional)', desc: 'ডেলিভারি চার্জ আগেই নিন। এতে ফেক অর্ডার এবং লোকসান কমবে।' },
             { num: '৪', color: '#534AB7', bg: '#EEEDFE', textColor: '#3C3489', borderColor: '#534AB7', title: 'ডেলিভারি ও ফলোআপ', desc: 'পণ্য পৌঁছে দিন, ফিডব্যাক নিন এবং সমস্যা হলে রিটার্ন প্রক্রিয়া করুন।' },
           ].map((step) => (
             <div key={step.num} style={{
@@ -112,7 +112,7 @@ const SalesGuidelines = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '2rem' }}>
           {[
             { icon: '📞', title: 'অর্ডার কনফার্মেশন', desc: 'সবসময় ফোনে কাস্টমারের সাথে কথা বলে অর্ডার নিশ্চিত করুন। অ্যাপে দেওয়ার আগে অবশ্যই কনফার্ম করুন।' },
-            { icon: '💰', title: 'অগ্রিম ডেলিভারি চার্জ', desc: 'ডেলিভারি চার্জ আগেই সংগ্রহ করুন। যারা চার্জ দেয়নি, তাদের অর্ডার ডেলিভারির আগে যাচাই করুন।' },
+            { icon: '💰', title: 'অগ্রিম ডেলিভারি চার্জ (Optional)', desc: 'ডেলিভারি চার্জ আগেই সংগ্রহ করুন। যারা চার্জ দেয়নি, তাদের অর্ডার ডেলিভারির আগে যাচাই করুন।' },
             { icon: '🔒', title: 'অ্যাকাউন্ট সুরক্ষা', desc: 'পাসওয়ার্ড কাউকে শেয়ার করবেন না। বিকাশ নম্বর লিংক রাখুন যাতে অননুমোদিত উত্তোলন না হয়।' },
             { icon: '🛡️', title: 'সাপোর্ট যোগাযোগ', desc: 'যেকোনো সমস্যায় দ্রুত সাপোর্ট টিমকে জানান। দেরি করলে সমস্যা বড় হতে পারে।' },
           ].map((item, i) => (
@@ -122,6 +122,36 @@ const SalesGuidelines = () => {
               <p style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.7 }}>{item.desc}</p>
             </div>
           ))}
+        </div>
+
+        {/* New Store Link Guide */}
+        <div style={{ marginBottom: '1rem' }}>
+          <span style={{
+            display: 'inline-block', background: '#E1F5EE', color: '#085041',
+            fontSize: '12px', fontWeight: 600, padding: '4px 12px', borderRadius: '20px', letterSpacing: '.5px'
+          }}>নতুন গাইড</span>
+          <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a', marginTop: '8px' }}>
+            আপনার নিজস্ব স্টোর ও লিঙ্ক শেয়ার
+          </h2>
+        </div>
+
+        <div style={{ background: '#fff', border: '0.5px solid #e5e7eb', borderRadius: '12px', padding: '1.25rem', marginBottom: '2rem' }}>
+          <p style={{ fontSize: '13px', color: '#6b7280', lineHeight: 1.8, marginBottom: '1rem' }}>
+            প্রোডাক্ট ডিটেইলে গিয়ে আপনি আপনার নিজের স্টোর তৈরি করে পণ্যের URL লিঙ্ক তৈরি করতে পারেন। এতে আপনি নিজের পছন্দমতো দামে পণ্য শেয়ার করতে পারবেন।
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            {[
+              { title: 'স্টোর তৈরি করুন', desc: 'প্রোডাক্ট ডিটেইলে গিয়ে আপনার নিজস্ব স্টোর সেটআপ করুন।' },
+              { title: 'কাস্টম লিঙ্ক তৈরি করুন', desc: 'পণ্যের URL লিঙ্ক তৈরি করে নিজের দাম সেট করুন।' },
+              { title: 'অর্ডার দেখুন', desc: 'এই প্যানেল থেকে আপনার স্টোরে আসা অর্ডার দেখুন।' },
+              { title: 'ভেরিফিকেশন শেষে ফরওয়ার্ড করুন', desc: 'অর্ডার যাচাই করে resellerbrain-এ পাঠিয়ে দিন।' },
+            ].map((item, i) => (
+              <div key={i} style={{ background: '#f8fafc', border: '0.5px solid #e5e7eb', borderRadius: '10px', padding: '0.9rem' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 600, color: '#1a1a1a', marginBottom: '4px' }}>{item.title}</h3>
+                <p style={{ fontSize: '12px', color: '#6b7280', lineHeight: 1.7 }}>{item.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Success Tips Banner */}

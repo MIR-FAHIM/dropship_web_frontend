@@ -136,7 +136,7 @@ const HomePage = () => {
                                 <button
                                     onClick={handleDashboard}
                                     className="text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-                                >লগইন</button>
+                                >Droshipper Login</button>
                                 <Link to="/register" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
                                     <Zap className="w-3.5 h-3.5" /> ফ্রি শুরু করুন
                                 </Link>
