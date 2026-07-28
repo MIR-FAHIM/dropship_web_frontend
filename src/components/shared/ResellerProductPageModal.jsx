@@ -61,8 +61,13 @@ const ResellerProductPageModal = ({
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={loading ? undefined : onClose} />
       <form onSubmit={handleSubmit} className="relative max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h3 className="text-base font-semibold text-gray-800">{title || "Product Page"}</h3>
+        <div className="flex items-start justify-between gap-4 border-b border-gray-100 px-5 py-4">
+          <div>
+            <h3 className="text-base font-semibold text-gray-800">{title || "Product Page"}</h3>
+            <p className="mt-1 max-w-xl text-xs leading-5 text-gray-500">
+              আপনার নিজের দামে এই প্রোডাক্ট লিংক কাস্টমারকে শেয়ার করুন। অর্ডার আপনার নিজস্ব স্টোরে আসবে, তারপর ভেরিফাই করে লজিস্টিক সম্পন্ন করার জন্য ResellerBrain-এ পাঠিয়ে দিন।
+            </p>
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -83,30 +88,15 @@ const ResellerProductPageModal = ({
             <input name="slug" value={form.slug} onChange={handleChange} className={inputClass} placeholder="Auto generate if empty" />
           </div>
           <div>
-            <label className={labelClass}>Published Status</label>
-            <select name="published_status" value={form.published_status} onChange={handleChange} className={inputClass}>
-              <option value="draft">draft</option>
-              <option value="published">published</option>
-              <option value="inactive">inactive</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelClass}>Selling Price</label>
+            <label className={labelClass}>Your Selling Price</label>
             <input required type="number" min={basePrice} name="selling_price" value={form.selling_price} onChange={handleChange} className={inputClass} />
             {hasPriceError && <p className="mt-1 text-xs font-semibold text-red-600">Minimum admin/base price is ৳{basePrice.toLocaleString()}</p>}
           </div>
           <div>
             <label className={labelClass}>Discount Price</label>
             <input type="number" min={basePrice} name="discount_price" value={form.discount_price} onChange={handleChange} className={inputClass} />
+            <p className="mt-1 text-xs text-gray-400">Example: if your selling price is ৳1,000, set discount price ৳900 to show a customer offer.</p>
             {hasDiscountError && <p className="mt-1 text-xs font-semibold text-red-600">Discount price must be at least ৳{basePrice.toLocaleString()}</p>}
-          </div>
-          <div>
-            <label className={labelClass}>Delivery Charge</label>
-            <input type="number" name="delivery_charge" value={form.delivery_charge} onChange={handleChange} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Template ID</label>
-            <input type="number" name="template_id" value={form.template_id} onChange={handleChange} className={inputClass} />
           </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Custom Description</label>

@@ -43,11 +43,11 @@ const menuLinks = [
     label: "All Categories",
     icon: <LuArchive />,
   },
-  {
-    path: "/app/all-store",
-    label: "All Stores",
-    icon: <LuArchive />,
-  },
+  // {
+  //   path: "/app/all-store",
+  //   label: "All Stores",
+  //   icon: <LuArchive />,
+  // },
 
   {
     path: "/app/favproducts",
