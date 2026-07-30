@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import PropTypes from "prop-types";
 import { toast } from "sonner";
@@ -24,6 +24,11 @@ import { useGetDistrictsQuery, useGetDivisionsQuery, useGetUpazilasQuery } from 
 import { useAddLandingPageOrderMutation } from "../../redux/features/landingPageOrder";
 import { useGetResellerProductPageBySlugQuery } from "../../redux/features/resellerProductPage";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
+import {
+  getButtonRadiusClass,
+  getFontFamily,
+  getProductPageDesign,
+} from "../../utils/resellerProductPageDesign.utils";
 
 const getPayload = (response) => response?.data?.data || response?.data || response;
 
@@ -108,6 +113,20 @@ const makeWhatsAppLink = ({ phone, title, price, storeName }) => {
   );
 
   return `https://wa.me/${normalized}?text=${message}`;
+};
+
+const withAlpha = (color, alpha = "12") => {
+  const value = String(color || "").trim();
+  if (/^#[0-9a-f]{6}$/i.test(value)) return `${value}${alpha}`;
+  if (/^#[0-9a-f]{3}$/i.test(value)) {
+    const expanded = value
+      .slice(1)
+      .split("")
+      .map((char) => `${char}${char}`)
+      .join("");
+    return `#${expanded}${alpha}`;
+  }
+  return "rgba(37, 99, 235, 0.07)";
 };
 
 const pushGalleryImage = (list, candidate, altText = "") => {
@@ -226,6 +245,45 @@ const ProductPage = () => {
   const whatsappLink = makeWhatsAppLink({ phone: whatsapp, title, price: salePrice, storeName: shopName });
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
   const stockLabel = Number(product?.current_stock) > 0 ? `${product.current_stock} in stock` : "Stock not confirmed";
+  const design = useMemo(() => getProductPageDesign(page), [page]);
+  const buttonRadiusClass = getButtonRadiusClass(design.button_style);
+  const ctaText = design.hero?.cta_text || "Order Now";
+  const heroSubtitle = design.hero?.subtitle;
+  const heroBadgeText = design.hero?.badge_text;
+  const isHeroCentered = design.layout?.hero_alignment === "center";
+  const imagePosition = design.layout?.image_position || "top";
+  const pageStyle = {
+    backgroundColor: design.background_color,
+    color: design.text_color,
+    fontFamily: getFontFamily(design.font_style),
+  };
+  const cardStyle = {
+    backgroundColor: design.card_background,
+    color: design.text_color,
+  };
+  const primaryButtonStyle = {
+    backgroundColor: design.button_color,
+    color: design.button_text_color,
+  };
+  const accentButtonStyle = {
+    backgroundColor: design.accent_color,
+    color: design.button_text_color,
+  };
+  const outlineButtonStyle = {
+    borderColor: design.button_color,
+    color: design.button_color,
+  };
+  const softPanelStyle = {
+    backgroundColor: withAlpha(design.primary_color),
+  };
+  const mainGridClass = imagePosition === "top"
+    ? "grid grid-cols-1 gap-6"
+    : "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]";
+  const imageSectionClass = `space-y-4 ${imagePosition === "right" ? "lg:order-2" : ""}`;
+  const infoAsideClass = `space-y-4 ${imagePosition === "top" ? "" : "lg:sticky lg:top-24 lg:self-start"} ${
+    imagePosition === "right" ? "lg:order-1" : ""
+  }`;
+  const heroTextClass = isHeroCentered ? "text-center" : "text-left";
   const divisions = getCollection(divisionsData);
   const districts = getCollection(districtsData);
   const upazilas = getCollection(upazilasData);
@@ -352,14 +410,14 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800">
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <div className="min-h-screen text-slate-800" style={pageStyle}>
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur" style={cardStyle}>
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex min-w-0 items-center gap-3">
             {logo ? (
               <img src={logo} alt={shopName} className="h-11 w-11 shrink-0 rounded-lg border border-slate-200 object-cover" />
             ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700" style={softPanelStyle}>
                 <Store className="h-5 w-5" />
               </div>
             )}
@@ -390,12 +448,13 @@ const ProductPage = () => {
                 Call
               </a>
             )}
-            {whatsappLink && (
+            {design.sections.show_whatsapp_button && whatsappLink && (
               <a
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-bold text-white hover:bg-green-700"
+                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white hover:opacity-90 ${buttonRadiusClass}`}
+                style={accentButtonStyle}
               >
                 <MessageCircle className="h-4 w-4" />
                 WhatsApp
@@ -412,15 +471,15 @@ const ProductPage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]">
-          <section className="space-y-4">
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className={mainGridClass}>
+          <section className={imageSectionClass}>
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white" style={cardStyle}>
               <div className="flex h-[320px] items-center justify-center bg-slate-100 p-4 sm:h-[420px] lg:h-[480px]">
                 <img src={mainImage} alt={mainImageAlt} className="max-h-full max-w-full object-contain" />
               </div>
 
-              {galleryImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto border-t border-slate-200 p-3">
+              {design.sections.show_gallery && galleryImages.length > 1 && (
+                <div className="flex gap-2 overflow-x-auto border-t border-slate-200 p-3" style={cardStyle}>
                   {galleryImages.map((image, index) => (
                     <button
                       key={image.url}
@@ -439,22 +498,62 @@ const ProductPage = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <DetailPill icon={PackageCheck} title="Stock" value={stockLabel} />
+              {design.show_stock_badge && <DetailPill icon={PackageCheck} title="Stock" value={stockLabel} />}
               <DetailPill icon={ShieldCheck} title="Status" value={isPublished ? "Published" : "Draft preview"} />
             </div>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
-              <h2 className="text-lg font-black text-slate-950">Product Details</h2>
-              <div className="mt-4 whitespace-pre-line text-sm leading-7 text-slate-700">
+            <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
+              <h2 className="text-lg font-black" style={{ color: design.text_color }}>Product Details</h2>
+              <div className="mt-4 whitespace-pre-line text-sm leading-7 opacity-80">
                 {description || "No product details available."}
               </div>
             </section>
+
+            {design.sections.show_benefits && design.benefits.length > 0 && (
+              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
+                <h2 className="text-lg font-black" style={{ color: design.text_color }}>Why Customers Choose This</h2>
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {design.benefits.map((benefit, index) => (
+                    <div key={`${benefit}-${index}`} className="rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold">
+                      <BadgeCheck className="mb-2 h-4 w-4" style={{ color: design.accent_color }} />
+                      {benefit}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {design.sections.show_reviews && (
+              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
+                <h2 className="text-lg font-black" style={{ color: design.text_color }}>Customer Reviews</h2>
+                <p className="mt-3 text-sm opacity-70">No reviews yet.</p>
+              </section>
+            )}
+
+            {design.sections.show_faq && design.faq.length > 0 && (
+              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
+                <h2 className="text-lg font-black" style={{ color: design.text_color }}>FAQ</h2>
+                <div className="mt-4 space-y-3">
+                  {design.faq.map((item, index) => (
+                    <div key={`${item.question}-${index}`} className="rounded-lg border border-slate-200 px-3 py-3">
+                      <p className="text-sm font-black" style={{ color: design.text_color }}>{item.question}</p>
+                      <p className="mt-1 text-sm leading-6 opacity-70">{item.answer}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </section>
 
-          <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
-            <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-black uppercase text-blue-700">
+          <aside className={infoAsideClass}>
+            <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${heroTextClass}`} style={cardStyle}>
+              <div className={`flex flex-wrap items-center gap-2 ${isHeroCentered ? "justify-center" : ""}`}>
+                {heroBadgeText && (
+                  <span className="rounded-full px-3 py-1 text-xs font-black uppercase" style={{ ...softPanelStyle, color: design.primary_color }}>
+                    {heroBadgeText}
+                  </span>
+                )}
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
                   {product?.category?.name || "Product"}
                 </span>
                 {product?.sku && (
@@ -462,14 +561,15 @@ const ProductPage = () => {
                 )}
               </div>
 
-              <h2 className="mt-4 text-2xl font-black leading-tight text-slate-950 sm:text-3xl">{title}</h2>
+              <h2 className="mt-4 text-2xl font-black leading-tight sm:text-3xl" style={{ color: design.text_color }}>{title}</h2>
+              {heroSubtitle && <p className="mt-3 text-sm leading-6 opacity-75">{heroSubtitle}</p>}
               {product?.name && page?.custom_title !== product.name && (
                 <p className="mt-2 text-sm font-medium text-slate-500">{product.name}</p>
               )}
 
-              <div className="mt-5 rounded-lg bg-slate-50 p-4">
+              <div className="mt-5 rounded-lg bg-slate-50 p-4" style={softPanelStyle}>
                 <div className="flex flex-wrap items-end gap-3">
-                  <span className="text-3xl font-black text-blue-700">{formatMoney(salePrice)}</span>
+                  <span className="text-3xl font-black" style={{ color: design.primary_color }}>{formatMoney(salePrice)}</span>
                   {hasDiscount && (
                     <span className="pb-1 text-base font-bold text-slate-400 line-through">{formatMoney(page.selling_price)}</span>
                   )}
@@ -481,21 +581,36 @@ const ProductPage = () => {
                 )}
               </div>
 
+              {design.sections.show_delivery_info && (
+                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-lg border border-slate-200 px-3 py-2">
+                    <p className="text-xs font-bold uppercase opacity-60">Inside Dhaka</p>
+                    <p className="font-black">Tk 80</p>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 px-3 py-2">
+                    <p className="text-xs font-bold uppercase opacity-60">Outside Dhaka</p>
+                    <p className="font-black">Tk 130</p>
+                  </div>
+                </div>
+              )}
+
               <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
                 <button
                   type="button"
                   onClick={() => setOrderModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700"
+                  className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black text-white hover:opacity-90 ${buttonRadiusClass}`}
+                  style={primaryButtonStyle}
                 >
                   <ShoppingBag className="h-4 w-4" />
-                  Make Order
+                  {ctaText}
                 </button>
-                {whatsappLink && (
+                {design.sections.show_whatsapp_button && whatsappLink && (
                   <a
                     href={whatsappLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-black text-white hover:bg-green-700"
+                    className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black text-white hover:opacity-90 ${buttonRadiusClass}`}
+                    style={accentButtonStyle}
                   >
                     <MessageCircle className="h-4 w-4" />
                     Order on WhatsApp
@@ -504,7 +619,8 @@ const ProductPage = () => {
                 {phone && (
                   <a
                     href={`tel:${phone}`}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-50"
+                    className={`inline-flex items-center justify-center gap-2 border px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`}
+                    style={outlineButtonStyle}
                   >
                     <Phone className="h-4 w-4" />
                     Call Seller
@@ -513,12 +629,12 @@ const ProductPage = () => {
               </div>
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5">
+            <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
               <div className="mb-4 flex items-center gap-3">
                 {logo ? (
                   <img src={logo} alt={shopName} className="h-12 w-12 rounded-lg border border-slate-200 object-cover" />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700" style={softPanelStyle}>
                     <Store className="h-5 w-5" />
                   </div>
                 )}
@@ -578,10 +694,10 @@ const ProductPage = () => {
           <button
             type="button"
             onClick={() => setOrderModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-black text-white"
+            className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`} style={primaryButtonStyle}
           >
             <ShoppingBag className="h-4 w-4" />
-            Make Order
+            {ctaText}
           </button>
           {phone ? (
             <a
@@ -591,12 +707,12 @@ const ProductPage = () => {
               <Phone className="h-4 w-4" />
               Call
             </a>
-          ) : whatsappLink ? (
+          ) : design.sections.show_whatsapp_button && whatsappLink ? (
             <a
               href={whatsappLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-black text-white"
+              className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`} style={accentButtonStyle}
             >
               <MessageCircle className="h-4 w-4" />
               WhatsApp
@@ -797,3 +913,8 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+
+
+
+
+

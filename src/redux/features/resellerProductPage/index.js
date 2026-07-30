@@ -1,4 +1,4 @@
-import baseApi from "../../api/baseApi";
+﻿import baseApi from "../../api/baseApi";
 import API_ENDPOINTS, { buildEndpointPath } from "../../api/apiEndpoints";
 
 const resellerProductPageApi = baseApi.injectEndpoints({
@@ -25,6 +25,18 @@ const resellerProductPageApi = baseApi.injectEndpoints({
       query: ({ id, ...payload }) => ({
         url: buildEndpointPath(API_ENDPOINTS.resellerProductPages.update.path, { id }),
         method: API_ENDPOINTS.resellerProductPages.update.method,
+        body: payload,
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        "ResellerProductPage",
+        { type: "ResellerProductPage", id },
+      ],
+    }),
+
+    updateResellerProductPageDesign: builder.mutation({
+      query: ({ id, ...payload }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.resellerProductPages.design.path, { id }),
+        method: API_ENDPOINTS.resellerProductPages.design.method,
         body: payload,
       }),
       invalidatesTags: (result, error, { id }) => [
@@ -71,6 +83,7 @@ export const {
   useAddResellerProductPageMutation,
   useCreateResellerProductPageMutation,
   useUpdateResellerProductPageMutation,
+  useUpdateResellerProductPageDesignMutation,
   useRemoveResellerProductPageMutation,
   useListResellerProductPagesQuery,
   useGetResellerProductPageDetailsQuery,
@@ -78,3 +91,5 @@ export const {
 } = resellerProductPageApi;
 
 export default resellerProductPageApi;
+
+

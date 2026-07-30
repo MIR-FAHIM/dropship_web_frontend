@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
@@ -36,7 +36,7 @@ const ProductDetails = () => {
   const [selectedAttributes, setSelectedAttributes] = useState({});
   const userId = getFromLocalstorage("userId");
 
-  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
+  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery({ id, reseller_id: userId }, { skip: !id });
   const { data: storeProfileData, isLoading: storeProfileLoading, isFetching: storeProfileFetching } =
     useGetResellerStoreProfileByResellerQuery(userId, { skip: !userId });
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
@@ -112,6 +112,9 @@ const ProductDetails = () => {
   };
   
   const product = detail?.data;
+  const currentProductPage = createdProductPage || product?.reseller_product_page || null;
+  const productPageSlug = currentProductPage?.slug || "";
+  const productPageUrl = productPageSlug ? `${window.location.origin}/store/product/${productPageSlug}` : "";
   const basePrice = getAdminBasePrice(product);
   const resellerPriceValue = Number(resellerPrice || 0);
   const profitValue = resellerPriceValue - basePrice;
@@ -228,6 +231,10 @@ const ProductDetails = () => {
   };
 
   const handleCreateProductPage = async (form) => {
+    if (currentProductPage?.id) {
+      toast.error("Product page already created. Use Edit Product Page instead.");
+      return;
+    }
     if (!product?.id || !userId) return;
     const sellingPrice = Number(form.selling_price);
     const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);
@@ -247,7 +254,7 @@ const ProductDetails = () => {
         selling_price: sellingPrice,
         discount_price: discountPrice,
         delivery_charge: Number(form.delivery_charge || 0),
-        template_id: Number(form.template_id || 1),
+        template_id: form.template_id || "default",
       }).unwrap();
       const page = response?.data?.data || response?.data || response;
       setCreatedProductPage(page);
@@ -329,7 +336,7 @@ const ProductDetails = () => {
                   style={{ whiteSpace: "nowrap", flexShrink: 0 }}
                   onClick={() => handleCopyText(product.video_link)}
                 >
-                  ভিডিও লিংক কপি
+                  à¦­à¦¿à¦¡à¦¿à¦“ à¦²à¦¿à¦‚à¦• à¦•à¦ªà¦¿
                 </button>
               </div>
             )}
@@ -512,9 +519,68 @@ const ProductDetails = () => {
             >
               {isAddingToCart ? t("product_details.adding") : t("product_details.add_to_cart")}
             </button>
+
+            {currentProductPage && (
+              <div style={{ marginTop: "12px", padding: "14px", borderRadius: "12px", border: "1px solid #bfdbfe", background: "#eff6ff" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "10px", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontSize: "14px", fontWeight: 800, color: "#1e3a8a" }}>Product Page</div>
+                    <p style={{ margin: "4px 0 0", fontSize: "12px", color: "#475569" }}>Product page already created</p>
+                  </div>
+                  <span style={{ borderRadius: "999px", padding: "3px 9px", fontSize: "11px", fontWeight: 800, color: currentProductPage.published_status === "published" ? "#166534" : "#92400e", background: currentProductPage.published_status === "published" ? "#dcfce7" : "#fef3c7" }}>
+                    {currentProductPage.published_status || "draft"}
+                  </span>
+                </div>
+
+                <div style={{ marginTop: "10px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "12px", color: "#334155" }}>
+                  <div><strong>Title:</strong> {currentProductPage.custom_title || product?.name || "-"}</div>
+                  <div><strong>Theme:</strong> {currentProductPage.template_id || "default"}</div>
+                  <div><strong>Selling:</strong> ৳{currentProductPage.selling_price || 0}</div>
+                  <div><strong>Discount:</strong> ৳{currentProductPage.discount_price || 0}</div>
+                </div>
+
+                {productPageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => handleCopyText(productPageUrl)}
+                    style={{ marginTop: "10px", color: "#1d4ed8", textDecoration: "underline", wordBreak: "break-all", textAlign: "left", fontSize: "12px" }}
+                  >
+                    {productPageUrl}
+                  </button>
+                )}
+
+                <div style={{ marginTop: "12px", display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "8px" }}>
+                  <button
+                    type="button"
+                    disabled={!productPageUrl}
+                    onClick={() => productPageUrl && window.open(productPageUrl, "_blank")}
+                    className="action-btn secondary"
+                    style={{ justifyContent: "center", fontSize: "12px", padding: "8px" }}
+                  >
+                    View Public Page
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/app/store-profile?tab=product-pages&edit_page_id=${currentProductPage.id}`)}
+                    className="action-btn secondary"
+                    style={{ justifyContent: "center", fontSize: "12px", padding: "8px" }}
+                  >
+                    Edit Product Page
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/app/store-profile?tab=product-pages&design_page_id=${currentProductPage.id}`)}
+                    className="action-btn secondary"
+                    style={{ justifyContent: "center", fontSize: "12px", padding: "8px" }}
+                  >
+                    Customize Design
+                  </button>
+                </div>
+              </div>
+            )}
             {userId && (
               <div style={{ marginTop: "10px" }}>
-                {checkingStoreProfile ? (
+                {currentProductPage ? null : checkingStoreProfile ? (
                   <button
                     type="button"
                     disabled
@@ -659,3 +725,11 @@ const ProductDetails = () => {
 };
 
 export default ProductDetails;
+
+
+
+
+
+
+
+

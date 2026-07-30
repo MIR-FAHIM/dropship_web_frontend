@@ -1,4 +1,4 @@
-// Centralized API endpoint definitions derived from backend routes.php
+﻿// Centralized API endpoint definitions derived from backend routes.php
 // Base URL is configured in baseApi.js as `${imgBaseUrl}/api`
 
 const define = (method, path) => ({ method, path });
@@ -222,6 +222,7 @@ export const API_ENDPOINTS = {
     list: define("GET", "/reseller-product-pages/list"),
     details: define("GET", "/reseller-product-pages/{id}"),
     bySlug: define("GET", "/reseller-product-pages/slug/{slug}"),
+    design: define("PUT", "/reseller-product-pages/design/{id}"),
   },
 
   landingPageOrders: {
@@ -331,3 +332,5 @@ export const buildEndpointPath = (template, params = {}) =>
   );
 
 export default API_ENDPOINTS;
+
+

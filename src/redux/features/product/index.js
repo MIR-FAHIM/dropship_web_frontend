@@ -1,4 +1,4 @@
-
+﻿
 import baseApi from "../../api/baseApi";
 import API_ENDPOINTS, { buildEndpointPath } from "../../api/apiEndpoints";
 
@@ -64,9 +64,18 @@ const productApi = baseApi.injectEndpoints({
     }),
 
     getProductDetails: builder.query({
-      query: (id) =>
-        buildEndpointPath(API_ENDPOINTS.products.details.path, { id }),
-      providesTags: (result, error, id) => [{ type: "Product", id }],
+      query: (arg) => {
+        const id = typeof arg === "object" ? arg.id : arg;
+        const resellerId = typeof arg === "object" ? arg.reseller_id : undefined;
+        return {
+          url: buildEndpointPath(API_ENDPOINTS.products.details.path, { id }),
+          params: resellerId ? { reseller_id: resellerId } : undefined,
+        };
+      },
+      providesTags: (result, error, arg) => {
+        const id = typeof arg === "object" ? arg.id : arg;
+        return [{ type: "Product", id }];
+      },
     }),
 
     updateProduct: builder.mutation({
@@ -172,3 +181,4 @@ export const {
 } = productApi;
 
 export default productApi;
+

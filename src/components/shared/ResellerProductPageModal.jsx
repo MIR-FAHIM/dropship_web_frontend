@@ -1,4 +1,4 @@
-/* eslint-disable react/prop-types */
+﻿/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
@@ -16,7 +16,7 @@ const getInitialForm = ({ product, page }) => ({
   custom_title: page?.custom_title || product?.name || "",
   custom_description: page?.custom_description || stripHtml(product?.description),
   delivery_charge: page?.delivery_charge ?? 0,
-  template_id: page?.template_id ?? 1,
+  template_id: page?.template_id || "default",
   published_status: page?.published_status || "draft",
 });
 
@@ -51,6 +51,7 @@ const ResellerProductPageModal = ({
     if (discountPrice !== null && discountPrice < basePrice) return;
     onSubmit?.(form);
   };
+
   const basePrice = getAdminBasePrice(product);
   const sellingPrice = Number(form.selling_price || 0);
   const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);

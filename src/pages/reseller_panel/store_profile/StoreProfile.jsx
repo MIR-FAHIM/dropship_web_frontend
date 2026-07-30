@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { Loader2, Save, Store } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
@@ -28,6 +29,7 @@ const inputClass =
   "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100";
 const labelClass = "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500";
 const allowedLogoTypes = ["image/jpeg", "image/png", "image/webp"];
+const tabKeys = ["information", "product-pages", "orders"];
 
 const getProfile = (response) => {
   const data = response?.data;
@@ -74,7 +76,9 @@ const buildStoreProfileFormData = ({ form, resellerId, selectedLogoFile }) => {
 
 const StoreProfile = () => {
   const resellerId = getFromLocalstorage("userId");
-  const [activeTab, setActiveTab] = useState("information");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = tabKeys.includes(searchParams.get("tab")) ? searchParams.get("tab") : "information";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [form, setForm] = useState(initialForm);
   const [apiErrors, setApiErrors] = useState([]);
   const [selectedLogoFile, setSelectedLogoFile] = useState(null);
@@ -129,6 +133,18 @@ const StoreProfile = () => {
 
     return () => URL.revokeObjectURL(previewUrl);
   }, [selectedLogoFile]);
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tabKeys.includes(tab) && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [activeTab, searchParams]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setSearchParams(tab === "information" ? {} : { tab });
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -212,7 +228,7 @@ const StoreProfile = () => {
           <button
             key={tab.key}
             type="button"
-            onClick={() => setActiveTab(tab.key)}
+            onClick={() => handleTabChange(tab.key)}
             className={`border-b-2 px-4 py-2 text-sm font-semibold transition ${
               activeTab === tab.key
                 ? "border-blue-600 text-blue-600"
@@ -339,3 +355,6 @@ const StoreProfile = () => {
 };
 
 export default StoreProfile;
+
+
+

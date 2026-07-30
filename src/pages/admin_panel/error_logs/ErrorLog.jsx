@@ -49,6 +49,28 @@ const getValidationMessage = (requestData) => {
   return "-";
 };
 
+const maskSensitiveRequestData = (value) => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+
+  return Object.entries(value).reduce((acc, [key, itemValue]) => {
+    if (/password|token|secret/i.test(key)) {
+      acc[key] = "***";
+      return acc;
+    }
+
+    acc[key] = itemValue && typeof itemValue === "object" ? maskSensitiveRequestData(itemValue) : itemValue;
+    return acc;
+  }, {});
+};
+
+const formatRequestData = (requestData, raw) => {
+  if (requestData) {
+    return JSON.stringify(maskSensitiveRequestData(requestData), null, 2);
+  }
+
+  return raw ? String(raw) : "-";
+};
+
 const ErrorLogTable = ({ rows, isFetching }) => {
   return (
     <div className={`bg-white rounded-xl border border-gray-200 overflow-hidden ${isFetching ? "opacity-70" : ""}`}>
@@ -68,6 +90,7 @@ const ErrorLogTable = ({ rows, isFetching }) => {
               const requestData = parseRequestData(item.request_data);
               const payload = requestData?.payload || {};
               const validationMessage = getValidationMessage(requestData);
+              const formattedRequestData = formatRequestData(requestData, item.request_data);
 
               return (
                 <tr key={item.id} className="border-b border-gray-100 last:border-0 align-top">
@@ -111,6 +134,11 @@ const ErrorLogTable = ({ rows, isFetching }) => {
                         </span>
                       )}
                     </div>
+                    {formattedRequestData !== "-" && (
+                      <pre className="mt-3 max-h-28 overflow-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-2 text-[11px] leading-5 text-gray-700">
+                        {formattedRequestData}
+                      </pre>
+                    )}
                   </td>
 
                   <td className="px-4 py-4 text-gray-700">
