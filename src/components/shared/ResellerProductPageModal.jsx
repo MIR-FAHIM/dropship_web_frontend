@@ -1,20 +1,47 @@
 ﻿/* eslint-disable react/prop-types */
 import { useEffect, useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const inputClass =
   "w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100";
 const labelClass = "mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-500";
 
-const stripHtml = (value) => String(value || "").replace(/<[^>]*>/g, "").trim();
+const quillModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ align: [] }],
+    ["blockquote", "link"],
+    ["clean"],
+  ],
+};
+
+const quillFormats = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "list",
+  "bullet",
+  "align",
+  "blockquote",
+  "link",
+];
 
 const getInitialForm = ({ product, page }) => ({
   slug: page?.slug || "",
   selling_price: page?.selling_price ?? getAdminBasePrice(product) ?? "",
   discount_price: page?.discount_price ?? "",
   custom_title: page?.custom_title || product?.name || "",
-  custom_description: page?.custom_description || stripHtml(product?.description),
+  custom_description: page?.custom_description || product?.description || "",
   delivery_charge: page?.delivery_charge ?? 0,
   template_id: page?.template_id || "default",
   published_status: page?.published_status || "draft",
@@ -101,7 +128,19 @@ const ResellerProductPageModal = ({
           </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Custom Description</label>
-            <textarea name="custom_description" value={form.custom_description} onChange={handleChange} rows={5} className={inputClass} />
+            <div className="rounded-lg border border-gray-300 bg-white">
+              <ReactQuill
+                theme="snow"
+                value={form.custom_description}
+                onChange={(value) => setForm((prev) => ({ ...prev, custom_description: value }))}
+                modules={quillModules}
+                formats={quillFormats}
+                placeholder="Write product details..."
+                className="product-page-description-editor"
+                style={{ minHeight: 180 }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-400">This keeps the original product description HTML and lets you edit it like an email body.</p>
           </div>
         </div>
 

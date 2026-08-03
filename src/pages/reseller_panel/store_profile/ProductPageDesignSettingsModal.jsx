@@ -47,9 +47,12 @@ const ProductPageDesignSettingsModal = ({ open, page, loading = false, onClose, 
 
   const settings = form.design_settings;
 
-  const updateTemplate = (event) => {
-    const template_id = event.target.value;
+  const applyTemplate = (template_id) => {
     setForm({ template_id, design_settings: getTemplateDesignSettings(template_id) });
+  };
+
+  const updateTemplate = (event) => {
+    applyTemplate(event.target.value);
   };
 
   const updateNested = (group, key, value) => {
@@ -165,6 +168,37 @@ const ProductPageDesignSettingsModal = ({ open, page, loading = false, onClose, 
                       <option key={option.value} value={option.value}>{option.label}</option>
                     ))}
                   </select>
+                </div>
+                <div className="md:col-span-2">
+                  <label className={labelClass}>Choose Theme</label>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                    {templateOptions.map((option) => {
+                      const preview = getTemplateDesignSettings(option.value);
+                      const active = form.template_id === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => applyTemplate(option.value)}
+                          className={`rounded-xl border p-3 text-left transition ${
+                            active ? "border-blue-600 bg-blue-50 shadow-sm ring-2 ring-blue-100" : "border-gray-200 bg-white hover:border-blue-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="text-sm font-black text-gray-800">{option.label}</span>
+                          <span className="mt-3 flex gap-1.5">
+                            {[
+                              preview.theme.primary_color,
+                              preview.theme.secondary_color,
+                              preview.theme.background_color,
+                              preview.theme.button_color,
+                            ].map((color, index) => (
+                              <span key={`${option.value}-${index}`} className="h-5 w-5 rounded-full border border-gray-200" style={{ backgroundColor: color }} />
+                            ))}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
                 {[
                   ["primary_color", "Primary Color"],

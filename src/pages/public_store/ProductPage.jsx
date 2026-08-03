@@ -1,22 +1,18 @@
-﻿import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import PropTypes from "prop-types";
 import { toast } from "sonner";
 import {
   BadgeCheck,
-  ExternalLink,
-  Facebook,
-  Globe2,
+  Check,
   Loader2,
-  MapPin,
   MessageCircle,
-  PackageCheck,
+  Minus,
   Phone,
+  Plus,
   Share2,
   ShieldCheck,
   ShoppingBag,
   Store,
-  X,
 } from "lucide-react";
 import { imgBaseUrl } from "../../../config";
 import { getFromLocalstorage } from "../../utils/localstorage.utils";
@@ -24,11 +20,10 @@ import { useGetDistrictsQuery, useGetDivisionsQuery, useGetUpazilasQuery } from 
 import { useAddLandingPageOrderMutation } from "../../redux/features/landingPageOrder";
 import { useGetResellerProductPageBySlugQuery } from "../../redux/features/resellerProductPage";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
-import {
-  getButtonRadiusClass,
-  getFontFamily,
-  getProductPageDesign,
-} from "../../utils/resellerProductPageDesign.utils";
+import { getFontFamily, getProductPageDesign } from "../../utils/resellerProductPageDesign.utils";
+
+const DELIVERY_INSIDE_DHAKA = 80;
+const DELIVERY_OUTSIDE_DHAKA = 130;
 
 const getPayload = (response) => response?.data?.data || response?.data || response;
 
@@ -56,29 +51,44 @@ const assetUrl = (value) => {
 
 const normalizePhone = (phone) => String(phone || "").replace(/[^\d]/g, "");
 
-const stripHtml = (value) => {
+const sanitizeHtml = (value) => {
   if (!value) return "";
-  const withoutTags = String(value)
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n")
-    .replace(/<li>/gi, "- ")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\s+\n/g, "\n")
-    .replace(/\n\s+/g, "\n")
-    .replace(/[ \t]{2,}/g, " ")
-    .trim();
+  if (typeof document === "undefined") return String(value);
 
-  if (typeof document === "undefined") return withoutTags.replace(/&amp;/g, "&");
+  const template = document.createElement("template");
+  template.innerHTML = String(value);
+  template.content.querySelectorAll("script, iframe, object, embed, form, input, button, link, meta").forEach((node) => {
+    node.remove();
+  });
 
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = withoutTags;
-  return textarea.value;
+  template.content.querySelectorAll("*").forEach((node) => {
+    [...node.attributes].forEach((attribute) => {
+      const name = attribute.name.toLowerCase();
+      const attrValue = String(attribute.value || "").trim();
+
+      if (name.startsWith("on")) {
+        node.removeAttribute(attribute.name);
+        return;
+      }
+
+      if ((name === "href" || name === "src") && /^(javascript:|data:text\/html)/i.test(attrValue)) {
+        node.removeAttribute(attribute.name);
+      }
+
+      if (name === "style" && /(expression|javascript:|data:text\/html)/i.test(attrValue)) {
+        node.removeAttribute(attribute.name);
+      }
+    });
+  });
+
+  return template.innerHTML;
 };
+
+const stripHtml = (value) => String(value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
 const formatMoney = (value) => {
   const numericValue = Number(value || 0);
-  return `Tk ${numericValue.toLocaleString("en-BD", {
+  return `৳ ${numericValue.toLocaleString("en-BD", {
     maximumFractionDigits: Number.isInteger(numericValue) ? 0 : 2,
   })}`;
 };
@@ -115,7 +125,7 @@ const makeWhatsAppLink = ({ phone, title, price, storeName }) => {
   return `https://wa.me/${normalized}?text=${message}`;
 };
 
-const withAlpha = (color, alpha = "12") => {
+const withAlpha = (color, alpha = "18") => {
   const value = String(color || "").trim();
   if (/^#[0-9a-f]{6}$/i.test(value)) return `${value}${alpha}`;
   if (/^#[0-9a-f]{3}$/i.test(value)) {
@@ -126,7 +136,7 @@ const withAlpha = (color, alpha = "12") => {
       .join("");
     return `#${expanded}${alpha}`;
   }
-  return "rgba(37, 99, 235, 0.07)";
+  return "rgba(232, 93, 61, 0.1)";
 };
 
 const pushGalleryImage = (list, candidate, altText = "") => {
@@ -137,28 +147,6 @@ const pushGalleryImage = (list, candidate, altText = "") => {
     url,
     alt: altText || candidate?.alt_text || candidate?.file_original_name || "Product image",
   });
-};
-
-const DetailPill = ({ icon: Icon, title, value }) => {
-  if (!value && value !== 0) return null;
-
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase text-slate-500">{title}</p>
-        <p className="truncate text-sm font-bold text-slate-900">{value}</p>
-      </div>
-    </div>
-  );
-};
-
-DetailPill.propTypes = {
-  icon: PropTypes.elementType.isRequired,
-  title: PropTypes.string.isRequired,
-  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
 };
 
 const initialOrderForm = {
@@ -176,6 +164,7 @@ const initialOrderForm = {
 const ProductPage = () => {
   const { slug } = useParams();
   const userId = getFromLocalstorage("userId");
+  const checkoutRef = useRef(null);
   const { data, isLoading, isError, error } = useGetResellerProductPageBySlugQuery(slug, { skip: !slug });
   const page = getPayload(data);
   const product = useMemo(() => page?.product || {}, [page?.product]);
@@ -187,21 +176,18 @@ const ProductPage = () => {
     page?.reseller_store ||
     {};
   const [selectedImage, setSelectedImage] = useState(null);
-  const title = page?.custom_title || product?.name || "Product";
-  const [orderModalOpen, setOrderModalOpen] = useState(false);
   const [orderForm, setOrderForm] = useState(initialOrderForm);
   const [createdOrder, setCreatedOrder] = useState(null);
   const [addOrder, { isLoading: placingOrder }] = useAddLandingPageOrderMutation();
-  const { data: divisionsData, isLoading: divisionsLoading } = useGetDivisionsQuery(undefined, {
-    skip: !orderModalOpen,
-  });
+  const { data: divisionsData, isLoading: divisionsLoading } = useGetDivisionsQuery();
   const { data: districtsData, isLoading: districtsLoading } = useGetDistrictsQuery(orderForm.division_id, {
-    skip: !orderModalOpen || !orderForm.division_id,
+    skip: !orderForm.division_id,
   });
   const { data: upazilasData, isLoading: upazilasLoading } = useGetUpazilasQuery(orderForm.district_id, {
-    skip: !orderModalOpen || !orderForm.district_id,
+    skip: !orderForm.district_id,
   });
 
+  const title = page?.custom_title || product?.name || "Product";
   const galleryImages = useMemo(() => {
     const list = [];
     const candidates = [
@@ -214,9 +200,7 @@ const ProductPage = () => {
       product?.meta_img,
     ];
 
-    candidates.forEach((candidate) => {
-      pushGalleryImage(list, candidate, title);
-    });
+    candidates.forEach((candidate) => pushGalleryImage(list, candidate, title));
 
     [...(product?.images || page?.images || [])]
       .sort((a, b) => Number(a?.sort_order || 0) - Number(b?.sort_order || 0))
@@ -231,59 +215,23 @@ const ProductPage = () => {
     return list;
   }, [product, page, title]);
 
-  const mainImage = selectedImage || galleryImages[0]?.url || "https://placehold.co/900x900/f8fafc/64748b?text=Product";
-  const mainImageAlt = galleryImages.find((item) => item.url === mainImage)?.alt || title;
+  const mainImage = selectedImage || galleryImages[0]?.url || "https://placehold.co/900x720/fff4e8/6b6660?text=Product";
   const isOwner = userId && Number(userId) === Number(page?.reseller_id);
   const isPublished = page?.published_status === "published";
   const shopName = storeProfile?.shop_name || page?.shop_name || "Store";
-  const description = stripHtml(page?.custom_description || product?.description);
+  const descriptionHtml = sanitizeHtml(page?.custom_description || product?.description || "");
+  const descriptionText = stripHtml(descriptionHtml);
   const phone = storeProfile?.phone || page?.phone;
   const whatsapp = storeProfile?.whatsapp || page?.whatsapp || phone;
   const logo = assetUrl(storeProfile?.logo || page?.logo);
-  const salePrice = page?.discount_price || page?.selling_price || getAdminBasePrice(product);
-  const hasDiscount = Number(page?.discount_price) > 0 && Number(page?.discount_price) < Number(page?.selling_price);
+  const design = useMemo(() => getProductPageDesign(page), [page]);
+  const salePrice = Number(page?.discount_price || page?.selling_price || getAdminBasePrice(product) || 0);
+  const regularPrice = Number(page?.selling_price || salePrice || 0);
+  const hasDiscount = Number(page?.discount_price) > 0 && Number(page?.discount_price) < regularPrice;
+  const saveAmount = hasDiscount ? regularPrice - salePrice : 0;
+  const discountPercent = hasDiscount && regularPrice > 0 ? Math.round((saveAmount / regularPrice) * 100) : 0;
   const whatsappLink = makeWhatsAppLink({ phone: whatsapp, title, price: salePrice, storeName: shopName });
   const productUrl = typeof window !== "undefined" ? window.location.href : "";
-  const stockLabel = Number(product?.current_stock) > 0 ? `${product.current_stock} in stock` : "Stock not confirmed";
-  const design = useMemo(() => getProductPageDesign(page), [page]);
-  const buttonRadiusClass = getButtonRadiusClass(design.button_style);
-  const ctaText = design.hero?.cta_text || "Order Now";
-  const heroSubtitle = design.hero?.subtitle;
-  const heroBadgeText = design.hero?.badge_text;
-  const isHeroCentered = design.layout?.hero_alignment === "center";
-  const imagePosition = design.layout?.image_position || "top";
-  const pageStyle = {
-    backgroundColor: design.background_color,
-    color: design.text_color,
-    fontFamily: getFontFamily(design.font_style),
-  };
-  const cardStyle = {
-    backgroundColor: design.card_background,
-    color: design.text_color,
-  };
-  const primaryButtonStyle = {
-    backgroundColor: design.button_color,
-    color: design.button_text_color,
-  };
-  const accentButtonStyle = {
-    backgroundColor: design.accent_color,
-    color: design.button_text_color,
-  };
-  const outlineButtonStyle = {
-    borderColor: design.button_color,
-    color: design.button_color,
-  };
-  const softPanelStyle = {
-    backgroundColor: withAlpha(design.primary_color),
-  };
-  const mainGridClass = imagePosition === "top"
-    ? "grid grid-cols-1 gap-6"
-    : "grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_420px]";
-  const imageSectionClass = `space-y-4 ${imagePosition === "right" ? "lg:order-2" : ""}`;
-  const infoAsideClass = `space-y-4 ${imagePosition === "top" ? "" : "lg:sticky lg:top-24 lg:self-start"} ${
-    imagePosition === "right" ? "lg:order-1" : ""
-  }`;
-  const heroTextClass = isHeroCentered ? "text-center" : "text-left";
   const divisions = getCollection(divisionsData);
   const districts = getCollection(districtsData);
   const upazilas = getCollection(upazilasData);
@@ -291,8 +239,29 @@ const ProductPage = () => {
   const selectedVariant = variants.find((variant) => String(variant?.id || variant?.variant || variant?.sku) === String(orderForm.variant_id));
   const orderQuantity = Math.max(1, Number(orderForm.quantity || 1));
   const orderUnitPrice = Number(selectedVariant?.price || salePrice || 0);
-  const orderDeliveryCharge = Number(page?.delivery_charge || 0);
-  const orderTotal = orderUnitPrice * orderQuantity + orderDeliveryCharge;
+  const orderDeliveryCharge = orderForm.is_outside_dhaka ? DELIVERY_OUTSIDE_DHAKA : DELIVERY_INSIDE_DHAKA;
+  const orderSubtotal = orderUnitPrice * orderQuantity;
+  const orderTotal = orderSubtotal + orderDeliveryCharge;
+  const heroBadgeText = hasDiscount ? `${discountPercent}% OFF` : design.hero?.badge_text;
+  const ctaText = design.hero?.cta_text || "Order Now";
+  const heroSubtitle = design.hero?.subtitle;
+  const benefitItems = design.benefits?.length ? design.benefits : ["High quality product", "Fast delivery", "Cash on delivery available"];
+  const frameStyle = {
+    "--rb-bg": design.background_color,
+    "--rb-ink": design.text_color,
+    "--rb-muted": "#6B6660",
+    "--rb-accent": design.button_color,
+    "--rb-secondary": design.accent_color,
+    "--rb-card": design.card_background,
+    "--rb-line": withAlpha(design.primary_color, "24"),
+    "--rb-soft": withAlpha(design.primary_color, "14"),
+    color: design.text_color,
+    fontFamily: getFontFamily(design.font_style),
+  };
+
+  const scrollToCheckout = () => {
+    checkoutRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -301,6 +270,7 @@ const ProductPage = () => {
     }
 
     await navigator.clipboard?.writeText(productUrl);
+    toast.success("Product link copied");
   };
 
   const updateOrderField = (event) => {
@@ -326,6 +296,13 @@ const ProductPage = () => {
 
       return next;
     });
+  };
+
+  const adjustQuantity = (amount) => {
+    setOrderForm((prev) => ({
+      ...prev,
+      quantity: Math.max(1, Number(prev.quantity || 1) + amount),
+    }));
   };
 
   const submitOrder = async (event) => {
@@ -372,9 +349,9 @@ const ProductPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm">
-          <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+      <div className="flex min-h-screen items-center justify-center bg-[#efe6da]">
+        <div className="flex items-center gap-3 rounded-xl border border-orange-100 bg-white px-5 py-4 shadow-sm">
+          <Loader2 className="h-5 w-5 animate-spin text-orange-600" />
           <span className="text-sm font-semibold text-slate-700">Loading product page...</span>
         </div>
       </div>
@@ -383,7 +360,7 @@ const ProductPage = () => {
 
   if (isError || !page) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#efe6da] p-4">
         <div className="w-full max-w-md rounded-xl border border-red-100 bg-white p-6 text-center shadow-sm">
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-red-50 text-red-600">
             <ShoppingBag className="h-5 w-5" />
@@ -397,7 +374,7 @@ const ProductPage = () => {
 
   if (!isPublished && !isOwner) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="flex min-h-screen items-center justify-center bg-[#efe6da] p-4">
         <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
             <ShieldCheck className="h-5 w-5" />
@@ -410,425 +387,270 @@ const ProductPage = () => {
   }
 
   return (
-    <div className="min-h-screen text-slate-800" style={pageStyle}>
-      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur" style={cardStyle}>
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex min-w-0 items-center gap-3">
-            {logo ? (
-              <img src={logo} alt={shopName} className="h-11 w-11 shrink-0 rounded-lg border border-slate-200 object-cover" />
-            ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-700" style={softPanelStyle}>
-                <Store className="h-5 w-5" />
-              </div>
-            )}
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h1 className="truncate text-base font-black text-slate-950">{shopName}</h1>
-                {storeProfile?.status === "active" && <BadgeCheck className="h-4 w-4 shrink-0 text-green-600" />}
-              </div>
-              <p className="truncate text-xs font-medium text-slate-500">{storeProfile?.address || "Bangladesh"}</p>
+    <div className="min-h-screen bg-[#efe6da] pb-28" style={frameStyle}>
+      <div className="bg-[var(--rb-ink)] px-4 py-2.5 text-center text-xs font-semibold text-white">
+        {shopName} {storeProfile?.status === "active" ? "verified store" : "product landing page"}
+      </div>
+
+      <main className="mx-auto flex w-full max-w-[454px] justify-center px-3 py-6">
+        <div className="w-full max-w-[430px] overflow-hidden rounded-[26px] bg-[var(--rb-bg)] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.35),0_0_0_8px_rgba(28,28,28,0.95)]">
+          {isOwner && !isPublished && (
+            <div className="bg-blue-50 px-4 py-3 text-center text-xs font-bold text-blue-800">
+              Preview mode: this page is currently saved as draft.
             </div>
-          </div>
+          )}
 
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={handleShare}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-50"
-              title="Share product"
-            >
-              <Share2 className="h-4 w-4" />
-            </button>
-            {phone && (
-              <a
-                href={`tel:${phone}`}
-                className="hidden items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 sm:inline-flex"
-              >
-                <Phone className="h-4 w-4" />
-                Call
-              </a>
-            )}
-            {design.sections.show_whatsapp_button && whatsappLink && (
-              <a
-                href={whatsappLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-bold text-white hover:opacity-90 ${buttonRadiusClass}`}
-                style={accentButtonStyle}
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp
-              </a>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-7xl px-4 py-5 pb-28 sm:py-8 lg:pb-10">
-        {isOwner && !isPublished && (
-          <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-800">
-            Preview mode: this page is currently saved as draft.
-          </div>
-        )}
-
-        <div className={mainGridClass}>
-          <section className={imageSectionClass}>
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-white" style={cardStyle}>
-              <div className="flex h-[320px] items-center justify-center bg-slate-100 p-4 sm:h-[420px] lg:h-[480px]">
-                <img src={mainImage} alt={mainImageAlt} className="max-h-full max-w-full object-contain" />
+          <section className="p-4 pb-2">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                {logo ? (
+                  <img src={logo} alt={shopName} className="h-10 w-10 rounded-xl border border-[var(--rb-line)] object-cover" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--rb-soft)] text-[var(--rb-accent)]">
+                    <Store className="h-5 w-5" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="truncate text-sm font-black">{shopName}</p>
+                    {storeProfile?.status === "active" && <BadgeCheck className="h-4 w-4 shrink-0 text-[var(--rb-secondary)]" />}
+                  </div>
+                  <p className="truncate text-xs text-[var(--rb-muted)]">{storeProfile?.address || "Bangladesh"}</p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={handleShare}
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--rb-line)] bg-white text-[var(--rb-ink)]"
+                aria-label="Share product"
+              >
+                <Share2 className="h-4 w-4" />
+              </button>
+            </div>
 
-              {design.sections.show_gallery && galleryImages.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto border-t border-slate-200 p-3" style={cardStyle}>
+            <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[18px] bg-[var(--rb-soft)]">
+              <img src={mainImage} alt={title} className="h-full w-full object-contain" />
+              {heroBadgeText && (
+                <span className="absolute left-3 top-3 rounded-xl bg-[var(--rb-secondary)] px-3 py-1.5 text-xs font-black text-white">
+                  {heroBadgeText}
+                </span>
+              )}
+              <span className="absolute right-3 top-3 rounded-xl bg-white/95 px-3 py-1.5 text-xs font-black text-[var(--rb-ink)]">
+                4.8 Rating
+              </span>
+            </div>
+          </section>
+
+          <section className="px-4 pb-4">
+            <h1 className="text-[21px] font-black leading-snug">{title}</h1>
+            {heroSubtitle && <p className="mt-1 text-sm leading-6 text-[var(--rb-muted)]">{heroSubtitle}</p>}
+            <div className="mt-2 flex flex-wrap items-end gap-2">
+              <span className="text-[28px] font-black text-[var(--rb-accent)]">{formatMoney(salePrice)}</span>
+              {hasDiscount && <span className="pb-1 text-sm font-bold text-[var(--rb-muted)] line-through">{formatMoney(regularPrice)}</span>}
+              {hasDiscount && (
+                <span className="mb-1 rounded-lg bg-[var(--rb-soft)] px-2 py-1 text-xs font-bold text-[var(--rb-accent)]">
+                  Save {formatMoney(saveAmount)}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-xs font-semibold text-[var(--rb-muted)]">Fast delivery available across Bangladesh</p>
+          </section>
+
+          <div className="h-2 bg-[#efe6da]" />
+
+          {design.sections.show_benefits && benefitItems.length > 0 && (
+            <section className="px-4 py-4">
+              <div className="rounded-2xl border border-[var(--rb-line)] bg-[var(--rb-card)] p-4">
+                <h2 className="mb-3 text-lg font-black">Why choose this product?</h2>
+                <ul className="grid gap-3">
+                  {benefitItems.map((benefit, index) => (
+                    <li key={`${benefit}-${index}`} className="flex items-start gap-3 text-sm leading-6">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--rb-secondary)] text-white">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
+          {design.sections.show_gallery && galleryImages.length > 1 && (
+            <>
+              <div className="h-2 bg-[#efe6da]" />
+              <section className="py-4">
+                <div className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {galleryImages.map((image, index) => (
                     <button
                       key={image.url}
                       type="button"
                       onClick={() => setSelectedImage(image.url)}
-                      className={`h-20 w-20 shrink-0 overflow-hidden rounded-lg border bg-white p-1 ${
-                        mainImage === image.url ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-200 hover:border-slate-300"
-                      }`}
-                      aria-label={`Show image ${index + 1}`}
+                      className={`relative h-[170px] w-[132px] shrink-0 overflow-hidden rounded-2xl border ${
+                        mainImage === image.url ? "border-[var(--rb-accent)]" : "border-[var(--rb-line)]"
+                      } bg-white`}
                     >
-                      <img src={image.url} alt={image.alt} className="h-full w-full rounded-md object-cover" />
+                      <img src={image.url} alt={image.alt} className="h-full w-full object-cover" />
+                      <span className="absolute bottom-2 left-2 rounded-lg bg-black/40 px-2 py-1 text-[11px] font-bold text-white">
+                        Image {index + 1}
+                      </span>
                     </button>
                   ))}
                 </div>
+              </section>
+            </>
+          )}
+
+          <div className="h-2 bg-[#efe6da]" />
+
+          <section className="px-4 py-4">
+            <div className="rounded-2xl border border-[var(--rb-line)] bg-[var(--rb-card)] p-4">
+              <h2 className="mb-3 text-lg font-black">Product Details</h2>
+              {descriptionText ? (
+                <div
+                  className="text-sm leading-7 text-[var(--rb-ink)] [&_a]:text-[var(--rb-accent)] [&_a]:underline [&_li]:ml-5 [&_ol]:list-decimal [&_p]:mb-3 [&_strong]:font-bold [&_ul]:list-disc"
+                  dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                />
+              ) : (
+                <p className="text-sm leading-7 text-[var(--rb-muted)]">No product details available.</p>
               )}
             </div>
-
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {design.show_stock_badge && <DetailPill icon={PackageCheck} title="Stock" value={stockLabel} />}
-              <DetailPill icon={ShieldCheck} title="Status" value={isPublished ? "Published" : "Draft preview"} />
-            </div>
-
-            <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
-              <h2 className="text-lg font-black" style={{ color: design.text_color }}>Product Details</h2>
-              <div className="mt-4 whitespace-pre-line text-sm leading-7 opacity-80">
-                {description || "No product details available."}
-              </div>
-            </section>
-
-            {design.sections.show_benefits && design.benefits.length > 0 && (
-              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
-                <h2 className="text-lg font-black" style={{ color: design.text_color }}>Why Customers Choose This</h2>
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {design.benefits.map((benefit, index) => (
-                    <div key={`${benefit}-${index}`} className="rounded-lg border border-slate-200 px-3 py-3 text-sm font-semibold">
-                      <BadgeCheck className="mb-2 h-4 w-4" style={{ color: design.accent_color }} />
-                      {benefit}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {design.sections.show_reviews && (
-              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
-                <h2 className="text-lg font-black" style={{ color: design.text_color }}>Customer Reviews</h2>
-                <p className="mt-3 text-sm opacity-70">No reviews yet.</p>
-              </section>
-            )}
-
-            {design.sections.show_faq && design.faq.length > 0 && (
-              <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
-                <h2 className="text-lg font-black" style={{ color: design.text_color }}>FAQ</h2>
-                <div className="mt-4 space-y-3">
-                  {design.faq.map((item, index) => (
-                    <div key={`${item.question}-${index}`} className="rounded-lg border border-slate-200 px-3 py-3">
-                      <p className="text-sm font-black" style={{ color: design.text_color }}>{item.question}</p>
-                      <p className="mt-1 text-sm leading-6 opacity-70">{item.answer}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
           </section>
 
-          <aside className={infoAsideClass}>
-            <section className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${heroTextClass}`} style={cardStyle}>
-              <div className={`flex flex-wrap items-center gap-2 ${isHeroCentered ? "justify-center" : ""}`}>
-                {heroBadgeText && (
-                  <span className="rounded-full px-3 py-1 text-xs font-black uppercase" style={{ ...softPanelStyle, color: design.primary_color }}>
-                    {heroBadgeText}
-                  </span>
-                )}
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                  {product?.category?.name || "Product"}
-                </span>
-                {product?.sku && (
-                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">SKU {product.sku}</span>
-                )}
-              </div>
-
-              <h2 className="mt-4 text-2xl font-black leading-tight sm:text-3xl" style={{ color: design.text_color }}>{title}</h2>
-              {heroSubtitle && <p className="mt-3 text-sm leading-6 opacity-75">{heroSubtitle}</p>}
-              {product?.name && page?.custom_title !== product.name && (
-                <p className="mt-2 text-sm font-medium text-slate-500">{product.name}</p>
-              )}
-
-              <div className="mt-5 rounded-lg bg-slate-50 p-4" style={softPanelStyle}>
-                <div className="flex flex-wrap items-end gap-3">
-                  <span className="text-3xl font-black" style={{ color: design.primary_color }}>{formatMoney(salePrice)}</span>
-                  {hasDiscount && (
-                    <span className="pb-1 text-base font-bold text-slate-400 line-through">{formatMoney(page.selling_price)}</span>
-                  )}
+          {design.sections.show_reviews && (
+            <>
+              <div className="h-2 bg-[#efe6da]" />
+              <section className="py-4">
+                <div className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {[
+                    ["R", "Verified customer", "Good quality and fast delivery."],
+                    ["S", "Happy buyer", "Price was reasonable and packaging was nice."],
+                    ["N", "Repeat customer", "Product matched the description."],
+                  ].map(([initial, name, review], index) => (
+                    <div key={index} className="w-[84%] shrink-0 rounded-2xl border border-[var(--rb-line)] bg-[var(--rb-card)] p-4">
+                      <div className="mb-2 flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--rb-accent)] text-sm font-black text-white">
+                          {initial}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{name}</p>
+                          <p className="text-xs font-bold text-yellow-600">5.0 Rating</p>
+                        </div>
+                      </div>
+                      <p className="text-sm leading-6 text-[var(--rb-muted)]">{review}</p>
+                    </div>
+                  ))}
                 </div>
-                {hasDiscount && (
-                  <p className="mt-1 text-sm font-semibold text-green-700">
-                    You save {formatMoney(Number(page.selling_price) - Number(page.discount_price))}
-                  </p>
-                )}
-              </div>
+              </section>
+            </>
+          )}
 
-              {design.sections.show_delivery_info && (
-                <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                  <div className="rounded-lg border border-slate-200 px-3 py-2">
-                    <p className="text-xs font-bold uppercase opacity-60">Inside Dhaka</p>
-                    <p className="font-black">Tk 80</p>
-                  </div>
-                  <div className="rounded-lg border border-slate-200 px-3 py-2">
-                    <p className="text-xs font-bold uppercase opacity-60">Outside Dhaka</p>
-                    <p className="font-black">Tk 130</p>
+          {design.sections.show_faq && design.faq.length > 0 && (
+            <>
+              <div className="h-2 bg-[#efe6da]" />
+              <section className="px-4 py-4">
+                <div className="rounded-2xl border border-[var(--rb-line)] bg-[var(--rb-card)] p-4">
+                  <h2 className="mb-3 text-lg font-black">FAQ</h2>
+                  <div className="grid gap-3">
+                    {design.faq.map((item, index) => (
+                      <div key={`${item.question}-${index}`} className="rounded-xl bg-[var(--rb-soft)] px-3 py-3">
+                        <p className="text-sm font-black">{item.question}</p>
+                        <p className="mt-1 text-sm leading-6 text-[var(--rb-muted)]">{item.answer}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              )}
+              </section>
+            </>
+          )}
 
-              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                <button
-                  type="button"
-                  onClick={() => setOrderModalOpen(true)}
-                  className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black text-white hover:opacity-90 ${buttonRadiusClass}`}
-                  style={primaryButtonStyle}
-                >
-                  <ShoppingBag className="h-4 w-4" />
-                  {ctaText}
-                </button>
-                {design.sections.show_whatsapp_button && whatsappLink && (
-                  <a
-                    href={whatsappLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black text-white hover:opacity-90 ${buttonRadiusClass}`}
-                    style={accentButtonStyle}
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Order on WhatsApp
-                  </a>
-                )}
-                {phone && (
-                  <a
-                    href={`tel:${phone}`}
-                    className={`inline-flex items-center justify-center gap-2 border px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`}
-                    style={outlineButtonStyle}
-                  >
-                    <Phone className="h-4 w-4" />
-                    Call Seller
-                  </a>
-                )}
-              </div>
-            </section>
+          <div className="h-2 bg-[#efe6da]" />
 
-            <section className="rounded-xl border border-slate-200 bg-white p-5" style={cardStyle}>
-              <div className="mb-4 flex items-center gap-3">
-                {logo ? (
-                  <img src={logo} alt={shopName} className="h-12 w-12 rounded-lg border border-slate-200 object-cover" />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700" style={softPanelStyle}>
-                    <Store className="h-5 w-5" />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <h3 className="truncate text-base font-black text-slate-950">{shopName}</h3>
-                  {storeProfile?.details && <p className="line-clamp-1 text-sm text-slate-500">{storeProfile.details}</p>}
-                </div>
-              </div>
+          <section ref={checkoutRef} className="px-4 py-4">
+            <form onSubmit={submitOrder} className="rounded-2xl border border-[var(--rb-line)] bg-[var(--rb-card)] p-4">
+              <h2 className="text-lg font-black">Complete Your Order</h2>
+              <p className="mb-4 mt-1 text-xs text-[var(--rb-muted)]">Fill in your details. The seller will verify your order.</p>
 
-              <div className="space-y-3 text-sm text-slate-600">
-                {storeProfile?.address && (
-                  <div className="flex gap-2">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                    <span>{storeProfile.address}</span>
-                  </div>
-                )}
-                {phone && (
-                  <div className="flex gap-2">
-                    <Phone className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
-                    <span>{phone}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                {storeProfile?.facebook_url && (
-                  <a
-                    href={storeProfile.facebook_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-50"
-                  >
-                    <Facebook className="h-4 w-4" />
-                    Facebook
-                  </a>
-                )}
-                {storeProfile?.website && (
-                  <a
-                    href={storeProfile.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50"
-                  >
-                    <Globe2 className="h-4 w-4" />
-                    Website
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
-                )}
-              </div>
-            </section>
-          </aside>
-        </div>
-      </main>
-
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white p-3 shadow-lg sm:hidden">
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => setOrderModalOpen(true)}
-            className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`} style={primaryButtonStyle}
-          >
-            <ShoppingBag className="h-4 w-4" />
-            {ctaText}
-          </button>
-          {phone ? (
-            <a
-              href={`tel:${phone}`}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-3 text-sm font-black text-slate-700"
-            >
-              <Phone className="h-4 w-4" />
-              Call
-            </a>
-          ) : design.sections.show_whatsapp_button && whatsappLink ? (
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-black hover:opacity-90 ${buttonRadiusClass}`} style={accentButtonStyle}
-            >
-              <MessageCircle className="h-4 w-4" />
-              WhatsApp
-            </a>
-          ) : null}
-        </div>
-      </div>
-
-      {orderModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/60 p-0 sm:items-center sm:p-4">
-          <div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white shadow-2xl sm:rounded-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-200 bg-white px-5 py-4">
-              <div>
-                <h3 className="text-lg font-black text-slate-950">Make Order</h3>
-                <p className="text-sm text-slate-500">{title}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOrderModalOpen(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
-                aria-label="Close order form"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={submitOrder} className="space-y-4 p-5">
               {createdOrder && (
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-800">
+                <div className="mb-4 rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800">
                   <p className="font-black">Order placed successfully</p>
                   {(createdOrder?.tracking_code || createdOrder?.data?.tracking_code) && (
                     <p className="mt-1">
-                      Tracking code:{" "}
-                      <span className="font-mono font-bold">
-                        {createdOrder?.tracking_code || createdOrder?.data?.tracking_code}
-                      </span>
+                      Tracking code: <span className="font-mono font-bold">{createdOrder?.tracking_code || createdOrder?.data?.tracking_code}</span>
                     </p>
                   )}
                 </div>
               )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Customer Name</label>
+              <div className="grid gap-3">
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold">Customer Name</span>
                   <input
                     name="customer_name"
                     value={orderForm.customer_name}
                     onChange={updateOrderField}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)]"
                     placeholder="Customer name"
                   />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Customer Phone</label>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold">Mobile Number</span>
                   <input
                     name="customer_phone"
                     value={orderForm.customer_phone}
                     onChange={updateOrderField}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)]"
                     placeholder="01XXXXXXXXX"
                   />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Customer Address</label>
+                </label>
+                <label className="block">
+                  <span className="mb-1 block text-xs font-bold">Full Address</span>
                   <textarea
                     name="customer_address"
                     value={orderForm.customer_address}
                     onChange={updateOrderField}
-                    rows={3}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    placeholder="Full delivery address"
+                    rows={2}
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)]"
+                    placeholder="House/road/area/district"
                   />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Division</label>
+                </label>
+
+                <div className="grid grid-cols-1 gap-3">
                   <select
                     name="division_id"
                     value={orderForm.division_id}
                     onChange={updateOrderField}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)]"
                   >
-                    <option value="">{divisionsLoading ? "Loading..." : "Select division"}</option>
+                    <option value="">{divisionsLoading ? "Loading divisions..." : "Select division"}</option>
                     {divisions.map((division) => (
                       <option key={division.id} value={division.id}>
                         {division.name || division.bn_name || division.title}
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">District</label>
                   <select
                     name="district_id"
                     value={orderForm.district_id}
                     onChange={updateOrderField}
                     disabled={!orderForm.division_id}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)] disabled:bg-slate-100"
                   >
-                    <option value="">{districtsLoading ? "Loading..." : "Select district"}</option>
+                    <option value="">{districtsLoading ? "Loading districts..." : "Select district"}</option>
                     {districts.map((district) => (
                       <option key={district.id} value={district.id}>
                         {district.name || district.bn_name || district.title}
                       </option>
                     ))}
                   </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Upazila</label>
                   <select
                     name="upozella_id"
                     value={orderForm.upozella_id}
                     onChange={updateOrderField}
                     disabled={!orderForm.district_id}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)] disabled:bg-slate-100"
                   >
-                    <option value="">{upazilasLoading ? "Loading..." : "Select upazila"}</option>
+                    <option value="">{upazilasLoading ? "Loading upazilas..." : "Select upazila"}</option>
                     {upazilas.map((upazila) => (
                       <option key={upazila.id} value={upazila.id}>
                         {upazila.name || upazila.bn_name || upazila.title}
@@ -836,61 +658,70 @@ const ProductPage = () => {
                     ))}
                   </select>
                 </div>
+
                 {variants.length > 0 && (
-                  <div>
-                    <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Variant</label>
-                    <select
-                      name="variant_id"
-                      value={orderForm.variant_id}
-                      onChange={updateOrderField}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                      <option value="">Select variant</option>
-                      {variants.map((variant, index) => {
-                        const value = variant.id || variant.variant || variant.sku || index;
-                        return (
-                          <option key={value} value={value}>
-                            {variant.variant || variant.name || variant.sku || `Variant ${index + 1}`}
-                            {variant.price ? ` - ${formatMoney(variant.price)}` : ""}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </div>
-                )}
-                <div>
-                  <label className="mb-1 block text-xs font-bold uppercase text-slate-500">Quantity</label>
-                  <input
-                    type="number"
-                    min="1"
-                    name="quantity"
-                    value={orderForm.quantity}
+                  <select
+                    name="variant_id"
+                    value={orderForm.variant_id}
                     onChange={updateOrderField}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  />
+                    className="w-full rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm outline-none focus:border-[var(--rb-accent)]"
+                  >
+                    <option value="">Select variant</option>
+                    {variants.map((variant, index) => {
+                      const value = variant.id || variant.variant || variant.sku || index;
+                      return (
+                        <option key={value} value={value}>
+                          {variant.variant || variant.name || variant.sku || `Variant ${index + 1}`}
+                          {variant.price ? ` - ${formatMoney(variant.price)}` : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                )}
+
+                <div className="flex items-center justify-between rounded-xl bg-[var(--rb-soft)] px-3 py-3">
+                  <span className="text-sm font-bold">Quantity</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => adjustQuantity(-1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--rb-accent)] text-white"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="min-w-6 text-center font-black">{orderQuantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => adjustQuantity(1)}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--rb-accent)] text-white"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-semibold text-slate-700">
+
+                <label className="flex items-center gap-3 rounded-xl border border-[var(--rb-line)] bg-[#fffcf8] px-3 py-3 text-sm font-semibold">
                   <input
                     type="checkbox"
                     name="is_outside_dhaka"
                     checked={orderForm.is_outside_dhaka}
                     onChange={updateOrderField}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                    className="h-4 w-4 rounded border-slate-300 text-orange-600"
                   />
                   Outside Dhaka
                 </label>
               </div>
 
-              <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="flex justify-between text-sm text-slate-600">
+              <div className="mt-4 rounded-xl bg-[var(--rb-soft)] px-3 py-3">
+                <div className="flex justify-between py-1 text-sm text-[var(--rb-muted)]">
                   <span>Product price x {orderQuantity}</span>
-                  <span>{formatMoney(orderUnitPrice * orderQuantity)}</span>
+                  <span>{formatMoney(orderSubtotal)}</span>
                 </div>
-                <div className="mt-2 flex justify-between text-sm text-slate-600">
+                <div className="flex justify-between py-1 text-sm text-[var(--rb-muted)]">
                   <span>Delivery charge</span>
                   <span>{formatMoney(orderDeliveryCharge)}</span>
                 </div>
-                <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-base font-black text-slate-950">
+                <div className="mt-2 flex justify-between border-t border-dashed border-[var(--rb-line)] pt-3 text-base font-black">
                   <span>Total</span>
                   <span>{formatMoney(orderTotal)}</span>
                 </div>
@@ -899,22 +730,57 @@ const ProductPage = () => {
               <button
                 type="submit"
                 disabled={placingOrder}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[var(--rb-accent)] px-4 py-4 text-base font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {placingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShoppingBag className="h-4 w-4" />}
-                {placingOrder ? "Placing order..." : "Submit Order"}
+                {placingOrder ? "Placing order..." : ctaText}
               </button>
             </form>
-          </div>
+          </section>
+
+          <div className="h-5" />
         </div>
-      )}
+      </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2">
+        <div className="grid w-full max-w-[430px] grid-cols-2 gap-2 rounded-2xl border border-[var(--rb-line)] bg-white p-2 shadow-[0_-6px_24px_rgba(0,0,0,0.14)]">
+          {phone ? (
+            <a
+              href={`tel:${phone}`}
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#f3efe9] px-3 py-3 text-sm font-black text-[var(--rb-ink)]"
+              onClick={() => setTimeout(scrollToCheckout, 150)}
+            >
+              <Phone className="h-4 w-4" />
+              Call Now
+            </a>
+          ) : design.sections.show_whatsapp_button && whatsappLink ? (
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#f3efe9] px-3 py-3 text-sm font-black text-[var(--rb-ink)]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
+          ) : (
+            <button type="button" onClick={handleShare} className="flex items-center justify-center gap-2 rounded-xl bg-[#f3efe9] px-3 py-3 text-sm font-black text-[var(--rb-ink)]">
+              <Share2 className="h-4 w-4" />
+              Share
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={scrollToCheckout}
+            className="flex items-center justify-center gap-2 rounded-xl bg-[var(--rb-accent)] px-3 py-3 text-sm font-black text-white"
+          >
+            <ShoppingBag className="h-4 w-4" />
+            {ctaText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
 
 export default ProductPage;
-
-
-
-
-

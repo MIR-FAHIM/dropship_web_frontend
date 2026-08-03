@@ -217,6 +217,7 @@ const ProductDetails = () => {
     try {
       if (navigator?.clipboard?.writeText) {
         await navigator.clipboard.writeText(safeText);
+        toast.success("Copied successfully");
         return;
       }
       const temp = document.createElement("textarea");
@@ -225,8 +226,10 @@ const ProductDetails = () => {
       temp.select();
       document.execCommand("copy");
       temp.remove();
+      toast.success("Copied successfully");
     } catch (err) {
       console.error("Copy failed:", err);
+      toast.error("Copy failed");
     }
   };
 
@@ -336,7 +339,7 @@ const ProductDetails = () => {
                   style={{ whiteSpace: "nowrap", flexShrink: 0 }}
                   onClick={() => handleCopyText(product.video_link)}
                 >
-                  à¦­à¦¿à¦¡à¦¿à¦“ à¦²à¦¿à¦‚à¦• à¦•à¦ªà¦¿
+                 Copy
                 </button>
               </div>
             )}
