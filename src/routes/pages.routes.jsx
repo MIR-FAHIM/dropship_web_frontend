@@ -32,6 +32,7 @@ import AllStore from "../pages/reseller_panel/all_store/AllStore";
 import StoreProducts from "../pages/reseller_panel/all_store/StoreProducts";
 import StoreProfile from "../pages/reseller_panel/store_profile/StoreProfile";
 import Notifications from "../pages/reseller_panel/notifications/Notifications";
+import NoticeBoard from "../pages/reseller_panel/notices/NoticeBoard";
 
 export const pagePaths = [
   { path: "dashboard-new",          element: <Overview /> },
@@ -50,6 +51,7 @@ export const pagePaths = [
   { path: "profile",                element: <ProfilePage /> },
   { path: "store-profile",          element: <StoreProfile /> },
   { path: "notifications",          element: <Notifications /> },
+  { path: "notices",                element: <NoticeBoard /> },
   { path: "items/category",         element: <ItemsCategory /> },
   { path: "product-assistant",      element: <ProductAssistantPage /> },
   { path: "cart",                   element: <CartPage /> },

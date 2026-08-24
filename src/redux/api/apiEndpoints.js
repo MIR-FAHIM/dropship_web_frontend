@@ -7,6 +7,8 @@ export const API_ENDPOINTS = {
   auth: {
     login: define("POST", "/auth/login"),
     loginAsVendor: define("POST", "/auth/login-as-vendor"),
+    forgotPassword: define("POST", "/auth/forgot-password"),
+    resetPassword: define("POST", "/auth/reset-password"),
     logout: define("POST", "/auth/logout"),
     listTokens: define("GET", "/auth/tokens"),
     revokeToken: define("DELETE", "/auth/tokens/{id}"),
@@ -266,6 +268,13 @@ export const API_ENDPOINTS = {
     byUser: define("GET", "/notifications/user/{userId}"),
     readUnread: define("PATCH", "/notifications/read-unread/{notificationId}"),
     markAllRead: define("PATCH", "/notifications/mark-all-read/{userId}"),
+  },
+  notices: {
+    reseller: define("GET", "/notices/reseller"),
+    list: define("GET", "/notices/list"),
+    add: define("POST", "/notices/add"),
+    update: define("PUT", "/notices/update/{id}"),
+    delete: define("DELETE", "/notices/delete/{id}"),
   },
   address: {
     divisions: define("GET", "/address/divisions"),

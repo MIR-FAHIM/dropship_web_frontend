@@ -29,6 +29,7 @@ import {
   TicketCheck,
   AlertTriangle,
   CheckCircle2,
+  Megaphone,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -135,6 +136,11 @@ const adminMenuLinks = [
     path: "/admin-panel/support-tickets",
     label: "Support Tickets",
     icon: <TicketCheck className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/notices",
+    label: "Notice Management",
+    icon: <Megaphone className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/error-logs",

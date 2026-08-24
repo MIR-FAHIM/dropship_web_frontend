@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useButtonClickMutation } from "../../../redux/features/user";
 import { Outlet } from "react-router-dom";
+import { useGetResellerNoticesQuery } from "../../../redux/features/notice";
+import { formatNoticeDate, formatNoticeLabel, getNoticeList, noticePriorityClass } from "../../../utils/notice.utils";
 import {
   FaBoxOpen, FaTrophy, FaRocket, FaBook, FaVideo,
   FaStore, FaChartBar, FaWallet, FaMoneyBillWave, FaHeadset,
@@ -30,6 +32,169 @@ const leaderboardData = [
   { rank: 4, product: "Fitness Band", sales: "900+" },
   { rank: 5, product: "Portable Speaker", sales: "850+" },
 ];
+
+const tierSteps = [
+  {
+    name: "Bronze",
+    status: "Completed",
+    helper: "First sales milestone",
+    state: "done",
+  },
+  {
+    name: "Silver",
+    status: "Completed",
+    helper: "Consistent order flow",
+    state: "done",
+  },
+  {
+    name: "Gold",
+    status: "In Progress",
+    helper: "Grow monthly profit",
+    state: "current",
+  },
+  {
+    name: "Platinum",
+    status: "Locked",
+    helper: "Premium seller rewards",
+    state: "locked",
+  },
+];
+
+const ResellerTierJourney = () => {
+  const completedCount = tierSteps.filter((tier) => tier.state === "done").length;
+  const currentTier = tierSteps.find((tier) => tier.state === "current") || tierSteps[0];
+  const progress = Math.round(((completedCount + 0.45) / tierSteps.length) * 100);
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-2xl border border-[#BDEAD8] bg-[#E1F5EE] shadow-sm">
+      <div className="bg-gradient-to-r from-[#085041] via-[#158E72] to-[#5DCAA5] p-4 text-white sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">Reseller Tier Journey</p>
+            <h3 className="mt-1 text-xl font-black">Current tier: {currentTier.name}</h3>
+            <p className="mt-1 text-sm text-white/80">Complete the next milestones to unlock better benefits.</p>
+          </div>
+          <div className="w-full rounded-2xl bg-white/15 p-3 sm:w-[170px]">
+            <p className="text-xs font-semibold text-white/70">Progress</p>
+            <p className="mt-1 text-2xl font-black">{progress}%</p>
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <div className="h-2 overflow-hidden rounded-full bg-white/25">
+            <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
+          </div>
+          <div className="mt-2 flex justify-between text-[11px] font-semibold text-white/75">
+            <span>Started</span>
+            <span>Next: Platinum</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
+        {tierSteps.map((tier, index) => {
+          const isDone = tier.state === "done";
+          const isCurrent = tier.state === "current";
+          const isLocked = tier.state === "locked";
+
+          return (
+            <div
+              key={tier.name}
+              className={`rounded-xl border p-4 ${
+                isCurrent
+                  ? "border-[#158E72] bg-[#CDEFE1] shadow-sm"
+                  : isDone
+                    ? "border-[#BDEAD8] bg-[#DDF4EA]"
+                    : "border-gray-200 bg-white/70"
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
+                    isDone
+                      ? "bg-[#158E72] text-white"
+                      : isCurrent
+                        ? "bg-white text-[#085041]"
+                        : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {isDone ? "OK" : isLocked ? "L" : index + 1}
+                </div>
+                <span
+                  className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                    isDone
+                      ? "bg-green-100 text-green-700"
+                      : isCurrent
+                        ? "bg-white text-[#085041]"
+                        : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {tier.status}
+                </span>
+              </div>
+              <h4 className="mt-4 text-base font-black text-gray-900">{tier.name}</h4>
+              <p className="mt-1 text-sm leading-5 text-gray-600">{tier.helper}</p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
+
+const DashboardNoticeWidget = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { data, isLoading, isError } = useGetResellerNoticesQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+  const notices = getNoticeList(data).slice(0, 3);
+
+  return (
+    <div className="rounded-lg border border-[#BDEAD8] bg-[#E1F5EE] p-4 shadow-md">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-xl font-semibold text-[#085041]">📢 {t("Notice Board")}</h3>
+        <button
+          type="button"
+          onClick={() => navigate("/app/notices")}
+          className="rounded-full bg-[#CDEFE1] px-3 py-1.5 text-xs font-bold text-[#085041] hover:bg-[#BDEAD8]"
+        >
+          View All
+        </button>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="h-14 animate-pulse rounded-lg bg-[#CDEFE1]" />
+          ))}
+        </div>
+      ) : isError ? (
+        <p className="text-sm text-red-700">Failed to load notices.</p>
+      ) : notices.length === 0 ? (
+        <p className="text-sm text-[#085041]/70">No notices available</p>
+      ) : (
+        <div className="space-y-3">
+          {notices.map((notice) => {
+            const priority = String(notice.priority || "normal").toLowerCase();
+            return (
+              <div key={notice.id} className="rounded-lg border border-[#BDEAD8] bg-[#DDF4EA] p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-bold text-[#085041]">{notice.title || "Untitled notice"}</p>
+                  <span className={`shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-bold ${noticePriorityClass[priority] || noticePriorityClass.normal}`}>
+                    {formatNoticeLabel(priority)}
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#085041]/70">{notice.message || "-"}</p>
+                {notice.published_at && <p className="mt-2 text-[11px] font-semibold text-[#085041]/55">{formatNoticeDate(notice.published_at)}</p>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Overview = () => {
   const { t, i18n } = useTranslation();
@@ -104,29 +269,12 @@ const Overview = () => {
           ))}
         </div>
 
-        {/* Reseller Tier Journey */}
-        <div className="mt-6 p-4 rounded-lg shadow-md bg-gradient-to-r from-green-400 to-gray-300">
-          <h3 className="text-xl font-semibold mb-2 text-white">⭐ Reseller Tier Journey</h3>
-          <ul className="flex space-x-4 text-sm">
-            <li className="text-green-800 bg-green-100 px-3 py-1 rounded-full">✔ Bronze - Completed</li>
-            <li className="text-green-800 bg-green-100 px-3 py-1 rounded-full">✔ Silver - Completed</li>
-            <li className="text-yellow-800 bg-yellow-100 px-3 py-1 rounded-full">🔜 Gold - In Progress</li>
-            <li className="text-gray-800 bg-gray-100 px-3 py-1 rounded-full">🔒 Platinum - Locked</li>
-          </ul>
-        </div>
+        <ResellerTierJourney />
       </div>
 
       {/* Right Section - Notice Board, Tips Board, and Leaderboard */}
       <div className="w-full lg:w-1/3 flex flex-col gap-5">
-        {/* Notice Board */}
-        <div className="bg-yellow-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-2">📢 {t("Notice Board")}</h3>
-          <ul className="text-gray-700 text-sm space-y-2">
-            <li>🚀 New product trends released, check the dashboard.</li>
-            <li>📌 Sales target deadline extended to next month.</li>
-            <li>📢 Exclusive offer for top sellers this week!</li>
-          </ul>
-        </div>
+        <DashboardNoticeWidget />
 
         {/* Tips Board */}
         <div className="bg-green-100 p-4 rounded-lg shadow-md">

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { LogIn, Eye, EyeOff, ArrowRight } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth";
 import { saveToLocalstorage } from "../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
@@ -9,11 +9,23 @@ import { toast } from "sonner";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ email: location.state?.email || "", password: "" });
   const [loginFunc, { isLoading }] = useLoginMutation();
+
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData((prev) => ({ ...prev, email: location.state.email }));
+    }
+
+    if (location.state?.passwordReset) {
+      toast.success("Password reset successfully. Please login with your new password.");
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -115,6 +127,7 @@ const Login = () => {
             <div className="flex justify-end">
               <button
                 type="button"
+                onClick={() => navigate("/forgot-password", { state: { email: formData.email } })}
                 className="text-xs text-[#158E72] hover:text-emerald-800 font-medium"
               >
                 পাসওয়ার্ড ভুলে গেছেন?

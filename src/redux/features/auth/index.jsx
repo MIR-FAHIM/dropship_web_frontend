@@ -17,6 +17,20 @@ const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    forgotPassword: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.auth.forgotPassword.path,
+        method: API_ENDPOINTS.auth.forgotPassword.method,
+        body: data,
+      }),
+    }),
+    resetPassword: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.auth.resetPassword.path,
+        method: API_ENDPOINTS.auth.resetPassword.method,
+        body: data,
+      }),
+    }),
     register: builder.mutation({
       query: (data) => ({
         url: "/register",
@@ -37,6 +51,8 @@ const authApi = baseApi.injectEndpoints({
 export const {
   useLoginMutation,
   useLoginAsVendorMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
   useRegisterMutation,
   useDropshipperRegisterMutation,
 } = authApi;

@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Login from "../pages/auth/Login";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 import RegisterPage from "../pages/auth/register";
 import PrivateRoute from "./PrivateRoute";
 import { pagePaths } from "./pages.routes";
@@ -62,6 +63,7 @@ import ProductAssistantPage from "../pages/reseller_panel/product_assistant/prod
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
 import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
 import LoginSuccessReport from "../pages/admin_panel/error_logs/LoginSuccessReport";
+import AdminNotices from "../pages/admin_panel/notices/AdminNotices";
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
@@ -186,6 +188,7 @@ export const router = createBrowserRouter([
       { path: "my-business-info", element: <MyBusinessInfo /> },
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
+      { path: "notices", element: <AdminNotices /> },
       { path: "error-logs", element: <ErrorLog /> },
       { path: "reports/login-success", element: <LoginSuccessReport /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
@@ -212,6 +215,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
   },
 
   {
