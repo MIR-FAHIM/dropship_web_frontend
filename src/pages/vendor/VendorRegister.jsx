@@ -69,6 +69,7 @@ const VendorRegister = () => {
 
   const [formData, setFormData] = useState({
     ownerName: "",
+    business_name: "",
     phone: "",
     contactPerson: "",
     emergencyContact: "",
@@ -153,7 +154,8 @@ const VendorRegister = () => {
     try {
       const payload = {
         name: formData.ownerName,
-        shop_name: formData.ownerName,
+        shop_name: formData.business_name || formData.ownerName,
+        business_name: formData.business_name,
         email: formData.email,
         password: formData.password,
         contact_person: formData.contactPerson,
@@ -314,6 +316,22 @@ const VendorRegister = () => {
                   required
                   placeholder="আপনার পূর্ণ নাম লিখুন"
                   value={formData.ownerName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#059669] focus:border-[#059669] outline-none text-sm"
+                />
+              </div>
+
+              {/* Business / Company Name */}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">
+                  Business / Company Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="business_name"
+                  required
+                  placeholder="আপনার কোম্পানির / প্রতিষ্ঠানের নাম লিখুন"
+                  value={formData.business_name}
                   onChange={handleChange}
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-[#059669] focus:border-[#059669] outline-none text-sm"
                 />
@@ -692,7 +710,7 @@ const VendorRegister = () => {
             />
             <label htmlFor="terms" className="text-xs text-slate-600 cursor-pointer leading-normal">
               আমি প্ল্যাটফর্মের{" "}
-              <Link to="/terms-and-conditions" className="text-[#059669] font-semibold underline">
+              <Link to="/supplier-terms-and-conditions" target="_blank" className="text-[#059669] font-semibold underline">
                 Terms & Conditions
               </Link>{" "}
               এবং{" "}

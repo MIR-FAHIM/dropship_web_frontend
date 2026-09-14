@@ -8,6 +8,7 @@ import { pagePaths } from "./pages.routes";
 import HomePage from "../pages/home_page/home_page";
 import PrivacyPolicyPage from "../pages/privacy_policy/privacy_policy";
 import TermsAndConditions from "../pages/terms/TermsAndConditions";
+import SupplierTermsAndConditions from "../pages/terms/SupplierTermsAndConditions";
 import ProductsListHomePage from "../pages/home_page/product_list_home";
 import ProductDetailsHomePage from "../pages/home_page/product_detail_home";
 import ContactPage from "../pages/home_page/contact_us";
@@ -78,8 +79,6 @@ export const router = createBrowserRouter([
     path: "/picnic-registration",
     element: <PicnicRegistration />,
   },
-
-
   {
     path: "/registered-members",
     element: <RegisteredMembersTable />,
@@ -107,6 +106,10 @@ export const router = createBrowserRouter([
   {
     path: "/terms-and-conditions",
     element: <TermsAndConditions />,
+  },
+  {
+    path: "/supplier-terms-and-conditions",
+    element: <SupplierTermsAndConditions />,
   },
   {
     path: "/products-home/:id",
