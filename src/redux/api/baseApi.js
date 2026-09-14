@@ -13,6 +13,7 @@ const rawBaseQuery = fetchBaseQuery({
       "vendorLogin",
       "forgotPassword",
       "resetPassword",
+      "addKycDocument",
     ];
     if (noAuthEndpoints.includes(endpoint)) {
       headers.set("Accept", "application/json");

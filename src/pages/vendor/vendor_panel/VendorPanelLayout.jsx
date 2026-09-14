@@ -12,6 +12,7 @@ import {
   Store,
   Tag,
   X,
+  ShieldCheck,
 } from "lucide-react";
 
 const vendorMenuLinks = [
@@ -45,6 +46,11 @@ const vendorMenuLinks = [
     path: "/vendor-panel/brands",
     label: "ব্র্যান্ড",
     icon: <Tag className="w-5 h-5" />,
+  },
+  {
+    path: "/vendor-panel/kyc",
+    label: "KYC Verification",
+    icon: <ShieldCheck className="w-5 h-5" />,
   },
   {
     path: "/vendor-panel/settings",

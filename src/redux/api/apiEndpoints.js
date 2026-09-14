@@ -1,4 +1,4 @@
-﻿// Centralized API endpoint definitions derived from backend routes.php
+// Centralized API endpoint definitions derived from backend routes.php
 // Base URL is configured in baseApi.js as `${imgBaseUrl}/api`
 
 const define = (method, path) => ({ method, path });
@@ -245,6 +245,12 @@ export const API_ENDPOINTS = {
     isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),
     dashboardReport: define("GET", "/vendors/dashboard/report/{vendorId}"),
+  },
+
+  documentsKyc: {
+    add: define("POST", "/documents-kyc/add"),
+    byUser: define("GET", "/documents-kyc/user/{userId}"),
+    update: define("POST", "/documents-kyc/update/{id}"),
   },
 
   tasks: {

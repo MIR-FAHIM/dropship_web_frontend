@@ -69,6 +69,29 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Vendor"],
     }),
+    addKycDocument: builder.mutation({
+      query: (formData) => ({
+        url: API_ENDPOINTS.documentsKyc.add.path,
+        method: API_ENDPOINTS.documentsKyc.add.method,
+        body: formData,
+      }),
+      invalidatesTags: ["Upload"],
+    }),
+    getKycDocumentsByUser: builder.query({
+      query: (userId) => ({
+        url: buildEndpointPath(API_ENDPOINTS.documentsKyc.byUser.path, { userId }),
+        method: API_ENDPOINTS.documentsKyc.byUser.method,
+      }),
+      providesTags: ["Upload"],
+    }),
+    updateKycDocument: builder.mutation({
+      query: ({ id, formData }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.documentsKyc.update.path, { id }),
+        method: API_ENDPOINTS.documentsKyc.update.method,
+        body: formData,
+      }),
+      invalidatesTags: ["Upload"],
+    }),
   }),
 });
 
@@ -82,6 +105,9 @@ export const {
   useGetVendorDashboardReportQuery,
   useVendorIsActiveMutation,
   useLoginAsVendorMutation,
+  useAddKycDocumentMutation,
+  useGetKycDocumentsByUserQuery,
+  useUpdateKycDocumentMutation,
 } = vendorApi;
 
 export default vendorApi;

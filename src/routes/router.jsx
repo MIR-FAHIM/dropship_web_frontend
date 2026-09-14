@@ -29,6 +29,7 @@ import VendorOrderDetails from "../pages/vendor/vendor_panel/VendorOrderDetails"
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
 import VendorBrands from "../pages/vendor/vendor_panel/VendorBrands";
+import VendorKyc from "../pages/vendor/vendor_panel/VendorKyc";
 import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
 import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
@@ -73,7 +74,6 @@ export const router = createBrowserRouter([
     path: "/",
     element: <HomePage />,
   },
-
   {
     path: "/picnic-registration",
     element: <PicnicRegistration />,
@@ -92,8 +92,6 @@ export const router = createBrowserRouter([
     path: "/product-assistant",
     element: <ProductAssistantPage />,
   },
-
-
   {
     path: "/contact-us",
     element: <ContactPage />,
@@ -130,12 +128,6 @@ export const router = createBrowserRouter([
     path: "/vendor-login",
     element: <VendorLogin />,
   },
-
-  {
-    path: "task-share-detail/:id",
-    element: <TaskShareDetail />
-  },
-
   {
     path: "/vendor-register",
     element: <VendorRegister />,
@@ -153,11 +145,15 @@ export const router = createBrowserRouter([
       { path: "accounting", element: <VendorAccounting /> },
       { path: "bank-account", element: <VendorBankAccount /> },
       { path: "brands", element: <VendorBrands /> },
+      { path: "kyc", element: <VendorKyc /> },
       { path: "settings", element: <VendorSettings /> },
-   
     ],
   },
-
+  {
+    path: "/vendor/kyc",
+    element: <VendorPanelLayout />,
+    children: [{ index: true, element: <VendorKyc /> }],
+  },
   {
     path: "/admin-panel",
     element: <AdminPanelLayout />,
