@@ -4,7 +4,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGetDivisionsQuery, useGetDistrictsQuery, useGetUpazilasQuery } from "../../redux/features/address";
 import { useAddKycDocumentMutation, useVendorRegisterMutation } from "../../redux/features/vendor_api";
 import { toast } from "sonner";
-
 const maxKycFileSize = 5 * 1024 * 1024;
 const allowedKycExtensions = ["jpg", "jpeg", "png", "webp", "pdf"];
 const kycAccept = ".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf";
