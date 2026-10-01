@@ -8,6 +8,7 @@ import {
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 
 const VendorBrands = () => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -15,6 +16,7 @@ const VendorBrands = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [mediaOpen, setMediaOpen] = useState(false);
   const [formData, setFormData] = useState({ name: "", logo: null, logoPreview: null });
+  const userId = getFromLocalstorage("userId");
 
   const { data, isLoading, isFetching } = useListBrandsQuery(currentPage);
   const [createBrand, { isLoading: creating }] = useCreateBrandMutation();
@@ -260,6 +262,8 @@ const VendorBrands = () => {
         open={mediaOpen}
         onClose={() => setMediaOpen(false)}
         onSelect={(file) => setFormData({ ...formData, logo: file.id, logoPreview: file.file_name })}
+        useUserUploads
+        userId={userId}
       />
     </div>
   );

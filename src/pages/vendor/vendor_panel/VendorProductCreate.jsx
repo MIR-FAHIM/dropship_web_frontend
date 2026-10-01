@@ -1,24 +1,23 @@
 import React, { useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import {
-  ArrowLeft, ArrowRight, Save, Loader2, ImagePlus, Check,
+  ArrowLeft, ArrowRight, Loader2, Check,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCreateProductMutation } from "../../../redux/features/product";
 import { useListCategoriesQuery } from "../../../redux/features/category";
 import { useListBrandsQuery } from "../../../redux/features/brand";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
-import { imgBaseUrl } from "../../../../config";
 import { useGetAttributesQuery, useGetAttributeDetailsQuery } from "../../../redux/features/attribute";
 import { useCreateProductAttributeMutation, useListProductAttributesQuery } from "../../../redux/features/productAttribute";
-import FormikForm from "../../../components/formik/FormikForm";
-import FormikDropdown from "../../../components/formik/FormikDropdown";
-import FormikInput from "../../../components/formik/FormikInput";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
 import {  useGetVendorIdQuery} from "../../../redux/features/vendor_api";
+import BasicInfoTab from "./product/product_create/BasicInfoTab";
+import MediaTab from "./product/product_create/MediaTab";
+import PricingTab from "./product/product_create/PricingTab";
+import ShippingTab from "./product/product_create/ShippingTab";
+import ProductAttributeTab from "./product/product_create/ProductAttributeTab";
 
 
 
@@ -254,270 +253,58 @@ const VendorProductCreate = () => {
         </div>
 
         <div className="p-6">
-          {/* Tab: Basic Info */}
           {activeTab === "basic" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="md:col-span-2">
-                <label className={labelClass}>পণ্যের নাম *</label>
-                <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="পণ্যের নাম লিখুন" className={inputClass} required />
-              </div>
-              <div>
-                <label className={labelClass}>ক্যাটাগরি *</label>
-                <select name="category_id" value={formData.category_id} onChange={handleChange} className={inputClass} required>
-                  <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>ব্র্যান্ড</label>
-                <select name="brand_id" value={formData.brand_id} onChange={handleChange} className={inputClass}>
-                  <option value="">ব্র্যান্ড নির্বাচন করুন</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>{b.name}</option>
-                  ))}
-                </select>
-              </div>
-              {/* <div>
-                <label className={labelClass}>স্লাগ</label>
-                <input type="text" name="slug" value={formData.slug} onChange={handleChange} placeholder="product-slug" className={inputClass} />
-              </div> */}
-              {/* <div>
-                <label className={labelClass}>SKU</label>
-                <input type="text" name="sku" value={formData.sku} onChange={handleChange} placeholder="SKU" className={inputClass} />
-              </div> */}
-              <div>
-                <label className={labelClass}>ট্যাগ</label>
-                <input type="text" name="tags" value={formData.tags} onChange={handleChange} placeholder="কমা দিয়ে আলাদা করুন" className={inputClass} />
-              </div>
-              <div className="md:col-span-2">
-                <label className={labelClass}>বিবরণ</label>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.description}
-                  onChange={(value) => setFormData((prev) => ({ ...prev, description: value }))}
-                  placeholder="পণ্যের বিবরণ লিখুন..."
-                  className="bg-white rounded-lg border border-gray-300"
-                  style={{ minHeight: 120 }}
-                />
-              </div>
-            </div>
+            <BasicInfoTab
+              formData={formData}
+              setFormData={setFormData}
+              handleChange={handleChange}
+              categories={categories}
+              brands={brands}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
           )}
 
-          {/* Tab: Media */}
           {activeTab === "media" && (
-            <div className="space-y-6">
-              <div>
-                <label className={labelClass}>থাম্বনেইল ছবি</label>
-                {formData.thumbnail_img ? (
-                  <div className="flex items-center gap-4">
-                    <img src={`${imgBaseUrl}/${formData.thumbnailPreview}`} alt="thumbnail" className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
-                    <div className="flex flex-col gap-1">
-                      <button type="button" onClick={() => openMedia("thumbnail")} className="text-xs text-blue-600 hover:underline">পরিবর্তন</button>
-                      <button type="button" onClick={() => setFormData((p) => ({ ...p, thumbnail_img: null, thumbnailPreview: null }))} className="text-xs text-red-500 hover:underline">মুছুন</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => openMedia("thumbnail")} className="flex items-center gap-2 px-4 py-4 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-500 transition w-full justify-center text-sm">
-                    <ImagePlus className="w-5 h-5" />
-                    থাম্বনেইল নির্বাচন করুন
-                  </button>
-                )}
-              </div>
-
-              <div>
-                <label className={labelClass}>প্রোডাক্ট ফটো</label>
-                {formData.photos ? (
-                  <div className="flex items-center gap-4">
-                    <img src={`${imgBaseUrl}/${formData.photosPreview}`} alt="photos" className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
-                    <div className="flex flex-col gap-1">
-                      <button type="button" onClick={() => openMedia("photos")} className="text-xs text-blue-600 hover:underline">পরিবর্তন</button>
-                      <button type="button" onClick={() => setFormData((p) => ({ ...p, photos: null, photosPreview: null }))} className="text-xs text-red-500 hover:underline">মুছুন</button>
-                    </div>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => openMedia("photos")} className="flex items-center gap-2 px-4 py-4 rounded-lg border-2 border-dashed border-gray-300 text-gray-500 hover:border-blue-400 hover:text-blue-500 transition w-full justify-center text-sm">
-                    <ImagePlus className="w-5 h-5" />
-                    প্রোডাক্ট ফটো নির্বাচন করুন
-                  </button>
-                )}
-              </div>
-
-              <div>
-                <label className={labelClass}>ভিডিও লিংক</label>
-                <input type="url" name="video_link" value={formData.video_link} onChange={handleChange} placeholder="https://youtube.com/..." className={inputClass} />
-              </div>
-            </div>
+            <MediaTab
+              formData={formData}
+              setFormData={setFormData}
+              openMedia={openMedia}
+              handleChange={handleChange}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
           )}
 
-          {/* Tab: Pricing & Stock */}
           {activeTab === "pricing" && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <div>
-                <label className={labelClass}>Vendor Price *</label>
-                <input type="number" name="unit_price" value={formData.unit_price} onChange={handleChange} placeholder="0" className={inputClass} required />
-              </div>
-              {/* <div>
-                <label className={labelClass}>Base Price (৳)</label>
-                <input type="number" name="purchase_price" value={formData.purchase_price} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div> */}
-              <div>
-                <label className={labelClass}>বর্তমান স্টক</label>
-                <input type="number" name="current_stock" value={formData.current_stock} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
-              {/* <div>
-                <label className={labelClass}>ইউনিট</label>
-                <input type="text" name="unit" value={formData.unit} onChange={handleChange} placeholder="যেমন: pcs, kg" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>ওজন (kg)</label>
-                <input type="number" name="weight" value={formData.weight} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
-              <div className="lg:col-span-3">
-                <hr className="my-2" />
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">ডিসকাউন্ট</p>
-              </div>
-              <div>
-                <label className={labelClass}>ডিসকাউন্ট</label>
-                <input type="number" name="discount" value={formData.discount} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>ডিসকাউন্ট ধরন</label>
-                <select name="discount_type" value={formData.discount_type} onChange={handleChange} className={inputClass}>
-                  <option value="">নির্বাচন করুন</option>
-                  <option value="flat">Flat (৳)</option>
-                  <option value="percent">Percent (%)</option>
-                </select>
-              </div>
-              <div>
-                <label className={labelClass}>শুরুর তারিখ</label>
-                <input type="date" name="discount_start_date" value={formData.discount_start_date} onChange={handleChange} className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>শেষের তারিখ</label>
-                <input type="date" name="discount_end_date" value={formData.discount_end_date} onChange={handleChange} className={inputClass} />
-              </div>
-              <div className="lg:col-span-3">
-                <hr className="my-2" />
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-3">ট্যাক্স</p>
-              </div>
-              <div>
-                <label className={labelClass}>ট্যাক্স</label>
-                <input type="number" name="tax" value={formData.tax} onChange={handleChange} placeholder="0" className={inputClass} />
-              </div>
-              <div>
-                <label className={labelClass}>ট্যাক্স ধরন</label>
-                <select name="tax_type" value={formData.tax_type} onChange={handleChange} className={inputClass}>
-                  <option value="">নির্বাচন করুন</option>
-                  <option value="flat">Flat (৳)</option>
-                  <option value="percent">Percent (%)</option>
-                </select>
-              </div> */}
-            </div>
+            <PricingTab
+              formData={formData}
+              handleChange={handleChange}
+              inputClass={inputClass}
+              labelClass={labelClass}
+            />
           )}
 
-          {/* Tab: Shipping & Settings */}
-                    {/* Tab: Product Attribute */}
-                    {activeTab === "productAttribute" && (
-                      <div className="space-y-6">
-                        <h2 className="text-lg font-bold mb-2">Product Attribute</h2>
-                        <FormikForm
-                          initialValues={prodAttrInitial}
-                          validationSchema={prodAttrSchema}
-                          onSubmit={handleProdAttrSubmit}
-                        >
-                          <FormikDropdown
-                            name="attribute_id"
-                            label="Attribute"
-                            options={attributeOptions}
-                            onChange={(val, form) => {
-                              const numVal = typeof val === "string" ? Number(val) : val;
-                              setSelectedAttrId(numVal);
-                              form.setFieldValue("attribute_id", numVal);
-                              form.setFieldValue("attribute_value_id", "");
-                            }}
-                          />
-                          <FormikDropdown
-                            name="attribute_value_id"
-                            label={loadingAttrDetails ? "Loading..." : "Attribute Value"}
-                            options={attributeValueOptions}
-                            disabled={selectedAttrId == null || loadingAttrDetails}
-                          />
-                          {selectedAttrId != null && !loadingAttrDetails && attributeValueOptions.length === 0 && (
-                            <div className="text-xs text-red-500 mt-1">No attribute values found for this attribute.</div>
-                          )}
-                          <FormikInput name="stock" label="Stock" type="number" required />
-                          <button
-                            type="submit"
-                            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                            disabled={creatingProdAttr}
-                          >
-                            {creatingProdAttr ? "Adding..." : "Add Attribute"}
-                          </button>
-                        </FormikForm>
+          {activeTab === "productAttribute" && (
+            <ProductAttributeTab
+              prodAttrInitial={prodAttrInitial}
+              prodAttrSchema={prodAttrSchema}
+              handleProdAttrSubmit={handleProdAttrSubmit}
+              attributeOptions={attributeOptions}
+              attributeValueOptions={attributeValueOptions}
+              selectedAttrId={selectedAttrId}
+              setSelectedAttrId={setSelectedAttrId}
+              loadingAttrDetails={loadingAttrDetails}
+              creatingProdAttr={creatingProdAttr}
+              prodAttrList={prodAttrList}
+            />
+          )}
 
-                        {/* List of product attributes */}
-                        <div className="mt-6">
-                          <h3 className="font-semibold mb-2">Attribute List</h3>
-                          {prodAttrList?.data?.length > 0 ? (
-                            <ul className="list-disc ml-6">
-                              {prodAttrList.data.map((item) => (
-                                <li key={item.id}>
-                                  Attribute: {item.attribute?.name} | Value: {item.attribute_value?.value} | Stock: {item.stock}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="text-gray-400">No attributes added yet.</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
           {activeTab === "shipping" && (
-            <div className="space-y-6">
-              {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <label className={labelClass}>শিপিং ধরন</label>
-                  <select name="shipping_type" value={formData.shipping_type} onChange={handleChange} className={inputClass}>
-                    <option value="">নির্বাচন করুন</option>
-                    <option value="free">ফ্রি</option>
-                    <option value="flat_rate">ফ্ল্যাট রেট</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={labelClass}>শিপিং চার্জ (৳)</label>
-                  <input type="number" name="shipping_cost" value={formData.shipping_cost} onChange={handleChange} placeholder="0" className={inputClass} />
-                </div>
-              </div> */}
-
-              <div>
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide mb-4">সেটিংস</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {[
-                    { name: "cash_on_delivery", label: "ক্যাশ অন ডেলিভারি" },
-                    { name: "refundable", label: "রিফান্ডযোগ্য" },
-                    { name: "published", label: "পাবলিশড" },
-                    { name: "featured", label: "ফিচার্ড" },
-                    { name: "seller_featured", label: "Hot Product" },
-                    { name: "todays_deal", label: "আজকের ডিল" },
-                    { name: "variant_product", label: "ভ্যারিয়েন্ট পণ্য" },
-                    { name: "stock_visibility_state", label: "স্টক দৃশ্যমান" },
-                  ].map((item) => (
-                    <label key={item.name} className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name={item.name}
-                        checked={formData[item.name] === 1}
-                        onChange={handleChange}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm text-gray-700">{item.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <ShippingTab
+              formData={formData}
+              handleChange={handleChange}
+            />
           )}
         </div>
 
@@ -557,6 +344,8 @@ const VendorProductCreate = () => {
         open={mediaOpen}
         onClose={() => setMediaOpen(false)}
         onSelect={handleMediaSelect}
+        useUserUploads
+        userId={userId}
       />
     </div>
   );

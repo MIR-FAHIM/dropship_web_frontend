@@ -5,6 +5,7 @@ import { useAddProductImageMutation, useDeleteProductImageMutation, useUpdatePro
 import MediaPickerModal from "../../../../../components/shared/MediaPickerModal";
 import ConfirmModal from "../../../../../components/shared/ConfirmModal";
 import { imgBaseUrl } from "../../../../../../config";
+import { getFromLocalstorage } from "../../../../../utils/localstorage.utils";
 
 const MediaTab = ({ product, productId }) => {
   const [mediaOpen, setMediaOpen] = useState(false);
@@ -16,6 +17,7 @@ const MediaTab = ({ product, productId }) => {
   const [updatingVideo, setUpdatingVideo] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deletingImageId, setDeletingImageId] = useState(null);
+  const userId = getFromLocalstorage("userId");
 
   const [addProductImage] = useAddProductImageMutation();
   const [updateProduct] = useUpdateProductMutation();
@@ -110,6 +112,8 @@ const MediaTab = ({ product, productId }) => {
           open={thumbOpen}
           onClose={() => setThumbOpen(false)}
           onSelect={handleThumbnailSelect}
+          useUserUploads
+          userId={userId}
         />
       </div>
 
@@ -130,6 +134,8 @@ const MediaTab = ({ product, productId }) => {
           open={mediaOpen}
           onClose={() => setMediaOpen(false)}
           onSelect={handleGalleryImageSelect}
+          useUserUploads
+          userId={userId}
         />
         {product.images && product.images.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3">

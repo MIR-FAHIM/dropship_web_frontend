@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { Image, Upload, Check, X } from "lucide-react";
-import { useListUploadsQuery, useUploadImageMutation } from "../../redux/features/upload";
+import { useListUploadsByUserIdQuery, useListUploadsQuery, useUploadImageMutation } from "../../redux/features/upload";
 import { imgBaseUrl } from "../../../config";
 import { toast } from "sonner";
 import Pagination from "../shared/Pagination";
@@ -16,6 +16,8 @@ import { getFromLocalstorage } from "../../utils/localstorage.utils";
  *     onSelect={(file) => console.log(file)}   // single select
  *     multiple={false}                           // set true for multi-select
  *     onSelectMultiple={(files) => ...}          // used when multiple=true
+ *     useUserUploads={true}                      // use /uploads/list/{userId}
+ *     userId={loggedInUserId}
  *   />
  *
  * `file` shape: { id, file_name, file_original_name, file_size, extension, ... }
@@ -26,20 +28,36 @@ const MediaPickerModal = ({
   onSelect,
   multiple = false,
   onSelectMultiple,
+  useUserUploads = false,
+  userId: scopedUserId,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const { data, isLoading, isFetching } = useListUploadsQuery(currentPage, {
-    skip: !open,
-  });
   const [uploadImage] = useUploadImageMutation();
-  const userId = getFromLocalstorage("userId") || 0;
+  const loggedInUserId = getFromLocalstorage("userId") || 0;
+  const userId = scopedUserId || loggedInUserId;
+  const shouldUseUserUploads = Boolean(useUserUploads && userId);
 
-  const uploads = data?.data?.data || [];
-  const totalPages = data?.data?.last_page || 1;
+  const globalUploadsQuery = useListUploadsQuery(currentPage, {
+    skip: !open || shouldUseUserUploads,
+  });
+  const userUploadsQuery = useListUploadsByUserIdQuery(
+    { userId, page: currentPage },
+    { skip: !open || !shouldUseUserUploads }
+  );
+
+  const { data, isLoading, isFetching } = shouldUseUserUploads ? userUploadsQuery : globalUploadsQuery;
+
+  const paginationData = data?.data;
+  const uploads = Array.isArray(paginationData?.data)
+    ? paginationData.data
+    : Array.isArray(paginationData)
+      ? paginationData
+      : [];
+  const totalPages = paginationData?.last_page || data?.last_page || 1;
 
   const handleUpload = async (e) => {
     const files = e.target.files;

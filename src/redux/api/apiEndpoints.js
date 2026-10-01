@@ -189,6 +189,7 @@ export const API_ENDPOINTS = {
   uploads: {
     image: define("POST", "/uploads/image"),
     list: define("GET", "/uploads/list"),
+    listByUser: define("GET", "/uploads/list/{userId}"),
     get: define("GET", "/uploads/{id}"),
     delete: define("DELETE", "/uploads/{id}"),
   },
