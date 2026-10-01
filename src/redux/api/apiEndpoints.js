@@ -340,6 +340,22 @@ export const API_ENDPOINTS = {
     order: define("GET", "/error-logs/order"),
     overallReport: define("GET", "/error-logs/report/overall"),
   },
+
+  socialMediaTextContents: {
+    byProduct:    define("GET",    "/social-media-text-contents/product/{productId}"),
+    add:          define("POST",   "/social-media-text-contents/add"),
+    update:       define("PUT",    "/social-media-text-contents/update/{id}"),
+    toggleActive: define("PATCH",  "/social-media-text-contents/toggle-active/{id}"),
+    delete:       define("DELETE", "/social-media-text-contents/delete/{id}"),
+  },
+
+  productAssistantQas: {
+    byProduct: define("GET",    "/product-assistant-qas/product/{productId}"),
+    list:      define("GET",    "/product-assistant-qas/list"),
+    add:       define("POST",   "/product-assistant-qas/add"),
+    update:    define("PUT",    "/product-assistant-qas/update/{id}"),
+    delete:    define("DELETE", "/product-assistant-qas/delete/{id}"),
+  },
 };
 
 export const buildEndpointPath = (template, params = {}) =>

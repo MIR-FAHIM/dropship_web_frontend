@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
@@ -14,6 +14,8 @@ import ProductGallery from "./product_gallery";
 import ResellerProductPageModal from "../../../components/shared/ResellerProductPageModal";
 import { toast } from "sonner";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
+import ResellerSocialContent from "./ResellerSocialContent";
+import ResellerProductQa from "./ResellerProductQa";
 
 const getStoreProfile = (response) => {
   const data = response?.data;
@@ -29,6 +31,7 @@ const ProductDetails = () => {
   const navigate = useNavigate();
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState("images");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [resellerPrice, setResellerPrice] = useState("");
   const [productPageOpen, setProductPageOpen] = useState(false);
@@ -76,7 +79,7 @@ const ProductDetails = () => {
       .replace(/[^a-zA-Z0-9_-]/g, "");
 
     const fileName = productData?.primary_image?.file_name;
-    const imageUrl = buildImageUrl(fileName, fallbackImageUrl);
+    const imageUrl = fallbackImageUrl || buildImageUrl(fileName);
 
     if (!imageUrl) {
       alert(t("product_details.image_not_available"));
@@ -90,7 +93,7 @@ const ProductDetails = () => {
       }
 
       const blob = await response.blob();
-      const ext = (productData?.primary_image?.extension || "jpg").toLowerCase();
+      const ext = (imageUrl?.split("?")?.[0]?.split(".")?.pop() || productData?.primary_image?.extension || "jpg").toLowerCase().slice(0, 4);
       const objectUrl = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = objectUrl;
@@ -184,6 +187,13 @@ const ProductDetails = () => {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+  };
+
+  const scrollToSection = (elementId) => {
+    const el = document.getElementById(elementId);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const handleDecreaseQty = () => {
@@ -288,23 +298,97 @@ const ProductDetails = () => {
     "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80"
   );
 
+  const allImages = [];
+  if (primaryImageUrl) {
+    allImages.push(primaryImageUrl);
+  }
+  if (Array.isArray(product?.images)) {
+    product.images.forEach((imgObj) => {
+      const fileName =
+        imgObj?.image?.file_name ||
+        imgObj?.file_name ||
+        imgObj?.image_file_name ||
+        (typeof imgObj === "string" ? imgObj : null);
+      if (fileName) {
+        const url = buildImageUrl(fileName);
+        if (url && !allImages.includes(url)) {
+          allImages.push(url);
+        }
+      }
+    });
+  }
+
+  const currentDisplayImage = selectedImage || primaryImageUrl;
+
   return (
     <div className="product-details-container">
       <div className="product-hero">
         <div className="product-image-column">
           <div className="product-image-wrapper">
             <img
-              src={primaryImageUrl}
+              src={currentDisplayImage}
               alt={product?.name}
               className="product-image"
             />
           </div>
 
+          {/* Multiple Image Thumbnails Under Main Thumbnail Image */}
+          {allImages.length > 0 && (
+            <div className="product-thumbnails-container" style={{ marginTop: "12px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  overflowX: "auto",
+                  paddingBottom: "8px",
+                  paddingTop: "2px",
+                }}
+              >
+                {allImages.map((imgUrl, index) => {
+                  const isSelected = currentDisplayImage === imgUrl;
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      onClick={() => setSelectedImage(imgUrl)}
+                      style={{
+                        position: "relative",
+                        flexShrink: 0,
+                        width: "72px",
+                        height: "72px",
+                        borderRadius: "12px",
+                        overflow: "hidden",
+                        border: isSelected ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                        boxShadow: isSelected ? "0 0 0 2px rgba(37, 99, 235, 0.35)" : "none",
+                        cursor: "pointer",
+                        padding: 0,
+                        background: "#fff",
+                        transition: "all 0.2s ease",
+                        opacity: isSelected ? 1 : 0.7,
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                      onMouseLeave={(e) => {
+                        if (!isSelected) e.currentTarget.style.opacity = "0.7";
+                      }}
+                      title={`View image ${index + 1}`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`${product?.name || "Product"} thumbnail ${index + 1}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="product-actions">
             <button
               type="button"
               className="action-btn"
-              onClick={() => handleDownloadAssets(product, primaryImageUrl)}
+              onClick={() => handleDownloadAssets(product, currentDisplayImage)}
             >
               <FaDownload />
               {t("product_details.download_assets")}
@@ -343,6 +427,141 @@ const ProductDetails = () => {
                 </button>
               </div>
             )}
+          </div>
+
+          {/* Reseller Instruction Note in Bengali */}
+          <div
+            className="reseller-guideline-card"
+            style={{
+              marginTop: "16px",
+              padding: "14px 16px",
+              background: "#f8fafc",
+              border: "1px solid #e2e8f0",
+              borderRadius: "12px",
+              boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+              <span style={{ fontSize: "16px" }}>📌</span>
+              <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#0f172a" }}>
+                রিসেলারদের জন্য করণীয় নির্দেশিকা
+              </h4>
+            </div>
+
+            <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ১
+                </span>
+                <span>
+                  <strong>ডেসক্রিপশন রিসার্চ:</strong> প্রোডাক্ট সম্পর্কে বিস্তারিত জেনে নিন।{" "}
+                  <button
+                    type="button"
+                    onClick={() => scrollToSection("product-description-section")}
+                    style={{ background: "none", border: "none", padding: 0, color: "#2563eb", textDecoration: "underline", fontWeight: 600, cursor: "pointer", display: "inline" }}
+                  >
+                    ডেসক্রিপশন সেকশনে যান ➔
+                  </button>
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ২
+                </span>
+                <span>
+                  <strong>সোশ্যাল মিডিয়া কনটেন্ট:</strong> বিজ্ঞাপনের জন্য সঠিক কনটেন্ট ও কপি পেতে{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab("social_content");
+                      scrollToSection("product-tabs-section");
+                    }}
+                    style={{ background: "none", border: "none", padding: 0, color: "#2563eb", textDecoration: "underline", fontWeight: 600, cursor: "pointer", display: "inline" }}
+                  >
+                    সোশ্যাল কনটেন্ট চেক করুন ➔
+                  </button>
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ৩
+                </span>
+                <span>
+                  <strong>গ্রাহকের প্রশ্নোত্তর (Q&A):</strong> কাস্টমারের যেকোনো সাধারণ প্রশ্নের সঠিক উত্তর দিতে{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab("qa_assistant");
+                      scrollToSection("product-tabs-section");
+                    }}
+                    style={{ background: "none", border: "none", padding: 0, color: "#2563eb", textDecoration: "underline", fontWeight: 600, cursor: "pointer", display: "inline" }}
+                  >
+                    Product Q&A ট্যাব দেখুন ➔
+                  </button>
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ৪
+                </span>
+                <span>
+                  <strong>ছবি ও কনটেন্ট ডাউনলোড:</strong> এই ছবি এবং কনটেন্ট ডাউনলোড করে আপনার নিজস্ব বিক্রয়মূল্য নির্ধারণ করে আপনার পেজ বা প্ল্যাটফর্মে পোস্ট করুন।
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ৫
+                </span>
+                <span>
+                  <strong>নিজস্ব ল্যান্ডিং পেজ তৈরি:</strong> আপনি যদি প্রোডাক্টটির একটি আকর্ষণীয় ল্যান্ডিং পেজ আপনার নিজস্ব প্রাইস ও ব্র্যান্ডিং দিয়ে কাস্টমারের সাথে শেয়ার করতে চান, তবে{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (currentProductPage?.id) {
+                        if (productPageUrl) {
+                          window.open(productPageUrl, "_blank");
+                        } else {
+                          navigate(`/app/store-profile?tab=product-pages&edit_page_id=${currentProductPage.id}`);
+                        }
+                      } else if (hasStoreProfile) {
+                        setProductPageOpen(true);
+                      } else {
+                        navigate("/app/store-profile");
+                      }
+                    }}
+                    style={{ background: "none", border: "none", padding: 0, color: "#2563eb", textDecoration: "underline", fontWeight: 600, cursor: "pointer", display: "inline" }}
+                  >
+                    Make Product Page বাটনে ক্লিক করুন ➔
+                  </button>
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#334155" }}>
+                <span style={{ background: "#dbeafe", color: "#1d4ed8", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ৬
+                </span>
+                <span>
+                  <strong>SKU দিয়ে অর্ডার প্লেস:</strong> অর্ডার পেলে এই একই প্রোডাক্টের SKU (
+                  <code style={{ background: "#e2e8f0", padding: "1px 5px", borderRadius: "4px", fontWeight: 600, color: "#0f172a", fontSize: "11px" }}>
+                    {product?.sku || "N/A"}
+                  </code>
+                  ) দিয়ে সার্চ করে খুঁজে নিয়ে আপনার প্রাইসে অর্ডারটি প্লেস করুন।
+                </span>
+              </li>
+
+              <li style={{ display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "12.5px", lineHeight: "1.45", color: "#991b1b", background: "#fef2f2", padding: "8px 10px", borderRadius: "8px", border: "1px solid #fee2e2" }}>
+                <span style={{ background: "#fee2e2", color: "#dc2626", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: "11px", flexShrink: 0, marginTop: "1px" }}>
+                  ৭
+                </span>
+                <span>
+                  <strong>রি-কনফার্ম ও ফ্রড চেক:</strong> অর্ডার যাতে রিটার্ন না আসে, সেজন্য অর্ডার প্লেস করার পূর্বে অবশ্যই কাস্টমারকে রি-কনফার্ম করুন এবং ফ্রড চেক সম্পন্ন করুন।
+                </span>
+              </li>
+            </ol>
           </div>
         </div>
 
@@ -653,25 +872,37 @@ const ProductDetails = () => {
       </div>
 
       {/* Product Description Section */}
-      <div className="product-description">
+      <div className="product-description" id="product-description-section">
         <h2>{t("product_details.description")}</h2>
         <div dangerouslySetInnerHTML={{ __html: product?.description || "" }} />
       </div>
 
       {/* Product Tabs */}
-      <div className="product-tabs">
+      <div className="product-tabs" id="product-tabs-section">
         <div className="tabs">
           <button
             className={`tab ${activeTab === "images" ? "active" : ""}`}
-            onClick={() => handleTabClick("images")}
+            onClick={() => setActiveTab("images")}
           >
             {t("product_details.image_assets")}
           </button>
           <button
             className={`tab ${activeTab === "details" ? "active" : ""}`}
-            onClick={() => handleTabClick("details")}
+            onClick={() => setActiveTab("details")}
           >
             {t("product_details.details")}
+          </button>
+          <button
+            className={`tab ${activeTab === "social_content" ? "active" : ""}`}
+            onClick={() => setActiveTab("social_content")}
+          >
+            Social Content / মার্কেটিং
+          </button>
+          <button
+            className={`tab ${activeTab === "qa_assistant" ? "active" : ""}`}
+            onClick={() => setActiveTab("qa_assistant")}
+          >
+            Product Q&A / প্রশ্নোত্তর
           </button>
         </div>
 
@@ -711,6 +942,16 @@ const ProductDetails = () => {
                 <h3 className="strategy-title">{t("product_details.shop")}</h3>
                 <p className="strategy-subtitle">{product?.shop?.name || "N/A"}</p>
               </div>
+            </div>
+          )}
+          {activeTab === "social_content" && (
+            <div className="social-tab-content">
+              <ResellerSocialContent productId={id} />
+            </div>
+          )}
+          {activeTab === "qa_assistant" && (
+            <div className="qa-tab-content">
+              <ResellerProductQa productId={id} />
             </div>
           )}
         </div>

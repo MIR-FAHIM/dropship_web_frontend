@@ -165,6 +165,7 @@ export const router = createBrowserRouter([
       { path: "products", element: <AdminProducts /> },
       { path: "products/create", element: <AdminProductCreate /> },
       { path: "products/:id", element: <AdminProductDetail /> },
+      { path: "products/:id/edit", element: <AdminProductDetail /> },
       { path: "products/price-update-logs", element: <AdminPriceUpdateLogs /> },
       { path: "categories", element: <AdminCategories /> },
       { path: "brands", element: <AdminBrands /> },

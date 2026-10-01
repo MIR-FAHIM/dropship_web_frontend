@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft, Package, Loader2, Tag, Truck, Image as ImageIcon, DollarSign,
+  ArrowLeft, Package, Loader2, Tag, Truck, Image as ImageIcon, DollarSign, Share2, HelpCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,6 +13,8 @@ import MediaTab from "./product_detail/MediaTab";
 import PricingTab from "./product_detail/PricingTab";
 import ShippingTab from "./product_detail/ShippingTab";
 import AttributesTab from "./product_detail/AttributesTab";
+import SocialContentTab from "./product_detail/SocialContentTab";
+import ProductQaTab from "./product_detail/ProductQaTab";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const tabs = [
@@ -21,6 +23,8 @@ const tabs = [
   { id: "pricing", label: "মূল্য ও স্টক", icon: DollarSign },
   { id: "shipping", label: "শিপিং ও সেটিংস", icon: Truck },
   { id: "attributes", label: "Attributes", icon: Tag },
+  { id: "social_content", label: "Social Content", icon: Share2 },
+  { id: "qa_assistant", label: "Product Q&A", icon: HelpCircle },
 ];
 
 const AdminProductDetail = () => {
@@ -166,6 +170,8 @@ const AdminProductDetail = () => {
           {activeTab === "pricing" && <PricingTab product={product} productId={id} />}
           {activeTab === "shipping" && <ShippingTab product={product} productId={id} />}
           {activeTab === "attributes" && <AttributesTab productId={id} />}
+          {activeTab === "social_content" && <SocialContentTab product={product} productId={id} />}
+          {activeTab === "qa_assistant" && <ProductQaTab product={product} productId={id} />}
         </div>
       </div>
     </div>
