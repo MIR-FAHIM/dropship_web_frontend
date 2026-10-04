@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Loader2,
   MapPin,
@@ -7,6 +7,7 @@ import {
   Truck,
   X,
   ChevronDown,
+  Info,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -391,6 +392,16 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+            {/* Instruction Note in Bengali */}
+            <div className="flex items-start gap-3 p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs sm:text-sm leading-relaxed">
+              <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-semibold text-amber-950 mb-0.5">নির্দেশনাঃ</p>
+                <p className="text-amber-800">
+                  আপনি অর্ডারটি ড্রাফট হিসেবে রেডি করে রাখুন, যখন প্যাকিং শেষ হবে তখন "Vendor is Ready" স্ট্যাটাস দিয়ে CarryBee পণ্য প্রস্তুত হলে নিচের বাটন চাপুন।
+                </p>
+              </div>
+            </div>
             {/* Store */}
             <SL label="Store *" value={storeId} onChange={setStoreId}
               options={stores.map((s) => ({ value: s.id, label: s.name }))}

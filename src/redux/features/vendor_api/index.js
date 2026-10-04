@@ -69,6 +69,29 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Vendor"],
     }),
+    updateVendor: builder.mutation({
+      query: ({ id, data }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.vendors.update.path, { id }),
+        method: API_ENDPOINTS.vendors.update.method,
+        body: data,
+      }),
+      invalidatesTags: ["Vendor"],
+    }),
+    getKycDocumentsList: builder.query({
+      query: (params) => ({
+        url: API_ENDPOINTS.documentsKyc.list.path,
+        method: API_ENDPOINTS.documentsKyc.list.method,
+        params,
+      }),
+      providesTags: ["KycDocument", "Upload"],
+    }),
+    getKycDocumentDetails: builder.query({
+      query: (id) => ({
+        url: buildEndpointPath(API_ENDPOINTS.documentsKyc.details.path, { id }),
+        method: API_ENDPOINTS.documentsKyc.details.method,
+      }),
+      providesTags: ["KycDocument", "Upload"],
+    }),
     addKycDocument: builder.mutation({
       query: (formData) => ({
         url: API_ENDPOINTS.documentsKyc.add.path,
@@ -85,12 +108,12 @@ const vendorApi = baseApi.injectEndpoints({
       providesTags: ["Upload"],
     }),
     updateKycDocument: builder.mutation({
-      query: ({ id, formData }) => ({
+      query: ({ id, formData, data, status, note }) => ({
         url: buildEndpointPath(API_ENDPOINTS.documentsKyc.update.path, { id }),
         method: API_ENDPOINTS.documentsKyc.update.method,
-        body: formData,
+        body: formData || data || (status !== undefined ? { status, note } : undefined),
       }),
-      invalidatesTags: ["Upload"],
+      invalidatesTags: ["Upload", "KycDocument", "Vendor"],
     }),
   }),
 });
@@ -104,7 +127,10 @@ export const {
   useGetVendorProductsQuery,
   useGetVendorDashboardReportQuery,
   useVendorIsActiveMutation,
+  useUpdateVendorMutation,
   useLoginAsVendorMutation,
+  useGetKycDocumentsListQuery,
+  useGetKycDocumentDetailsQuery,
   useAddKycDocumentMutation,
   useGetKycDocumentsByUserQuery,
   useUpdateKycDocumentMutation,

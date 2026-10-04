@@ -243,12 +243,15 @@ export const API_ENDPOINTS = {
     profile: define("GET", "/vendors/profile/{id}"),
     getVendorId: define("GET", "/vendors/vendor/id/{id}"),
     list: define("GET", "/vendors/list"),
+    update: define("PUT", "/vendors/update/{id}"),
     isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),
     dashboardReport: define("GET", "/vendors/dashboard/report/{vendorId}"),
   },
 
   documentsKyc: {
+    list: define("GET", "/documents-kyc/list"),
+    details: define("GET", "/documents-kyc/details/{id}"),
     add: define("POST", "/documents-kyc/add"),
     byUser: define("GET", "/documents-kyc/user/{userId}"),
     update: define("POST", "/documents-kyc/update/{id}"),

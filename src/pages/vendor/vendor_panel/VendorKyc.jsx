@@ -75,8 +75,13 @@ const validateKycFile = (file) => {
 const getDocumentUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  const cleanBase = String(imgBaseUrl || "").replace(/\/+$/, "");
-  const cleanPath = String(path).replace(/^\/+/, "");
+  const cleanBase = String(imgBaseUrl || "https://apidropship.resellerbrain.com/storage/app/public").replace(/\/+$/, "");
+  let cleanPath = String(path).replace(/^\/+/, "");
+  if (cleanPath.startsWith("storage/app/public/")) {
+    cleanPath = cleanPath.replace(/^storage\/app\/public\//, "");
+  } else if (cleanPath.startsWith("app/public/")) {
+    cleanPath = cleanPath.replace(/^app\/public\//, "");
+  }
   return `${cleanBase}/${cleanPath}`;
 };
 

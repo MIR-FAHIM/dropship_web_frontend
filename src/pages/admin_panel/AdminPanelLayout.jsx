@@ -97,6 +97,11 @@ const adminMenuLinks = [
     icon: <Store className="w-5 h-5" />,
   },
   {
+    path: "/admin-panel/kyc-documents",
+    label: "KYC ভেরিফিকেশন",
+    icon: <ShieldCheck className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/dropshippers",
     label: "ড্রপশিপার",
     icon: <Truck className="w-5 h-5" />,

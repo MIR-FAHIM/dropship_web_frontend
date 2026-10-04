@@ -12,7 +12,14 @@ import {
   ClipboardList,
 } from "lucide-react";
 import { toast } from "react-toastify";
-import { useGetOrderDetailsQuery, useUpdateOrderStatusMutation } from "../../../redux/features/order";
+import {
+  useGetOrderDetailsQuery,
+  useUpdateOrderStatusMutation,
+  useGetOrderStatusSummaryQuery,
+} from "../../../redux/features/order";
+import { useGetVendorIdQuery, useGetVendorProfileQuery } from "../../../redux/features/vendor_api";
+import AssignCarryBeeModal from "../../admin_panel/orders/carrybee_assign";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import {
   useLazyGetCarryBeeOrderDetailsQuery,
   useCreateCarryBeeOrderMutation,
@@ -129,18 +136,83 @@ const fmt = (iso) => {
 
 const currency = (v) => `৳${Number(v || 0).toLocaleString("en-US")}`;
 
+const DEFAULT_STATUS_LIST = [
+  { id: 1, name: "Pending", bn: "পেন্ডিং" },
+  { id: 2, name: "Confirmed", bn: "কনফার্মড" },
+  { id: 3, name: "Processing", bn: "প্রসেসিং" },
+  { id: 4, name: "Shipped", bn: "শিপড" },
+  { id: 5, name: "Out for Delivery", bn: "আউট ফর ডেলিভারি" },
+  { id: 6, name: "Delivered", bn: "ডেলিভার্ড" },
+  { id: 7, name: "Cancelled", bn: "বাতিল" },
+  { id: 8, name: "Returned", bn: "রিটার্ন" },
+  { id: 9, name: "Completed", bn: "সম্পন্ন" },
+];
+
 const VendorOrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useGetOrderDetailsQuery(id);
   const order = data?.data || null;
   const [showCarryBeeDetails, setShowCarryBeeDetails] = useState(false);
+  const [carryBeeOpen, setCarryBeeOpen] = useState(false);
   const [fetchCarryBeeDetails, { data: cbDetailsData, isLoading: cbDetailsLoading, isError: cbDetailsError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
   const cbDetails = cbDetailsData?.data?.data;
 
   const [createCarryBeeOrder, { isLoading: readySubmitting }] = useCreateCarryBeeOrderMutation();
-  const [updateStatus] = useUpdateOrderStatusMutation();
+  const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateOrderStatusMutation();
+
+  const userId = getFromLocalstorage("userId");
+  const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
+  const vendorId = vendorIdData?.data?.vendor_id || order?.vendor_id || order?.vendor?.id;
+  const { data: vendorProfileData } = useGetVendorProfileQuery(vendorId, {
+    skip: !vendorId,
+  });
+  const vendorProfile = vendorProfileData?.data;
+
+  const hasOwnDeliveryAccount = Boolean(
+    vendorProfile?.has_own_delivery_account === true ||
+    vendorProfile?.has_own_delivery_account === 1 ||
+    vendorProfile?.has_own_delivery_account === "1" ||
+    vendorProfile?.has_own_delivery_account === "true" ||
+    order?.vendor?.has_own_delivery_account === true ||
+    order?.vendor?.has_own_delivery_account === 1 ||
+    order?.vendor?.has_own_delivery_account === "1" ||
+    order?.vendor?.has_own_delivery_account === "true"
+  );
+
+  const { data: summaryData } = useGetOrderStatusSummaryQuery(undefined, {
+    skip: !hasOwnDeliveryAccount,
+  });
+  const statusList = summaryData?.data?.length ? summaryData.data : DEFAULT_STATUS_LIST;
+
+  const getCurrentStatusId = () => {
+    if (!order) return "";
+    if (typeof order.status === "object" && order.status?.id) return order.status.id;
+    if (order.status_id) return order.status_id;
+    if (order.status_history?.length && order.status_history[0].status?.id) {
+      return order.status_history[0].status.id;
+    }
+    const found = statusList.find(
+      (s) => s.name?.toLowerCase() === String(order.status).toLowerCase()
+    );
+    return found?.id || order.status || "";
+  };
+
+  const handleStatusChange = async (newStatusId) => {
+    try {
+      await updateStatus({
+        id: order.id,
+        status_id: Number(newStatusId),
+        changed_by: userId || undefined,
+      }).unwrap();
+      toast.success("অর্ডার স্ট্যাটাস সফলভাবে আপডেট করা হয়েছে!");
+      refetch();
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      toast.error(err?.data?.message || "স্ট্যাটাস আপডেট ব্যর্থ হয়েছে।");
+    }
+  };
 
   const handleReadyForCarryBee = async () => {
     const confirmed = window.confirm(`Mark order ${order.order_number} as ready for CarryBee?`);
@@ -216,6 +288,30 @@ const VendorOrderDetails = () => {
           }`}>
             {order.payment_status === "paid" ? "পেইড" : "আনপেইড"}
           </span>
+          {hasOwnDeliveryAccount && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <Truck className="w-3.5 h-3.5 text-emerald-600" />
+              Own Delivery
+            </span>
+          )}
+          {hasOwnDeliveryAccount && (
+            delivery ? (
+              <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-200 rounded-full">
+                <Truck className="w-3.5 h-3.5" /> CarryBee Assigned
+              </span>
+            ) : order.carry_bee_draft != null ? (
+              <span className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-orange-700 bg-orange-50 border border-orange-200 rounded-full">
+                <Truck className="w-3.5 h-3.5" /> CarryBee Draft Pending
+              </span>
+            ) : (
+              <button
+                onClick={() => setCarryBeeOpen(true)}
+                className="flex items-center gap-1.5 px-3.5 py-1 text-xs font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-full transition shadow-sm"
+              >
+                <Truck className="w-3.5 h-3.5" /> Assign CarryBee
+              </button>
+            )
+          )}
         </div>
       </div>
 
@@ -312,6 +408,37 @@ const VendorOrderDetails = () => {
 
         {/* Right column */}
         <div className="space-y-6">
+          {/* Update Status Card for Own Delivery Vendors */}
+          {hasOwnDeliveryAccount && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h2 className="text-sm font-semibold text-gray-800">
+                  স্ট্যাটাস পরিবর্তন (Update Status)
+                </h2>
+                {isUpdatingStatus && (
+                  <span className="flex items-center gap-1 text-xs text-blue-600">
+                    <Loader2 className="w-3 h-3 animate-spin" /> আপডেটিং...
+                  </span>
+                )}
+              </div>
+              <div className="px-5 py-4">
+                <select
+                  value={getCurrentStatusId()}
+                  disabled={isUpdatingStatus}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className={`w-full text-sm font-medium rounded-lg px-3 py-2.5 border border-gray-300 cursor-pointer focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    isUpdatingStatus ? "opacity-50" : ""
+                  }`}
+                >
+                  {statusList.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.bn ? `${s.bn} (${s.name})` : s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
           {/* Customer Info */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
@@ -346,6 +473,28 @@ const VendorOrderDetails = () => {
               )}
             </div>
           </div>
+
+          {/* Assign CarryBee for Own Delivery Vendor */}
+          {hasOwnDeliveryAccount && !delivery && !order.carry_bee_draft && (
+            <div className="bg-white rounded-xl border border-amber-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-4 border-b border-amber-100 bg-amber-50 flex items-center gap-2">
+                <Truck className="w-4 h-4 text-amber-600" />
+                <h2 className="text-sm font-semibold text-amber-800">কুরিয়ার অ্যাসাইন (CarryBee)</h2>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-xs text-gray-500 mb-3">
+                  আপনার নিজস্ব ডেলিভারি অ্যাকাউন্ট দিয়ে CarryBee-তে সরাসরি পার্সেল বুকিং করুন।
+                </p>
+                <button
+                  onClick={() => setCarryBeeOpen(true)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold transition shadow-sm"
+                >
+                  <Truck className="w-4 h-4" />
+                  Assign CarryBee Order
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Ready for CarryBee */}
           {order.carry_bee_draft && !delivery && (
@@ -436,6 +585,16 @@ const VendorOrderDetails = () => {
           )}
         </div>
       </div>
+      {/* Assign CarryBee Modal for vendors with own delivery account */}
+      {carryBeeOpen && !delivery && (
+        <AssignCarryBeeModal
+          order={{ ...order, vendor_id: order.vendor_id || vendorId }}
+          onClose={() => {
+            setCarryBeeOpen(false);
+            refetch();
+          }}
+        />
+      )}
     </div>
   );
 };

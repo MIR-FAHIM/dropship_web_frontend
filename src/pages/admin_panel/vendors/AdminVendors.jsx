@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Store, Search, CheckCircle, Clock, Loader2, Eye } from "lucide-react";
+import { Store, Search, CheckCircle, Clock, Loader2, Eye, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useGetVendorListQuery, useVendorIsActiveMutation, useLoginAsVendorMutation } from "../../../redux/features/vendor_api";
 import { useDispatch } from "react-redux";
@@ -16,18 +16,37 @@ const AdminVendors = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const vendors = data?.data || [];
-  const activeVendors = vendors.filter((v) => v.is_active === 1);
-  const activeCount = activeVendors.length;
+  const isVendorActive = (v) =>
+    v?.is_active === true ||
+    v?.is_active === 1 ||
+    v?.is_active === "1" ||
+    v?.is_active === "true";
 
-  const filtered = activeVendors.filter((v) => {
+  const vendors = Array.isArray(data?.data) ? data.data : Array.isArray(data?.data?.data) ? data.data.data : [];
+  const [filterMode, setFilterMode] = useState("active");
+  const activeVendors = vendors.filter(isVendorActive);
+  const activeCount = activeVendors.length;
+  const displayedVendors = filterMode === "all" ? vendors : activeVendors;
+
+  const filtered = displayedVendors.filter((v) => {
+    if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
+    const shopName = v.shop_name ? String(v.shop_name).toLowerCase() : "";
+    const ownerName = v.owner_name ? String(v.owner_name).toLowerCase() : "";
+    const email = v.user?.email ? String(v.user.email).toLowerCase() : "";
+    const phone = (v.user?.phone || v.whatsapp || v.emergency_contact)
+      ? String(v.user?.phone || v.whatsapp || v.emergency_contact).toLowerCase()
+      : "";
+    const zone = v.zone ? String(v.zone).toLowerCase() : "";
+    const district = v.district?.name ? String(v.district.name).toLowerCase() : "";
+
     return (
-      v.shop_name?.toLowerCase().includes(term) ||
-      v.owner_name?.toLowerCase().includes(term) ||
-      v.user?.email?.toLowerCase().includes(term) ||
-      v.user?.phone?.toLowerCase().includes(term) ||
-      v.zone?.toLowerCase().includes(term)
+      shopName.includes(term) ||
+      ownerName.includes(term) ||
+      email.includes(term) ||
+      phone.includes(term) ||
+      zone.includes(term) ||
+      district.includes(term)
     );
   });
 
@@ -49,22 +68,36 @@ const AdminVendors = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+        <div
+          onClick={() => setFilterMode("active")}
+          className={`bg-white rounded-xl border p-5 flex items-center gap-4 cursor-pointer transition ${
+            filterMode === "active"
+              ? "border-green-500 ring-2 ring-green-100 shadow-xs"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
           <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center text-white">
             <CheckCircle className="w-5 h-5" />
           </div>
           <div>
             <p className="text-2xl font-bold text-gray-800">{activeCount}</p>
-            <p className="text-xs text-gray-500 font-medium">সক্রিয়</p>
+            <p className="text-xs text-gray-500 font-medium">সক্রিয় ভেন্ডর</p>
           </div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+        <div
+          onClick={() => setFilterMode("all")}
+          className={`bg-white rounded-xl border p-5 flex items-center gap-4 cursor-pointer transition ${
+            filterMode === "all"
+              ? "border-blue-500 ring-2 ring-blue-100 shadow-xs"
+              : "border-gray-200 hover:border-gray-300"
+          }`}
+        >
           <div className="w-10 h-10 rounded-lg bg-yellow-500 flex items-center justify-center text-white">
             <Clock className="w-5 h-5" />
           </div>
           <div>
             <p className="text-2xl font-bold text-gray-800">{vendors.length}</p>
-            <p className="text-xs text-gray-500 font-medium">মোট ভেন্ডর</p>
+            <p className="text-xs text-gray-500 font-medium">মোট ভেন্ডর (সব)</p>
           </div>
         </div>
       </div>
@@ -115,11 +148,24 @@ const AdminVendors = () => {
                     <td className="py-3 font-medium text-gray-800">{vendor.shop_name}</td>
                     <td className="py-3 text-gray-600">{vendor.owner_name}</td>
                     <td className="py-3">
-                      {vendor.carry_bee_info ? (
-                        <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{vendor.carry_bee_info.client_id}</span>
-                      ) : (
-                        <span className="text-xs text-red-400 italic">No CarryBee info added yet</span>
-                      )}
+                      <div>
+                        {vendor.carry_bee_info ? (
+                          <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{vendor.carry_bee_info.client_id}</span>
+                        ) : (
+                          <span className="text-xs text-red-400 italic">No CarryBee info</span>
+                        )}
+                        <div className="mt-1">
+                          {vendor.has_own_delivery_account ? (
+                            <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                              Own Delivery
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-[10px] text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+                              Platform Delivery
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 text-gray-600">{vendor.user?.phone}</td>
                     {/* <td className="py-3 text-gray-600 capitalize">{vendor.zone}</td> */}

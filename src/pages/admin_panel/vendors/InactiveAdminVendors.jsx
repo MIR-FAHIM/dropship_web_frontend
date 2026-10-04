@@ -14,17 +14,34 @@ const InactiveAdminVendors = () => {
   const [loginAsVendor, { isLoading: isLoginLoading }] = useLoginAsVendorMutation();
   const navigate = useNavigate();
 
-  const vendors = data?.data || [];
-  const inactive = vendors.filter((v) => v.is_active === 0);
+  const isVendorActive = (v) =>
+    v?.is_active === true ||
+    v?.is_active === 1 ||
+    v?.is_active === "1" ||
+    v?.is_active === "true";
+
+  const vendors = Array.isArray(data?.data) ? data.data : Array.isArray(data?.data?.data) ? data.data.data : [];
+  const inactive = vendors.filter((v) => !isVendorActive(v));
 
   const filtered = inactive.filter((v) => {
+    if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
+    const shopName = v.shop_name ? String(v.shop_name).toLowerCase() : "";
+    const ownerName = v.owner_name ? String(v.owner_name).toLowerCase() : "";
+    const email = v.user?.email ? String(v.user.email).toLowerCase() : "";
+    const phone = (v.user?.phone || v.whatsapp || v.emergency_contact)
+      ? String(v.user?.phone || v.whatsapp || v.emergency_contact).toLowerCase()
+      : "";
+    const zone = v.zone ? String(v.zone).toLowerCase() : "";
+    const district = v.district?.name ? String(v.district.name).toLowerCase() : "";
+
     return (
-      v.shop_name?.toLowerCase().includes(term) ||
-      v.owner_name?.toLowerCase().includes(term) ||
-      v.user?.email?.toLowerCase().includes(term) ||
-      v.user?.phone?.toLowerCase().includes(term) ||
-      v.zone?.toLowerCase().includes(term)
+      shopName.includes(term) ||
+      ownerName.includes(term) ||
+      email.includes(term) ||
+      phone.includes(term) ||
+      zone.includes(term) ||
+      district.includes(term)
     );
   });
 
@@ -101,11 +118,24 @@ const InactiveAdminVendors = () => {
                     <td className="py-3 font-medium text-gray-800">{vendor.shop_name}</td>
                     <td className="py-3 text-gray-600">{vendor.owner_name}</td>
                     <td className="py-3">
-                      {vendor.carry_bee_info ? (
-                        <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{vendor.carry_bee_info.client_id}</span>
-                      ) : (
-                        <span className="text-xs text-red-400 italic">No CarryBee info added yet</span>
-                      )}
+                      <div>
+                        {vendor.carry_bee_info ? (
+                          <span className="text-xs font-medium text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">{vendor.carry_bee_info.client_id}</span>
+                        ) : (
+                          <span className="text-xs text-red-400 italic">No CarryBee info</span>
+                        )}
+                        <div className="mt-1">
+                          {vendor.has_own_delivery_account ? (
+                            <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                              Own Delivery
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-[10px] text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">
+                              Platform Delivery
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 text-gray-600">{vendor.user?.phone}</td>
                     <td className="py-3">
