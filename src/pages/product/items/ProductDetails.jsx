@@ -4,7 +4,7 @@ import { FaHeart, FaDownload } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useGetProductDetailsQuery } from "../../../redux/features/product";
+import { useGetProductDetailsQuery, useAddWishListMutation, useDeleteWishProductMutation, useGetFavProductsQuery } from "../../../redux/features/product";
 import { useCreateCartMutation } from "../../../redux/features/cart";
 import { useAddResellerProductPageMutation } from "../../../redux/features/resellerProductPage";
 import { useGetResellerStoreProfileByResellerQuery } from "../../../redux/features/resellerStoreProfile";
@@ -16,6 +16,8 @@ import { toast } from "sonner";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
 import ResellerSocialContent from "./ResellerSocialContent";
 import ResellerProductQa from "./ResellerProductQa";
+import WhatsAppFloatingButton from "../../../components/shared/WhatsAppFloatingButton";
+import { htmlToPlainText } from "../../../utils/text.utils";
 
 const getStoreProfile = (response) => {
   const data = response?.data;
@@ -44,6 +46,43 @@ const ProductDetails = () => {
     useGetResellerStoreProfileByResellerQuery(userId, { skip: !userId });
   const [createCart, { isLoading: isAddingToCart }] = useCreateCartMutation();
   const [addProductPage, { isLoading: creatingProductPage }] = useAddResellerProductPageMutation();
+  const [addWishList, { isLoading: isAddingWish }] = useAddWishListMutation();
+  const [deleteWishProduct, { isLoading: isDeletingWish }] = useDeleteWishProductMutation();
+  const { data: favData } = useGetFavProductsQuery(userId, { skip: !userId });
+
+  const favItems = favData?.items ?? favData?.data ?? [];
+
+  useEffect(() => {
+    if (!id) return;
+    if (Array.isArray(favItems) && favItems.length > 0) {
+      const inFavApi = favItems.some(
+        (item) => String(item?.product_id ?? item?.product?.id) === String(id)
+      );
+      setIsFavorite(inFavApi);
+      return;
+    }
+    try {
+      const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      if (Array.isArray(localWishlist) && localWishlist.map(String).includes(String(id))) {
+        setIsFavorite(true);
+      } else if (favData) {
+        setIsFavorite(false);
+      }
+    } catch {}
+  }, [favItems, favData, id]);
+
+  useEffect(() => {
+    const onWish = () => {
+      try {
+        const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+        if (Array.isArray(localWishlist)) {
+          setIsFavorite(localWishlist.map(String).includes(String(id)));
+        }
+      } catch {}
+    };
+    window.addEventListener("wishlist-updated", onWish);
+    return () => window.removeEventListener("wishlist-updated", onWish);
+  }, [id]);
   const normalizeImageUrl = (rawUrl) => {
     if (!rawUrl) return null;
     let url = String(rawUrl);
@@ -181,8 +220,79 @@ const ProductDetails = () => {
     }
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite((prev) => !prev);
+  const toggleFavorite = async () => {
+    if (!id) return;
+    if (!userId) {
+      toast.error(t("product_details.login_required") || "Please login to manage wishlist");
+      return;
+    }
+
+    try {
+      if (!isFavorite) {
+        const res = await addWishList({
+          id: Number(id),
+          product_id: Number(id),
+          user_id: Number(userId),
+        }).unwrap();
+
+        const wishId = res?.data?.id ?? res?.id ?? res?.data?.data?.id ?? null;
+        if (wishId) {
+          try {
+            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+            localStorage.setItem("wishlistMap", JSON.stringify({ ...map, [String(id)]: wishId }));
+          } catch {}
+        }
+
+        try {
+          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const next = Array.from(new Set([...current, Number(id)]));
+          localStorage.setItem("wishlist", JSON.stringify(next));
+        } catch {}
+
+        setIsFavorite(true);
+        window.dispatchEvent(new Event("wishlist-updated"));
+        toast.success(res?.message || "Product added to wishlist!");
+      } else {
+        let wishItemId = null;
+        if (Array.isArray(favItems)) {
+          const matchingItem = favItems.find(
+            (item) => String(item?.product_id ?? item?.product?.id) === String(id)
+          );
+          if (matchingItem?.id) {
+            wishItemId = matchingItem.id;
+          }
+        }
+        if (!wishItemId) {
+          try {
+            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+            wishItemId = map?.[String(id)] ?? id;
+          } catch {
+            wishItemId = id;
+          }
+        }
+
+        const res = await deleteWishProduct(wishItemId).unwrap();
+
+        try {
+          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const next = current.filter((x) => String(x) !== String(id));
+          localStorage.setItem("wishlist", JSON.stringify(next));
+
+          const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+          if (map[String(id)]) {
+            delete map[String(id)];
+            localStorage.setItem("wishlistMap", JSON.stringify(map));
+          }
+        } catch {}
+
+        setIsFavorite(false);
+        window.dispatchEvent(new Event("wishlist-updated"));
+        toast.success(res?.message || "Product removed from wishlist!");
+      }
+    } catch (err) {
+      console.error("Wishlist error:", err);
+      toast.error(err?.data?.message || err?.message || "Failed to update wishlist");
+    }
   };
 
   const handleTabClick = (tab) => {
@@ -221,8 +331,14 @@ const ProductDetails = () => {
     setResellerPrice(value);
   };
 
-  const handleCopyText = async (text) => {
-    const safeText = String(text || "").trim();
+  const handleCopyText = async (text, isHtml = false) => {
+    let safeText = String(text || "").trim();
+    if (!safeText) return;
+
+    if (isHtml || /<[a-z][\s\S]*>/i.test(safeText)) {
+      safeText = htmlToPlainText(safeText);
+    }
+
     if (!safeText) return;
     try {
       if (navigator?.clipboard?.writeText) {
@@ -403,7 +519,7 @@ const ProductDetails = () => {
             <button
               type="button"
               className="action-btn secondary"
-              onClick={() => handleCopyText(product?.description)}
+              onClick={() => handleCopyText(product?.description, true)}
             >
               {t("product_details.copy_description")}
             </button>
@@ -584,9 +700,10 @@ const ProductDetails = () => {
               type="button"
               className={`favorite-toggle ${isFavorite ? "active" : ""}`}
               onClick={toggleFavorite}
-              title={isFavorite ? t("product_details.remove_from_favorites") : t("product_details.add_to_favorites")}
+              title={isFavorite ? "Remove from your favourite list" : "Add to your favourite list"}
             >
-              <FaHeart />
+              <FaHeart size={15} />
+              <span>{isFavorite ? "Added to your favourite list" : "Add to your favourite list"}</span>
             </button>
           </div>
 
@@ -873,7 +990,17 @@ const ProductDetails = () => {
 
       {/* Product Description Section */}
       <div className="product-description" id="product-description-section">
-        <h2>{t("product_details.description")}</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px", flexWrap: "wrap", gap: "8px" }}>
+          <h2 style={{ margin: 0 }}>{t("product_details.description")}</h2>
+          <button
+            type="button"
+            className="action-btn secondary"
+            style={{ fontSize: "12px", padding: "6px 14px", height: "auto" }}
+            onClick={() => handleCopyText(product?.description, true)}
+          >
+            {t("product_details.copy_description")}
+          </button>
+        </div>
         <div dangerouslySetInnerHTML={{ __html: product?.description || "" }} />
       </div>
 
@@ -964,6 +1091,7 @@ const ProductDetails = () => {
         onClose={() => setProductPageOpen(false)}
         onSubmit={handleCreateProductPage}
       />
+      <WhatsAppFloatingButton product={product} />
     </div>
   );
 };

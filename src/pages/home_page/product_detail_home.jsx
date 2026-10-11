@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { FaHeart, FaRegHeart, FaTag, FaBoxOpen, FaStore, FaLayerGroup, FaThLarge } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetProductDetailsQuery } from "../../redux/features/product";
+import { useGetProductDetailsQuery, useAddWishListMutation, useDeleteWishProductMutation, useGetFavProductsQuery } from "../../redux/features/product";
+import { toast } from "sonner";
+import { getFromLocalstorage } from "../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../config";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
+import WhatsAppFloatingButton from "../../components/shared/WhatsAppFloatingButton";
 
 const styles = `
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -123,15 +126,18 @@ const styles = `
     position: absolute;
     top: 20px;
     right: 20px;
-    width: 44px;
-    height: 44px;
+    padding: 8px 16px;
+    gap: 8px;
     background: rgba(255,255,255,0.85);
     backdrop-filter: blur(8px);
-    border-radius: 50%;
+    border-radius: 999px;
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s;
     box-shadow: var(--shadow-sm);
@@ -454,6 +460,104 @@ const ProductDetailsHomePage = () => {
 
   useEffect(() => { setSelectedImage(null); }, [id]);
 
+  const userId = getFromLocalstorage("userId");
+  const [inWish, setInWish] = useState(false);
+  const [addWishList] = useAddWishListMutation();
+  const [deleteWishProduct] = useDeleteWishProductMutation();
+  const { data: favData } = useGetFavProductsQuery(userId, { skip: !userId });
+  const favItems = favData?.items ?? favData?.data ?? [];
+
+  useEffect(() => {
+    if (!id) return;
+    if (Array.isArray(favItems) && favItems.length > 0) {
+      const inFavApi = favItems.some(
+        (item) => String(item?.product_id ?? item?.product?.id) === String(id)
+      );
+      setInWish(inFavApi);
+      return;
+    }
+    try {
+      const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
+      if (Array.isArray(localWishlist)) {
+        setInWish(localWishlist.map(String).includes(String(id)));
+      }
+    } catch {}
+  }, [favItems, id]);
+
+  const handleToggleWish = async (e) => {
+    e?.stopPropagation?.();
+    if (!id) return;
+    if (!userId) {
+      toast.error("Please login to manage wishlist");
+      return;
+    }
+
+    try {
+      if (!inWish) {
+        const res = await addWishList({
+          id: Number(id),
+          product_id: Number(id),
+          user_id: Number(userId),
+        }).unwrap();
+
+        const wishId = res?.data?.id ?? res?.id ?? res?.data?.data?.id ?? null;
+        if (wishId) {
+          try {
+            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+            localStorage.setItem("wishlistMap", JSON.stringify({ ...map, [String(id)]: wishId }));
+          } catch {}
+        }
+
+        try {
+          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const next = Array.from(new Set([...current, Number(id)]));
+          localStorage.setItem("wishlist", JSON.stringify(next));
+        } catch {}
+
+        setInWish(true);
+        window.dispatchEvent(new Event("wishlist-updated"));
+        toast.success(res?.message || "Product added to wishlist!");
+      } else {
+        let wishItemId = null;
+        if (Array.isArray(favItems)) {
+          const match = favItems.find(
+            (it) => String(it?.product_id ?? it?.product?.id) === String(id)
+          );
+          if (match?.id) wishItemId = match.id;
+        }
+        if (!wishItemId) {
+          try {
+            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+            wishItemId = map?.[String(id)] ?? id;
+          } catch {
+            wishItemId = id;
+          }
+        }
+
+        const res = await deleteWishProduct(wishItemId).unwrap();
+
+        try {
+          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
+          const next = current.filter((x) => String(x) !== String(id));
+          localStorage.setItem("wishlist", JSON.stringify(next));
+
+          const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
+          if (map[String(id)]) {
+            delete map[String(id)];
+            localStorage.setItem("wishlistMap", JSON.stringify(map));
+          }
+        } catch {}
+
+        setInWish(false);
+        window.dispatchEvent(new Event("wishlist-updated"));
+        toast.success(res?.message || "Product removed from wishlist!");
+      }
+    } catch (err) {
+      console.error("Wishlist error:", err);
+      toast.error(err?.data?.message || err?.message || "Failed to update wishlist");
+    }
+  };
+
   if (isLoading) return <div className="pdp-loading">Loading product…</div>;
   if (isError) return <div className="pdp-error">Error: {error?.message}</div>;
 
@@ -485,10 +589,11 @@ const ProductDetailsHomePage = () => {
           <div className="pdp-image-panel">
             <div className="pdp-main-img-wrap">
               <img src={mainImageUrl} alt={product?.name} />
-              <button className="pdp-fav-btn" title={product?.is_fav ? "Remove from Favorites" : "Add to Favorites"}>
-                {product?.is_fav
+              <button className="pdp-fav-btn" onClick={handleToggleWish} title={inWish ? "Remove from your favourite list" : "Add to your favourite list"}>
+                {inWish
                   ? <FaHeart size={18} color="#c9622f" />
                   : <FaRegHeart size={18} color="#7a6e65" />}
+                <span>{inWish ? "Added to your favourite list" : "Add to your favourite list"}</span>
               </button>
             </div>
 
@@ -600,6 +705,7 @@ const ProductDetailsHomePage = () => {
           )}
         </div>
 
+        <WhatsAppFloatingButton product={product} />
       </div>
     </>
   );

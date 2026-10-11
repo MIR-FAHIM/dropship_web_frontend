@@ -26,10 +26,26 @@ const userApi = baseApi.injectEndpoints({
       }),
     }),
     getDropshippers: builder.query({
-      query: (page = 1) => ({
-        url: `${API_ENDPOINTS.users.dropshippers.path}?page=${page}`,
-        method: API_ENDPOINTS.users.dropshippers.method,
-      }),
+      query: (args = {}) => {
+        let params = {};
+        if (typeof args === "number" || typeof args === "string") {
+          params = { page: Number(args) || 1 };
+        } else if (typeof args === "object" && args !== null) {
+          params = { ...args };
+        }
+        const cleanedParams = {};
+        Object.entries(params).forEach(([key, val]) => {
+          if (val !== undefined && val !== null && val !== "") {
+            cleanedParams[key] = val;
+          }
+        });
+
+        return {
+          url: API_ENDPOINTS.users.dropshippers.path,
+          method: API_ENDPOINTS.users.dropshippers.method,
+          params: cleanedParams,
+        };
+      },
       providesTags: ["User"],
     }),
     getUserDetails: builder.query({
@@ -50,6 +66,14 @@ const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    userUnban: builder.mutation({
+      query: (id) => ({
+        url: API_ENDPOINTS.users.unban.path.replace('{id}', id),
+        method: API_ENDPOINTS.users.unban.method,
+      }),
+      invalidatesTags: ["User"],
+    }),
   }),
 });
 
@@ -62,6 +86,7 @@ export const {
   useGetAdminListQuery,
   useGetDropshippersQuery,
   useUserBanMutation,
+  useUserUnbanMutation,
 } = userApi;
 
 export default userApi;

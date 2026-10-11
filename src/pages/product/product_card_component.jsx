@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Heart, ShoppingCart, Eye, Download, Star, Tag, Zap } from "lucide-react";
+import { ShoppingCart, Eye, Download, Star, Tag, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { imgBaseUrl } from "../../../config";
-import { useAddWishListMutation, useDeleteWishProductMutation } from "../../redux/features/product";
+import { useAddWishListMutation, useDeleteWishProductMutation, useGetFavProductsQuery } from "../../redux/features/product";
+import { toast } from "sonner";
 import { useCreateCartMutation } from "../../redux/features/cart";
 import ResellerPriceModal from "./components/quick_order_reseller_price";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
@@ -59,6 +60,8 @@ const ProductCard = ({
 
 	const [addWishList] = useAddWishListMutation();
 	const [deleteWishProduct] = useDeleteWishProductMutation();
+	const { data: favData } = useGetFavProductsQuery(userId, { skip: !userId });
+	const favItems = useMemo(() => favData?.items ?? favData?.data ?? [], [favData]);
 	const [createCart] = useCreateCartMutation();
 
 	const imageUrl = product?.primary_image?.file_name
@@ -124,8 +127,15 @@ const ProductCard = ({
 	}, [product?.id]);
 
 	useEffect(() => {
+		if (favData) {
+			const inFav = favItems.some(
+				(it) => String(it?.product_id ?? it?.product?.id) === String(product?.id)
+			);
+			setInWish(inFav);
+			return;
+		}
 		refreshLocalStates();
-	}, [refreshLocalStates]);
+	}, [favData, favItems, product?.id, refreshLocalStates]);
 
 	useEffect(() => {
 		const onAuth = () => {
@@ -155,7 +165,7 @@ const ProductCard = ({
 				return;
 			}
 			if (!userId) {
-				alert("Please login to manage wishlist.");
+				toast.error("Please login to manage wishlist.");
 				return;
 			}
 
@@ -165,7 +175,7 @@ const ProductCard = ({
 						id: product.id,
 						user_id: userId,
 						product_id: product.id,
-					});
+					}).unwrap();
 
 					const wishId =
 						res?.data?.id ?? res?.id ?? res?.data?.data?.id ?? null;
@@ -179,12 +189,22 @@ const ProductCard = ({
 					writeJson("wishlist", next);
 					setInWish(true);
 					window.dispatchEvent(new Event("wishlist-updated"));
+					toast.success(res?.message || "Product added to wishlist!");
 					return;
 				}
 
 				const map = readJson("wishlistMap", {});
-				const wishItemId = map?.[String(product.id)] ?? product.id;
-				await deleteWishProduct(wishItemId);
+				let wishItemId = null;
+				if (Array.isArray(favItems)) {
+					const match = favItems.find(
+						(it) => String(it?.product_id ?? it?.product?.id) === String(product.id)
+					);
+					if (match?.id) wishItemId = match.id;
+				}
+				if (!wishItemId) {
+					wishItemId = map?.[String(product.id)] ?? product.id;
+				}
+				const res = await deleteWishProduct(wishItemId).unwrap();
 
 				const current = safeArray(readJson("wishlist", []));
 				const next = current.filter((x) => String(x) !== String(product.id));
@@ -198,11 +218,13 @@ const ProductCard = ({
 
 				setInWish(false);
 				window.dispatchEvent(new Event("wishlist-updated"));
+				toast.success(res?.message || "Product removed from wishlist!");
 			} catch (err) {
 				console.error("wishlist toggle error:", err);
+				toast.error(err?.data?.message || err?.message || "Failed to update wishlist");
 			}
 		},
-		[addWishList, deleteWishProduct, inWish, onToggleWish, product, userId]
+		[addWishList, deleteWishProduct, favItems, inWish, onToggleWish, product, userId]
 	);
 
 	const openModal = useCallback(
@@ -364,11 +386,11 @@ const ProductCard = ({
 
 				{/* Quick-action overlay — desktop hover only */}
 				<div className="absolute top-2 right-2 hidden sm:flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-					{!hideFav && (
-						<ActionBtn title={inWish ? "Remove from wishlist" : "Add to wishlist"} btnClick={handleToggleWish} active={inWish}>
-							<Heart className={`w-3.5 h-3.5 ${inWish ? "fill-current" : ""}`} />
-						</ActionBtn>
-					)}
+
+
+
+
+
 					<ActionBtn title="Quick view" btnClick={handleView}>
 						<Eye className="w-3.5 h-3.5" />
 					</ActionBtn>

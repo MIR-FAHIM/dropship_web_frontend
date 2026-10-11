@@ -68,6 +68,7 @@ import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
 import LoginSuccessReport from "../pages/admin_panel/error_logs/LoginSuccessReport";
 import AdminNotices from "../pages/admin_panel/notices/AdminNotices";
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
+import RouteErrorBoundary from "../components/shared/RouteErrorBoundary";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -139,6 +140,7 @@ export const router = createBrowserRouter([
   {
     path: "/vendor-panel",
     element: <VendorPanelLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <VendorDashboard /> },
       { path: "products", element: <VendorProducts /> },
@@ -156,11 +158,13 @@ export const router = createBrowserRouter([
   {
     path: "/vendor/kyc",
     element: <VendorPanelLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [{ index: true, element: <VendorKyc /> }],
   },
   {
     path: "/admin-panel",
     element: <AdminPanelLayout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: "products", element: <AdminProducts /> },
@@ -212,6 +216,7 @@ export const router = createBrowserRouter([
         <App />
       </PrivateRoute>
     ),
+    errorElement: <RouteErrorBoundary />,
     children: routeGenerator(pagePaths),
   },
   {

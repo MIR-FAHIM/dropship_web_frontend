@@ -1,8 +1,9 @@
-﻿/* eslint-disable react/prop-types */
-import { useEffect, useState } from "react";
+/* eslint-disable react/prop-types */
+import React, { Component, useEffect, useState } from "react";
 import { Loader2, Save, X } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import "../../utils/domPatches";
 import { getAdminBasePrice } from "../../utils/pricing.utils";
 
 const inputClass =
@@ -19,6 +20,9 @@ const quillModules = {
     ["blockquote", "link"],
     ["clean"],
   ],
+  clipboard: {
+    matchVisual: false,
+  },
 };
 
 const quillFormats = [
@@ -36,12 +40,43 @@ const quillFormats = [
   "link",
 ];
 
+// Error boundary to protect modal from ReactQuill DOM or Parchment parse crashes
+class EditorErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn("Editor error caught by boundary, falling back to textarea:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
+
+const sanitizeDescription = (desc) => {
+  if (!desc || typeof desc !== "string") return "";
+  return desc
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
+};
+
 const getInitialForm = ({ product, page }) => ({
   slug: page?.slug || "",
   selling_price: page?.selling_price ?? getAdminBasePrice(product) ?? "",
   discount_price: page?.discount_price ?? "",
   custom_title: page?.custom_title || product?.name || "",
-  custom_description: page?.custom_description || product?.description || "",
+  custom_description: sanitizeDescription(page?.custom_description || product?.description || ""),
   delivery_charge: page?.delivery_charge ?? 0,
   template_id: page?.template_id || "default",
   published_status: page?.published_status || "draft",
@@ -59,8 +94,10 @@ const ResellerProductPageModal = ({
   const [form, setForm] = useState(getInitialForm({ product, page }));
 
   useEffect(() => {
-    if (open) setForm(getInitialForm({ product, page }));
-  }, [open, product, page]);
+    if (open) {
+      setForm(getInitialForm({ product, page }));
+    }
+  }, [open, product?.id, page?.id]);
 
   if (!open) return null;
 
@@ -128,17 +165,29 @@ const ResellerProductPageModal = ({
           </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Custom Description</label>
-            <div className="rounded-lg border border-gray-300 bg-white">
-              <ReactQuill
-                theme="snow"
-                value={form.custom_description}
-                onChange={(value) => setForm((prev) => ({ ...prev, custom_description: value }))}
-                modules={quillModules}
-                formats={quillFormats}
-                placeholder="Write product details..."
-                className="product-page-description-editor"
-                style={{ minHeight: 180 }}
-              />
+            <div className="rounded-lg border border-gray-300 bg-white notranslate" translate="no">
+              <EditorErrorBoundary
+                fallback={
+                  <textarea
+                    rows={8}
+                    value={form.custom_description}
+                    onChange={(e) => setForm((prev) => ({ ...prev, custom_description: e.target.value }))}
+                    placeholder="Write product details..."
+                    className="w-full p-3 text-sm text-gray-700 outline-none rounded-lg"
+                  />
+                }
+              >
+                <ReactQuill
+                  theme="snow"
+                  value={form.custom_description}
+                  onChange={(value) => setForm((prev) => ({ ...prev, custom_description: value }))}
+                  modules={quillModules}
+                  formats={quillFormats}
+                  placeholder="Write product details..."
+                  className="product-page-description-editor"
+                  style={{ minHeight: 180 }}
+                />
+              </EditorErrorBoundary>
             </div>
             <p className="mt-1 text-xs text-gray-400">This keeps the original product description HTML and lets you edit it like an email body.</p>
           </div>

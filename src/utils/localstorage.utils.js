@@ -3,7 +3,13 @@ export const saveToLocalstorage = (name, data) => {
 };
 
 export const getFromLocalstorage = (name) => {
-  return JSON.parse(localStorage.getItem(name));
+  try {
+    const item = localStorage.getItem(name);
+    if (!item) return null;
+    return JSON.parse(item);
+  } catch {
+    return localStorage.getItem(name);
+  }
 };
 
 export const removeFromLocalstorage = (name) => {

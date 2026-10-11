@@ -53,7 +53,7 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
 const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithAuth,
-  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor", "Upload", "Category", "Brand", "Product", "CarryBeeStore", "CarryBeeOrder", "SupportTickets", "OrderSettlement", "ResellerStoreProfile", "ResellerProductPage", "LandingPageOrder", "Notification", "Notice", "SocialMediaText", "ProductAssistantQa", "KycDocument"],
+  tagTypes: ["Grid", "Request", "Payment", "Note", "User", "Warehouse", "Vendor", "Upload", "Category", "Brand", "Product", "CarryBeeStore", "CarryBeeOrder", "SupportTickets", "OrderSettlement", "ResellerStoreProfile", "ResellerProductPage", "LandingPageOrder", "Notification", "Notice", "SocialMediaText", "ProductAssistantQa", "KycDocument", "Wishlist"],
   endpoints: () => ({}),
 });
 

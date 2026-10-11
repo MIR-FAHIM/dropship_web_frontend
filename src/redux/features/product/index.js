@@ -1,6 +1,7 @@
-﻿
+
 import baseApi from "../../api/baseApi";
 import API_ENDPOINTS, { buildEndpointPath } from "../../api/apiEndpoints";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 
 const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -57,6 +58,7 @@ const productApi = baseApi.injectEndpoints({
     }),
     getFavProducts: builder.query({
       query: (userId) => buildEndpointPath(API_ENDPOINTS.wishlists.list.path, { userId }),
+      providesTags: ["Wishlist"],
     }),
 
     listTodayDealProducts: builder.query({
@@ -103,10 +105,14 @@ const productApi = baseApi.injectEndpoints({
       invalidatesTags: ["Product"],
     }),
     deleteWishProduct: builder.mutation({
-      query: (id) => ({
+      query: (arg) => {
+        const id = typeof arg === "object" && arg !== null ? (arg.id ?? arg.product_id) : arg;
+        return {
         url: buildEndpointPath(API_ENDPOINTS.wishlists.delete.path, { id }),
         method: API_ENDPOINTS.wishlists.delete.method,
-      }),
+        };
+      },
+      invalidatesTags: ["Wishlist"],
     }),
 
     addProductImage: builder.mutation({
@@ -118,11 +124,32 @@ const productApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
     }),
     addWishList: builder.mutation({
-      query: ({ id, ...payload }) => ({
-        url: buildEndpointPath(API_ENDPOINTS.wishlists.add.path, { id }),
+      query: (arg) => {
+        let body;
+        if (typeof arg === "object" && arg !== null) {
+          const productId = arg.product_id ?? arg.id;
+          const userId = arg.user_id ?? getFromLocalstorage("userId");
+          body = {
+            ...arg,
+            id: Number(productId),
+            product_id: Number(productId),
+            ...(userId ? { user_id: Number(userId) } : {}),
+          };
+        } else {
+          const userId = getFromLocalstorage("userId");
+          body = {
+            id: Number(arg),
+            product_id: Number(arg),
+            ...(userId ? { user_id: Number(userId) } : {}),
+          };
+        }
+        return {
+          url: API_ENDPOINTS.wishlists.add.path,
         method: API_ENDPOINTS.wishlists.add.method,
-        body: payload,
-      }),
+          body,
+        };
+      },
+      invalidatesTags: ["Wishlist"],
     }),
 
     deleteProductImage: builder.mutation({
