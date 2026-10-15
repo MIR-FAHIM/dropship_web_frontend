@@ -63,6 +63,16 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
       providesTags: ["CarryBeeOrder"],
     }),
 
+    getCarryBeeTracking: builder.query({
+      query: (consignmentId) => ({
+        url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeTracking.path, {
+          consignmentId: encodeURIComponent(consignmentId),
+        }),
+        validateStatus: (response, body) => response.ok && body?.status === "success" && !body?.data?.error,
+      }),
+      keepUnusedDataFor: 30,
+    }),
+
     getCarryBeeAreaDetails: builder.mutation({
       query: ({ vendorId, query }) => ({
         url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.path, { vendorId }),
@@ -84,6 +94,7 @@ export const {
   useCancelCarryBeeOrderMutation,
   useGetCarryBeeOrderDetailsQuery,
   useLazyGetCarryBeeOrderDetailsQuery,
+  useLazyGetCarryBeeTrackingQuery,
   useGetCarryBeeAreaDetailsMutation,
 } = carrybeeStoreApi;
 

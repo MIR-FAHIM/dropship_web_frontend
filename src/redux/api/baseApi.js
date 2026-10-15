@@ -14,6 +14,7 @@ const rawBaseQuery = fetchBaseQuery({
       "forgotPassword",
       "resetPassword",
       "addKycDocument",
+      "getCarryBeeTracking",
     ];
     if (noAuthEndpoints.includes(endpoint)) {
       headers.set("Accept", "application/json");

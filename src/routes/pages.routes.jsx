@@ -14,6 +14,7 @@ import ProductDetails from "../pages/product/items/ProductDetails";
 import AdminActivity from "../pages/activity/AdminActivity";
 import OrderDetailsPage from "../pages/reseller_panel/orders/OrderDetails";
 import Order from "../pages/reseller_panel/orders/Orders";
+import OrderTracking from "../pages/reseller_panel/orders/OrderTracking";
 import Overview from "../pages/reseller_panel/overview/Overview";
 import SalesAndProfit from "../pages/billing/saleandprofit/SaleAndProfit";
 import Users from "../pages/reseller_panel/supports/SupportTicket";
@@ -40,6 +41,7 @@ export const pagePaths = [
   { path: "saleandprofit",          element: <SalesAndProfit /> },
   { path: "favproducts",            element: <FavProducts /> },
   { path: "order",                  element: <Order /> },
+  { path: "track-order",            element: <OrderTracking /> },
   { path: "contact-us-form",        element: <ContactUsPage /> },
   { path: "orders/invoice/:id",     element: <Invoice /> },
   { path: "billing/paymentpage/:id",element: <PaymentPage /> },

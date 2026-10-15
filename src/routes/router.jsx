@@ -232,6 +232,10 @@ export const router = createBrowserRouter([
     path: "/register",
     element: <RegisterPage />,
   },
+  {
+    path: "/dropshipper-register",
+    element: <RegisterPage />,
+  },
 
   {
     path: "*",

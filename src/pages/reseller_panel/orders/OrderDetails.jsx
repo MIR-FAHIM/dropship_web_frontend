@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useGetOrderDetailsQuery } from "../../../redux/features/order";
 import { imgBaseUrl } from "../../../../config";
@@ -6,6 +6,8 @@ import {
   FaArrowLeft, FaBoxOpen, FaUser, FaPhone, FaMapMarkerAlt,
   FaCalendarAlt, FaStickyNote, FaChartLine, FaCheckCircle, FaClock,
 } from "react-icons/fa";
+import { Truck, Copy, Check, Search, ArrowRight, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import {
   getAdminBasePrice,
   getResellerProfit,
@@ -85,6 +87,33 @@ const OrderDetailsPage = () => {
   const { data, isLoading, isError, error } = useGetOrderDetailsQuery(id);
   const order = data?.data;
 
+  const [copiedConsignment, setCopiedConsignment] = useState(false);
+
+  const deliveryInfo = order?.delivery_information;
+  const consignmentId =
+    deliveryInfo?.consignment_id ||
+    order?.consignment_id ||
+    order?.carry_bee_draft?.consignment_id;
+
+  const handleCopyConsignment = async (e) => {
+    e?.stopPropagation?.();
+    if (!consignmentId) return;
+    try {
+      await navigator.clipboard.writeText(consignmentId);
+      setCopiedConsignment(true);
+      toast.success("Consignment ID কপি করা হয়েছে!");
+      setTimeout(() => setCopiedConsignment(false), 2000);
+    } catch {
+      toast.error("Consignment ID কপি করতে সমস্যা হয়েছে");
+    }
+  };
+
+  const handleTrackOrder = (e) => {
+    e?.stopPropagation?.();
+    if (!consignmentId) return;
+    navigate(`/app/track-order?consignment_id=${encodeURIComponent(consignmentId)}`);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -123,7 +152,20 @@ const OrderDetailsPage = () => {
           </button>
           <div className="flex-1 min-w-0">
             <h1 className="text-lg font-black text-gray-800 leading-tight">Order Details</h1>
-            <p className="text-xs text-gray-400">{order?.order_number ? `#${order.order_number}` : `ID: ${id}`}</p>
+            <div className="flex items-center gap-2 flex-wrap mt-0.5">
+              <p className="text-xs text-gray-400">{order?.order_number ? `#${order.order_number}` : `ID: ${id}`}</p>
+              {consignmentId && (
+                <button
+                  type="button"
+                  onClick={handleTrackOrder}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[11px] font-mono font-bold border border-indigo-200 transition cursor-pointer"
+                  title="রিয়েল-টাইম ট্র্যাকিং দেখুন"
+                >
+                  <Truck className="w-3 h-3 text-indigo-500" />
+                  <span>CID: {consignmentId}</span>
+                </button>
+              )}
+            </div>
           </div>
           <div className="flex gap-2 flex-wrap justify-end">
             <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize border ${st.pill}`}>
@@ -151,6 +193,102 @@ const OrderDetailsPage = () => {
               <p className="text-xs text-white/70">Margin</p>
               <p className="text-xl font-black text-white">{profitMargin}%</p>
             </div>
+          </div>
+        )}
+
+        {/* ── Consignment & Real Time Delivery Tracking Card ── */}
+        {consignmentId && (
+          <div className="rounded-2xl bg-gradient-to-r from-blue-50 via-indigo-50 to-indigo-100/70 border border-indigo-200/80 p-4 mb-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-11 h-11 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-sm shrink-0">
+                  <Truck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold uppercase tracking-wider text-indigo-900">
+                      Live Delivery Tracking
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      Real Time
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    <span className="text-xs text-gray-500 font-medium">Consignment ID:</span>
+                    <button
+                      type="button"
+                      onClick={handleTrackOrder}
+                      className="font-mono font-bold text-sm text-indigo-700 bg-white hover:bg-indigo-50 px-2.5 py-0.5 rounded-lg border border-indigo-200 shadow-xs transition hover:underline cursor-pointer"
+                      title="ট্র্যাক পেজে যান"
+                    >
+                      {consignmentId}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyConsignment}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white hover:bg-indigo-50 active:bg-indigo-100 text-indigo-700 text-xs font-semibold border border-indigo-200 transition shadow-xs cursor-pointer"
+                      title="Consignment ID কপি করুন"
+                    >
+                      {copiedConsignment ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-green-600" />
+                          <span className="text-green-700">কপি হয়েছে!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>কপি করুন</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={handleTrackOrder}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs sm:text-sm font-bold shadow-sm hover:shadow transition cursor-pointer"
+                  title="রিয়েল টাইম ডেলিভারি স্ট্যাটাস ট্র্যাক করুন"
+                >
+                  <Search className="w-4 h-4" />
+                  <span>ট্র্যাক করুন (Track Order)</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Delivery Summary info if deliveryInfo exists */}
+            {deliveryInfo && (
+              <div className="mt-3 pt-3 border-t border-indigo-200/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                {deliveryInfo.merchant_order_id && (
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Merchant Order</span>
+                    <span className="font-medium text-gray-800">{deliveryInfo.merchant_order_id}</span>
+                  </div>
+                )}
+                {deliveryInfo.delivery_fee && (
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Delivery Fee</span>
+                    <span className="font-medium text-gray-800">৳{Number(deliveryInfo.delivery_fee).toLocaleString()}</span>
+                  </div>
+                )}
+                {deliveryInfo.collectable_amount && (
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Collectable</span>
+                    <span className="font-medium text-gray-800">৳{Number(deliveryInfo.collectable_amount).toLocaleString()}</span>
+                  </div>
+                )}
+                {deliveryInfo.recipient_phone && (
+                  <div>
+                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Recipient Phone</span>
+                    <span className="font-medium text-gray-800">{deliveryInfo.recipient_phone}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -197,6 +335,29 @@ const OrderDetailsPage = () => {
                 <span>Payment Method</span>
                 <span className="font-semibold text-gray-600 capitalize">{order?.payment_method || "—"}</span>
               </div>
+              {consignmentId && (
+                <div className="flex justify-between items-center text-xs pt-1 border-t border-dashed border-gray-100">
+                  <span className="text-gray-500">Consignment ID</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={handleTrackOrder}
+                      className="font-mono font-bold text-indigo-600 hover:text-indigo-800 underline decoration-dotted cursor-pointer"
+                      title="ট্র্যাক পেজে যান"
+                    >
+                      {consignmentId}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyConsignment}
+                      className="p-1 hover:bg-gray-100 rounded text-gray-400 hover:text-indigo-600 transition cursor-pointer"
+                      title="Consignment ID কপি করুন"
+                    >
+                      {copiedConsignment ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="mt-3 pt-3 border-t border-gray-50 flex flex-col gap-2">
               <InfoRow icon={FaCalendarAlt} label="Placed on" value={fmt(order?.created_at)} accent="bg-purple-50 text-purple-400" />

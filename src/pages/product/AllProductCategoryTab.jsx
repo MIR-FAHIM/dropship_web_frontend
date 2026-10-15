@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { useListCategoriesWithChildrenQuery } from "../../redux/features/category";
 import { useListProductsCategoryWiseQuery } from "../../redux/features/product";
@@ -9,21 +9,44 @@ import TabHeading from "../../components/shared/TabHeading";
 
 const AllProductCategoryTab = () => {
 	const navigate = useNavigate();
+	const [searchParams, setSearchParams] = useSearchParams();
+
+	const pageParam = parseInt(searchParams.get("page"), 10);
+	const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
+
+	const selectedCategory = searchParams.get("category_id") || null; // null = All
+	const search = searchParams.get("search") || "";
+
 	const { data, isLoading, error } = useListCategoriesWithChildrenQuery();
 	const categories = data?.data?.data ?? data?.data ?? [];
-	const [selectedCategory, setSelectedCategory] = useState(null); // null = All
-	const [page, setPage] = useState(1);
-	const [searchInput, setSearchInput] = useState("");
-	const [search, setSearch] = useState("");
 
-	// Debounce search — fire query 400ms after user stops typing
+	const [searchInput, setSearchInput] = useState(search);
+
+	// Synchronize searchInput with URL query params when external navigation occurs (e.g. Back/Forward)
 	useEffect(() => {
+		setSearchInput(search);
+	}, [search]);
+
+	// Debounce search — update URL query params 400ms after user stops typing
+	useEffect(() => {
+		if (searchInput.trim() === search) return;
+
 		const timer = setTimeout(() => {
-			setSearch(searchInput.trim());
-			setPage(1);
+			setSearchParams((prev) => {
+				const next = new URLSearchParams(prev);
+				const trimmed = searchInput.trim();
+				if (trimmed) {
+					next.set("search", trimmed);
+				} else {
+					next.delete("search");
+				}
+				// When search text changes, reset to page 1
+				next.delete("page");
+				return next;
+			}, { replace: true });
 		}, 400);
 		return () => clearTimeout(timer);
-	}, [searchInput]);
+	}, [searchInput, search, setSearchParams]);
 
 	const queryParams = useMemo(() => {
 		const p = { page };
@@ -38,12 +61,52 @@ const AllProductCategoryTab = () => {
 		isError: isProductsError,
 		error: productsError,
 	} = useListProductsCategoryWiseQuery(queryParams);
-  const handleDownloadImage = (image) => {
-    const link = document.createElement('a');
-    link.href = image;
-    link.download = 'product-image';
-    link.click();
-  };
+
+	const handleDownloadImage = (image) => {
+		const link = document.createElement('a');
+		link.href = image;
+		link.download = 'product-image';
+		link.click();
+	};
+
+	const handlePageChange = (newPage) => {
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			if (newPage > 1) {
+				next.set("page", String(newPage));
+			} else {
+				next.delete("page");
+			}
+			return next;
+		});
+		window.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
+	const handleCategorySelect = (categoryId) => {
+		setSearchInput("");
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			if (categoryId) {
+				next.set("category_id", String(categoryId));
+			} else {
+				next.delete("category_id");
+			}
+			next.delete("search");
+			next.delete("page");
+			return next;
+		});
+	};
+
+	const handleClearSearch = () => {
+		setSearchInput("");
+		setSearchParams((prev) => {
+			const next = new URLSearchParams(prev);
+			next.delete("search");
+			next.delete("page");
+			return next;
+		}, { replace: true });
+	};
+
 	const productList = products?.data?.data || [];
 	const currentPage = products?.data?.current_page ?? page;
 	const totalPages = products?.data?.last_page ?? 1;
@@ -67,7 +130,7 @@ const AllProductCategoryTab = () => {
 				/>
 				{searchInput && (
 					<button
-						onClick={() => setSearchInput("")}
+						onClick={handleClearSearch}
 						className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
 					>
 						<X className="w-4 h-4" />
@@ -77,7 +140,7 @@ const AllProductCategoryTab = () => {
 
 			<div className="flex flex-wrap gap-2 mb-8">
 					<button
-					onClick={() => { setSelectedCategory(null); setPage(1); setSearchInput(""); }}
+					onClick={() => handleCategorySelect(null)}
 						className={`px-4 py-2 rounded-full border transition font-semibold text-sm ${
 							selectedCategory === null
 								? "bg-blue-600 text-white border-blue-600"
@@ -89,13 +152,9 @@ const AllProductCategoryTab = () => {
 					{categories.map((cat) => (
 						<button
 							key={cat.id}
-							onClick={() => {
-								setSelectedCategory(cat.id);
-								setPage(1);
-								setSearchInput("");
-							}}
+							onClick={() => handleCategorySelect(cat.id)}
 							className={`px-4 py-2 rounded-full border transition font-semibold text-sm ${
-								selectedCategory === cat.id
+								String(selectedCategory) === String(cat.id)
 									? "bg-blue-600 text-white border-blue-600"
 									: "bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:text-blue-600"
 							}`}
@@ -123,7 +182,7 @@ const AllProductCategoryTab = () => {
 						</div>
 						{totalPages > 1 && (
 							<div className="flex justify-center mt-6">
-								<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setPage} />
+								<Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
 							</div>
 						)}
 					</>

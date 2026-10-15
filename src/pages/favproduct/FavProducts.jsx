@@ -1,9 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useGetFavProductsQuery } from "../../redux/features/product";
 import ProductCard from "../product/product_card_component";
 
 const FavProducts = () => {
-  const { data, isLoading, isError, error } = useGetFavProductsQuery(localStorage.getItem("userId"));
+  const navigate = useNavigate();
+  const userId = localStorage.getItem("userId");
+  const { data, isLoading, isError, error } = useGetFavProductsQuery(userId, { skip: !userId });
 
   const items = data?.items ?? data?.data ?? [];
   const count = data?.count ?? items.length;
@@ -73,14 +76,19 @@ const FavProducts = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {items.map((item) => (
-              <ProductCard
-                key={item?.product_id ?? item?.id}
-                product={item?.product}
-                onClick={() => null}
-                onDownload={handleDownloadImage}
-              />
-            ))}
+            {items.map((item) => {
+              const product = item?.product ?? item;
+              const productId = product?.id ?? item?.product_id;
+              if (!productId) return null;
+              return (
+                <ProductCard
+                  key={item?.id ?? productId}
+                  product={product}
+                  onClick={() => navigate(`/app/productdetails/${productId}`)}
+                  onDownload={handleDownloadImage}
+                />
+              );
+            })}
           </div>
         )}
       </div>

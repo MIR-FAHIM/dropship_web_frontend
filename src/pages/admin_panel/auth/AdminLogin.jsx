@@ -6,6 +6,24 @@ import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../../redux/slices/authSlice";
 import { toast } from "sonner";
+import AccountActivationModal from "../../../components/shared/AccountActivationModal";
+
+const isActivationRequired = (dataOrMsg) => {
+  if (!dataOrMsg) return false;
+  if (typeof dataOrMsg === "object") {
+    const msg = dataOrMsg?.message || "";
+    if (isActivationRequired(msg)) return true;
+    if (dataOrMsg?.status === "failed" && isActivationRequired(msg)) return true;
+    return false;
+  }
+  const str = String(dataOrMsg).toLowerCase();
+  return (
+    str.includes("activate your account") ||
+    str.includes("activate account") ||
+    str.includes("account activation") ||
+    str.includes("need to activate")
+  );
+};
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -13,6 +31,8 @@ const AdminLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loginFunc, { isLoading }] = useLoginMutation();
+  const [activationModalOpen, setActivationModalOpen] = useState(false);
+  const [activationMessage, setActivationMessage] = useState("");
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -22,6 +42,15 @@ const AdminLogin = () => {
     e.preventDefault();
     try {
       const res = await loginFunc(formData).unwrap();
+      if (res?.status === "failed") {
+        if (isActivationRequired(res)) {
+          setActivationMessage(res?.message || "You need to activate your account");
+          setActivationModalOpen(true);
+          return;
+        }
+        toast.error(res?.message || "Login failed!");
+        return;
+      }
       dispatch(setToken({ token: res.data.token }));
       saveToLocalstorage("token", res.data.token);
       saveToLocalstorage("userId", res.data.user.id);
@@ -34,11 +63,19 @@ const AdminLogin = () => {
       }
      
     } catch (err) {
-      toast.error(err?.data?.message || "Login failed!");
+      const errorData = err?.data || err;
+      if (isActivationRequired(errorData) || isActivationRequired(err?.message)) {
+        const msg = errorData?.message || err?.message || "You need to activate your account";
+        setActivationMessage(msg);
+        setActivationModalOpen(true);
+        return;
+      }
+      toast.error(errorData?.message || "Login failed!");
     }
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-rose-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
@@ -135,6 +172,14 @@ const AdminLogin = () => {
         </p>
       </div>
     </div>
+      <AccountActivationModal
+        isOpen={activationModalOpen}
+        onClose={() => setActivationModalOpen(false)}
+        message={activationMessage || "You need to activate your account"}
+        userEmail={formData.email}
+        supportNumber="01941606310"
+      />
+    </>
   );
 };
 

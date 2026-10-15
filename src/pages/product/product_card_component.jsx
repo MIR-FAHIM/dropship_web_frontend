@@ -96,16 +96,20 @@ const ProductCard = ({
 	}, [product?.discount_percent, product?.discount, product?.discount_type, hasSale, price, salePrice]);
 
 	const ratingValue = useMemo(() => {
-		const r = Number(product?.rating);
+		const r = Number(product?.rating ?? product?.avg_rating ?? product?.average_rating ?? product?.avg_review ?? product?.reviews_avg_rating);
 		if (Number.isFinite(r) && r >= 0) return Math.min(5, r);
-		return 4.5;
-	}, [product?.rating]);
+		return 0;
+	}, [product?.rating, product?.avg_rating, product?.average_rating, product?.avg_review, product?.reviews_avg_rating]);
 
 	const reviewsCount = useMemo(() => {
-		const n = Number(product?.reviews_count);
+		const n = Number(product?.reviews_count ?? product?.review_count ?? product?.total_reviews ?? (Array.isArray(product?.reviews) ? product.reviews.length : null));
 		if (Number.isFinite(n) && n >= 0) return n;
 		return 0;
-	}, [product?.reviews_count]);
+	}, [product?.reviews_count, product?.review_count, product?.total_reviews, product?.reviews]);
+
+	const hasReviews = useMemo(() => {
+		return reviewsCount > 0 && ratingValue > 0;
+	}, [reviewsCount, ratingValue]);
 
 	const outOfStock = useMemo(() => {
 		if (typeof product?.current_stock === "number")
@@ -292,7 +296,7 @@ const ProductCard = ({
 	const handleView = (e) => {
 		e?.stopPropagation?.();
 		onView?.(product);
-		onClick?.(product);
+		if (onClick) { onClick(product); } else if (product?.id) { navigate(`/app/productdetails/${product.id}`); }
 	};
 
 	const handleQuickOrder = useCallback(
@@ -355,7 +359,7 @@ const ProductCard = ({
 		/>
 
 		<div
-			onClick={() => !showTouchActions && onClick?.(product)}
+			onClick={() => !showTouchActions && (onClick ? onClick(product) : (product?.id && navigate(`/app/productdetails/${product.id}`)))}
 			onTouchStart={handleTouchStart}
 			onTouchEnd={handleTouchEnd}
 			className="group relative bg-white rounded-2xl border border-gray-100 overflow-hidden cursor-pointer
@@ -438,12 +442,14 @@ const ProductCard = ({
 					)}
 				</div>
 
-				<div className="flex items-center gap-1">
+				{hasReviews && (
+					<div className="flex items-center gap-1">
 					{[1,2,3,4,5].map((s) => (
 						<Star key={s} className={`w-3 h-3 ${s <= Math.round(ratingValue) ? "text-amber-400 fill-current" : "text-gray-200 fill-current"}`} />
 					))}
 					<span className="text-[10px] text-gray-400 ml-0.5">({reviewsCount})</span>
-				</div>
+					</div>
+				)}
 
 				{/* Bottom action bar */}
 				<div className="flex flex-col gap-2 mt-auto pt-2 border-t border-gray-50">

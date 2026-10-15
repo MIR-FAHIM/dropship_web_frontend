@@ -6,6 +6,24 @@ import { saveToLocalstorage } from "../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
+import AccountActivationModal from "../../components/shared/AccountActivationModal";
+
+const isActivationRequired = (dataOrMsg) => {
+  if (!dataOrMsg) return false;
+  if (typeof dataOrMsg === "object") {
+    const msg = dataOrMsg?.message || "";
+    if (isActivationRequired(msg)) return true;
+    if (dataOrMsg?.status === "failed" && isActivationRequired(msg)) return true;
+    return false;
+  }
+  const str = String(dataOrMsg).toLowerCase();
+  return (
+    str.includes("activate your account") ||
+    str.includes("activate account") ||
+    str.includes("account activation") ||
+    str.includes("need to activate")
+  );
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -15,6 +33,8 @@ const Login = () => {
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [formData, setFormData] = useState({ email: location.state?.email || "", password: "" });
   const [loginFunc, { isLoading }] = useLoginMutation();
+  const [activationModalOpen, setActivationModalOpen] = useState(false);
+  const [activationMessage, setActivationMessage] = useState("");
 
   useEffect(() => {
     if (location.state?.email) {
@@ -35,6 +55,15 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await loginFunc(formData).unwrap();
+      if (res?.status === "failed") {
+        if (isActivationRequired(res)) {
+          setActivationMessage(res?.message || "You need to activate your account");
+          setActivationModalOpen(true);
+          return;
+        }
+        toast.error(res?.message || "লগইন ব্যর্থ হয়েছে!");
+        return;
+      }
       dispatch(setToken({ token: res.data.token }));
       saveToLocalstorage("token", res.data.token);
       saveToLocalstorage("userId", res.data.user.id);
@@ -45,11 +74,19 @@ const Login = () => {
         navigate("/");
       }
     } catch (err) {
-      toast.error(err?.data?.message || "লগইন ব্যর্থ হয়েছে!");
+      const errorData = err?.data || err;
+      if (isActivationRequired(errorData) || isActivationRequired(err?.message)) {
+        const msg = errorData?.message || err?.message || "You need to activate your account";
+        setActivationMessage(msg);
+        setActivationModalOpen(true);
+        return;
+      }
+      toast.error(errorData?.message || "লগইন ব্যর্থ হয়েছে!");
     }
   };
 
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
@@ -209,6 +246,14 @@ const Login = () => {
         </p>
       </div>
     </div>
+      <AccountActivationModal
+        isOpen={activationModalOpen}
+        onClose={() => setActivationModalOpen(false)}
+        message={activationMessage || "You need to activate your account"}
+        userEmail={formData.email}
+        supportNumber="01941606310"
+      />
+    </>
   );
 };
 

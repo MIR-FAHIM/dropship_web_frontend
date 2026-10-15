@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   auth: {
     login: define("POST", "/auth/login"),
     loginAsVendor: define("POST", "/auth/login-as-vendor"),
+    loginAsDropshipper: define("POST", "/auth/login-as-dropshipper"),
     forgotPassword: define("POST", "/auth/forgot-password"),
     resetPassword: define("POST", "/auth/reset-password"),
     logout: define("POST", "/auth/logout"),
@@ -316,6 +317,7 @@ export const API_ENDPOINTS = {
     carrybeeOrderDraftCreate:  define("POST", "/delivery-companies/carrybee/order-drafts"),
     carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/cancel"),
     carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/details"),
+    carrybeeTracking: define("GET", "/delivery-companies/carrybee/track/{consignmentId}"),
     getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{vendorId}"),
   },
   vendorCarryBeeCredentials: {

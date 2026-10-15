@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Search, X } from "lucide-react";
 import { useListProductsCategoryWiseQuery } from "../../../redux/features/product";
 import ProductCard from "../product_card_component";
@@ -7,19 +7,39 @@ import Pagination from "../../../components/shared/Pagination";
 
 const ProductsList = () => {
   const { id } = useParams();
-  const [page, setPage] = useState(1);
-  const [searchInput, setSearchInput] = useState("");
-  const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Debounce: fire query 400ms after user stops typing
+  const pageParam = parseInt(searchParams.get("page"), 10);
+  const page = !isNaN(pageParam) && pageParam > 0 ? pageParam : 1;
+  const search = searchParams.get("search") || "";
+
+  const [searchInput, setSearchInput] = useState(search);
+
+  // Sync search input if URL changes externally (e.g. Back/Forward)
   useEffect(() => {
+    setSearchInput(search);
+  }, [search]);
+
+  // Debounce: update search param 400ms after user stops typing
+  useEffect(() => {
+    if (searchInput.trim() === search) return;
+
     const timer = setTimeout(() => {
-      setSearch(searchInput.trim());
-      setPage(1);
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
+        const trimmed = searchInput.trim();
+        if (trimmed) {
+          next.set("search", trimmed);
+        } else {
+          next.delete("search");
+        }
+        next.delete("page");
+        return next;
+      }, { replace: true });
     }, 400);
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, search, setSearchParams]);
 
   const queryParams = useMemo(() => {
     const p = { page, category_id: id };
@@ -34,18 +54,35 @@ const ProductsList = () => {
     if (!id) return list;
     return list;
   }, [products, id]);
-  useEffect(() => {
-    console.log("Category ID from URL:", id);
-  }, [id]);  // Log the category ID whenever it changes (i.e., on navigation)
-  useEffect(() => {
-    setPage(1);
-    setSearchInput("");
-  }, [id]);
+
   const handleDownloadImage = (image) => {
     const link = document.createElement('a');
     link.href = image;
     link.download = 'product-image';
     link.click();
+  };
+
+  const handlePageChange = (newPage) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newPage > 1) {
+        next.set("page", String(newPage));
+      } else {
+        next.delete("page");
+      }
+      return next;
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleClearSearch = () => {
+    setSearchInput("");
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("search");
+      next.delete("page");
+      return next;
+    }, { replace: true });
   };
 
   if (isLoading) {
@@ -74,7 +111,7 @@ const ProductsList = () => {
         />
         {searchInput && (
           <button
-            onClick={() => setSearchInput("")}
+            onClick={handleClearSearch}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
           >
             <X className="w-4 h-4" />
@@ -96,7 +133,7 @@ const ProductsList = () => {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={setPage}
+            onPageChange={handlePageChange}
           />
         </div>
       ) : null}

@@ -22,12 +22,15 @@ import {
   ShieldAlert,
   Wallet,
   Calendar,
+  LogIn,
 } from "lucide-react";
 import {
   useGetDropshippersQuery,
   useUserBanMutation,
   useUserUnbanMutation,
 } from "../../../redux/features/user";
+import { useLoginAsDropshipperMutation } from "../../../redux/features/auth";
+import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { toast } from "react-toastify";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -106,6 +109,8 @@ const AdminDropshippers = () => {
   // Ban / Unban mutations
   const [userBan, { isLoading: isBanLoading }] = useUserBanMutation();
   const [userUnban, { isLoading: isUnbanLoading }] = useUserUnbanMutation();
+  const [loginAsDropshipper, { isLoading: isLoginLoading }] = useLoginAsDropshipperMutation();
+  const [loginUserId, setLoginUserId] = useState(null);
 
   // Extract pagination & dropshipper records safely
   const rawData = data?.data;
@@ -227,6 +232,47 @@ const AdminDropshippers = () => {
       toast.error(backendError);
     } finally {
       setBanUserId(null);
+    }
+  };
+
+  // Login as dropshipper handler
+  const handleLoginAsDropshipper = async (user) => {
+    const email = user.email || user.user?.email;
+    const phone = user.phone || user.mobile || user.user?.phone;
+    if (!email && !phone) {
+      toast.error("এই ড্রপশিপারের কোনো ইমেইল বা ফোন নম্বর পাওয়া যায়নি!");
+      return;
+    }
+
+    setLoginUserId(user.id);
+    try {
+      const payload = {
+        ...(email ? { email } : {}),
+        ...(phone ? { phone } : {}),
+        id: user.id,
+        user_id: user.id,
+      };
+      const res = await loginAsDropshipper(payload).unwrap();
+      const token = res?.data?.token || res?.token;
+      const loggedUser = res?.data?.user || res?.user || user;
+      if (token) {
+        saveToLocalstorage("token", token);
+        saveToLocalstorage("userId", loggedUser?.id || user.id);
+        saveToLocalstorage("user", JSON.stringify(loggedUser));
+        toast.success(res?.message || "লগইন সফল হয়েছে!");
+        window.open("/app/dashboard-new", "_blank");
+      } else {
+        toast.error(res?.message || "লগইন টোকেন পাওয়া যায়নি!");
+      }
+    } catch (err) {
+      console.error("Login as dropshipper error:", err);
+      toast.error(
+        err?.data?.message ||
+        err?.message ||
+        "লগইন ব্যর্থ হয়েছে! ব্যাকএন্ডে /auth/login-as-dropshipper নিশ্চিত করুন।"
+      );
+    } finally {
+      setLoginUserId(null);
     }
   };
 
@@ -652,6 +698,7 @@ const AdminDropshippers = () => {
                   <th className="py-3 px-3">নাম ও বিবরণ</th>
                   <th className="py-3 px-3">যোগাযোগ</th>
                   <th className="py-3 px-3">হোয়াটসঅ্যাপ</th>
+                  <th className="py-3 px-3">লগইন</th>
                   <th className="py-3 px-3">ঠিকানা</th>
                   <th className="py-3 px-3">ব্যালেন্স</th>
                   <th className="py-3 px-3">স্ট্যাটাস</th>
@@ -755,6 +802,29 @@ const AdminDropshippers = () => {
                             </a>
                           );
                         })()}
+                      </td>
+
+                      {/* Dropshipper Panel Login */}
+                      <td className="py-3 px-3">
+                        <button
+                          type="button"
+                          disabled={loginUserId === user.id}
+                          onClick={() => handleLoginAsDropshipper(user)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition-colors"
+                          title={`${user.name || "ড্রপশিপার"} এর প্যানেলে লগইন করুন`}
+                        >
+                          {loginUserId === user.id ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <span>অপেক্ষা করুন...</span>
+                            </>
+                          ) : (
+                            <>
+                              <LogIn className="w-3.5 h-3.5" />
+                              <span>লগইন করুন</span>
+                            </>
+                          )}
+                        </button>
                       </td>
 
                       {/* Address */}

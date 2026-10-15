@@ -17,6 +17,13 @@ const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    loginAsDropshipper: builder.mutation({
+      query: (data) => ({
+        url: API_ENDPOINTS.auth.loginAsDropshipper.path,
+        method: API_ENDPOINTS.auth.loginAsDropshipper.method,
+        body: data,
+      }),
+    }),
     forgotPassword: builder.mutation({
       query: (data) => ({
         url: API_ENDPOINTS.auth.forgotPassword.path,
@@ -51,6 +58,7 @@ const authApi = baseApi.injectEndpoints({
 export const {
   useLoginMutation,
   useLoginAsVendorMutation,
+  useLoginAsDropshipperMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useRegisterMutation,
