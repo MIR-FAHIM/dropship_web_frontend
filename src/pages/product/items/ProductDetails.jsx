@@ -384,6 +384,7 @@ const ProductDetails = () => {
         discount_price: discountPrice,
         delivery_charge: Number(form.delivery_charge || 0),
         template_id: form.template_id || "default",
+        published_status: form.published_status || "published",
       }).unwrap();
       const page = response?.data?.data || response?.data || response;
       setCreatedProductPage(page);

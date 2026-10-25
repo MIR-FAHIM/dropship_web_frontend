@@ -79,7 +79,7 @@ const getInitialForm = ({ product, page }) => ({
   custom_description: sanitizeDescription(page?.custom_description || product?.description || ""),
   delivery_charge: page?.delivery_charge ?? 0,
   template_id: page?.template_id || "default",
-  published_status: page?.published_status || "draft",
+  published_status: page?.published_status || "published",
 });
 
 const ResellerProductPageModal = ({
@@ -151,6 +151,37 @@ const ResellerProductPageModal = ({
           <div>
             <label className={labelClass}>Slug</label>
             <input name="slug" value={form.slug} onChange={handleChange} className={inputClass} placeholder="Auto generate if empty" />
+          </div>
+          <div>
+            <label className={labelClass}>Publishing Status</label>
+            <div className="flex items-center gap-3 pt-1.5">
+              <button
+                type="button"
+                onClick={() =>
+                  setForm((prev) => ({
+                    ...prev,
+                    published_status: prev.published_status === "published" ? "draft" : "published",
+                  }))
+                }
+                className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  form.published_status === "published" ? "bg-emerald-600" : "bg-gray-300"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    form.published_status === "published" ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
+              <span className={`text-xs font-bold ${form.published_status === "published" ? "text-emerald-700" : "text-amber-700"}`}>
+                {form.published_status === "published" ? "Published (Live for customers)" : "Draft (Preview mode only)"}
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-gray-400">
+              {form.published_status === "published"
+                ? "Anyone with the link can view and place orders."
+                : "Only you can preview the page while logged in."}
+            </p>
           </div>
           <div>
             <label className={labelClass}>Your Selling Price</label>

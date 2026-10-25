@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useGetOrderDetailsQuery } from "../../../redux/features/order";
+import { useGetOrderDetailsQuery, usePayAdvanceMutation, useCheckAdvanceRequirementQuery } from "../../../redux/features/order";
+import { Wallet, X } from "lucide-react";
 import { imgBaseUrl } from "../../../../config";
 import {
   FaArrowLeft, FaBoxOpen, FaUser, FaPhone, FaMapMarkerAlt,
@@ -85,6 +86,48 @@ const OrderDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, isError, error } = useGetOrderDetailsQuery(id);
+  const [payAdvance, { isLoading: isPayingAdvance }] = usePayAdvanceMutation();
+  const userId = localStorage.getItem("userId");
+  const { data: advanceReqData } = useCheckAdvanceRequirementQuery(userId, { skip: !userId });
+  const availableWalletBalance = Number(advanceReqData?.data?.available_wallet_balance ?? 0);
+
+  const [showPayAdvanceModal, setShowPayAdvanceModal] = useState(false);
+  const [advancePayMethod, setAdvancePayMethod] = useState("wallet");
+  const [mfsMethod, setMfsMethod] = useState("bkash");
+  const [mfsTrxId, setMfsTrxId] = useState("");
+  const [mfsSenderPhone, setMfsSenderPhone] = useState("");
+
+  const handlePayAdvanceSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (advancePayMethod === "wallet") {
+        const requiredAmount = Number(order?.advance_amount || 130);
+        if (availableWalletBalance < requiredAmount) {
+          toast.error("ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই। আপনার ব্যালেন্স ৳" + availableWalletBalance + ", প্রয়োজন ৳" + requiredAmount);
+          return;
+        }
+        await payAdvance({ id: order.id, pay_from_wallet: true, amount: requiredAmount }).unwrap();
+        toast.success("ওয়ালেট থেকে অগ্রিম পেমেন্ট সফলভাবে সম্পন্ন হয়েছে!");
+        setShowPayAdvanceModal(false);
+      } else {
+        if (!mfsTrxId.trim()) {
+          toast.error("অনুগ্রহ করে Trx ID দিন");
+          return;
+        }
+        await payAdvance({
+          id: order.id,
+          payment_method: mfsMethod,
+          trx_id: mfsTrxId.trim(),
+          sender_phone: mfsSenderPhone.trim(),
+          amount: Number(order?.advance_amount || 130),
+        }).unwrap();
+        toast.success("অগ্রিম পেমেন্ট সাবমিট হয়েছে। অ্যাডমিন ভেরিফিকেশনের জন্য অপেক্ষা করুন।");
+        setShowPayAdvanceModal(false);
+      }
+    } catch (err) {
+      toast.error(err?.data?.message || err?.message || "অগ্রিম পেমেন্ট করতে সমস্যা হয়েছে");
+    }
+  };
   const order = data?.data;
 
   const [copiedConsignment, setCopiedConsignment] = useState(false);
@@ -176,6 +219,63 @@ const OrderDetailsPage = () => {
             </span>
           </div>
         </div>
+
+        {/* ── Advance Payment Alert / Badge ── */}
+        {order?.advance_status === "pending" && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 mb-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 text-amber-700">
+                  <FaClock className="text-base" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-amber-900">অগ্রিম ডেলিভারি চার্জ বাকি রয়েছে</p>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-bold">
+                      {order?.advance_trx_id ? "ভেরিফিকেশন অপেক্ষমাণ" : "পরিশোধ বাকি"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-amber-800/80 mt-0.5">
+                    {order?.advance_trx_id
+                      ? "আপনি " + (order.advance_payment_method?.toUpperCase() || "MFS") + " মাধ্যমে Trx ID: " + order.advance_trx_id + " সাবমিট করেছেন। অ্যাডমিন কর্তৃক যাচাই সম্পন্ন হলে অর্ডারটি প্রসেসিংয়ে যাবে।"
+                      : "এই অর্ডারের জন্য ৳" + (order?.advance_amount || 130) + " অগ্রিম পরিশোধ করতে হবে।"}
+                  </p>
+                </div>
+              </div>
+              {!order?.advance_trx_id && (
+                <button
+                  type="button"
+                  onClick={() => setShowPayAdvanceModal(true)}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition shrink-0"
+                >
+                  অগ্রিম পরিশোধ করুন (Pay Advance)
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {order?.advance_status === "approved" && Number(order?.advance_amount) > 0 && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3.5 mb-5 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                <FaCheckCircle className="text-sm" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-900">
+                  অগ্রিম পরিশোধিত: {money(order.advance_amount)} ({order.advance_payment_method?.toUpperCase() || "PAID"})
+                </p>
+                {order.advance_trx_id && (
+                  <p className="text-[11px] text-emerald-700 font-mono mt-0.5">Trx ID: {order.advance_trx_id}</p>
+                )}
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] text-gray-500 uppercase font-bold">কাস্টমার প্রদেয় COD</p>
+              <p className="text-sm font-black text-gray-800">{money(order.remaining_cod)}</p>
+            </div>
+          </div>
+        )}
 
         {/* ── Profit Banner ── */}
         {profit > 0 && (
@@ -515,6 +615,126 @@ const OrderDetailsPage = () => {
           </div>
         )}
 
+        {/* ── Pay Advance Modal ── */}
+        {showPayAdvanceModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+              <button
+                type="button"
+                onClick={() => setShowPayAdvanceModal(false)}
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-base font-bold text-gray-900 mb-1">অগ্রিম ডেলিভারি চার্জ পরিশোধ</h3>
+              <p className="text-xs text-gray-500 mb-4">
+                অর্ডার #{order?.order_number || order?.id}-এর ডেলিভারি ফি: <strong>৳{order?.advance_amount || 130}</strong>
+              </p>
+
+              <form onSubmit={handlePayAdvanceSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAdvancePayMethod("wallet")}
+                    className={"p-3 rounded-xl border text-left transition " + (advancePayMethod === "wallet" ? "border-indigo-600 bg-indigo-50/50 text-indigo-900" : "border-gray-200 bg-white text-gray-700")}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold text-xs">
+                      <Wallet className="w-4 h-4 text-indigo-600" />
+                      ওয়ালেট ব্যালেন্স
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-1">উপলব্ধ: ৳{availableWalletBalance}</p>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setAdvancePayMethod("mfs")}
+                    className={"p-3 rounded-xl border text-left transition " + (advancePayMethod === "mfs" ? "border-indigo-600 bg-indigo-50/50 text-indigo-900" : "border-gray-200 bg-white text-gray-700")}
+                  >
+                    <div className="font-bold text-xs">bKash Payment / MFS</div>
+                    <p className="text-[11px] text-gray-500 mt-1">ম্যানুয়াল বিকাশ পেমেন্ট</p>
+                  </button>
+                </div>
+
+                {advancePayMethod === "wallet" ? (
+                  <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                    {availableWalletBalance >= Number(order?.advance_amount || 130) ? (
+                      <p className="text-emerald-700 font-medium">
+                        ✓ আপনার ওয়ালেট থেকে ৳{order?.advance_amount || 130} তাৎক্ষণিকভাবে কেটে নেওয়া হবে এবং অর্ডার নিশ্চিত হবে।
+                      </p>
+                    ) : (
+                      <p className="text-red-600 font-medium">
+                        ⚠️ পর্যাপ্ত ওয়ালেট ব্যালেন্স নেই (উপলব্ধ: ৳{availableWalletBalance})। অনুগ্রহ করে bKash/Nagad নির্বাচন করুন।
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3 p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs">
+                    <div>
+                      <p className="text-gray-700">
+                        আমাদের বিকাশ নম্বরে <strong>৳{order?.advance_amount || 130}</strong> পেমেন্ট করুন: <span className="font-mono font-bold text-indigo-600 text-sm">01941606310</span>
+                      </p>
+                      <p className="text-red-600 font-bold text-[11px] mt-1">
+                        ⚠️ শুধুমাত্র বিকাশ পেমেন্ট (Bkash Payment ✅) করুন। সেন্ড মানি (Send money ❌) করবেন না।
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">পেমেন্ট মেথড</label>
+                        <select
+                          value={mfsMethod}
+                          onChange={(e) => setMfsMethod(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs"
+                        >
+                          <option value="bkash">bKash</option>
+                          <option value="nagad">Nagad</option>
+                          <option value="rocket">Rocket</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">সেন্ডার নম্বর</label>
+                        <input
+                          type="text"
+                          placeholder="01XXXXXXXXX"
+                          value={mfsSenderPhone}
+                          onChange={(e) => setMfsSenderPhone(e.target.value)}
+                          className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Transaction ID (Trx ID)</label>
+                      <input
+                        type="text"
+                        placeholder="যেমন: BKL998811"
+                        value={mfsTrxId}
+                        onChange={(e) => setMfsTrxId(e.target.value)}
+                        className="w-full rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPayAdvanceModal(false)}
+                    className="px-4 py-2 border border-gray-200 text-gray-600 rounded-xl text-xs font-semibold hover:bg-gray-50"
+                  >
+                    বাতিল
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isPayingAdvance || (advancePayMethod === "wallet" && availableWalletBalance < Number(order?.advance_amount || 130))}
+                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold shadow"
+                  >
+                    {isPayingAdvance ? "প্রসেসিং..." : "পেমেন্ট নিশ্চিত করুন"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

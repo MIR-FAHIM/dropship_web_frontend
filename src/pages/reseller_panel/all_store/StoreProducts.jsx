@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Package, Search, Eye } from "lucide-react";
+import { Loader2, Package, Search, Eye, ArrowLeft } from "lucide-react";
 import { useGetVendorProductsQuery } from "../../../redux/features/vendor_api";
 import { imgBaseUrl } from "../../../../config";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
@@ -54,7 +54,19 @@ const StoreProducts = () => {
   return (
     <div className="space-y-5 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <h1 className="text-xl font-bold text-gray-800">Store Products</h1>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate("/app/all-store")}
+            className="p-1.5 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition"
+            title="Back to All Stores"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-gray-800">Store Products ({id ? `s${id}` : ""})</h1>
+            <p className="text-xs text-gray-500 font-mono">Code: s{id}</p>
+          </div>
+        </div>
         <div className="relative w-full sm:w-72">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input

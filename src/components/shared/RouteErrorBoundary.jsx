@@ -15,9 +15,14 @@ const RouteErrorBoundary = () => {
           <AlertTriangle className="w-7 h-7" />
         </div>
         <h2 className="text-xl font-bold text-gray-800 mb-2">কিছু একটা সমস্যা হয়েছে</h2>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-gray-500 mb-4">
           পৃষ্ঠাটি লোড করার সময় একটি সমস্যা দেখা দিয়েছে। অনুগ্রহ করে পুনরায় চেষ্টা করুন।
         </p>
+        {(error?.message || error?.statusText) && (
+          <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs text-left rounded-lg overflow-x-auto font-mono max-h-32">
+            {error?.message || error?.statusText}
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
             onClick={() => window.location.reload()}

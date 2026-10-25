@@ -7,6 +7,8 @@ import {
   ArrowUpFromLine,
   Loader2,
   Wallet,
+  Store,
+  ShieldCheck,
 } from "lucide-react";
 import {
   useGetCreditTransactionsQuery,
@@ -35,6 +37,8 @@ const AdminAccounting = () => {
   const totalDebit = debitData?.data?.total || 0;
   const resellerLiabilityBalance =
     report.reseller_liablity_balance ?? report.reseller_liability_balance ?? 0;
+  const vendorLiabilityBalance = report.vendor_liability_balance ?? 0;
+  const advancesInCustody = report.advances_in_custody ?? 0;
 
   const isLoading = creditLoading || debitLoading || reportLoading;
 
@@ -132,79 +136,112 @@ const AdminAccounting = () => {
       <h1 className="text-xl font-bold text-gray-800">হিসাব-নিকাশ</h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-green-500 flex items-center justify-center text-white">
-              <ArrowDownToLine className="w-4 h-4 sm:w-5 sm:h-5" />
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            প্ল্যাটফর্ম ক্যাশফ্লো ও মার্জিন (Platform Cashflow)
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-green-500 flex items-center justify-center text-white">
+                  <ArrowDownToLine className="w-4 h-4" />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">Credit (আয়)</span>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
+                {formatCurrency(report.total_credit || totalCredit)}
+              </p>
             </div>
-            <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              Credit
-            </span>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-red-500 flex items-center justify-center text-white">
+                  <ArrowUpFromLine className="w-4 h-4" />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">Debit (ব্যয়)</span>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-red-600">
+                {formatCurrency(report.total_debit || totalDebit)}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">Cash in Hand / লাভ</span>
+              </div>
+              <p className={`text-xl sm:text-2xl font-bold ${(report.profit || 0) >= 0 ? "text-blue-600" : "text-red-600"}`}>
+                {formatCurrency(report.profit || 0)}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-purple-500 flex items-center justify-center text-white">
+                  <DollarSign className="w-4 h-4" />
+                </div>
+                <span className="text-xs text-gray-500 font-medium">Profit Margin</span>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-purple-600">
+                {(report.margin_percent || 0).toFixed(1)}%
+              </p>
+            </div>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-green-600">
-            {formatCurrency(report.total_credit || totalCredit)}
-          </p>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-red-500 flex items-center justify-center text-white">
-              <ArrowUpFromLine className="w-4 h-4 sm:w-5 sm:h-5" />
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">
+            দায় ও আমানত (Liabilities & Advances in Custody)
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-amber-50/50 rounded-xl border border-amber-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-amber-500 flex items-center justify-center text-white">
+                  <Wallet className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs text-amber-900 font-bold block">Reseller Liability</span>
+                  <span className="text-[11px] text-gray-500">রিসেলারদের প্রাপ্য ওয়ালেট</span>
+                </div>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-amber-700">
+                {formatCurrency(resellerLiabilityBalance)}
+              </p>
             </div>
-            <span className="text-xs sm:text-sm text-gray-500 font-medium">
-             Debit
-            </span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-red-600">
-            {formatCurrency(report.total_debit || totalDebit)}
-          </p>
-        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white">
-              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="bg-orange-50/50 rounded-xl border border-orange-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center text-white">
+                  <Store className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs text-orange-900 font-bold block">Vendor Liability</span>
+                  <span className="text-[11px] text-gray-500">ভেন্ডরদের প্রাপ্য বকেয়া</span>
+                </div>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-orange-700">
+                {formatCurrency(vendorLiabilityBalance)}
+              </p>
             </div>
-            <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              Cash in hand
-            </span>
-          </div>
-          <p
-            className={`text-xl sm:text-2xl font-bold ${
-              (report.profit || 0) >= 0 ? "text-blue-600" : "text-red-600"
-            }`}
-          >
-            {formatCurrency(report.profit || 0)}
-          </p>
-        </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-red-500 flex items-center justify-center text-white">
-              <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="bg-indigo-50/50 rounded-xl border border-indigo-200 p-4 sm:p-5">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-9 h-9 rounded-lg bg-indigo-500 flex items-center justify-center text-white">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs text-indigo-900 font-bold block">Advances in Custody</span>
+                  <span className="text-[11px] text-gray-500">অর্ডারে গৃহীত অগ্রিম জমা</span>
+                </div>
+              </div>
+              <p className="text-xl sm:text-2xl font-bold text-indigo-700">
+                {formatCurrency(advancesInCustody)}
+              </p>
             </div>
-            <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              Reseller Liability
-            </span>
           </div>
-          <p className="text-xl sm:text-2xl font-bold text-red-600">
-            {formatCurrency(resellerLiabilityBalance)}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-5">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-purple-500 flex items-center justify-center text-white">
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-            <span className="text-xs sm:text-sm text-gray-500 font-medium">
-              Mergin
-            </span>
-          </div>
-          <p className="text-xl sm:text-2xl font-bold text-purple-600">
-            {(report.margin_percent || 0).toFixed(1)}%
-          </p>
         </div>
       </div>
 

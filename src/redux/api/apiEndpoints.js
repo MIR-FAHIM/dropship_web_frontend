@@ -97,6 +97,10 @@ export const API_ENDPOINTS = {
     listByUser: define("GET", "/orders/list/{userId}"),
     allOrders: define("GET", "/orders/all/orders"),
     vendorOrders: define("GET", "/orders/vendor/{vendorId}"),
+    vendorProductHistory: define("GET", "/vendor/orders/history"),
+    vendorProductHistoryOrders: define("GET", "/vendor/orders/history/orders"),
+    adminGroupOrderHistory: define("GET", "/admin/orders/history"),
+    adminGroupOrderHistoryOrders: define("GET", "/admin/orders/history/orders"),
     statusSummary: define("GET", "/orders/status-summary"),
     update: define("PUT", "/orders/update/{id}"),
     completed: define("GET", "/orders/completed"),
@@ -104,6 +108,18 @@ export const API_ENDPOINTS = {
     details: define("GET", "/orders/details/{id}"),
     updateStatus: define("POST", "/orders/update/status/{id}"),
     updateItemStatus: define("PATCH", "/orders/item/status/{id}"),
+    checkAdvanceRequirement: define("GET", "/orders/check-advance-requirement"),
+    payAdvance: define("POST", "/orders/{id}/pay-advance"),
+    approveAdvance: define("POST", "/orders/{id}/approve-advance"),
+    rejectAdvance: define("POST", "/orders/{id}/reject-advance"),
+  },
+
+  wallet: {
+    topup: define("POST", "/wallet/topup"),
+    myHistory: define("GET", "/wallet/topup/my-history"),
+    allTopups: define("GET", "/wallet/topup/all"),
+    approveTopup: define("POST", "/wallet/topup/{id}/approve"),
+    rejectTopup: define("POST", "/wallet/topup/{id}/reject"),
   },
 
   orderSettlements: {
@@ -205,6 +221,7 @@ export const API_ENDPOINTS = {
   },
 
   transactions: {
+    all: define("GET", "/transactions/all"),
     credit: define("GET", "/transactions/credit"),
     debit: define("GET", "/transactions/debit"),
     reseller: define("GET", "/transactions/reseller"),
@@ -244,6 +261,8 @@ export const API_ENDPOINTS = {
     profile: define("GET", "/vendors/profile/{id}"),
     getVendorId: define("GET", "/vendors/vendor/id/{id}"),
     list: define("GET", "/vendors/list"),
+    stores: define("GET", "/vendors/stores"),
+    resellerStores: define("GET", "/reseller/stores"),
     update: define("PUT", "/vendors/update/{id}"),
     isActive: define("PATCH", "/vendors/is-active/{id}"),
     products: define("GET", "/vendors/products/{vendorId}"),

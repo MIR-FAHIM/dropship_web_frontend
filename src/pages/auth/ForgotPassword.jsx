@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, KeyRound, Loader2, Mail, ShieldCheck } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useForgotPasswordMutation, useResetPasswordMutation } from "../../redux/features/auth";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const resendDelayMs = 2 * 60 * 1000;
+const resendDelayMs = 60 * 1000;
 
 const getResponseData = (response) => response?.data?.data || response?.data || response;
 
@@ -89,11 +89,17 @@ const ForgotPassword = () => {
       const nextExpiresAt = data?.expires_at ? Date.parse(data.expires_at) : null;
 
       setOtpInfo(data);
-      setExpiresAtMs(Number.isNaN(nextExpiresAt) ? null : nextExpiresAt);
-      setResendAvailableAtMs(Date.now() + resendDelayMs);
+      setExpiresAtMs(
+        nextExpiresAt && !Number.isNaN(nextExpiresAt)
+          ? nextExpiresAt
+          : Date.now() + (data?.expires_in_seconds ? data.expires_in_seconds * 1000 : 5 * 60 * 1000)
+      );
+      setResendAvailableAtMs(
+        Date.now() + (data?.resend_available_in_seconds ? data.resend_available_in_seconds * 1000 : resendDelayMs)
+      );
       setStep("otp");
-      setMessage(`OTP sent to ${data?.phone || "your registered mobile number"}`);
-      toast.success(response?.message || "Password reset OTP sent successfully");
+      setMessage("If this email is registered, a password reset code has been sent.");
+      toast.success("If this email is registered, a password reset code has been sent.");
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, "Could not send password reset OTP"));
       toast.error(getApiErrorMessage(error, "Could not send password reset OTP"));
@@ -103,7 +109,7 @@ const ForgotPassword = () => {
   const validateResetForm = () => {
     if (!/^\d{6}$/.test(form.otp)) return "OTP must be exactly 6 digits";
     if (!form.password) return "New password is required";
-    if (form.password.length < 6) return "Password must be at least 6 characters";
+    if (form.password.length < 8) return "Password must be at least 8 characters";
     if (form.password_confirmation !== form.password) return "Confirm password must match new password";
     return "";
   };
@@ -165,7 +171,7 @@ const ForgotPassword = () => {
           <h1 className="cursor-pointer text-3xl font-bold text-[#158E72]" onClick={() => navigate("/")}>
             ResellerBrain
           </h1>
-          <p className="mt-2 text-sm text-gray-500">Reset your password with mobile OTP verification</p>
+          <p className="mt-2 text-sm text-gray-500">Reset your password with email OTP verification</p>
         </div>
 
         <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-lg">
@@ -176,15 +182,31 @@ const ForgotPassword = () => {
             <div>
               <h2 className="text-xl font-bold text-gray-800">{step === "email" ? "Forgot Password" : "Verify OTP"}</h2>
               <p className="text-xs text-gray-500">
-                {step === "email" ? "Enter your login email to receive an OTP" : "Set a new password for your account"}
+                {step === "email" ? "Enter your login email to receive a verification OTP code" : "Set a new password for your account"}
               </p>
             </div>
           </div>
 
           {message && (
             <div className="mb-4 flex gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-sm text-emerald-800">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#158E72]" />
               <span>{message}</span>
+            </div>
+          )}
+
+          {step === "otp" && (
+            <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-3.5 text-amber-900 shadow-sm">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                <div className="text-xs sm:text-sm">
+                  <p className="font-semibold text-amber-950">
+                    Check code in your spam mail if you do not find it in your Gmail inbox
+                  </p>
+                  <p className="mt-1 text-xs text-amber-800">
+                    Verification emails can sometimes be filtered by Gmail. Please check your <strong>Spam / Junk</strong> folder if not found in your inbox.
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
@@ -228,13 +250,14 @@ const ForgotPassword = () => {
                 <div className="flex items-start gap-3">
                   <KeyRound className="mt-0.5 h-5 w-5 text-[#158E72]" />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-800">OTP sent to {otpInfo?.phone || "your registered mobile"}</p>
+                    <p className="text-sm font-semibold text-gray-800">OTP code sent to {email.trim()}</p>
                     <p className="mt-1 text-xs text-gray-500">
+                      Check your inbox and Spam / Junk folder.{" "}
                       {otpExpiresIn === null
-                        ? "Use the latest OTP before it expires."
+                        ? "Use the 6-digit code before it expires."
                         : otpExpiresIn > 0
-                          ? `OTP expires in ${formatTime(otpExpiresIn)}`
-                          : "OTP expired. Please resend a new OTP."}
+                          ? `Expires in ${formatTime(otpExpiresIn)}.`
+                          : "Code expired. Please request a new OTP."}
                     </p>
                   </div>
                 </div>
@@ -259,7 +282,7 @@ const ForgotPassword = () => {
                     type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                    placeholder="Minimum 6 characters"
+                    placeholder="Minimum 8 characters"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#158E72]"
                   />
                   <button

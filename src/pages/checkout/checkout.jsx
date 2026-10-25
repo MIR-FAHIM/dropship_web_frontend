@@ -36,7 +36,8 @@ import {
 	LocationOn as LocationOnIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useCheckoutOrderMutation } from "../../redux/features/order";
+import { Chip } from "@mui/material";
+import { useCheckoutOrderMutation, useCheckAdvanceRequirementQuery } from "../../redux/features/order";
 import {
 	useGetCartQuery,
 	useUpdateCartMutation,
@@ -74,6 +75,30 @@ const CheckoutPage = () => {
 	const [msg, setMsg] = useState({ text: "", severity: "info" });
 
 	const notify = (text, severity = "info") => setMsg({ text, severity });
+
+	/* ── advance eligibility & states ── */
+	const { data: advanceReqData } = useCheckAdvanceRequirementQuery(userId, { skip: !userId });
+	const eligibility = advanceReqData?.data || {};
+	const requiresAdvance = Boolean(eligibility.requires_advance);
+	const completedOrdersCount = eligibility.completed_orders_count ?? 0;
+	const defaultAdvanceAmount = Number(eligibility.default_advance_amount ?? 130);
+	const availableWalletBalance = Number(eligibility.available_wallet_balance ?? 0);
+	const canPayFromWallet = availableWalletBalance >= defaultAdvanceAmount;
+
+	const [advanceOption, setAdvanceOption] = useState("wallet");
+	const [mfsMethod, setMfsMethod] = useState("bkash");
+	const [mfsTrxId, setMfsTrxId] = useState("");
+	const [mfsSenderPhone, setMfsSenderPhone] = useState("");
+
+	useEffect(() => {
+		if (requiresAdvance) {
+			if (canPayFromWallet) {
+				setAdvanceOption("wallet");
+			} else {
+				setAdvanceOption("mfs");
+			}
+		}
+	}, [requiresAdvance, canPayFromWallet]);
 
 	/* ── cart ── */
 	const {
@@ -175,6 +200,26 @@ const CheckoutPage = () => {
 				payment_method: paymentMethod,
 				note: note || "",
 			};
+
+			if (requiresAdvance) {
+				if (advanceOption === "wallet") {
+					if (!canPayFromWallet) {
+						return notify(`ওয়ালেটে পর্যাপ্ত ব্যালেন্স নেই। আপনার ব্যালেন্স ৳${availableWalletBalance}, প্রয়োজন ৳${defaultAdvanceAmount}`, "warning");
+					}
+					payload.pay_from_wallet = true;
+					payload.advance_amount = defaultAdvanceAmount;
+				} else if (advanceOption === "mfs") {
+					if (!mfsTrxId.trim()) {
+						return notify("অনুগ্রহ করে bKash/Nagad ট্রানজ্যাকশন আইডি (Trx ID) প্রদান করুন।", "warning");
+					}
+					payload.advance_payment_method = mfsMethod;
+					payload.advance_trx_id = mfsTrxId.trim();
+					payload.advance_sender_phone = mfsSenderPhone.trim();
+					payload.advance_amount = defaultAdvanceAmount;
+				} else if (advanceOption === "later") {
+					payload.advance_amount = defaultAdvanceAmount;
+				}
+			}
 
 			const res = await checkoutOrder(payload);
 			const ok = res?.data?.status === "success" || res?.status === "success" || res?.status === 200;
@@ -405,6 +450,104 @@ const CheckoutPage = () => {
 								</Typography>
 							</Box>
 
+							{/* Advance Payment Section (if required) */}
+							{requiresAdvance && (
+								<Box sx={{ mb: 2.5, p: 2, borderRadius: 2, border: "1px solid #fed7aa", background: "#fffbeb" }}>
+									<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#9a3412", mb: 0.5 }}>
+										⚠️ অগ্রিম ডেলিভারি চার্জ আবশ্যক (৳{defaultAdvanceAmount})
+									</Typography>
+									<Typography sx={{ fontSize: 11.5, color: "#78350f", mb: 1.5, lineHeight: 1.4 }}>
+										নতুন ড্রপশিপার হিসেবে প্রথম ৫টি অর্ডারের ডেলিভারি ফি অগ্রিম প্রদান আবশ্যক। আপনার সম্পন্ন অর্ডার: <strong>{completedOrdersCount}/5</strong>
+									</Typography>
+
+									<RadioGroup value={advanceOption} onChange={(e) => setAdvanceOption(e.target.value)}>
+										{/* Pay via Wallet */}
+										<Paper elevation={0} sx={{
+											border: "1px solid", borderColor: advanceOption === "wallet" ? "#6366f1" : "#e5e7eb",
+											borderRadius: 2, px: 1.5, py: 1, mb: 1, background: advanceOption === "wallet" ? "#f5f3ff" : "#fff"
+										}}>
+											<FormControlLabel
+												value="wallet"
+												control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
+												label={
+													<Stack direction="row" alignItems="center" spacing={1}>
+														<Typography sx={{ fontSize: 13, fontWeight: 700 }}>ওয়ালেট ব্যালেন্স থেকে দিন</Typography>
+														<Chip size="small" label={`ব্যালেন্স: ৳${availableWalletBalance}`} color={canPayFromWallet ? "success" : "default"} sx={{ height: 20, fontSize: 11, fontWeight: 700 }} />
+													</Stack>
+												}
+											/>
+											{advanceOption === "wallet" && (
+												<Typography sx={{ fontSize: 11, color: canPayFromWallet ? "#16a34a" : "#dc2626", ml: 3.5, mt: 0.2 }}>
+													{canPayFromWallet ? "✓ অর্ডার সম্পন্ন করার সাথে সাথে স্বয়ংক্রিয়ভাবে ভেরিফাই হবে।" : "পর্যাপ্ত ওয়ালেট ব্যালেন্স নেই। bKash/Nagad নির্বাচন করুন অথবা পরে পে করুন।"}
+												</Typography>
+											)}
+										</Paper>
+
+										{/* Pay via MFS */}
+										<Paper elevation={0} sx={{
+											border: "1px solid", borderColor: advanceOption === "mfs" ? "#6366f1" : "#e5e7eb",
+											borderRadius: 2, px: 1.5, py: 1, mb: 1, background: advanceOption === "mfs" ? "#f5f3ff" : "#fff"
+										}}>
+											<FormControlLabel
+												value="mfs"
+												control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
+												label={<Typography sx={{ fontSize: 13, fontWeight: 700 }}>bKash Payment / MFS (ম্যানুয়াল ভেরিফিকেশন)</Typography>}
+											/>
+											{advanceOption === "mfs" && (
+												<Box sx={{ ml: 3.5, mt: 1, pr: 1, pb: 0.5 }}>
+													<Typography sx={{ fontSize: 11, color: "#4b5563", mb: 0.5 }}>
+														আমাদের বিকাশ নম্বরে <strong>৳{defaultAdvanceAmount}</strong> পেমেন্ট করুন: <span style={{ color: "#4f46e5", fontWeight: 700, fontFamily: "monospace", fontSize: 13 }}>01941606310</span>
+													</Typography>
+													<Typography sx={{ fontSize: 11, color: "#dc2626", fontWeight: 700, mb: 1 }}>
+														⚠️ শুধুমাত্র বিকাশ পেমেন্ট (Bkash Payment ✅) করুন। সেন্ড মানি (Send money ❌) করবেন না।
+													</Typography>
+													<Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mb: 1 }}>
+														<Select size="small" value={mfsMethod} onChange={(e) => setMfsMethod(e.target.value)} sx={{ minWidth: 100, fontSize: 12 }}>
+															<MenuItem value="bkash">bKash</MenuItem>
+															<MenuItem value="nagad">Nagad</MenuItem>
+															<MenuItem value="rocket">Rocket</MenuItem>
+														</Select>
+														<TextField
+															size="small"
+															fullWidth
+															placeholder="Sender Phone (01XXXXXXXXX)"
+															value={mfsSenderPhone}
+															onChange={(e) => setMfsSenderPhone(e.target.value)}
+															inputProps={{ style: { fontSize: 12 } }}
+														/>
+													</Stack>
+													<TextField
+														size="small"
+														fullWidth
+														placeholder="Transaction ID (Trx ID)"
+														value={mfsTrxId}
+														onChange={(e) => setMfsTrxId(e.target.value)}
+														inputProps={{ style: { fontSize: 12 } }}
+													/>
+												</Box>
+											)}
+										</Paper>
+
+										{/* Pay Later */}
+										<Paper elevation={0} sx={{
+											border: "1px solid", borderColor: advanceOption === "later" ? "#6366f1" : "#e5e7eb",
+											borderRadius: 2, px: 1.5, py: 1, background: advanceOption === "later" ? "#f5f3ff" : "#fff"
+										}}>
+											<FormControlLabel
+												value="later"
+												control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
+												label={<Typography sx={{ fontSize: 13, fontWeight: 700 }}>পরে পরিশোধ করুন (Pay Later)</Typography>}
+											/>
+											{advanceOption === "later" && (
+												<Typography sx={{ fontSize: 11, color: "#6b7280", ml: 3.5, mt: 0.2 }}>
+													অর্ডারটি জমা হবে এবং আপনি Order Details পেজ থেকে ২৪ ঘণ্টার মধ্যে অগ্রিম পরিশোধ করতে পারবেন।
+												</Typography>
+											)}
+										</Paper>
+									</RadioGroup>
+								</Box>
+							)}
+
 							{/* Place Order */}
 							<Button
 								variant="contained"
@@ -598,6 +741,18 @@ const CheckoutPage = () => {
 										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#1f2937" }}>Grand Total</Typography>
 										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#4f46e5" }}>{money(grandTotal)}</Typography>
 									</Stack>
+									{requiresAdvance && (
+										<>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#9a3412" }}>অগ্রিম প্রদেয় (Advance Due)</Typography>
+												<Typography sx={{ fontSize: 13, fontWeight: 800, color: "#9a3412" }}>-{money(defaultAdvanceAmount)}</Typography>
+											</Stack>
+											<Stack direction="row" justifyContent="space-between" alignItems="center">
+												<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#166534" }}>কাস্টমার থেকে বকেয়া (Remaining COD)</Typography>
+												<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#166534" }}>{money(Math.max(0, grandTotal - defaultAdvanceAmount))}</Typography>
+											</Stack>
+										</>
+									)}
 								</Stack>
 
 								{/* Coupon */}

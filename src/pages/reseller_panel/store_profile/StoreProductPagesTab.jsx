@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Edit3, ExternalLink, Loader2, Palette, Store, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
@@ -101,12 +101,32 @@ const StoreProductPagesTab = ({ resellerId }) => {
         custom_title: form.custom_title,
         custom_description: form.custom_description,
         delivery_charge: Number(form.delivery_charge || 0),
-        published_status: form.published_status || editingPage.published_status || "draft",
+        published_status: form.published_status || editingPage.published_status || "published",
       }).unwrap();
       toast.success("Product page updated");
       setEditingPage(null);
     } catch (err) {
       toast.error(err?.data?.message || "Product page update failed");
+    }
+  };
+
+  const handleToggleStatus = async (page) => {
+    const nextStatus = page.published_status === "published" ? "draft" : "published";
+    try {
+      await updatePage({
+        id: page.id,
+        reseller_id: Number(resellerId),
+        product_id: page.product_id || page.product?.id,
+        selling_price: Number(page.selling_price),
+        discount_price: page.discount_price ? Number(page.discount_price) : null,
+        custom_title: page.custom_title,
+        custom_description: page.custom_description,
+        delivery_charge: Number(page.delivery_charge || 0),
+        published_status: nextStatus,
+      }).unwrap();
+      toast.success(nextStatus === "published" ? "Product page published (Live)" : "Product page saved as Draft");
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update page status");
     }
   };
 
@@ -142,13 +162,14 @@ const StoreProductPagesTab = ({ resellerId }) => {
               <th className="px-4 py-3">Price</th>
               <th className="px-4 py-3">Total discounted Price</th>
               <th className="px-4 py-3">Theme</th>
+              <th className="px-4 py-3 text-center">Status</th>
               <th className="px-4 py-3 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {pages.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                <td colSpan={9} className="px-4 py-12 text-center text-gray-500">
                   No product pages created yet.
                 </td>
               </tr>
@@ -176,6 +197,26 @@ const StoreProductPagesTab = ({ resellerId }) => {
                       <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
                         {theme?.label || "Default"}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleStatus(page)}
+                        disabled={updating}
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold transition-all shadow-sm ${
+                          page.published_status === "published"
+                            ? "bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border border-emerald-300"
+                            : "bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300"
+                        }`}
+                        title={
+                          page.published_status === "published"
+                            ? "Page is Live. Click to switch to Draft."
+                            : "Page is in Draft. Click to Publish Live."
+                        }
+                      >
+                        <span className={`h-2 w-2 rounded-full ${page.published_status === "published" ? "bg-emerald-600 animate-pulse" : "bg-amber-600"}`} />
+                        {page.published_status === "published" ? "Published" : "Draft"}
+                      </button>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">

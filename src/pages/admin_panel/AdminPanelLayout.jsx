@@ -30,6 +30,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   Megaphone,
+  PlusCircle,
+  ArrowLeftRight,
+  CreditCard,
+  Receipt,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -77,14 +81,21 @@ const adminMenuLinks = [
     icon: <ImageIcon className="w-5 h-5" />,
   },
   {
-    path: "/admin-panel/orders",
-    label: "অর্ডার",
+    label: "Orders",
     icon: <ClipboardList className="w-5 h-5" />,
-  },
-  {
-    path: "/admin-panel/settlement-orders",
-    label: "Settlement Orders",
-    icon: <Wallet className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/orders",
+        label: "Order History",
+        icon: <ClipboardList className="w-4 h-4" />,
+        end: true,
+      },
+      {
+        path: "/admin-panel/orders/group-history",
+        label: "Group-Wise Order History",
+        icon: <Package className="w-4 h-4" />,
+      },
+    ],
   },
   {
     path: "/admin-panel/vendors",
@@ -112,14 +123,35 @@ const adminMenuLinks = [
     icon: <Users className="w-5 h-5" />,
   },
   {
-    path: "/admin-panel/all-withdraw-requests",
-    label: "All Withdraw Requests",
-    icon: <Users className="w-5 h-5" />,
-  },
-  {
-    path: "/admin-panel/accounting",
-    label: "হিসাব-নিকাশ",
+    label: "অ্যাকাউন্টস (Accounts)",
     icon: <Wallet className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/accounting",
+        label: "হিসাব-নিকাশ",
+        icon: <Wallet className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/transactions",
+        label: "সকল লেনদেন",
+        icon: <ArrowLeftRight className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/all-withdraw-requests",
+        label: "উইথড্র রিকোয়েস্ট",
+        icon: <CreditCard className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/wallet-topups",
+        label: "ওয়ালেট রিচার্জ",
+        icon: <PlusCircle className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/settlement-orders",
+        label: "সেটেলমেন্ট অর্ডার",
+        icon: <Receipt className="w-4 h-4" />,
+      },
+    ],
   },
    {
     label: "Reports and Analytics",
@@ -239,7 +271,11 @@ const AdminPanelLayout = () => {
   };
 
   const isChildActive = (children) => {
-    return children?.some((child) => location.pathname === child.path);
+    return children?.some(
+      (child) =>
+        location.pathname === child.path ||
+        (child.path !== "/admin-panel" && location.pathname.startsWith(`${child.path}/`))
+    );
   };
 
   const SidebarContent = ({ isMobile = false }) => (
@@ -298,14 +334,21 @@ const AdminPanelLayout = () => {
                       <NavLink
                         key={child.path}
                         to={child.path}
+                        end={child.end}
                         onClick={() => isMobile && setMobileOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                            isActive
+                        className={({ isActive }) => {
+                          const isOrderDetailsMatch =
+                            child.path === "/admin-panel/orders" &&
+                            location.pathname.startsWith("/admin-panel/orders/") &&
+                            !location.pathname.startsWith("/admin-panel/orders/group-history");
+                          const isChildHighlight = isActive || isOrderDetailsMatch;
+
+                          return `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            isChildHighlight
                               ? "bg-red-600 text-white"
                               : "text-gray-400 hover:bg-gray-700 hover:text-white"
-                          }`
-                        }
+                          }`;
+                        }}
                       >
                         {child.icon}
                         <span>{child.label}</span>

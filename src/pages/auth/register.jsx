@@ -94,7 +94,7 @@ const RegisterPage = () => {
       });
     }
 
-    if (duplicateAccountAlert && name === "email") {
+    if (duplicateAccountAlert && (name === "email" || name === "phone")) {
       setDuplicateAccountAlert(null);
     }
 
@@ -155,8 +155,10 @@ const RegisterPage = () => {
       errors.email = "সঠিক ইমেইল ঠিকানা প্রদান করুন (Enter a valid email address)";
     }
 
-    // Phone: Recommended; if provided, validate Bangladesh phone format
-    if (trimmedPhone) {
+    // Phone: Required, validate Bangladesh phone format
+    if (!trimmedPhone) {
+      errors.phone = "ফোন নম্বর আবশ্যক (Phone number is required)";
+    } else {
       const phoneRegex = /^(?:\+?8801|01)[3-9]\d{8}$/;
       const cleaned = trimmedPhone.replace(/[\s-]/g, "");
       if (!phoneRegex.test(cleaned)) {
@@ -204,14 +206,11 @@ const RegisterPage = () => {
     const payload = {
       name: formData.name.trim(),
       email: formData.email.trim(),
+      phone: formData.phone.trim().replace(/[\s-]/g, ""),
     };
 
     if (formData.business_name.trim()) {
       payload.business_name = formData.business_name.trim();
-    }
-
-    if (formData.phone.trim()) {
-      payload.phone = formData.phone.trim().replace(/[\s-]/g, "");
     }
 
     // If password provided, send it; otherwise omit so backend auto-generates
@@ -536,10 +535,7 @@ const RegisterPage = () => {
               {/* Phone Number */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  ফোন নম্বর (Phone Number)
-                  <span className="text-emerald-700 font-semibold ml-1 text-[11px]">
-                    (সুপারিশকৃত)
-                  </span>
+                  ফোন নম্বর (Phone Number) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="tel"
@@ -547,6 +543,7 @@ const RegisterPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="017XXXXXXXX"
+                  required
                   className={`w-full px-3.5 py-2.5 rounded-xl border text-sm transition focus:outline-none focus:ring-2 ${
                     fieldErrors.phone
                       ? "border-red-400 focus:ring-red-300 bg-red-50/20"
@@ -559,7 +556,7 @@ const RegisterPage = () => {
                   </p>
                 ) : (
                   <p className="text-[11px] text-gray-400 mt-1">
-                    অ্যাকাউন্ট অ্যাক্টিভেশন ও SMS বিজ্ঞপ্তির জন্য
+                    অ্যাকাউন্ট অ্যাক্টিভেশন ও বিজ্ঞপ্তির জন্য আবশ্যক
                   </p>
                 )}
               </div>

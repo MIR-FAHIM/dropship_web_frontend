@@ -415,6 +415,11 @@ const AdminSettlementOrderDetails = () => {
                                   Settled TRX: {settlement.settled_trx_id}
                                 </p>
                               )}
+                              {settlement.admin_note && (
+                                <p className="text-[11px] text-gray-500 italic mt-1 max-w-xs">
+                                  {settlement.admin_note}
+                                </p>
+                              )}
                             </td>
                             <td className="py-3 px-4">
                               <p className="font-medium text-gray-700">
@@ -424,10 +429,15 @@ const AdminSettlementOrderDetails = () => {
                                 {settlement.user_type || "-"}
                               </p>
                             </td>
-                            <td className="py-3 px-4 text-right font-bold text-gray-800">
-                              {formatMoney(
-                                settlement.settleable_amount,
-                                settlement.currency
+                            <td className="py-3 px-4 text-right">
+                              <span className="font-bold text-gray-900 block">
+                                {formatMoney(settlement.settleable_amount, settlement.currency)}
+                              </span>
+                              {Number(settlement.deducted_by_courier || 0) > 0 && (
+                                <div className="text-[10px] text-gray-500 space-y-0.5 mt-0.5">
+                                  <span className="block text-gray-600">Gross: {formatMoney(settlement.gross_entitlement)}</span>
+                                  <span className="block text-amber-600 font-medium">By Courier: -{formatMoney(settlement.deducted_by_courier)}</span>
+                                </div>
                               )}
                             </td>
                             <td className="py-3 px-4 text-center">
@@ -494,6 +504,11 @@ const AdminSettlementOrderDetails = () => {
                                 settlement.currency
                               )}
                             </p>
+                            {Number(settlement.deducted_by_courier || 0) > 0 && (
+                              <p className="text-[10px] text-amber-600">
+                                Courier deducted: {formatMoney(settlement.deducted_by_courier)}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -528,6 +543,11 @@ const AdminSettlementOrderDetails = () => {
                   label="Reseller Profit"
                   value={formatMoney(order.reseller_profit)}
                 />
+                <DetailItem label="Advance Taken" value={formatMoney(order.advance_amount)} />
+                <DetailItem label="Remaining COD" value={formatMoney(order.remaining_cod)} />
+                <DetailItem label="Courier Cost" value={formatMoney(order.actual_courier_cost)} />
+                <DetailItem label="Net COD Payout" value={formatMoney(order.courier_net_payout)} />
+                <DetailItem label="Courier Account" value={order.courier_account_owner ? (order.courier_account_owner + ' Owned').toUpperCase() : "-"} />
                 <DetailItem label="Created" value={formatDateTime(order.created_at)} />
               </div>
             </div>

@@ -254,6 +254,13 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
   const [zoneId, setZoneId] = useState("");
   const [areaId, setAreaId] = useState("");
   const [autoDetected, setAutoDetected] = useState(false);
+  const initialCollectable =
+    order.remaining_cod !== null &&
+    order.remaining_cod !== undefined &&
+    order.remaining_cod !== ""
+      ? Math.max(0, Number(order.remaining_cod))
+      : Math.max(0, Number(order.total || 0));
+
   const [form, setForm] = useState({
     delivery_type: 1,
     product_type: 1,
@@ -265,7 +272,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     product_description: orderProductDescription,
     item_weight: 500,
     item_quantity: order.items?.reduce((s, i) => s + Number(i.qty || 1), 0) || 1,
-    collectable_amount: Number(order.total || 0),
+    collectable_amount: initialCollectable,
     is_closed_box: false,
     is_exchange: false,
     own_vendor_id: "",

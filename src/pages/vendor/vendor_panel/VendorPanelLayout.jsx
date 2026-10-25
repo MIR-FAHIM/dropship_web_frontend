@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import PropTypes from "prop-types";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { getOrdersSection, HISTORY_PATH } from "../../../utils/vendorOrderHistory.utils";
 import {
   LayoutDashboard,
   Package,
@@ -7,6 +9,8 @@ import {
   Wallet,
   Settings,
   ChevronLeft,
+  ChevronDown,
+  History,
   Menu,
   LogOut,
   Store,
@@ -28,9 +32,12 @@ const vendorMenuLinks = [
     icon: <Package className="w-5 h-5" />,
   },
   {
-    path: "/vendor-panel/orders",
-    label: "অর্ডার",
+    label: "Orders",
     icon: <ClipboardList className="w-5 h-5" />,
+    children: [
+      { id: "history", path: "/vendor-panel/orders", label: "Order History", icon: <History className="w-4 h-4 shrink-0" /> },
+      { id: "product-history", path: HISTORY_PATH, label: "Product-Wise Order History", icon: <Package className="w-4 h-4 shrink-0" /> },
+    ],
   },
   {
     path: "/vendor-panel/accounting",
@@ -63,6 +70,10 @@ const VendorPanelLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const ordersSection = getOrdersSection(pathname);
+  const [ordersMenu, setOrdersMenu] = useState({ path: pathname, open: Boolean(ordersSection) });
+  const ordersExpanded = ordersMenu.path === pathname ? ordersMenu.open : Boolean(ordersSection);
 
   const SidebarContent = ({ isMobile = false }) => (
     <div className="flex flex-col h-full">
@@ -90,7 +101,37 @@ const VendorPanelLayout = () => {
 
       {/* Menu Links */}
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {vendorMenuLinks.map((item) => (
+        {vendorMenuLinks.map((item) => item.children ? (
+          <div key={item.label}>
+            <button
+              type="button"
+              title="Orders"
+              aria-label="Orders"
+              aria-expanded={ordersExpanded && (sidebarOpen || isMobile)}
+              aria-controls={isMobile ? "mobile-orders-menu" : "desktop-orders-menu"}
+              onClick={() => {
+                if (!sidebarOpen && !isMobile) {
+                  setSidebarOpen(true);
+                  setOrdersMenu({ path: pathname, open: true });
+                } else setOrdersMenu({ path: pathname, open: !ordersExpanded });
+              }}
+              className={`flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${ordersSection ? "bg-blue-600/20 text-blue-300" : "text-gray-300 hover:bg-gray-700 hover:text-white"} ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
+            >
+              {item.icon}
+              {(sidebarOpen || isMobile) && <><span className="flex-1 text-left">{item.label}</span><ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${ordersExpanded ? "rotate-180" : ""}`} /></>}
+            </button>
+            {(sidebarOpen || isMobile) && ordersExpanded && (
+              <div id={isMobile ? "mobile-orders-menu" : "desktop-orders-menu"} className="ml-4 mt-1 space-y-1 border-l border-gray-700 pl-3">
+                {item.children.map((child) => (
+                  <NavLink key={child.path} to={child.path} end onClick={() => isMobile && setMobileOpen(false)}
+                    className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${ordersSection === child.id ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-gray-700 hover:text-white"}`}>
+                    {child.icon}<span className="min-w-0 break-words">{child.label}</span>
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
           <NavLink
             key={item.path}
             to={item.path}
@@ -125,6 +166,8 @@ const VendorPanelLayout = () => {
     </div>
   );
 
+  SidebarContent.propTypes = { isMobile: PropTypes.bool };
+
   return (
     <div className="flex h-screen bg-gray-100 overflow-hidden">
       {/* Desktop Sidebar */}
@@ -150,7 +193,7 @@ const VendorPanelLayout = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
         {/* Top Navbar */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shrink-0">
           <div className="flex items-center gap-3">

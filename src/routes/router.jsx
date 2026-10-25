@@ -26,6 +26,8 @@ import VendorProductCreate from "../pages/vendor/vendor_panel/VendorProductCreat
 import VendorProductDetail from "../pages/vendor/vendor_panel/VendorProductDetail";
 import VendorBankAccount from "../pages/vendor/vendor_panel/bank_account/VendorBankAccount";
 import VendorOrders from "../pages/vendor/vendor_panel/VendorOrders";
+import VendorProductOrderHistory from "../pages/vendor/vendor_panel/VendorProductOrderHistory";
+import VendorHistoryRoute from "./VendorHistoryRoute";
 import VendorOrderDetails from "../pages/vendor/vendor_panel/VendorOrderDetails";
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
@@ -42,6 +44,7 @@ import AdminKycDocuments from "../pages/admin_panel/kyc/AdminKycDocuments";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
+import AdminAllTransactions from "../pages/admin_panel/accounting/AdminAllTransactions";
 import AdminSettings from "../pages/admin_panel/settings/AdminSettings";
 import AdminLogin from "../pages/admin_panel/auth/AdminLogin";
 import AdminCategories from "../pages/admin_panel/products/AdminCategories";
@@ -53,12 +56,14 @@ import AdminProductCreate from "../pages/admin_panel/products/AdminProductCreate
 import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail";
 import AdminPriceUpdateLogs from "../pages/admin_panel/products/AdminPriceUpdateLogs";
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
+import AdminGroupOrderHistory from "../pages/admin_panel/orders/AdminGroupOrderHistory";
 import AdminSettlementOrders from "../pages/admin_panel/settlement_orders/AdminSettlementOrders";
 import AdminSettlementOrderDetails from "../pages/admin_panel/settlement_orders/AdminSettlementOrderDetails";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
 import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
+import AllWalletTopupReq from "../pages/admin_panel/accounting/AllWalletTopupReq";
 import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanies";
 import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
@@ -147,6 +152,7 @@ export const router = createBrowserRouter([
       { path: "products/create", element: <VendorProductCreate /> },
       { path: "products/:id", element: <VendorProductDetail /> },
       { path: "orders", element: <VendorOrders /> },
+      { path: "orders/product-history", element: <VendorHistoryRoute><VendorProductOrderHistory /></VendorHistoryRoute> },
       { path: "orders/:id", element: <VendorOrderDetails /> },
       { path: "accounting", element: <VendorAccounting /> },
       { path: "bank-account", element: <VendorBankAccount /> },
@@ -178,6 +184,7 @@ export const router = createBrowserRouter([
       { path: "media", element: <AdminMedia /> },
       { path: "product/clicks", element: <ProductClicksReport /> },
       { path: "orders", element: <AdminOrders /> },
+      { path: "orders/group-history", element: <AdminGroupOrderHistory /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "settlement-orders", element: <AdminSettlementOrders /> },
       { path: "settlement-orders/:orderId", element: <AdminSettlementOrderDetails /> },
@@ -188,11 +195,13 @@ export const router = createBrowserRouter([
       { path: "dropshippers", element: <AdminDropshippers /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
+      { path: "transactions", element: <AdminAllTransactions /> },
       { path: "tasks", element: <AdminTasks /> },
       { path: "task-share-detail/:id", element: <TaskShareDetail /> },
       { path: "settings", element: <AdminSettings /> },
       { path: "my-business-info", element: <MyBusinessInfo /> },
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
+      { path: "wallet-topups", element: <AllWalletTopupReq /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
       { path: "notices", element: <AdminNotices /> },
       { path: "error-logs", element: <ErrorLog /> },

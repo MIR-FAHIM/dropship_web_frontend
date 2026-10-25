@@ -243,7 +243,7 @@ const ProductCard = ({
 	);
 
 	const handleModalSubmit = useCallback(
-		async (rPrice, qty) => {
+		async (rPrice, qty, selectedAttributeId) => {
 			if (!product?.id) return;
 			const base = getAdminBasePrice(product);
 			const resolvedPrice = rPrice ?? base;
@@ -260,6 +260,7 @@ const ProductCard = ({
 					product_id: product.id,
 					qty: qty ?? 1,
 					reseller_price: resolvedPrice,
+					...(selectedAttributeId != null && { attribute_id: selectedAttributeId }),
 				});
 				if (res?.data?.status === 200 || res?.data?.status === "success") {
 					const current = safeArray(readJson("cartItems", []));
@@ -356,6 +357,7 @@ const ProductCard = ({
 			isSubmitting={isSubmitting}
 			outOfStock={outOfStock}
 			onSubmit={handleModalSubmit}
+			userId={userId}
 		/>
 
 		<div

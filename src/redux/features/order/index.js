@@ -97,6 +97,41 @@ const orderApi = baseApi.injectEndpoints({
     getUserBalance: builder.query({
       query: (id) => `/users/getBalance/${id}`,
     }),
+
+    checkAdvanceRequirement: builder.query({
+      query: (userId) => ({
+        url: API_ENDPOINTS.orders.checkAdvanceRequirement.path,
+        params: userId ? { user_id: userId } : undefined,
+      }),
+      providesTags: ["OrderAdvance"],
+    }),
+
+    payAdvance: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.payAdvance.path, { id }),
+        method: API_ENDPOINTS.orders.payAdvance.method,
+        body,
+      }),
+      invalidatesTags: ["OrderAdvance", "OrderDetails"],
+    }),
+
+    approveAdvance: builder.mutation({
+      query: ({ id, admin_note }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.approveAdvance.path, { id }),
+        method: API_ENDPOINTS.orders.approveAdvance.method,
+        body: { admin_note },
+      }),
+      invalidatesTags: ["OrderAdvance", "OrderDetails"],
+    }),
+
+    rejectAdvance: builder.mutation({
+      query: ({ id, reason }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.rejectAdvance.path, { id }),
+        method: API_ENDPOINTS.orders.rejectAdvance.method,
+        body: { reason },
+      }),
+      invalidatesTags: ["OrderAdvance", "OrderDetails"],
+    }),
   }),
 });
 
@@ -114,7 +149,10 @@ export const {
   useUpdateOrderItemStatusMutation,
   useUpdateOrderInfoMutation,
   useVendorOrdersQuery,
-
+  useCheckAdvanceRequirementQuery,
+  usePayAdvanceMutation,
+  useApproveAdvanceMutation,
+  useRejectAdvanceMutation,
 } = orderApi;
 
 export default orderApi;

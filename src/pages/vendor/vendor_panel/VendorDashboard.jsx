@@ -1,7 +1,7 @@
 import React from "react";
 import {
   ShoppingBag, Package, TrendingUp, DollarSign, ClipboardList, Clock,
-  CheckCircle2, XCircle, AlertTriangle, BarChart2, Loader2, Star,
+  CheckCircle2, XCircle, AlertTriangle, BarChart2, Loader2, Star, Wallet, Truck,
 } from "lucide-react";
 import { useGetVendorDashboardReportQuery , useGetVendorIdQuery} from "../../../redux/features/vendor_api";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
@@ -9,34 +9,54 @@ import { useNavigate } from "react-router-dom";
 
 const VendorDashboard = () => {
   const userId = getFromLocalstorage("userId");
-    const { data: vendorIdData } = useGetVendorIdQuery(userId, { skip: !userId });
-    const vendorId = vendorIdData?.data?.vendor_id;
+  const { data: vendorIdData, isLoading: isVendorIdLoading, isError: isVendorIdError } = useGetVendorIdQuery(userId, { skip: !userId });
+  const vendorId = vendorIdData?.data?.vendor_id;
   const navigate = useNavigate();
 
-  const { data: reportData, isLoading } = useGetVendorDashboardReportQuery(vendorId, {
+  const { data: reportData, isLoading: isReportLoading, isError: isReportError } = useGetVendorDashboardReportQuery(vendorId, {
     skip: !vendorId,
   });
+
+  const isLoading = isVendorIdLoading || isReportLoading || (!reportData?.data && !!vendorId);
 
   const report = reportData?.data;
   const vendor = report?.vendor;
   const products = report?.products;
   const orders = report?.orders;
   const sales = report?.sales;
+  const financials = report?.financials || {};
   const topProducts = report?.top_selling_products || [];
 
-  if (isLoading) {
+  if (isLoading || !report) {
+    if (isVendorIdError || isReportError) {
+      return (
+        <div className="text-center py-32 space-y-3">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto" />
+          <p className="text-base font-semibold text-gray-800">ভেন্ডর তথ্য লোড করা যায়নি</p>
+          <p className="text-sm text-gray-500">অনুগ্রহ করে ভেন্ডর প্রোফাইল বা অনুমোদনের স্থিতি পরীক্ষা করুন।</p>
+        </div>
+      );
+    }
     return (
       <div className="flex justify-center items-center py-32">
         <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
       </div>
     );
   }
-
-  // Build order status map for easy lookup
   const orderStatusMap = {};
   (orders?.by_status || []).forEach((s) => {
-    orderStatusMap[s.delivery_status] = s.count;
+    const key = (s.delivery_status || s.status || "").toLowerCase().trim();
+    orderStatusMap[key] = Number(s.count ?? s.total ?? 0);
   });
+
+  const pendingCount = orderStatusMap["pending"] || 0;
+  const processingCount =
+    (orderStatusMap["processing"] || 0) +
+    (orderStatusMap["vendor is ready"] || 0) +
+    (orderStatusMap["confirmed"] || 0) +
+    (orderStatusMap["shipped"] || 0);
+  const deliveredCount = (orderStatusMap["delivered"] || 0) + (orderStatusMap["completed"] || 0);
+  const cancelledCount = (orderStatusMap["cancelled"] || 0) + (orderStatusMap["returned"] || 0);
 
   return (
     <div className="space-y-6">
@@ -52,14 +72,85 @@ const VendorDashboard = () => {
         </p>
       </div>
 
+      {/* Financials & Settlements */}
+      <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+          <div>
+            <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-indigo-600" />
+              আর্থিক নিষ্পত্তি ও বকেয়া হিসাব (Financial Settlement Overview)
+            </h2>
+            <p className="text-xs text-gray-500 mt-0.5">
+              কুরিয়ার থেকে সরাসরি ক্যাশ কালেকশন এবং প্ল্যাটফর্ম প্রদেয় বকেয়া।
+            </p>
+          </div>
+          <span className="text-xs px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 font-semibold border border-indigo-100">
+            {vendor?.has_own_delivery_account ? 'স্বত্বাধিকারী কুরিয়ার অ্যাকাউন্ট (Vendor Courier)' : 'প্ল্যাটফর্ম কুরিয়ার অ্যাকাউন্ট (Platform Courier)'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
+            <p className="text-xs text-gray-500 font-medium">মোট বিক্রীত পণ্যের মূল্য</p>
+            <p className="text-xl font-bold text-gray-900 mt-1">
+              ৳{Number(financials?.total_gross_entitlement || 0).toLocaleString('bn-BD')}
+            </p>
+            <p className="text-[11px] text-gray-400 mt-0.5">Gross Product Entitlement</p>
+          </div>
+
+          {vendor?.has_own_delivery_account ? (
+            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
+              <p className="text-xs text-emerald-800 font-medium flex items-center gap-1">
+                <Truck className="w-3.5 h-3.5 text-emerald-600" /> কুরিয়ার থেকে সরাসরি প্রাপ্ত
+              </p>
+              <p className="text-xl font-bold text-emerald-700 mt-1">
+                ৳{Number(financials?.paid_by_courier || 0).toLocaleString('bn-BD')}
+              </p>
+              <p className="text-[11px] text-emerald-600/70 mt-0.5">Net COD directly from Courier</p>
+            </div>
+          ) : (
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+              <p className="text-xs text-blue-800 font-medium">প্ল্যাটফর্ম কর্তৃক নিষ্পন্ন</p>
+              <p className="text-xl font-bold text-blue-700 mt-1">
+                ৳{Number(financials?.settled_amount || 0).toLocaleString('bn-BD')}
+              </p>
+              <p className="text-[11px] text-blue-600/70 mt-0.5">Settled by Platform</p>
+            </div>
+          )}
+
+          <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+            <p className="text-xs text-green-800 font-medium">প্ল্যাটফর্ম কর্তৃক নিষ্পন্ন</p>
+            <p className="text-xl font-bold text-green-700 mt-1">
+              ৳{Number(financials?.settled_amount || 0).toLocaleString('bn-BD')}
+            </p>
+            <p className="text-[11px] text-green-600/70 mt-0.5">Total Settled by ResellerBrain</p>
+          </div>
+
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-100">
+            <p className="text-xs text-amber-800 font-medium">প্ল্যাটফর্ম থেকে বকেয়া</p>
+            <p className="text-xl font-bold text-amber-700 mt-1">
+              ৳{Number(financials?.pending_settlement || 0).toLocaleString('bn-BD')}
+            </p>
+            <p className="text-[11px] text-amber-600/70 mt-0.5">Pending Shortage Payable</p>
+          </div>
+        </div>
+      </div>
+
       {/* Main Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition">
           <div className="w-10 h-10 rounded-lg bg-green-500 flex items-center justify-center text-white mb-3">
             <DollarSign className="w-6 h-6" />
           </div>
-          <p className="text-2xl font-bold text-gray-800">৳{sales?.total ?? 0}</p>
-          <p className="text-xs text-gray-500 mt-1 font-medium">মোট বিক্রয়</p>
+          <p className="text-2xl font-bold text-gray-800">৳{sales?.total ?? sales?.completed_sales ?? 0}</p>
+          <div className="flex items-center justify-between mt-1 gap-1">
+            <p className="text-xs text-gray-500 font-medium">মোট বিক্রয় (সম্পন্ন)</p>
+            {Number(sales?.pending_sales ?? 0) > 0 && (
+              <span className="text-[11px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                পেন্ডিং: ৳{sales.pending_sales}
+              </span>
+            )}
+          </div>
         </div>
         <div className="bg-white rounded-xl border border-gray-200 p-5 hover:shadow-md transition">
           <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center text-white mb-3">
@@ -107,22 +198,22 @@ const VendorDashboard = () => {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div className="bg-yellow-50 rounded-lg p-4 text-center">
               <Clock className="w-5 h-5 text-yellow-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">{orderStatusMap["pending"] ?? 0}</p>
+              <p className="text-xl font-bold text-gray-800">{pendingCount}</p>
               <p className="text-xs text-gray-500 mt-1">পেন্ডিং</p>
             </div>
             <div className="bg-blue-50 rounded-lg p-4 text-center">
               <ClipboardList className="w-5 h-5 text-blue-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">{orderStatusMap["processing"] ?? 0}</p>
+              <p className="text-xl font-bold text-gray-800">{processingCount}</p>
               <p className="text-xs text-gray-500 mt-1">প্রসেসিং</p>
             </div>
             <div className="bg-green-50 rounded-lg p-4 text-center">
               <CheckCircle2 className="w-5 h-5 text-green-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">{orderStatusMap["delivered"] ?? 0}</p>
+              <p className="text-xl font-bold text-gray-800">{deliveredCount}</p>
               <p className="text-xs text-gray-500 mt-1">সম্পন্ন</p>
             </div>
             <div className="bg-red-50 rounded-lg p-4 text-center">
               <XCircle className="w-5 h-5 text-red-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">{orderStatusMap["cancelled"] ?? 0}</p>
+              <p className="text-xl font-bold text-gray-800">{cancelledCount}</p>
               <p className="text-xs text-gray-500 mt-1">বাতিল</p>
             </div>
           </div>

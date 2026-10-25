@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
-import { ClipboardList, Search, Eye, Loader2, User } from "lucide-react";
+import { ClipboardList, Search, Eye, Loader2, User, CheckCircle, Clock, Lock } from "lucide-react";
+import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import {
   useListAllOrdersQuery,
@@ -208,9 +209,16 @@ const AdminOrders = () => {
                       className="hover:bg-gray-50 transition"
                     >
                       <td className="py-3 px-4">
-                        <span className="font-medium text-gray-800">
-                          {order.order_number}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-medium text-gray-800">
+                            {order.order_number}
+                          </span>
+                          {(order.has_consignment || order.consignment_id || order.delivery_information?.consignment_id) && (
+                            <span title="Locked - Consignment Created" className="text-amber-500">
+                              <Lock className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div>
@@ -330,22 +338,32 @@ const AdminOrders = () => {
             </div>
 
             {/* Mobile Card List */}
-            <div className="md:hidden divide-y divide-gray-100">
+            <div className="md:hidden p-3 sm:p-4 space-y-3 bg-gray-50/50">
               {filteredOrders.map((order) => (
-                <div key={order.id} className="p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                <div
+                  key={order.id}
+                  className="bg-white border border-gray-200 rounded-xl p-4 space-y-3 shadow-xs hover:border-gray-300 transition"
+                >
+                  <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="font-semibold text-gray-800 text-sm">
-                        {order.order_number}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <p className="font-semibold text-gray-800 text-sm">
+                          {order.order_number}
+                        </p>
+                        {(order.has_consignment || order.consignment_id || order.delivery_information?.consignment_id) && (
+                          <span title="Locked - Consignment Created" className="text-amber-500">
+                            <Lock className="w-3.5 h-3.5" />
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {formatDate(order.created_at)}
                       </p>
                     </div>
                     <span
-                      className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                      className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${
                         statusColorMap[getStatusName(order)] ||
-                        "bg-gray-100 text-gray-600"
+                        "bg-gray-100 text-gray-600 border-gray-200"
                       }`}
                     >
                       {getStatusName(order)}
@@ -368,7 +386,7 @@ const AdminOrders = () => {
 
                   {/* Dropshipper info */}
                   {order.user && (
-                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                    <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
                       <User className="w-3.5 h-3.5 text-gray-400" />
                       <span className="text-xs text-gray-600">
                         {order.user.name} &middot; {order.user.phone}
@@ -378,7 +396,7 @@ const AdminOrders = () => {
 
                   {/* Items */}
                   {order.items?.length > 0 && (
-                    <div className="bg-gray-50 rounded-lg px-3 py-2 space-y-1">
+                    <div className="bg-gray-50 rounded-lg px-3 py-2 space-y-1 border border-gray-100">
                       <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
                         {order.items.length} item{order.items.length > 1 ? 's' : ''}
                       </p>
@@ -411,8 +429,8 @@ const AdminOrders = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
                           paymentColors[order.payment_status] ||
@@ -427,7 +445,7 @@ const AdminOrders = () => {
                         onChange={(e) =>
                           handleStatusChange(order.id, e.target.value)
                         }
-                        className="text-xs rounded-lg border border-gray-300 px-2 py-1 focus:ring-2 focus:ring-red-500"
+                        className="text-xs rounded-lg border border-gray-300 px-2 py-1 focus:ring-2 focus:ring-red-500 bg-white"
                       >
                         {statusList.map((s) => (
                           <option key={s.id} value={s.id}>
@@ -438,7 +456,7 @@ const AdminOrders = () => {
                     </div>
                     <button
                       onClick={() => navigate(`/admin-panel/orders/${order.id}`)}
-                      className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium"
+                      className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded hover:bg-red-50 transition"
                     >
                       <Eye className="w-4 h-4" />
                       দেখুন
