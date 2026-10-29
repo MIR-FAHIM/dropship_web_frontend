@@ -2,8 +2,11 @@
 import { useState } from "react";
 import AdminNotification from "./notification/AdminNotification";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { toast } from "sonner";
 import { useGetUserDetailsQuery } from "../../redux/features/user";
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
+import { logout } from "../../redux/slices/authSlice";
+import { getFromLocalstorage, removeFromLocalstorage } from "../../utils/localstorage.utils";
 import {
   LayoutDashboard,
   Package,
@@ -34,6 +37,7 @@ import {
   ArrowLeftRight,
   CreditCard,
   Receipt,
+  Activity,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -151,6 +155,11 @@ const adminMenuLinks = [
         label: "সেটেলমেন্ট অর্ডার",
         icon: <Receipt className="w-4 h-4" />,
       },
+      {
+        path: "/admin-panel/vendor-invoices",
+        label: "ভেন্ডর ইনভয়েস",
+        icon: <Receipt className="w-4 h-4" />,
+      },
     ],
   },
    {
@@ -208,6 +217,11 @@ const adminMenuLinks = [
         label: "কোম্পানি",
         icon: <Building2 className="w-4 h-4" />,
       },
+      {
+        path: "/admin-panel/delivery/webhook-tester",
+        label: "CarryBee Webhook টেস্ট",
+        icon: <Activity className="w-4 h-4" />,
+      },
     ],
   },
 ];
@@ -258,6 +272,15 @@ const AdminPanelLayout = () => {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+
+  const handleLogout = () => {
+    removeFromLocalstorage("token");
+    removeFromLocalstorage("userId");
+    dispatch(logout());
+    toast.success("লগআউট সফল হয়েছে");
+    navigate("/admin-login", { replace: true });
+  };
 
   const userId = getFromLocalstorage("userId");
   const { data: userDetailsData } = useGetUserDetailsQuery(userId, { skip: !userId });
@@ -381,7 +404,7 @@ const AdminPanelLayout = () => {
       {/* Logout */}
       <div className="p-3 border-t border-gray-700">
         <button
-          onClick={() => navigate("/admin-login")}
+          onClick={handleLogout}
           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-red-600/20 hover:text-red-400 transition-colors ${
             !sidebarOpen && !isMobile ? "justify-center" : ""
           }`}

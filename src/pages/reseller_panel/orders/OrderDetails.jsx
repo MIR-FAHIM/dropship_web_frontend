@@ -136,7 +136,10 @@ const OrderDetailsPage = () => {
   const consignmentId =
     deliveryInfo?.consignment_id ||
     order?.consignment_id ||
-    order?.carry_bee_draft?.consignment_id;
+    order?.carry_bee_draft?.consignment_id ||
+    order?.tracking_number ||
+    order?.tracking_code ||
+    deliveryInfo?.tracking_number;
 
   const handleCopyConsignment = async (e) => {
     e?.stopPropagation?.();
@@ -360,35 +363,33 @@ const OrderDetailsPage = () => {
               </div>
             </div>
 
-            {/* Quick Delivery Summary info if deliveryInfo exists */}
-            {deliveryInfo && (
-              <div className="mt-3 pt-3 border-t border-indigo-200/60 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                {deliveryInfo.merchant_order_id && (
-                  <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Merchant Order</span>
-                    <span className="font-medium text-gray-800">{deliveryInfo.merchant_order_id}</span>
-                  </div>
-                )}
-                {deliveryInfo.delivery_fee && (
-                  <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Delivery Fee</span>
-                    <span className="font-medium text-gray-800">৳{Number(deliveryInfo.delivery_fee).toLocaleString()}</span>
-                  </div>
-                )}
-                {deliveryInfo.collectable_amount && (
-                  <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Collectable</span>
-                    <span className="font-medium text-gray-800">৳{Number(deliveryInfo.collectable_amount).toLocaleString()}</span>
-                  </div>
-                )}
-                {deliveryInfo.recipient_phone && (
-                  <div>
-                    <span className="text-gray-500 block text-[10px] uppercase font-bold">Recipient Phone</span>
-                    <span className="font-medium text-gray-800">{deliveryInfo.recipient_phone}</span>
-                  </div>
-                )}
-              </div>
-            )}
+            {/* Quick Delivery Summary info */}
+            <div className="mt-3 pt-3 border-t border-indigo-200/60 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              {(deliveryInfo?.collectable_amount != null || order?.remaining_cod != null || grand > 0) && (
+                <div>
+                  <span className="text-gray-500 block text-[10px] uppercase font-bold">Collectable</span>
+                  <span className="font-bold text-gray-900">
+                    {money(deliveryInfo?.collectable_amount ?? order?.remaining_cod ?? grand)}
+                  </span>
+                </div>
+              )}
+              {(deliveryInfo?.merchant_order_id || order?.order_number) && (
+                <div>
+                  <span className="text-gray-500 block text-[10px] uppercase font-bold">Merchant Order</span>
+                  <span className="font-medium text-gray-800">
+                    {deliveryInfo?.merchant_order_id || order?.order_number}
+                  </span>
+                </div>
+              )}
+              {(deliveryInfo?.recipient_phone || order?.customer_phone) && (
+                <div>
+                  <span className="text-gray-500 block text-[10px] uppercase font-bold">Recipient Phone</span>
+                  <span className="font-medium text-gray-800">
+                    {deliveryInfo?.recipient_phone || order?.customer_phone}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 

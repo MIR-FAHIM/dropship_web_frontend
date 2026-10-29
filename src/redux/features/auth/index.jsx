@@ -52,6 +52,13 @@ const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    checkAdmin: builder.query({
+      query: () => ({
+        url: API_ENDPOINTS.auth.checkAdmin.path,
+        method: API_ENDPOINTS.auth.checkAdmin.method,
+      }),
+      providesTags: ["AdminAuth"],
+    }),
   }),
 });
 
@@ -63,8 +70,7 @@ export const {
   useResetPasswordMutation,
   useRegisterMutation,
   useDropshipperRegisterMutation,
+  useCheckAdminQuery,
 } = authApi;
 
 export default authApi;
-
-

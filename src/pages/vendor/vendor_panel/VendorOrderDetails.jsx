@@ -10,8 +10,17 @@ import {
   Clock,
   Truck,
   ClipboardList,
+  CheckCircle2,
+  ArrowRight,
+  Receipt,
+  AlertCircle,
+  HelpCircle,
+  Wallet,
+  Send,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import { useGetOrderBreakdownQuery } from "../../../redux/features/orderSettlement";
 import {
   useGetOrderDetailsQuery,
   useUpdateOrderStatusMutation,
@@ -55,6 +64,62 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
           {details.transfer_status}
         </span>
+      </div>
+
+      {/* CarryBee Payment & Webhook Settlement Status Card */}
+      <div
+        className={`p-3.5 rounded-xl border ${
+          details.is_carrybee_paid
+            ? "bg-emerald-50/90 border-emerald-200 shadow-2xs"
+            : "bg-amber-50/90 border-amber-200 shadow-2xs"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200/60">
+          <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-gray-800">
+            <CreditCard className="w-4 h-4 text-indigo-600" />
+            CarryBee পেমেন্ট ও সেটেলমেন্ট স্ট্যাটাস
+          </span>
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              details.is_carrybee_paid
+                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                : "bg-amber-100 text-amber-800 border-amber-300"
+            }`}
+          >
+            {details.is_carrybee_paid ? "✓ CarryBee Paid (পরিশোধিত)" : "⏳ CarryBee Pending (অপেক্ষমান)"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
+          <div>
+            <span className="text-gray-400 block text-[11px]">CarryBee Invoice ID</span>
+            <span className="font-mono font-bold text-gray-900">
+              {details.carrybee_invoice_id || "—"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">পরিশোধের সময় (Paid At)</span>
+            <span className="text-gray-800 font-medium">
+              {details.carrybee_paid_at
+                ? new Date(details.carrybee_paid_at).toLocaleString("bn-BD")
+                : "অনিষ্পন্ন / অপেক্ষমান"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">জমা হয়েছে (Disbursed To)</span>
+            <span className="font-semibold text-gray-800">
+              {details.carrybee_disbursed_to === "vendor"
+                ? "আপনার নিজস্ব CarryBee অ্যাকাউন্টে"
+                : "প্ল্যাটফর্ম সেন্ট্রাল অ্যাকাউন্টে"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">ওয়েবহুক ট্র্যাকিং</span>
+            <span className="font-semibold text-gray-800">
+              {details.webhook_event_found ? "✓ ওয়েবহুক ইভেন্ট প্রাপ্ত" : "সিস্টেম সিঙ্ক"}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
@@ -181,6 +246,24 @@ const VendorOrderDetails = () => {
     order?.vendor?.has_own_delivery_account === "true"
   );
 
+  const { data: breakdownData } = useGetOrderBreakdownQuery(order?.id, { skip: !order?.id });
+  const breakdown = breakdownData?.data;
+
+  // 3 Amounts Strictly for Vendor
+  const productWholesalePrice = breakdown?.supplier?.vendor_price ?? (
+    order?.items?.reduce((sum, item) => sum + Number(item.unit_price || 0) * Number(item.qty || 1), 0) || 0
+  );
+
+  const courierNetReceived = breakdown?.courier?.net_received_by_supplier ?? (
+    hasOwnDeliveryAccount
+      ? Math.max(0, Number(order?.total || 0) - (Number(order?.actual_courier_fee || 0) + Number(order?.actual_cod_fee || 0)))
+      : 0
+  );
+
+  const amountToSendAdmin = breakdown?.supplier?.supplier_owes_platform ?? (
+    hasOwnDeliveryAccount ? Math.max(0, courierNetReceived - productWholesalePrice) : 0
+  );
+
   const { data: summaryData } = useGetOrderStatusSummaryQuery(undefined, {
     skip: !hasOwnDeliveryAccount,
   });
@@ -226,6 +309,32 @@ const VendorOrderDetails = () => {
       window.location.reload();
     } catch (err) {
       toast.error(err?.data?.message || "Failed to submit order to CarryBee.");
+    }
+  };
+
+  
+  const handleCheckCarrybeePayment = async () => {
+    if (!delivery) return;
+    try {
+      const res = await fetchCarryBeeDetails({
+        vendorId: delivery.delivery_company_id,
+        consignmentId: delivery.consignment_id,
+      }).unwrap();
+
+      const info = res?.data?.data || res?.data || {};
+      if (info.is_carrybee_paid) {
+        toast.success(
+          `CarryBee কুরিয়ার পেমেন্ট পরিশোধিত! ইনভয়েস #${info.carrybee_invoice_id || "সম্পন্ন"}`
+        );
+      } else {
+        toast.info(
+          "CarryBee কুরিয়ার পেমেন্ট এখনও অনিষ্পন্ন (Pending)। কুরিয়ার থেকে অ্যাকাউন্টে টাকা জমা হয়নি।"
+        );
+      }
+      setShowCarryBeeDetails(true);
+      refetch();
+    } catch (err) {
+      toast.error("CarryBee স্ট্যাটাস চেক করতে সমস্যা হয়েছে।");
     }
   };
 
@@ -368,6 +477,134 @@ const VendorOrderDetails = () => {
                 <span>{currency(order.total)}</span>
               </div>
             </div> */}
+          </div>
+
+          {/* Financial Settlement Card for Vendor - Strictly 3 Amounts */}
+          <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Wallet className="w-5 h-5 text-indigo-600" />
+                <div>
+                  <h2 className="text-sm font-bold text-gray-800">
+                    আর্থিক হিসাব ও সেটেলমেন্ট (Financial Settlement)
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    {hasOwnDeliveryAccount
+                      ? "আপনার নিজস্ব CarryBee ডেলিভারি অ্যাকাউন্টভিত্তিক নিট হিসাব"
+                      : "প্ল্যাটফর্ম সেন্ট্রাল ডেলিভারি ভিত্তিক হিসাব"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate("/vendor-panel/invoices")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition cursor-pointer"
+              >
+                <Receipt className="w-3.5 h-3.5" /> ইনভয়েস ও পেমেন্ট দেখুন
+              </button>
+            </div>
+
+            <div className="p-5">
+              {hasOwnDeliveryAccount ? (
+                <div className="space-y-4">
+                  {/* Notice: Auto-deduction at source */}
+                  <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <span>
+                      CarryBee ডেলিভারি কোম্পানি নির্ধারিত ডেলিভারি ও COD ফি স্বয়ংক্রিয়ভাবে পূর্বেই কেটে রেখে অবশিষ্ট <strong>{currency(courierNetReceived)}</strong> আপনার CarryBee অ্যাকাউন্টে জমা দিয়েছে।
+                    </span>
+                  </div>
+
+                  {/* Exactly 3 Amount Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 1. Received from CarryBee */}
+                    <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider block mb-1">
+                          ১. কুরিয়ার থেকে প্রাপ্ত অর্থ
+                        </span>
+                        <p className="text-xs text-emerald-700">CarryBee আপনার অ্যাকাউন্টে যা জমা দিয়েছে (ফি বাদে)</p>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-2xl font-black text-emerald-900 font-mono">
+                          {currency(courierNetReceived)}
+                        </p>
+                        <span className="text-[10px] text-emerald-700">কুরিয়ারের নিট ক্যাশ</span>
+                      </div>
+                    </div>
+
+                    {/* 2. Product Wholesale Price */}
+                    <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider block mb-1">
+                          ২. পণ্যের পাইকারি মূল্য
+                        </span>
+                        <p className="text-xs text-blue-700">আপনার পণ্যের নির্ধারিত বিক্রয়মূল্য (আপনার নিজের)</p>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-2xl font-black text-blue-900 font-mono">
+                          {currency(productWholesalePrice)}
+                        </p>
+                        <span className="text-[10px] text-blue-700">আপনার পণ্যের দাম</span>
+                      </div>
+                    </div>
+
+                    {/* 3. Amount to Send to ResellerBrain Admin */}
+                    <div className="bg-amber-50/80 border-2 border-amber-300 rounded-xl p-4 flex flex-col justify-between shadow-xs">
+                      <div>
+                        <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block mb-1">
+                          ৩. অ্যাডমিনকে প্রদেয় অর্থ
+                        </span>
+                        <p className="text-xs text-amber-800 font-medium">ইনভয়েস অনুযায়ী ResellerBrain-কে পাঠাতে হবে</p>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-2xl font-black text-amber-950 font-mono">
+                          {currency(amountToSendAdmin)}
+                        </p>
+                        <span className="text-[10px] text-amber-800">
+                          (কুরিয়ার প্রাপ্ত {currency(courierNetReceived)} − পণ্যের মূল্য {currency(productWholesalePrice)})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Call to action */}
+                  <div className="pt-2 flex items-center justify-between text-xs text-gray-500 border-t border-gray-100">
+                    <span>* অ্যাডমিন ইনভয়েস তৈরি করলে আপনি ইনভয়েস লিস্টে দেখতে পাবেন এবং পেমেন্ট সম্পন্ন করতে পারবেন।</span>
+                    <button
+                      onClick={() => navigate("/vendor-panel/invoices")}
+                      className="inline-flex items-center gap-1 font-semibold text-indigo-600 hover:text-indigo-800 hover:underline cursor-pointer"
+                    >
+                      ইনভয়েস পেজে যান <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Non-own delivery account */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <span className="text-[11px] font-semibold text-gray-600 uppercase tracking-wider block mb-1">
+                      ১. কাস্টমার সংগৃহীত অর্থ
+                    </span>
+                    <p className="text-xs text-gray-500">প্ল্যাটফর্ম সেন্ট্রাল অ্যাকাউন্টে জমা হয়েছে</p>
+                    <p className="text-xl font-bold text-gray-800 font-mono mt-2">{currency(order.total)}</p>
+                  </div>
+                  <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4">
+                    <span className="text-[11px] font-semibold text-blue-800 uppercase tracking-wider block mb-1">
+                      ২. পণ্যের পাইকারি মূল্য
+                    </span>
+                    <p className="text-xs text-blue-600">আপনার পণ্যের নির্ধারিত মূল্য</p>
+                    <p className="text-xl font-bold text-blue-900 font-mono mt-2">{currency(productWholesalePrice)}</p>
+                  </div>
+                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-xl p-4">
+                    <span className="text-[11px] font-bold text-emerald-900 uppercase tracking-wider block mb-1">
+                      ৩. আপনার প্রাপ্য অর্থ
+                    </span>
+                    <p className="text-xs text-emerald-700">প্ল্যাটফর্ম আপনাকে ব্যাংক/বিকাশে পাঠাবে</p>
+                    <p className="text-xl font-bold text-emerald-950 font-mono mt-2">{currency(productWholesalePrice)}</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Status History */}
@@ -527,18 +764,42 @@ const VendorOrderDetails = () => {
                   <Truck className="w-4 h-4 text-teal-700" />
                   <h2 className="text-sm font-semibold text-teal-800">ডেলিভারি তথ্য</h2>
                 </div>
-                <button
-                  onClick={handleShowCarryBeeDetails}
-                  className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition"
-                >
-                  {showCarryBeeDetails ? "লুকান" : "লাইভ স্ট্যাটাস দেখুন"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCheckCarrybeePayment}
+                    disabled={cbDetailsLoading}
+                    className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition disabled:opacity-50 cursor-pointer shadow-xs"
+                    title="CarryBee কুরিয়ার পেমেন্ট ও ওয়েবহুক স্ট্যাটাস চেক করুন"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${cbDetailsLoading ? "animate-spin" : ""}`} />
+                    {cbDetailsLoading ? "চেক হচ্ছে..." : "কুরিয়ার পেমেন্ট চেক"}
+                  </button>
+                  <button
+                    onClick={handleShowCarryBeeDetails}
+                    className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition cursor-pointer"
+                  >
+                    {showCarryBeeDetails ? "লুকান" : "লাইভ স্ট্যাটাস দেখুন"}
+                  </button>
+                </div>
               </div>
               <div className="px-5 py-4 space-y-3 text-sm">
                 <div className="grid grid-cols-1 gap-3">
                   <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
                     <p className="text-xs text-gray-400 mb-0.5">Consignment ID</p>
                     <p className="font-bold text-gray-900 font-mono text-xs tracking-wide">{delivery.consignment_id}</p>
+                  </div>
+                  {/* Quick Payment Status Pill */}
+                  <div className="flex items-center justify-between py-1.5 px-3 bg-gray-50/90 rounded-lg border border-gray-150">
+                    <span className="text-xs text-gray-500 font-medium">কুরিয়ার সেটেলমেন্ট:</span>
+                    {order.is_carrybee_paid || order.carrybee_invoice_id || order.carrybee_paid_at || cbDetails?.is_carrybee_paid ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3" /> CarryBee Paid (#{order.carrybee_invoice_id || cbDetails?.carrybee_invoice_id || "পরিশোধিত"})
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                        কুরিয়ার পেমেন্ট অপেক্ষমান
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-1.5 text-gray-600">

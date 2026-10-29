@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, Package, Phone, User, Banknote, Hash, Loader2 } from "lucide-react";
+import { X, Package, Phone, User, Banknote, Hash, Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 import { useGetAssignedOrderOfCompanyQuery } from "../../../../../../redux/features/delivery_company";
 import { useLazyGetCarryBeeOrderDetailsQuery } from "../../../../../../redux/features/delivery_company/carrybeeStoreApi";
 
@@ -15,7 +15,7 @@ const OrderDetailPanel = ({ companyId, consignmentId, onClose }) => {
   }, [companyId, consignmentId, fetchDetails]);
 
   // response shape: { data: { data: { ...fields } } }
-  const detail = data?.data?.data ?? null;
+  const detail = data?.data?.data ?? data?.data ?? null;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
@@ -81,6 +81,29 @@ const OrderDetailPanel = ({ companyId, consignmentId, onClose }) => {
                 <DetailRow label="Consignment"    value={detail.consignment_id ?? consignmentId} />
                 <DetailRow label="Merchant Order" value={detail.merchant_order_id} />
                 <DetailRow label="Store ID"       value={detail.store_id} />
+              </DetailSection>
+
+              <DetailSection title="Settlement & Payment" icon={<CreditCard className="w-4 h-4 text-indigo-600" />}>
+                <div className="flex items-center justify-between pb-1.5 border-b border-gray-100">
+                  <span className="text-xs text-gray-500 font-medium">Payment Status</span>
+                  {detail.is_carrybee_paid ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <CheckCircle2 className="w-3 h-3" /> Paid (পরিশোধিত)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                      Pending (অপেক্ষমান)
+                    </span>
+                  )}
+                </div>
+                <DetailRow label="Invoice ID" value={detail.carrybee_invoice_id || "—"} />
+                {detail.carrybee_paid_at && (
+                  <DetailRow label="Paid At" value={new Date(detail.carrybee_paid_at).toLocaleString("en-GB")} />
+                )}
+                <DetailRow
+                  label="Disbursed To"
+                  value={detail.carrybee_disbursed_to === "vendor" ? "Vendor CarryBee Account" : "Platform Account"}
+                />
               </DetailSection>
 
               <DetailSection title="Charges" icon={<Banknote className="w-4 h-4" />}>

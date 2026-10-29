@@ -31,7 +31,13 @@ const Login = () => {
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
-  const [formData, setFormData] = useState({ email: location.state?.email || "", password: "" });
+  const [rememberMe, setRememberMe] = useState(() => {
+    return localStorage.getItem("rememberMe") !== "false";
+  });
+  const [formData, setFormData] = useState({
+    email: location.state?.email || localStorage.getItem("rememberedEmail") || "",
+    password: "",
+  });
   const [loginFunc, { isLoading }] = useLoginMutation();
   const [activationModalOpen, setActivationModalOpen] = useState(false);
   const [activationMessage, setActivationMessage] = useState("");
@@ -54,7 +60,12 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await loginFunc(formData).unwrap();
+      const loginPayload = {
+        email: formData.email.trim(),
+        password: formData.password,
+        remember: rememberMe,
+      };
+      const res = await loginFunc(loginPayload).unwrap();
       if (res?.status === "failed") {
         if (isActivationRequired(res)) {
           setActivationMessage(res?.message || "You need to activate your account");
@@ -64,15 +75,33 @@ const Login = () => {
         toast.error(res?.message || "লগইন ব্যর্থ হয়েছে!");
         return;
       }
-      dispatch(setToken({ token: res.data.token }));
-      saveToLocalstorage("token", res.data.token);
-      saveToLocalstorage("userId", res.data.user.id);
-      toast.success(res?.message || "লগইন সফল হয়েছে!");
-      if (res.data.user.user_type === "dropshipper") {
-        navigate("/app/dashboard-new");
+
+      // Persist remember preference and email
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("rememberedEmail", formData.email.trim());
       } else {
-        navigate("/");
+        localStorage.setItem("rememberMe", "false");
+        localStorage.removeItem("rememberedEmail");
       }
+
+      const token = res.data?.token;
+      const user = res.data?.user;
+      const userId = user?.id;
+
+      dispatch(setToken({ token, user, userId }));
+      saveToLocalstorage("token", token);
+      saveToLocalstorage("userId", userId);
+      if (user) {
+        saveToLocalstorage("user", user);
+      }
+
+      toast.success(res?.message || "লগইন সফল হয়েছে!");
+
+      const destination =
+        location.state?.from?.pathname ||
+        (user?.user_type === "dropshipper" ? "/app/dashboard-new" : "/");
+      navigate(destination, { replace: true });
     } catch (err) {
       const errorData = err?.data || err;
       if (isActivationRequired(errorData) || isActivationRequired(err?.message)) {
@@ -114,15 +143,17 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
             {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                 ইমেইল
               </label>
               <input
+                id="email"
                 type="email"
                 name="email"
+                autoComplete="username"
                 value={formData.email}
                 onChange={handleChange}
                 required
@@ -133,13 +164,15 @@ const Login = () => {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                 পাসওয়ার্ড
               </label>
               <div className="relative">
                 <input
+                  id="password"
                   type={showPassword ? "text" : "password"}
                   name="password"
+                  autoComplete="current-password"
                   value={formData.password}
                   onChange={handleChange}
                   required
@@ -160,12 +193,23 @@ const Login = () => {
               </div>
             </div>
 
-            {/* Forgot password */}
-            <div className="flex justify-end">
+            {/* Remember Me & Forgot password */}
+            <div className="flex items-center justify-between text-xs">
+              <label htmlFor="rememberMe" className="flex items-center gap-2 cursor-pointer text-gray-600 hover:text-gray-800 select-none">
+                <input
+                  type="checkbox"
+                  name="rememberMe"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-[#158E72]"
+                />
+                <span>আমাকে মনে রাখুন</span>
+              </label>
               <button
                 type="button"
                 onClick={() => navigate("/forgot-password", { state: { email: formData.email } })}
-                className="text-xs text-[#158E72] hover:text-emerald-800 font-medium"
+                className="text-[#158E72] hover:text-emerald-800 font-medium"
               >
                 পাসওয়ার্ড ভুলে গেছেন?
               </button>

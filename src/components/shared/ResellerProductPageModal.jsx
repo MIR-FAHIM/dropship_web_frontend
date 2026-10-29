@@ -113,6 +113,11 @@ const ResellerProductPageModal = ({
     const discountPrice = form.discount_price === "" ? null : Number(form.discount_price);
     if (sellingPrice < basePrice) return;
     if (discountPrice !== null && discountPrice < basePrice) return;
+    if (!page?.id) {
+      const { slug: _slug, ...rest } = form;
+      onSubmit?.(rest);
+      return;
+    }
     onSubmit?.(form);
   };
 
@@ -148,11 +153,13 @@ const ResellerProductPageModal = ({
             <label className={labelClass}>Custom Title</label>
             <input name="custom_title" value={form.custom_title} onChange={handleChange} className={inputClass} />
           </div>
-          <div>
-            <label className={labelClass}>Slug</label>
-            <input name="slug" value={form.slug} onChange={handleChange} className={inputClass} placeholder="Auto generate if empty" />
-          </div>
-          <div>
+          {page?.id ? (
+            <div>
+              <label className={labelClass}>Slug</label>
+              <input name="slug" value={form.slug} onChange={handleChange} className={inputClass} placeholder="Auto generate if empty" />
+            </div>
+          ) : null}
+          <div className={page?.id ? "" : "md:col-span-2"}>
             <label className={labelClass}>Publishing Status</label>
             <div className="flex items-center gap-3 pt-1.5">
               <button

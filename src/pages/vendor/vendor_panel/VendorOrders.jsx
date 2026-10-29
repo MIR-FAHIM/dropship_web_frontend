@@ -24,7 +24,8 @@ const STATUS_CONFIG = {
   Processing: { label: "প্রসেসিং",    cls: "bg-blue-100 text-blue-700 border-blue-200" },
   Confirmed:  { label: "কনফার্মড",    cls: "bg-indigo-100 text-indigo-700 border-indigo-200" },
   Shipped:    { label: "শিপড",        cls: "bg-purple-100 text-purple-700 border-purple-200" },
-  Delivered:  { label: "ডেলিভার্ড",  cls: "bg-green-100 text-green-700 border-green-200" },
+  Delivered:  { label: "ডেলিভার্ড",  cls: "bg-teal-100 text-teal-700 border-teal-200" },
+  "Carrybee Paid": { label: "কুরিয়ার পেইড", cls: "bg-emerald-100 text-emerald-800 border-emerald-300 font-bold" },
   Cancelled:  { label: "বাতিল",       cls: "bg-red-100 text-red-700 border-red-200" },
   Returned:   { label: "রিটার্ন",     cls: "bg-orange-100 text-orange-700 border-orange-200" },
   "Out for Delivery": { label: "আউট ফর ডেলিভারি", cls: "bg-orange-100 text-orange-700 border-orange-200" },
@@ -38,6 +39,7 @@ const DEFAULT_STATUS_LIST = [
   { id: 4, name: "Shipped", bn: "শিপড" },
   { id: 5, name: "Out for Delivery", bn: "আউট ফর ডেলিভারি" },
   { id: 6, name: "Delivered", bn: "ডেলিভার্ড" },
+  { id: 10, name: "Carrybee Paid", bn: "ক্যারিবী পরিশোধিত" },
   { id: 7, name: "Cancelled", bn: "বাতিল" },
   { id: 8, name: "Returned", bn: "রিটার্ন" },
   { id: 9, name: "Completed", bn: "সম্পন্ন" },
@@ -339,15 +341,31 @@ const VendorOrders = () => {
 
                         {/* Payment */}
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
-                              order.payment_status === "paid"
-                                ? "bg-green-100 text-green-700 border-green-200"
-                                : "bg-red-100 text-red-700 border-red-200"
-                            }`}
-                          >
-                            {order.payment_status === "paid" ? "পেইড" : "আনপেইড"}
-                          </span>
+                          <div className="flex flex-col gap-1 items-start">
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${
+                                order.payment_status === "paid"
+                                  ? "bg-green-100 text-green-700 border-green-200"
+                                  : "bg-red-100 text-red-700 border-red-200"
+                              }`}
+                            >
+                              {order.payment_status === "paid" ? "পেইড" : "আনপেইড"}
+                            </span>
+                            {delivery && (
+                              order.is_carrybee_paid || order.carrybee_paid_at || order.carrybee_invoice_id ? (
+                                <span
+                                  className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                  title={`CarryBee Paid: #${order.carrybee_invoice_id || "পরিশোধিত"}`}
+                                >
+                                  ✓ CarryBee Paid
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+                                  কুরিয়ার: অপেক্ষমান
+                                </span>
+                              )
+                            )}
+                          </div>
                         </td>
 
                       

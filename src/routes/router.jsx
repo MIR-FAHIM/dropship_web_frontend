@@ -28,11 +28,13 @@ import VendorBankAccount from "../pages/vendor/vendor_panel/bank_account/VendorB
 import VendorOrders from "../pages/vendor/vendor_panel/VendorOrders";
 import VendorProductOrderHistory from "../pages/vendor/vendor_panel/VendorProductOrderHistory";
 import VendorHistoryRoute from "./VendorHistoryRoute";
+import AdminRoute from "./AdminRoute";
 import VendorOrderDetails from "../pages/vendor/vendor_panel/VendorOrderDetails";
 import VendorAccounting from "../pages/vendor/vendor_panel/VendorAccounting";
 import VendorSettings from "../pages/vendor/vendor_panel/VendorSettings";
 import VendorBrands from "../pages/vendor/vendor_panel/VendorBrands";
 import VendorKyc from "../pages/vendor/vendor_panel/VendorKyc";
+import VendorInvoices from "../pages/vendor/vendor_panel/VendorInvoices";
 import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
 import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
@@ -59,6 +61,7 @@ import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
 import AdminGroupOrderHistory from "../pages/admin_panel/orders/AdminGroupOrderHistory";
 import AdminSettlementOrders from "../pages/admin_panel/settlement_orders/AdminSettlementOrders";
 import AdminSettlementOrderDetails from "../pages/admin_panel/settlement_orders/AdminSettlementOrderDetails";
+import AdminVendorInvoices from "../pages/admin_panel/orders/AdminVendorInvoices";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
@@ -66,6 +69,7 @@ import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
 import AllWalletTopupReq from "../pages/admin_panel/accounting/AllWalletTopupReq";
 import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanies";
 import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
+import CarrybeeWebhookTester from "../pages/admin_panel/delivery/CarrybeeWebhookTester";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
@@ -158,6 +162,7 @@ export const router = createBrowserRouter([
       { path: "bank-account", element: <VendorBankAccount /> },
       { path: "brands", element: <VendorBrands /> },
       { path: "kyc", element: <VendorKyc /> },
+      { path: "invoices", element: <VendorInvoices /> },
       { path: "settings", element: <VendorSettings /> },
     ],
   },
@@ -169,7 +174,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/admin-panel",
-    element: <AdminPanelLayout />,
+    element: (
+      <AdminRoute>
+        <AdminPanelLayout />
+      </AdminRoute>
+    ),
     errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboard /> },
@@ -188,6 +197,7 @@ export const router = createBrowserRouter([
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "settlement-orders", element: <AdminSettlementOrders /> },
       { path: "settlement-orders/:orderId", element: <AdminSettlementOrderDetails /> },
+      { path: "vendor-invoices", element: <AdminVendorInvoices /> },
       { path: "vendors", element: <AdminVendors /> },
       { path: "vendors/inactive", element: <InactiveAdminVendors /> },
       { path: "vendors/:id", element: <VendorDetailsTab /> },
@@ -208,6 +218,7 @@ export const router = createBrowserRouter([
       { path: "reports/login-success", element: <LoginSuccessReport /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
+      { path: "delivery/webhook-tester", element: <CarrybeeWebhookTester /> },
     ],
   },
   {

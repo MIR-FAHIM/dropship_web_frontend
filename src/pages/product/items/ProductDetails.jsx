@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "../../../../src/css/ProductDetails.css"; // Custom CSS for styling
 import { FaHeart, FaDownload } from "react-icons/fa";
+import { Store } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -154,6 +155,7 @@ const ProductDetails = () => {
   };
   
   const product = detail?.data;
+  const vendorId = product?.vendor_id || product?.vendor?.id || product?.shop?.vendor_id || product?.shop?.id;
   const currentProductPage = createdProductPage || product?.reseller_product_page || null;
   const productPageSlug = currentProductPage?.slug || "";
   const productPageUrl = productPageSlug ? `${window.location.origin}/store/product/${productPageSlug}` : "";
@@ -376,8 +378,9 @@ const ProductDetails = () => {
       return;
     }
     try {
+      const { slug: _unusedSlug, ...formPayload } = form || {};
       const response = await addProductPage({
-        ...form,
+        ...formPayload,
         reseller_id: Number(userId),
         product_id: product.id,
         selling_price: sellingPrice,
@@ -689,13 +692,47 @@ const ProductDetails = () => {
               <h1 className="product-name">{product?.name}</h1>
               
              
-              <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#052c03", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em" }}>
-                zone: {product?.vendor?.district?.name || "N/A"}
-              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "8px", marginTop: "8px" }}>
+                <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#052c03", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em", marginBottom: 0 }}>
+                  zone: {product?.vendor?.district?.name || "N/A"}
+                </span>
 
-               <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#d81d55", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em" }}>
-                {t("product_details.sku")}: {product?.sku || "N/A"}
-              </span>
+                <span className="product-sku" style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#dbeafe", color: "#d81d55", fontSize: "11px", fontWeight: 600, padding: "2px 10px", borderRadius: "999px", letterSpacing: "0.03em", marginBottom: 0 }}>
+                  {t("product_details.sku")}: {product?.sku || "N/A"}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => navigate(vendorId ? `/app/store-products/${vendorId}` : "/app/all-store")}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    padding: "3px 12px",
+                    borderRadius: "999px",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    boxShadow: "0 1px 2px rgba(37, 99, 235, 0.2)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#1d4ed8";
+                    e.currentTarget.style.transform = "translateY(-1px)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#2563eb";
+                    e.currentTarget.style.transform = "none";
+                  }}
+                  title="View Shop"
+                >
+                  <Store size={12} />
+                  <span>View Shop</span>
+                </button>
+              </div>
             </div>
             <button
               type="button"

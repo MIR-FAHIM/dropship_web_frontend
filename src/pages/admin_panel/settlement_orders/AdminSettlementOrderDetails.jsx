@@ -15,6 +15,7 @@ import {
   useGetOrderSettlementByOrderQuery,
   useSettleNowOrderSettlementMutation,
 } from "../../../redux/features/orderSettlement";
+import FinancialStakeBreakdownCard from "../orders/FinancialStakeBreakdownCard";
 import {
   formatDateTime,
   formatMoney,
@@ -361,6 +362,9 @@ const AdminSettlementOrderDetails = () => {
           </p>
         </div>
       </div>
+
+      {/* Financial Stake Breakdown Card */}
+      <FinancialStakeBreakdownCard order={order} refetchOrder={refetch} />
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2 space-y-6">

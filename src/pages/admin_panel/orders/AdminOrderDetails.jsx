@@ -29,6 +29,8 @@ import {
   useRejectAdvanceMutation,
 } from "../../../redux/features/order";
 import AssignCarryBeeModal, { CarryBeeInfoCard } from "./carrybee_assign";
+import ManualCarrybeePaymentModal from "./ManualCarrybeePaymentModal";
+import FinancialStakeBreakdownCard from "./FinancialStakeBreakdownCard";
 import {
   getAdminBasePrice,
   getAdminCommission,
@@ -69,6 +71,7 @@ const AdminOrderDetails = () => {
     useUpdateOrderInfoMutation();
 
   const [carryBeeOpen, setCarryBeeOpen] = useState(false);
+  const [carrybeePaymentOpen, setCarrybeePaymentOpen] = useState(false);
   const [approveAdvance, { isLoading: isApprovingAdvance }] = useApproveAdvanceMutation();
   const [rejectAdvance, { isLoading: isRejectingAdvance }] = useRejectAdvanceMutation();
   const [showRejectModal, setShowRejectModal] = useState(false);
@@ -104,6 +107,13 @@ const AdminOrderDetails = () => {
   );
   const isOrderEditable = order?.is_editable !== undefined ? Boolean(order.is_editable) : !hasConsignment;
   const consignmentId = order?.consignment_id || order?.delivery_information?.consignment_id || null;
+  const isCancelledOrReturned = [7, 8, 10, 11].includes(Number(order?.status?.id || order?.status));
+  const isCarrybeePaid = !isCancelledOrReturned && hasConsignment && Boolean(
+    order?.is_carrybee_paid ||
+    order?.carrybee_paid_at ||
+    order?.carrybee_invoice_id ||
+    order?.delivery_information?.carrybee_invoice_id
+  );
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -425,13 +435,50 @@ const AdminOrderDetails = () => {
           >
             {statusName}
           </span>
-          <span
-            className={`inline-block px-3 py-1.5 rounded-full text-xs font-semibold ${
-              paymentColors[order.payment_status] || "bg-gray-100 text-gray-600"
-            }`}
+          {isCancelledOrReturned ? (
+            <button
+              type="button"
+              onClick={() => setCarrybeePaymentOpen(true)}
+              className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 hover:bg-red-200 transition"
+              title="CarryBee পেমেন্ট পরিচালনা করুন"
+            >
+              বাতিল / Unpaid
+            </button>
+          ) : isCarrybeePaid ? (
+            <button
+              type="button"
+              onClick={() => setCarrybeePaymentOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs hover:bg-emerald-200 transition cursor-pointer"
+              title="CarryBee পেমেন্ট পরিচালনা বা রিসেট করতে ক্লিক করুন"
+            >
+              <Truck className="w-3.5 h-3.5 text-emerald-600" />
+              CarryBee Paid {order.carrybee_invoice_id ? `(#${order.carrybee_invoice_id})` : ""}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setCarrybeePaymentOpen(true)}
+              className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold hover:opacity-90 transition ${
+                order.payment_status === "paid"
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : paymentColors[order.payment_status] || "bg-gray-100 text-gray-600"
+              }`}
+              title="CarryBee পেমেন্ট পরিচালনা করতে ক্লিক করুন"
+            >
+              {order.payment_status === "paid" ? (hasConsignment ? "Paid (CarryBee বাকি)" : "Paid (কুরিয়ার ছাড়া)") : order.payment_status}
+            </button>
+          )}
+
+          {/* Manual CarryBee Payment Action Button */}
+          <button
+            type="button"
+            onClick={() => setCarrybeePaymentOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition shadow-2xs"
+            title="CarryBee পেমেন্ট স্ট্যাটাস ম্যানুয়াল পরিবর্তন বা রিসেট করুন"
           >
-            {order.payment_status}
-          </span>
+            <Truck className="w-3.5 h-3.5 text-indigo-600" />
+            CarryBee পেমেন্ট
+          </button>
 
           {/* Edit Order Action Button */}
           {isOrderEditable ? (
@@ -500,6 +547,9 @@ const AdminOrderDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Financial Stake & Settlement Breakdown */}
+          <FinancialStakeBreakdownCard order={order} refetchOrder={refetch} />
+
           {/* Order Items */}
           <div className="bg-white rounded-xl border border-gray-200">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -870,6 +920,15 @@ const AdminOrderDetails = () => {
 
       {carryBeeOpen && !order.delivery_information && (
         <AssignCarryBeeModal order={order} onClose={() => setCarryBeeOpen(false)} />
+      )}
+
+      {carrybeePaymentOpen && (
+        <ManualCarrybeePaymentModal
+          order={order}
+          isOpen={carrybeePaymentOpen}
+          onClose={() => setCarrybeePaymentOpen(false)}
+          onSuccess={() => refetch()}
+        />
       )}
 
       {/* Reject Advance Modal */}

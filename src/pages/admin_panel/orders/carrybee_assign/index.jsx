@@ -8,6 +8,9 @@ import {
   X,
   ChevronDown,
   Info,
+  RefreshCw,
+  CreditCard,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -70,7 +73,7 @@ export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) =
   if (isLoading)
     return (
       <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
-        <Loader2 className="w-4 h-4 animate-spin" /> Loading...
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading CarryBee details...
       </div>
     );
 
@@ -78,7 +81,7 @@ export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) =
     return (
       <div className="px-5 py-4 text-sm text-red-500 flex items-center justify-between">
         <span>Failed to load data.</span>
-        <button onClick={onRetry} className="text-xs text-red-600 underline">Retry</button>
+        <button onClick={onRetry} className="text-xs text-red-600 underline cursor-pointer">Retry</button>
       </div>
     );
 
@@ -90,12 +93,68 @@ export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) =
       : "bg-yellow-100 text-yellow-700 border-yellow-200";
 
   return (
-    <div className="border-t border-teal-100 px-5 py-4 space-y-3 text-sm bg-teal-50/40">
+    <div className="border-t border-teal-100 px-5 py-4 space-y-4 text-sm bg-teal-50/40">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live Status</span>
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
           {details.transfer_status}
         </span>
+      </div>
+
+      {/* CarryBee Payment & Webhook Settlement Status Card */}
+      <div
+        className={`p-3.5 rounded-xl border ${
+          details.is_carrybee_paid
+            ? "bg-emerald-50/90 border-emerald-200 shadow-2xs"
+            : "bg-amber-50/90 border-amber-200 shadow-2xs"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200/60">
+          <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-gray-800">
+            <CreditCard className="w-4 h-4 text-indigo-600" />
+            CarryBee পেমেন্ট ও সেটেলমেন্ট স্ট্যাটাস
+          </span>
+          <span
+            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              details.is_carrybee_paid
+                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                : "bg-amber-100 text-amber-800 border-amber-300"
+            }`}
+          >
+            {details.is_carrybee_paid ? "✓ CarryBee Paid (পরিশোধিত)" : "⏳ CarryBee Pending (অপেক্ষমান)"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
+          <div>
+            <span className="text-gray-400 block text-[11px]">CarryBee Invoice ID</span>
+            <span className="font-mono font-bold text-gray-900">
+              {details.carrybee_invoice_id || "—"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">পরিশোধের সময় (Paid At)</span>
+            <span className="text-gray-800 font-medium">
+              {details.carrybee_paid_at
+                ? new Date(details.carrybee_paid_at).toLocaleString("bn-BD")
+                : "অনিষ্পন্ন / অপেক্ষমান"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">জমা হয়েছে (Disbursed To)</span>
+            <span className="font-semibold text-gray-800">
+              {details.carrybee_disbursed_to === "vendor"
+                ? "ভেন্ডরের নিজস্ব CarryBee অ্যাকাউন্ট"
+                : "প্ল্যাটফর্ম সেন্ট্রাল অ্যাকাউন্ট"}
+            </span>
+          </div>
+          <div>
+            <span className="text-gray-400 block text-[11px]">ওয়েবহুক ট্র্যাকিং</span>
+            <span className="font-semibold text-gray-800">
+              {details.webhook_event_found ? "✓ ওয়েবহুক ইভেন্ট প্রাপ্ত" : "সিস্টেম সিঙ্ক"}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
@@ -159,8 +218,14 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [fetchDetails, { data: detailsData, isLoading, isError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
-  const details = detailsData?.data?.data;
-    const userId = localStorage.getItem("userId");
+  const details = detailsData?.data?.data || detailsData?.data;
+
+  const isPaid = Boolean(
+    details?.is_carrybee_paid ||
+    deliveryInfo?.carrybee_invoice_id ||
+    deliveryInfo?.carrybee_paid_at
+  );
+
   const handleToggle = () => {
     if (!showDetails && deliveryInfo) {
       fetchDetails({
@@ -171,21 +236,56 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
     setShowDetails((p) => !p);
   };
 
+  const handleCheckPaymentStatus = async () => {
+    if (!deliveryInfo) return;
+    try {
+      const res = await fetchDetails({
+        vendorId: deliveryInfo.delivery_company_id,
+        consignmentId: deliveryInfo.consignment_id,
+      }).unwrap();
+
+      const info = res?.data?.data || res?.data || {};
+      if (info.is_carrybee_paid) {
+        toast.success(
+          `CarryBee পেমেন্ট পরিশোধিত! ইনভয়েস #${info.carrybee_invoice_id || "সম্পন্ন"}`
+        );
+      } else {
+        toast.info(
+          "CarryBee কুরিয়ার পেমেন্ট এখনও অনিষ্পন্ন (অপেক্ষমান)। কুরিয়ার থেকে টাকা জমা হয়নি।"
+        );
+      }
+      setShowDetails(true);
+    } catch (err) {
+      toast.error("CarryBee স্ট্যাটাস চেক করতে সমস্যা হয়েছে।");
+    }
+  };
+
   if (!deliveryInfo) return null;
 
   return (
-    <div className="bg-white rounded-xl border border-teal-200">
+    <div className="bg-white rounded-xl border border-teal-200 shadow-xs">
       <div className="px-5 py-4 border-b border-teal-100 bg-teal-50 rounded-t-xl flex items-center justify-between">
         <h2 className="text-sm font-semibold text-teal-800 flex items-center gap-2">
           <Truck className="w-4 h-4" />
           CarryBee Delivery Info
         </h2>
-        <button
-          onClick={handleToggle}
-          className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition"
-        >
-          {showDetails ? "Hide" : "View delivery details"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCheckPaymentStatus}
+            disabled={isLoading}
+            className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition disabled:opacity-50 cursor-pointer shadow-xs"
+            title="CarryBee কুরিয়ার পেমেন্ট ও ওয়েবহুক স্ট্যাটাস চেক করুন"
+          >
+            <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
+            {isLoading ? "চেক হচ্ছে..." : "পেমেন্ট চেক করুন"}
+          </button>
+          <button
+            onClick={handleToggle}
+            className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition cursor-pointer"
+          >
+            {showDetails ? "Hide" : "View delivery details"}
+          </button>
+        </div>
       </div>
       <div className="px-5 py-4 space-y-3 text-sm">
         <div className="grid grid-cols-2 gap-3">
@@ -198,6 +298,21 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
             <p className="font-semibold text-gray-800 text-xs">{deliveryInfo.merchant_order_id}</p>
           </div>
         </div>
+
+        {/* Quick Payment Status Pill */}
+        <div className="flex items-center justify-between py-1 px-2.5 bg-gray-50/80 rounded-lg border border-gray-150">
+          <span className="text-xs text-gray-500 font-medium">কুরিয়ার সেটেলমেন্ট:</span>
+          {isPaid ? (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+              <CheckCircle2 className="w-3 h-3" /> CarryBee Paid (#{deliveryInfo.carrybee_invoice_id || details?.carrybee_invoice_id || "পরিশোধিত"})
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
+              কুরিয়ার পেমেন্ট অপেক্ষমান
+            </span>
+          )}
+        </div>
+
         <div className="space-y-1.5 text-gray-600">
           <div className="flex justify-between">
             <span className="text-gray-400">Recipient</span>

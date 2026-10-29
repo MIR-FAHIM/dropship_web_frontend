@@ -1,5 +1,7 @@
 import React from "react";
 import { useGetAdminDashboardReportQuery } from "../../../redux/features/report";
+import { useGetUnacknowledgedPaidOrdersQuery } from "../../../redux/features/delivery_company/carrybeeWebhookApi";
+import CarrybeePaidOrderModal from "./CarrybeePaidOrderModal";
 import {
   ShoppingBag,
   Package,
@@ -63,10 +65,22 @@ const getStatCards = (data) => [
 
 const AdminDashboard = () => {
   const { data, isLoading, isError, error } = useGetAdminDashboardReportQuery();
+  const { data: paidOrdersData, refetch: refetchPaidOrders } = useGetUnacknowledgedPaidOrdersQuery(undefined, {
+    pollingInterval: 30000,
+  });
+  const unacknowledgedPaidOrders = paidOrdersData?.data || [];
   const stats = getStatCards(data?.data);
 
   return (
     <div className="space-y-6">
+      {/* Real-time CarryBee Paid Order Modal */}
+      {unacknowledgedPaidOrders.length > 0 && (
+        <CarrybeePaidOrderModal
+          orders={unacknowledgedPaidOrders}
+          onComplete={refetchPaidOrders}
+        />
+      )}
+
       {/* Welcome */}
       <div className="bg-gradient-to-r from-gray-800 to-gray-900 rounded-xl p-6 text-white">
         <h1 className="text-xl sm:text-2xl font-bold">স্বাগতম, অ্যাডমিন!</h1>

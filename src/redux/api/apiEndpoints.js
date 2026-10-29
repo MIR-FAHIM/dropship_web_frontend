@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
     logout: define("POST", "/auth/logout"),
     listTokens: define("GET", "/auth/tokens"),
     revokeToken: define("DELETE", "/auth/tokens/{id}"),
+    checkAdmin: define("GET", "/auth/check-admin"),
   },
 
   users: {
@@ -127,6 +128,16 @@ export const API_ENDPOINTS = {
     byOrder: define("GET", "/order-settlements/order/{orderId}"),
     settleNow: define("POST", "/order-settlements/settle-now/{id}"),
     addSettledTrxId: define("POST", "/order-settlements/add-settled-trx-id/{id}"),
+    breakdown: define("GET", "/order-settlements/orders/{orderId}/breakdown"),
+    updateBreakdown: define("POST", "/order-settlements/orders/{orderId}/update-breakdown"),
+    disburseResellerProfit: define("POST", "/order-settlements/orders/{orderId}/disburse-reseller-profit"),
+    createVendorInvoice: define("POST", "/order-settlements/vendor-invoice"),
+    listVendorInvoices: define("GET", "/order-settlements/vendor-invoices"),
+    vendorInvoiceDetails: define("GET", "/order-settlements/vendor-invoices/{id}"),
+    payVendorInvoice: define("POST", "/order-settlements/vendor-invoices/{id}/pay"),
+    approveVendorInvoice: define("POST", "/order-settlements/vendor-invoices/{id}/approve"),
+    rejectVendorInvoice: define("POST", "/order-settlements/vendor-invoices/{id}/reject"),
+    adminPaymentAccounts: define("GET", "/order-settlements/admin-payment-accounts"),
   },
 
   addresses: {

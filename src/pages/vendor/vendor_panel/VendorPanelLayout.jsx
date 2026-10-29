@@ -2,6 +2,7 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { getOrdersSection, HISTORY_PATH } from "../../../utils/vendorOrderHistory.utils";
+import VendorInvoiceSearch from "./VendorInvoiceSearch";
 import {
   LayoutDashboard,
   Package,
@@ -17,6 +18,7 @@ import {
   Tag,
   X,
   ShieldCheck,
+  Receipt,
 } from "lucide-react";
 
 const vendorMenuLinks = [
@@ -38,6 +40,11 @@ const vendorMenuLinks = [
       { id: "history", path: "/vendor-panel/orders", label: "Order History", icon: <History className="w-4 h-4 shrink-0" /> },
       { id: "product-history", path: HISTORY_PATH, label: "Product-Wise Order History", icon: <Package className="w-4 h-4 shrink-0" /> },
     ],
+  },
+  {
+    path: "/vendor-panel/invoices",
+    label: "সেটেলমেন্ট ইনভয়েস",
+    icon: <Receipt className="w-5 h-5" />,
   },
   {
     path: "/vendor-panel/accounting",
@@ -195,8 +202,8 @@ const VendorPanelLayout = () => {
       {/* Main Content */}
       <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
         {/* Top Navbar */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 sm:px-6 shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0 gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileOpen(true)}
@@ -215,11 +222,16 @@ const VendorPanelLayout = () => {
                 }`}
               />
             </button>
-            <h2 className="text-base font-semibold text-gray-800">Supplier ড্যাশবোর্ড</h2>
+            <h2 className="text-base font-semibold text-gray-800 hidden lg:block">Supplier ড্যাশবোর্ড</h2>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
+          {/* Topbar Invoice Search Bar */}
+          <div className="flex-1 max-w-sm sm:max-w-md mx-1 sm:mx-4">
+            <VendorInvoiceSearch />
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-xs">
               V
             </div>
           </div>

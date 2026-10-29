@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { LogIn, Eye, EyeOff, ArrowRight, ShieldCheck } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useLoginMutation } from "../../../redux/features/auth";
 import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
@@ -27,6 +27,7 @@ const isActivationRequired = (dataOrMsg) => {
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -51,17 +52,28 @@ const AdminLogin = () => {
         toast.error(res?.message || "Login failed!");
         return;
       }
+
+      const loggedUser = res?.data?.user;
+      const roles = [
+        loggedUser?.user_type?.toLowerCase(),
+        loggedUser?.role?.toLowerCase(),
+      ].filter(Boolean);
+
+      const allowedAdminRoles = ["admin", "superadmin", "product manager"];
+      const isAdmin = roles.some((r) => allowedAdminRoles.includes(r));
+
+      if (!isAdmin) {
+        toast.error("এই অ্যাকাউন্টের অ্যাডমিন প্যানেলে প্রবেশের অনুমতি নেই।");
+        return;
+      }
+
       dispatch(setToken({ token: res.data.token }));
       saveToLocalstorage("token", res.data.token);
       saveToLocalstorage("userId", res.data.user.id);
       toast.success(res?.message || "Admin login successful!");
 
-       if (res.data.user.user_type === "admin") {
-        navigate("/admin-panel");
-      } else {
-        navigate("/");
-      }
-     
+      const target = location.state?.from?.pathname || "/admin-panel";
+      navigate(target, { replace: true });
     } catch (err) {
       const errorData = err?.data || err;
       if (isActivationRequired(errorData) || isActivationRequired(err?.message)) {

@@ -33,7 +33,11 @@ const orderApi = baseApi.injectEndpoints({
     }),
 
     listAllOrders: builder.query({
-      query: () => API_ENDPOINTS.orders.allOrders.path,
+      query: (params) => ({
+        url: API_ENDPOINTS.orders.allOrders.path,
+        params: params || undefined,
+      }),
+      providesTags: ["Order"],
     }),
 
     getOrderStatusSummary: builder.query({
