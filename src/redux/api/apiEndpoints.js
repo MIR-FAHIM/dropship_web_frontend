@@ -33,9 +33,10 @@ export const API_ENDPOINTS = {
   },
 
   dashboard: {
-   
+
     adminDashboardReport: define("GET", "/reports/dashboard"),
-  
+    cashflowDashboard: define("GET", "/reports/cashflow-dashboard"),
+
   },
 
   categories: {

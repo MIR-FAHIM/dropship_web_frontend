@@ -38,6 +38,7 @@ import {
   CreditCard,
   Receipt,
   Activity,
+  BookOpen,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -131,6 +132,11 @@ const adminMenuLinks = [
     icon: <Wallet className="w-5 h-5" />,
     children: [
       {
+        path: "/admin-panel/cashflow",
+        label: "ক্যাশফ্লো রিপোর্ট",
+        icon: <Wallet className="w-4 h-4" />,
+      },
+      {
         path: "/admin-panel/accounting",
         label: "হিসাব-নিকাশ",
         icon: <Wallet className="w-4 h-4" />,
@@ -223,6 +229,11 @@ const adminMenuLinks = [
         icon: <Activity className="w-4 h-4" />,
       },
     ],
+  },
+  {
+    path: "/admin-panel/documentation",
+    label: "ডকুমেন্টেশন",
+    icon: <BookOpen className="w-5 h-5" />,
   },
 ];
 

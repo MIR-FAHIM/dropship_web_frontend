@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { useGetAdminDashboardReportQuery } from "../../../redux/features/report";
 import { useGetUnacknowledgedPaidOrdersQuery } from "../../../redux/features/delivery_company/carrybeeWebhookApi";
 import CarrybeePaidOrderModal from "./CarrybeePaidOrderModal";
@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   Package,
   TrendingUp,
+  TrendingDown,
   DollarSign,
   Store,
   Users,
@@ -14,62 +15,252 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  RotateCcw,
+  Send,
   ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  Table2,
 } from "lucide-react";
+
+const money = (n) => `৳${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
+
+/* ── growth badge (used on stat cards + growth summary) ── */
+const GrowthBadge = ({ percent }) => {
+  if (percent === undefined || percent === null) return null;
+  const isUp = percent > 0;
+  const isFlat = percent === 0;
+  const Icon = isFlat ? Minus : isUp ? ArrowUpRight : ArrowDownRight;
+  const color = isFlat ? "text-gray-400" : isUp ? "text-green-600" : "text-red-500";
+  return (
+    <span className={`flex items-center text-xs font-bold ${color}`}>
+      <Icon className="w-3.5 h-3.5" />
+      {Math.abs(percent)}%
+    </span>
+  );
+};
 
 const getStatCards = (data) => [
   {
     label: "মোট বিক্রয়",
-    value: `৳${data?.total_sell ?? 0}`,
-    change: "",
+    value: money(data?.total_sell),
+    change: data?.growth?.month?.sell_growth_percent,
     icon: <DollarSign className="w-6 h-6" />,
     color: "bg-green-500",
   },
   {
     label: "মোট অর্ডার",
     value: `${data?.orders_count ?? 0}`,
-    change: "",
+    change: data?.growth?.month?.orders_growth_percent,
     icon: <ShoppingBag className="w-6 h-6" />,
     color: "bg-blue-500",
   },
   {
     label: "মোট পণ্য",
     value: `${data?.products_count ?? 0}`,
-    change: "",
     icon: <Package className="w-6 h-6" />,
     color: "bg-purple-500",
   },
   {
     label: "মোট ভেন্ডর",
     value: `${data?.total_vendor ?? 0}`,
-    change: "",
     icon: <Store className="w-6 h-6" />,
     color: "bg-orange-500",
   },
   {
     label: "মোট ড্রপশিপার",
     value: `${data?.total_dropshipper ?? 0}`,
-    change: "",
     icon: <Truck className="w-6 h-6" />,
     color: "bg-teal-500",
   },
   {
     label: "মোট কর্মচারী",
     value: `${data?.total_admin ?? 0}`,
-    change: "",
     icon: <Users className="w-6 h-6" />,
     color: "bg-indigo-500",
   },
 ];
 
+/* ── order status breakdown: pick an icon/color by keyword, since the
+   actual set of statuses is whatever admin has seeded, not fixed ── */
+const STATUS_VISUALS = [
+  { test: /cancel|বাতিল/i, icon: XCircle, bg: "bg-red-50", text: "text-red-500" },
+  { test: /return|ফেরত/i, icon: RotateCcw, bg: "bg-pink-50", text: "text-pink-500" },
+  { test: /deliver|complet|paid|settle|সম্পন্ন/i, icon: CheckCircle2, bg: "bg-green-50", text: "text-green-500" },
+  { test: /transit|ship|pick|দিকে|পিক/i, icon: Send, bg: "bg-indigo-50", text: "text-indigo-500" },
+  { test: /process|প্রসেসিং/i, icon: ClipboardList, bg: "bg-blue-50", text: "text-blue-500" },
+  { test: /pending|পেন্ডিং/i, icon: Clock, bg: "bg-yellow-50", text: "text-yellow-500" },
+];
+const getStatusVisual = (type, name) => {
+  const haystack = `${type || ""} ${name || ""}`;
+  return (
+    STATUS_VISUALS.find((v) => v.test.test(haystack)) || {
+      icon: ClipboardList,
+      bg: "bg-gray-50",
+      text: "text-gray-500",
+    }
+  );
+};
+
+/* ── simple single-series day-wise bar chart (no charting lib needed) ── */
+const DailyGrowthChart = ({ daily }) => {
+  const [showTable, setShowTable] = useState(false);
+  const [hover, setHover] = useState(null);
+
+  const max = useMemo(
+    () => Math.max(1, ...daily.map((d) => d.orders_count_gross ?? d.orders_count ?? 0)),
+    [daily]
+  );
+
+  const labelEvery = daily.length > 20 ? 5 : daily.length > 10 ? 3 : 1;
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-base font-semibold text-gray-800">দিনওয়ারি অর্ডার গ্রোথ</h3>
+          <p className="text-xs text-gray-400 mt-0.5">প্রতিদিনের নিট অর্ডার সংখ্যা (বাতিল বাদে)</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowTable((v) => !v)}
+          className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-indigo-600 border border-gray-200 rounded-lg px-2.5 py-1.5 transition"
+        >
+          <Table2 className="w-3.5 h-3.5" />
+          {showTable ? "চার্ট দেখুন" : "টেবিল দেখুন"}
+        </button>
+      </div>
+
+      {showTable ? (
+        <div className="overflow-x-auto max-h-72">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="text-left text-gray-400 border-b border-gray-100">
+                <th className="py-2 pr-3 font-bold">তারিখ</th>
+                <th className="py-2 pr-3 font-bold">নিট অর্ডার</th>
+                <th className="py-2 pr-3 font-bold">বাতিল</th>
+                <th className="py-2 pr-3 font-bold">বিক্রয়</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...daily].reverse().map((d) => (
+                <tr key={d.date} className="border-b border-gray-50">
+                  <td className="py-1.5 pr-3 text-gray-600">{d.date}</td>
+                  <td className="py-1.5 pr-3 font-bold text-gray-800">{d.orders_count}</td>
+                  <td className="py-1.5 pr-3 text-red-500">{d.cancelled_count}</td>
+                  <td className="py-1.5 pr-3 text-gray-600">{money(d.total_sell)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="relative">
+          {hover && (
+            <div className="absolute -top-1 left-0 bg-gray-800 text-white text-[11px] rounded-lg px-2.5 py-1.5 shadow-lg z-10 pointer-events-none">
+              <p className="font-bold">{hover.date}</p>
+              <p>অর্ডার: {hover.orders_count}{hover.cancelled_count > 0 ? ` (+${hover.cancelled_count} বাতিল)` : ""}</p>
+              <p>বিক্রয়: {money(hover.total_sell)}</p>
+            </div>
+          )}
+          <div className="flex items-end gap-1 h-40 border-b border-gray-100">
+            {daily.map((d) => {
+              const gross = d.orders_count_gross ?? d.orders_count ?? 0;
+              const netHeight = max > 0 ? (d.orders_count / max) * 100 : 0;
+              const cancelledHeight = max > 0 ? (d.cancelled_count / max) * 100 : 0;
+              return (
+                <div
+                  key={d.date}
+                  className="flex-1 min-w-[4px] flex flex-col items-center justify-end h-full group cursor-pointer"
+                  onMouseEnter={() => setHover(d)}
+                  onMouseLeave={() => setHover(null)}
+                >
+                  <div className="w-full flex flex-col items-center justify-end h-full rounded-t-sm overflow-hidden bg-transparent">
+                    {d.cancelled_count > 0 && (
+                      <div
+                        className="w-full bg-red-200 group-hover:bg-red-300 transition-colors"
+                        style={{ height: `${cancelledHeight}%` }}
+                      />
+                    )}
+                    <div
+                      className="w-full bg-indigo-400 group-hover:bg-indigo-500 transition-colors rounded-t-sm"
+                      style={{ height: `${netHeight}%`, minHeight: gross > 0 ? "2px" : 0 }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-1 mt-1.5">
+            {daily.map((d, idx) => (
+              <div key={d.date} className="flex-1 min-w-[4px] text-center">
+                {idx % labelEvery === 0 && (
+                  <span className="text-[9px] text-gray-400 font-medium">
+                    {d.date.slice(5)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-4 mt-3 text-[11px] text-gray-500">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-indigo-400 inline-block" /> নিট অর্ডার
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-red-200 inline-block" /> বাতিল
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const GrowthSummaryCard = ({ title, growth }) => {
+  if (!growth) return null;
+  const ordersUp = growth.orders_growth_percent >= 0;
+  const sellUp = growth.sell_growth_percent >= 0;
+  return (
+    <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+      <p className="text-xs font-bold text-gray-500 mb-2">{title}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <p className="text-[11px] text-gray-400">অর্ডার</p>
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg font-bold text-gray-800">{growth.current_orders}</span>
+            <span className={`flex items-center text-[11px] font-bold ${ordersUp ? "text-green-600" : "text-red-500"}`}>
+              {ordersUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {Math.abs(growth.orders_growth_percent)}%
+            </span>
+          </div>
+          <p className="text-[10px] text-gray-400">আগে: {growth.previous_orders}</p>
+        </div>
+        <div>
+          <p className="text-[11px] text-gray-400">বিক্রয়</p>
+          <div className="flex items-center gap-1.5">
+            <span className="text-lg font-bold text-gray-800">{money(growth.current_sell)}</span>
+            <span className={`flex items-center text-[11px] font-bold ${sellUp ? "text-green-600" : "text-red-500"}`}>
+              {sellUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {Math.abs(growth.sell_growth_percent)}%
+            </span>
+          </div>
+          <p className="text-[10px] text-gray-400">আগে: {money(growth.previous_sell)}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const AdminDashboard = () => {
-  const { data, isLoading, isError, error } = useGetAdminDashboardReportQuery();
+  const { data, isLoading, isError } = useGetAdminDashboardReportQuery({ days: 30 });
   const { data: paidOrdersData, refetch: refetchPaidOrders } = useGetUnacknowledgedPaidOrdersQuery(undefined, {
     pollingInterval: 30000,
   });
   const unacknowledgedPaidOrders = paidOrdersData?.data || [];
-  const stats = getStatCards(data?.data);
+  const report = data?.data;
+  const stats = getStatCards(report);
+  const statusBreakdown = report?.orders?.status_breakdown || [];
+  const dailyBreakdown = report?.daily_breakdown || [];
 
   return (
     <div className="space-y-6">
@@ -107,12 +298,7 @@ const AdminDashboard = () => {
                 <div className={`w-10 h-10 rounded-lg ${card.color} flex items-center justify-center text-white`}>
                   {card.icon}
                 </div>
-                {card.change && (
-                  <span className="flex items-center text-xs font-medium text-green-600">
-                    <ArrowUpRight className="w-3 h-3" />
-                    {card.change}
-                  </span>
-                )}
+                <GrowthBadge percent={card.change} />
               </div>
               <p className="text-2xl font-bold text-gray-800">{card.value}</p>
               <p className="text-xs text-gray-500 mt-1 font-medium">{card.label}</p>
@@ -121,33 +307,42 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Order Summary + Recent Activity */}
+      {/* Order Summary + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Order Status */}
+        {/* Order Status Breakdown (real data) */}
         <div className="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-6">
-          <h3 className="text-base font-semibold text-gray-800 mb-4">অর্ডার সারসংক্ষেপ</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-yellow-50 rounded-lg p-4 text-center">
-              <Clock className="w-6 h-6 text-yellow-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">০</p>
-              <p className="text-xs text-gray-500 mt-1">পেন্ডিং</p>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <ClipboardList className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">০</p>
-              <p className="text-xs text-gray-500 mt-1">প্রসেসিং</p>
-            </div>
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">০</p>
-              <p className="text-xs text-gray-500 mt-1">সম্পন্ন</p>
-            </div>
-            <div className="bg-red-50 rounded-lg p-4 text-center">
-              <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-              <p className="text-xl font-bold text-gray-800">০</p>
-              <p className="text-xs text-gray-500 mt-1">বাতিল</p>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-gray-800">অর্ডার সারসংক্ষেপ</h3>
+            {report?.orders && (
+              <span className="text-xs text-gray-400">
+                মোট {report.orders.total_gross} টি (নিট {report.orders.total_net}, বাতিল {report.orders.cancelled_count})
+              </span>
+            )}
           </div>
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-gray-100 rounded-lg h-24 animate-pulse" />
+              ))}
+            </div>
+          ) : statusBreakdown.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-8">কোনো অর্ডার স্ট্যাটাস পাওয়া যায়নি।</p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {statusBreakdown.map((s) => {
+                const visual = getStatusVisual(s.type, s.name);
+                const Icon = visual.icon;
+                return (
+                  <div key={s.status_id} className={`${visual.bg} rounded-lg p-4 text-center`}>
+                    <Icon className={`w-6 h-6 ${visual.text} mx-auto mb-2`} />
+                    <p className="text-xl font-bold text-gray-800">{s.count}</p>
+                    <p className="text-xs text-gray-500 mt-1 truncate" title={s.name}>{s.name}</p>
+                    <p className="text-[10px] text-gray-400">{s.percent_of_total}%</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -172,6 +367,23 @@ const AdminDashboard = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Day-wise Order Growth */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        {isLoading ? (
+          <div className="h-48 bg-gray-100 rounded-lg animate-pulse" />
+        ) : dailyBreakdown.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-8">গ্রোথ ডেটা পাওয়া যায়নি।</p>
+        ) : (
+          <>
+            <DailyGrowthChart daily={dailyBreakdown} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+              <GrowthSummaryCard title="এই সপ্তাহ বনাম আগের সপ্তাহ" growth={report?.growth?.week} />
+              <GrowthSummaryCard title="এই মাস বনাম আগের মাস (সমান দিন)" growth={report?.growth?.month} />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Recent Orders Table */}

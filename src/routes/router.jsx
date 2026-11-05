@@ -37,6 +37,8 @@ import VendorKyc from "../pages/vendor/vendor_panel/VendorKyc";
 import VendorInvoices from "../pages/vendor/vendor_panel/VendorInvoices";
 import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
 import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
+import AdminDocumentation from "../pages/admin_panel/documentation/AdminDocumentation";
+import AdminCashflowReport from "../pages/admin_panel/cashflow/AdminCashflowReport";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
@@ -182,6 +184,8 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <AdminDashboard /> },
+      { path: "documentation", element: <AdminDocumentation /> },
+      { path: "cashflow", element: <AdminCashflowReport /> },
       { path: "products", element: <AdminProducts /> },
       { path: "products/create", element: <AdminProductCreate /> },
       { path: "products/:id", element: <AdminProductDetail /> },

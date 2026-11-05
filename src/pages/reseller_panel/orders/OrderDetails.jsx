@@ -9,12 +9,6 @@ import {
 } from "react-icons/fa";
 import { Truck, Copy, Check, Search, ArrowRight, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import {
-  getAdminBasePrice,
-  getResellerProfit,
-  getVendorPrice,
-  toNumber,
-} from "../../../utils/pricing.utils";
 
 /* ── helpers ── */
 const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
@@ -37,22 +31,6 @@ const STATUS_STYLES = {
 const getStatus = (s) =>
   STATUS_STYLES[String(s || "").toLowerCase()] ??
   { pill: "bg-gray-100 text-gray-600 border-gray-200", dot: "bg-gray-400" };
-
-const getOrderItemPricing = (item = {}) => {
-  const qty = Number(item?.qty || 1);
-  const vendorPrice = getVendorPrice(item);
-  const adminPrice = getAdminBasePrice(item);
-  const lineUnitPrice = qty > 0 ? Number(item?.line_total || 0) / qty : 0;
-  const sellingPrice = toNumber(item?.reseller_price ?? item?.selling_price ?? lineUnitPrice, adminPrice);
-
-  return {
-    qty,
-    vendorPrice,
-    sellingPrice,
-    lineTotal: sellingPrice * qty,
-    resellerProfit: getResellerProfit({ resellerPrice: sellingPrice, adminPrice, qty }),
-  };
-};
 
 const getStatusName = (status) => {
   if (!status) return "";
@@ -89,7 +67,10 @@ const OrderDetailsPage = () => {
   const [payAdvance, { isLoading: isPayingAdvance }] = usePayAdvanceMutation();
   const userId = localStorage.getItem("userId");
   const { data: advanceReqData } = useCheckAdvanceRequirementQuery(userId, { skip: !userId });
-  const availableWalletBalance = Number(advanceReqData?.data?.available_wallet_balance ?? 0);
+  const eligibility = advanceReqData?.data || {};
+  const completedOrdersCount = eligibility.completed_orders_count ?? 0;
+  const availableWalletBalance = Number(eligibility.available_wallet_balance ?? 0);
+  const minOrdersThreshold = eligibility.min_orders_threshold ?? 5;
 
   const [showPayAdvanceModal, setShowPayAdvanceModal] = useState(false);
   const [advancePayMethod, setAdvancePayMethod] = useState("wallet");
@@ -107,7 +88,7 @@ const OrderDetailsPage = () => {
           return;
         }
         await payAdvance({ id: order.id, pay_from_wallet: true, amount: requiredAmount }).unwrap();
-        toast.success("ওয়ালেট থেকে অগ্রিম পেমেন্ট সফলভাবে সম্পন্ন হয়েছে!");
+        toast.success("ওয়ালেট থেকে রিলায়েবিলিটি ব্যালেন্স সফলভাবে নিশ্চিত হয়েছে!");
         setShowPayAdvanceModal(false);
       } else {
         if (!mfsTrxId.trim()) {
@@ -121,11 +102,11 @@ const OrderDetailsPage = () => {
           sender_phone: mfsSenderPhone.trim(),
           amount: Number(order?.advance_amount || 130),
         }).unwrap();
-        toast.success("অগ্রিম পেমেন্ট সাবমিট হয়েছে। অ্যাডমিন ভেরিফিকেশনের জন্য অপেক্ষা করুন।");
+        toast.success("রিলায়েবিলিটি ব্যালেন্স সাবমিট হয়েছে। অ্যাডমিন ভেরিফিকেশনের জন্য অপেক্ষা করুন।");
         setShowPayAdvanceModal(false);
       }
     } catch (err) {
-      toast.error(err?.data?.message || err?.message || "অগ্রিম পেমেন্ট করতে সমস্যা হয়েছে");
+      toast.error(err?.data?.message || err?.message || "রিলায়েবিলিটি ব্যালেন্স নিশ্চিত করতে সমস্যা হয়েছে");
     }
   };
   const order = data?.data;
@@ -223,7 +204,7 @@ const OrderDetailsPage = () => {
           </div>
         </div>
 
-        {/* ── Advance Payment Alert / Badge ── */}
+        {/* ── Reliability Balance Alert / Badge (Before 5 orders) ── */}
         {order?.advance_status === "pending" && (
           <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 mb-5 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -232,16 +213,33 @@ const OrderDetailsPage = () => {
                   <FaClock className="text-base" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-amber-900">অগ্রিম ডেলিভারি চার্জ বাকি রয়েছে</p>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-800 font-bold">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-sm font-bold text-amber-950">রিলায়েবিলিটি ব্যালেন্স প্রযোজ্য (Reliability Balance)</p>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">
                       {order?.advance_trx_id ? "ভেরিফিকেশন অপেক্ষমাণ" : "পরিশোধ বাকি"}
                     </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 font-bold">
+                      সম্পন্ন অর্ডার: {completedOrdersCount}/{minOrdersThreshold}
+                    </span>
                   </div>
-                  <p className="text-xs text-amber-800/80 mt-0.5">
-                    {order?.advance_trx_id
-                      ? "আপনি " + (order.advance_payment_method?.toUpperCase() || "MFS") + " মাধ্যমে Trx ID: " + order.advance_trx_id + " সাবমিট করেছেন। অ্যাডমিন কর্তৃক যাচাই সম্পন্ন হলে অর্ডারটি প্রসেসিংয়ে যাবে।"
-                      : "এই অর্ডারের জন্য ৳" + (order?.advance_amount || 130) + " অগ্রিম পরিশোধ করতে হবে।"}
+                  <div className="text-xs text-amber-950 mt-1.5 space-y-1.5 leading-relaxed">
+                    {order?.advance_trx_id ? (
+                      <p>
+                        {"আপনি " + (order.advance_payment_method?.toUpperCase() || "MFS") + " মাধ্যমে Trx ID: " + order.advance_trx_id + " সাবমিট করেছেন। অ্যাডমিন কর্তৃক যাচাই সম্পন্ন হলে অর্ডারটি প্রসেসিংয়ে যাবে।"}
+                      </p>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-amber-950">
+                          ১. নতুন ড্রপশিপারদের প্রথম ৫টি সফল অর্ডার সম্পন্ন হওয়ার পূর্ব পর্যন্ত একাউন্ট সিকিউরিটি হিসেবে ৳{order?.advance_amount || 130} রিলায়েবিলিটি ব্যালেন্স নিশ্চিত করা আবশ্যক।
+                        </p>
+                        <p className="text-amber-900 font-medium">
+                          ২. এই ব্যালেন্সটি সম্পূর্ণ ফেরত দেওয়া হবে আপনার অর্ডার কমপ্লিট হওয়ার সাথে সাথেই অথবা প্রথম ৫টি অর্ডার পর্যন্ত আপনি সিকিউরিটি মানি হিসেবে জমা রাখতে পারেন এবং পরবর্তীতে যখন খুশি উইথড্র করে নিতে পারবেন।
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-amber-800/90 mt-1">
+                    💡 রিলায়েবিলিটি ব্যালেন্স কোনো চার্জ বা ফি নয় — এটি কাস্টমার COD বা আপনার প্রফিট থেকে কাটা হয় না।
                   </p>
                 </div>
               </div>
@@ -249,9 +247,10 @@ const OrderDetailsPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPayAdvanceModal(true)}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition shrink-0"
+                  className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow transition shrink-0 flex items-center gap-1.5 cursor-pointer"
                 >
-                  অগ্রিম পরিশোধ করুন (Pay Advance)
+                  <Wallet className="w-3.5 h-3.5" />
+                  <span>ব্যালেন্স নিশ্চিত করুন (Pay Reliability Balance)</span>
                 </button>
               )}
             </div>
@@ -266,7 +265,7 @@ const OrderDetailsPage = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-emerald-900">
-                  অগ্রিম পরিশোধিত: {money(order.advance_amount)} ({order.advance_payment_method?.toUpperCase() || "PAID"})
+                  রিলায়েবিলিটি ব্যালেন্স নিশ্চিত হয়েছে: {money(order.advance_amount)} ({order.advance_payment_method?.toUpperCase() || "PAID"})
                 </p>
                 {order.advance_trx_id && (
                   <p className="text-[11px] text-emerald-700 font-mono mt-0.5">Trx ID: {order.advance_trx_id}</p>
@@ -480,14 +479,14 @@ const OrderDetailsPage = () => {
             </span>
           </div>
 
-          {/* Mobile: cards */}
+          {/* Mobile: cards — product & attribute only; pricing/charges are shown
+              once in the order summary above, not duplicated per item. */}
           <div className="flex flex-col gap-3 md:hidden">
             {order?.items?.map((item) => {
               const imgSrc = item?.product?.primary_image?.file_name
                 ? `${imgBaseUrl}/${item.product.primary_image.file_name}`
                 : null;
               const ist = getStatus(item.status);
-              const pricing = getOrderItemPricing(item);
               return (
                 <div key={item.id} className="flex gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50">
                   {imgSrc ? (
@@ -507,15 +506,7 @@ const OrderDetailsPage = () => {
                     )}
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-xs text-gray-500">Qty: <b className="text-gray-700">{item.qty}</b></span>
-                      <span className="text-xs text-gray-500">Selling: {money(pricing.sellingPrice)} / pc</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5 mt-2 text-[10px] text-gray-500">
-                      <span>Vendor: <b>{money(pricing.vendorPrice)}</b></span>
-                      <span>Profit: <b className="text-green-600">{money(pricing.resellerProfit)}</b></span>
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${ist.pill}`}>{item.status}</span>
-                      <span className="font-black text-indigo-700 text-sm">{money(pricing.lineTotal)}</span>
                     </div>
                   </div>
                 </div>
@@ -523,12 +514,13 @@ const OrderDetailsPage = () => {
             })}
           </div>
 
-          {/* Desktop: table */}
+          {/* Desktop: table — product & attribute only; pricing/charges are shown
+              once in the order summary above, not duplicated per item. */}
           <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-100">
-                  {["Product", "Qty", "Vendor Price", "Selling Price", "Reseller Profit", "Line Total"].map((h) => (
+                  {["Product", "Qty"].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-black text-gray-400 uppercase tracking-wide">{h}</th>
                   ))}
                 </tr>
@@ -538,7 +530,6 @@ const OrderDetailsPage = () => {
                   const imgSrc = item?.product?.primary_image?.file_name
                     ? `${imgBaseUrl}/${item.product.primary_image.file_name}`
                     : null;
-                  const pricing = getOrderItemPricing(item);
                   return (
                     <tr key={item.id} className="border-b border-gray-50 hover:bg-indigo-50/20 transition">
                       <td className="px-4 py-3">
@@ -562,11 +553,6 @@ const OrderDetailsPage = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3 font-bold text-gray-700">{item.qty}</td>
-                      <td className="px-4 py-3 text-gray-600">{money(pricing.vendorPrice)}</td>
-                      <td className="px-4 py-3 text-gray-600">{money(pricing.sellingPrice)}</td>
-                      <td className="px-4 py-3 font-bold text-green-600">{money(pricing.resellerProfit)}</td>
-                      <td className="px-4 py-3 font-black text-indigo-700">{money(pricing.lineTotal)}</td>
-             
                     </tr>
                   );
                 })}
@@ -628,10 +614,13 @@ const OrderDetailsPage = () => {
                 <X className="w-5 h-5" />
               </button>
 
-              <h3 className="text-base font-bold text-gray-900 mb-1">অগ্রিম ডেলিভারি চার্জ পরিশোধ</h3>
-              <p className="text-xs text-gray-500 mb-4">
-                অর্ডার #{order?.order_number || order?.id}-এর ডেলিভারি ফি: <strong>৳{order?.advance_amount || 130}</strong>
+              <h3 className="text-base font-bold text-gray-900 mb-1">রিলায়েবিলিটি ব্যালেন্স নিশ্চিতকরণ (Reliability Balance)</h3>
+              <p className="text-xs text-gray-600 mb-2 leading-relaxed">
+                প্রথম ৫টি অর্ডারের জন্য একাউন্ট সিকিউরিটি ব্যালেন্স: <strong>{money(order?.advance_amount || 130)}</strong> (সম্পন্ন অর্ডার: {completedOrdersCount}/{minOrdersThreshold})
               </p>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 mb-4 text-[11px] text-emerald-900 leading-relaxed font-medium">
+                💡 <strong>মনে রাখবেন:</strong> এই টাকাটি কোনো চার্জ বা খরচ নয় — এটি আপনার ওয়ালেট সিকিউরিটি ব্যালেন্স। অর্ডার সম্পন্ন হওয়ার পর এটি আপনার একাউন্টে জমা থাকবে এবং আপনি যখন খুশি এটি উইথড্র (উত্তোলন) করে নিতে পারবেন।
+              </div>
 
               <form onSubmit={handlePayAdvanceSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-2">
@@ -661,7 +650,7 @@ const OrderDetailsPage = () => {
                   <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 text-xs">
                     {availableWalletBalance >= Number(order?.advance_amount || 130) ? (
                       <p className="text-emerald-700 font-medium">
-                        ✓ আপনার ওয়ালেট থেকে ৳{order?.advance_amount || 130} তাৎক্ষণিকভাবে কেটে নেওয়া হবে এবং অর্ডার নিশ্চিত হবে।
+                        ✓ আপনার ওয়ালেট থেকে ৳{order?.advance_amount || 130} রিলায়েবিলিটি সিকিউরিটি হিসেবে সমন্বয় করা হবে এবং অর্ডার নিশ্চিত হবে।
                       </p>
                     ) : (
                       <p className="text-red-600 font-medium">

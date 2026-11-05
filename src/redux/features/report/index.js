@@ -6,7 +6,17 @@ const reportApi = baseApi.injectEndpoints({
 
 
     getAdminDashboardReport: builder.query({
-      query: () => API_ENDPOINTS.dashboard.adminDashboardReport.path,
+      query: (params) => ({
+        url: API_ENDPOINTS.dashboard.adminDashboardReport.path,
+        params: params || undefined,
+      }),
+    }),
+
+    getCashflowDashboard: builder.query({
+      query: (params) => ({
+        url: API_ENDPOINTS.dashboard.cashflowDashboard.path,
+        params: params || undefined,
+      }),
     }),
 
     getProductClicksMonthwiseReport: builder.query({
@@ -41,6 +51,7 @@ const reportApi = baseApi.injectEndpoints({
 
 export const {
   useGetAdminDashboardReportQuery,
+  useGetCashflowDashboardQuery,
   useGetProductClicksMonthwiseReportQuery,
   useGetProductClicksDaywiseReportQuery,
   useGetProductClicksLast7DaysReportQuery,
