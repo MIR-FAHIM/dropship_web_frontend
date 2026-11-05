@@ -18,6 +18,7 @@ import {
   Wallet,
   Send,
   RefreshCw,
+  CreditCard,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useGetOrderBreakdownQuery } from "../../../redux/features/orderSettlement";
@@ -224,6 +225,15 @@ const VendorOrderDetails = () => {
     useLazyGetCarryBeeOrderDetailsQuery();
   const cbDetails = cbDetailsData?.data?.data;
 
+  // CarryBee only actually confirms payment via its "order.paid" webhook -
+  // until then (order.is_carrybee_paid / carrybee_invoice_id / carrybee_paid_at
+  // all empty, and the on-demand check below hasn't confirmed it either), any
+  // "net received" figure is a projection, not a fact, and must be labelled
+  // as such everywhere it's shown.
+  const isCarrybeePaidConfirmed = Boolean(
+    order?.is_carrybee_paid || order?.carrybee_invoice_id || order?.carrybee_paid_at || cbDetails?.is_carrybee_paid
+  );
+
   const [createCarryBeeOrder, { isLoading: readySubmitting }] = useCreateCarryBeeOrderMutation();
   const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateOrderStatusMutation();
 
@@ -262,6 +272,19 @@ const VendorOrderDetails = () => {
 
   const amountToSendAdmin = breakdown?.supplier?.supplier_owes_platform ?? (
     hasOwnDeliveryAccount ? Math.max(0, courierNetReceived - productWholesalePrice) : 0
+  );
+
+  const pendingNotice = !isCarrybeePaidConfirmed && (
+    <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-900 flex items-start gap-2">
+      <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+      <span>
+        {"CarryBee থেকে এখনো পেমেন্ট কনফার্মেশন (webhook) পাওয়া যায়নি। ডেলিভারি সম্পন্ন হলে CarryBee তাদের ফি কেটে রেখে সম্ভাব্য অবশিষ্ট "}
+        <strong>{currency(courierNetReceived)}</strong>
+        {" আপনার CarryBee অ্যাকাউন্টে জমা দেওয়ার সম্ভাবনা রয়েছে — নিচের হিসাবের সংখ্যাগুলো "}
+        <strong>{"সম্ভাব্য, এখনো নিশ্চিত নয়"}</strong>
+        {"।"}
+      </span>
+    </div>
   );
 
   const { data: summaryData } = useGetOrderStatusSummaryQuery(undefined, {
@@ -506,17 +529,22 @@ const VendorOrderDetails = () => {
             <div className="p-5">
               {hasOwnDeliveryAccount ? (
                 <div className="space-y-4">
-                  {/* Notice: Auto-deduction at source */}
+                  {/* Notice: Auto-deduction at source - only claim it already
+                      happened once CarryBee's webhook actually confirmed it */}
+                  {isCarrybeePaidConfirmed && (
                   <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                     <span>
                       CarryBee ডেলিভারি কোম্পানি নির্ধারিত ডেলিভারি ও COD ফি স্বয়ংক্রিয়ভাবে পূর্বেই কেটে রেখে অবশিষ্ট <strong>{currency(courierNetReceived)}</strong> আপনার CarryBee অ্যাকাউন্টে জমা দিয়েছে।
                     </span>
                   </div>
+                  )}
+                  {pendingNotice}
 
                   {/* Exactly 3 Amount Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* 1. Received from CarryBee */}
+                    {isCarrybeePaidConfirmed ? (
                     <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-4 flex flex-col justify-between">
                       <div>
                         <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider block mb-1">
@@ -531,6 +559,26 @@ const VendorOrderDetails = () => {
                         <span className="text-[10px] text-emerald-700">কুরিয়ারের নিট ক্যাশ</span>
                       </div>
                     </div>
+                    ) : (
+                    <div className="bg-amber-50/50 border border-amber-200 rounded-xl p-4 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider block mb-1">
+                          {"১. কুরিয়ার থেকে সম্ভাব্য (অপেক্ষমান) অর্থ"}
+                        </span>
+                        <p className="text-xs text-amber-700">
+                          {"ডেলিভারি সম্পন্ন হলে CarryBee যা জমা দিতে পারে (ফি বাদে) — এখনো নিশ্চিত নয়"}
+                        </p>
+                      </div>
+                      <div className="mt-3">
+                        <p className="text-2xl font-black text-amber-900 font-mono">
+                          {currency(courierNetReceived)}
+                        </p>
+                        <span className="text-[10px] text-amber-700">
+                          {"সম্ভাব্য নিট ক্যাশ (অপেক্ষমান)"}
+                        </span>
+                      </div>
+                    </div>
+                    )}
 
                     {/* 2. Product Wholesale Price */}
                     <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4 flex flex-col justify-between">
@@ -555,6 +603,11 @@ const VendorOrderDetails = () => {
                           ৩. অ্যাডমিনকে প্রদেয় অর্থ
                         </span>
                         <p className="text-xs text-amber-800 font-medium">ইনভয়েস অনুযায়ী ResellerBrain-কে পাঠাতে হবে</p>
+                        {!isCarrybeePaidConfirmed && (
+                          <p className="text-[10px] text-amber-600 font-semibold mt-1">
+                            {"সম্ভাব্য হিসাব — CarryBee পেমেন্ট কনফার্ম হওয়ার আগে এখনো নিশ্চিত নয়"}
+                          </p>
+                        )}
                       </div>
                       <div className="mt-3">
                         <p className="text-2xl font-black text-amber-950 font-mono">
@@ -791,7 +844,7 @@ const VendorOrderDetails = () => {
                   {/* Quick Payment Status Pill */}
                   <div className="flex items-center justify-between py-1.5 px-3 bg-gray-50/90 rounded-lg border border-gray-150">
                     <span className="text-xs text-gray-500 font-medium">কুরিয়ার সেটেলমেন্ট:</span>
-                    {order.is_carrybee_paid || order.carrybee_invoice_id || order.carrybee_paid_at || cbDetails?.is_carrybee_paid ? (
+                    {isCarrybeePaidConfirmed ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
                         <CheckCircle2 className="w-3 h-3" /> CarryBee Paid (#{order.carrybee_invoice_id || cbDetails?.carrybee_invoice_id || "পরিশোধিত"})
                       </span>
