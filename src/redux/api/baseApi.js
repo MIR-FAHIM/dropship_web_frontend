@@ -94,6 +94,10 @@ const baseApi = createApi({
     "OrderDetails",
     "CarrybeePaidOrders",
     "CarrybeeWebhookEvents",
+    "FeedPost",
+    "FeedPostComments",
+    "PartnerStore",
+    "EcommerceWebsiteLead",
   ],
   endpoints: () => ({}),
 });

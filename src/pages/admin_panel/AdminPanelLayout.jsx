@@ -39,6 +39,8 @@ import {
   Receipt,
   Activity,
   BookOpen,
+  UserPlus,
+  Globe,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -227,6 +229,17 @@ const adminMenuLinks = [
         path: "/admin-panel/delivery/webhook-tester",
         label: "CarryBee Webhook টেস্ট",
         icon: <Activity className="w-4 h-4" />,
+      },
+    ],
+  },
+  {
+    label: "লিড (Lead)",
+    icon: <UserPlus className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/leads/ecommerce",
+        label: "ইকমার্স লিড",
+        icon: <Globe className="w-4 h-4" />,
       },
     ],
   },

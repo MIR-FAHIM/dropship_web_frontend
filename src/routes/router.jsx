@@ -39,6 +39,7 @@ import AdminPanelLayout from "../pages/admin_panel/AdminPanelLayout";
 import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminDocumentation from "../pages/admin_panel/documentation/AdminDocumentation";
 import AdminCashflowReport from "../pages/admin_panel/cashflow/AdminCashflowReport";
+import AdminEcommerceLeads from "../pages/admin_panel/leads/AdminEcommerceLeads";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
@@ -186,6 +187,7 @@ export const router = createBrowserRouter([
       { index: true, element: <AdminDashboard /> },
       { path: "documentation", element: <AdminDocumentation /> },
       { path: "cashflow", element: <AdminCashflowReport /> },
+      { path: "leads/ecommerce", element: <AdminEcommerceLeads /> },
       { path: "products", element: <AdminProducts /> },
       { path: "products/create", element: <AdminProductCreate /> },
       { path: "products/:id", element: <AdminProductDetail /> },

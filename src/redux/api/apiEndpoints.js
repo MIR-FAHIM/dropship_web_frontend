@@ -392,6 +392,12 @@ export const API_ENDPOINTS = {
     update:    define("PUT",    "/product-assistant-qas/update/{id}"),
     delete:    define("DELETE", "/product-assistant-qas/delete/{id}"),
   },
+
+  ecommerceWebsiteLeads: {
+    create:       define("POST", "/ecommerce-website-leads"),
+    list:         define("GET",  "/ecommerce-website-leads"),
+    updateStatus: define("POST", "/ecommerce-website-leads/{id}/status"),
+  },
 };
 
 export const buildEndpointPath = (template, params = {}) =>
