@@ -1,714 +1,211 @@
-import React, { useState, useEffect } from "react";
-import { FaHeart, FaRegHeart, FaTag, FaBoxOpen, FaStore, FaLayerGroup, FaThLarge } from "react-icons/fa";
-import { useParams, useNavigate } from "react-router-dom";
-import { useGetProductDetailsQuery, useAddWishListMutation, useDeleteWishProductMutation, useGetFavProductsQuery } from "../../redux/features/product";
-import { toast } from "sonner";
-import { getFromLocalstorage } from "../../utils/localstorage.utils";
-import { imgBaseUrl } from "../../../config";
-import { getAdminBasePrice } from "../../utils/pricing.utils";
-import WhatsAppFloatingButton from "../../components/shared/WhatsAppFloatingButton";
-
-const styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
-
-  :root {
-    --cream: #faf7f4;
-    --warm-white: #fff9f5;
-    --ink: #1a1410;
-    --muted: #7a6e65;
-    --accent: #c9622f;
-    --accent-light: #f0d5c8;
-    --accent-pale: #fdf0ea;
-    --border: #e8e0d8;
-    --shadow-sm: 0 2px 8px rgba(26,20,16,0.06);
-    --shadow-md: 0 8px 32px rgba(26,20,16,0.10);
-    --shadow-lg: 0 24px 64px rgba(26,20,16,0.13);
-    --radius: 16px;
-    --radius-sm: 8px;
-  }
-
-  .pdp-wrap * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  .pdp-wrap {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    min-height: 100vh;
-    color: var(--ink);
-    animation: pdpFadeIn 0.5s ease both;
-  }
-
-  @keyframes pdpFadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ─── Hero ─── */
-  .pdp-hero {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    min-height: 78vh;
-    background: var(--warm-white);
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* ─── Image Panel ─── */
-  .pdp-image-panel {
-    position: relative;
-    background: #f0ebe5;
-    padding: 40px 32px 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    border-right: 1px solid var(--border);
-  }
-
-  .pdp-main-img-wrap {
-    width: 100%;
-    aspect-ratio: 1;
-    max-width: 420px;
-    border-radius: 20px;
-    overflow: hidden;
-    background: #e8e2db;
-    position: relative;
-    box-shadow: var(--shadow-lg);
-  }
-
-  .pdp-main-img-wrap img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s ease;
-    display: block;
-  }
-
-  .pdp-main-img-wrap:hover img {
-    transform: scale(1.035);
-  }
-
-  .pdp-gallery {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .pdp-thumb {
-    width: 60px;
-    height: 60px;
-    border-radius: 10px;
-    overflow: hidden;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-    background: #e8e2db;
-  }
-
-  .pdp-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .pdp-thumb:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(201,98,47,0.2);
-  }
-
-  .pdp-thumb.active {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-light);
-  }
-
-  .pdp-fav-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 8px 16px;
-    gap: 8px;
-    background: rgba(255,255,255,0.85);
-    backdrop-filter: blur(8px);
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    box-shadow: var(--shadow-sm);
-  }
-
-  .pdp-fav-btn:hover {
-    transform: scale(1.1);
-    box-shadow: var(--shadow-md);
-  }
-
-  .pdp-kit-badge {
-    background: rgba(255,255,255,0.7);
-    backdrop-filter: blur(6px);
-    border: 1px solid var(--border);
-    border-radius: 40px;
-    padding: 7px 16px;
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.02em;
-  }
-
-  /* ─── Info Panel ─── */
-  .pdp-info-panel {
-    padding: 52px 48px 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 20px;
-  }
-
-  .pdp-category-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-pale);
-    color: var(--accent);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    padding: 5px 12px;
-    border-radius: 40px;
-    width: fit-content;
-  }
-
-  .pdp-name {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(2rem, 4vw, 2.8rem);
-    font-weight: 700;
-    line-height: 1.15;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-
-  .pdp-sku {
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .pdp-divider {
-    height: 1px;
-    background: var(--border);
-    border: none;
-  }
-
-  .pdp-description {
-    font-size: 14.5px;
-    line-height: 1.7;
-    color: #4a4039;
-  }
-
-  .pdp-description * {
-    font-size: inherit;
-    line-height: inherit;
-    color: inherit;
-  }
-
-  .pdp-stats {
-    display: flex;
-    gap: 16px;
-  }
-
-  .pdp-stat-card {
-    flex: 1;
-    background: var(--cream);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .pdp-stat-label {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: var(--muted);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-
-  .pdp-stat-value {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.7rem;
-    font-weight: 700;
-    color: var(--ink);
-    letter-spacing: -0.01em;
-  }
-
-  .pdp-stat-card.price .pdp-stat-value { color: var(--accent); }
-
-  .pdp-profit-banner {
-    background: linear-gradient(135deg, #1a3a2a 0%, #1f4a35 100%);
-    border-radius: 12px;
-    padding: 14px 18px;
-    color: #a8d5b5;
-    font-size: 13px;
-    line-height: 1.55;
-    border: 1px solid #2a5a3f;
-  }
-
-  .pdp-profit-banner strong { color: #c8f0d8; }
-
-  .pdp-login-section {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    padding-top: 4px;
-  }
-
-  .pdp-login-note {
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
-    font-style: italic;
-  }
-
-  .pdp-login-btn {
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    padding: 16px 32px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    letter-spacing: 0.02em;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-    box-shadow: 0 4px 20px rgba(201,98,47,0.3);
-  }
-
-  .pdp-login-btn:hover {
-    background: #b5531f;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(201,98,47,0.4);
-  }
-
-  .pdp-login-btn:active { transform: translateY(0); }
-
-  /* ─── Tabs ─── */
-  .pdp-tabs-section {
-    max-width: 1100px;
-    margin: 48px auto;
-    padding: 0 40px 64px;
-  }
-
-  .pdp-tab-bar {
-    display: flex;
-    gap: 4px;
-    background: var(--warm-white);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 4px;
-    width: fit-content;
-    margin-bottom: 32px;
-  }
-
-  .pdp-tab {
-    background: none;
-    border: none;
-    padding: 9px 22px;
-    border-radius: 9px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    color: var(--muted);
-    transition: all 0.2s;
-    letter-spacing: 0.01em;
-  }
-
-  .pdp-tab.active {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 2px 10px rgba(201,98,47,0.25);
-  }
-
-  .pdp-tab:hover:not(.active) {
-    background: var(--border);
-    color: var(--ink);
-  }
-
-  /* ─── Images Tab ─── */
-  .pdp-images-tab {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    align-items: flex-start;
-    animation: tabReveal 0.3s ease both;
-  }
-
-  @keyframes tabReveal {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .pdp-tab-main-img {
-    width: 360px;
-    height: 360px;
-    object-fit: cover;
-    border-radius: 18px;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-md);
-  }
-
-  /* ─── Details Tab ─── */
-  .pdp-details-tab {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
-    animation: tabReveal 0.3s ease both;
-  }
-
-  .pdp-detail-card {
-    background: var(--warm-white);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .pdp-detail-card:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-3px);
-  }
-
-  .pdp-detail-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--accent-pale);
-    border-radius: 9px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--accent);
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-
-  .pdp-detail-label {
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .pdp-detail-value {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: var(--ink);
-  }
-
-  /* ─── Loading / Error ─── */
-  .pdp-loading, .pdp-error {
-    font-family: 'DM Sans', sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 60vh;
-    font-size: 16px;
-    color: var(--muted);
-  }
-
-  .pdp-error { color: var(--accent); }
-
-  /* ─── Responsive ─── */
-  @media (max-width: 900px) {
-    .pdp-hero { grid-template-columns: 1fr; min-height: unset; }
-    .pdp-image-panel { border-right: none; border-bottom: 1px solid var(--border); }
-    .pdp-info-panel { padding: 32px 24px; }
-    .pdp-tabs-section { padding: 0 20px 48px; }
-    .pdp-details-tab { grid-template-columns: 1fr 1fr; }
-  }
-
-  @media (max-width: 560px) {
-    .pdp-name { font-size: 1.8rem; }
-    .pdp-stats { flex-direction: column; }
-    .pdp-details-tab { grid-template-columns: 1fr; }
-    .pdp-tab-main-img { width: 100%; height: auto; }
-  }
-`;
-
-const ProductDetailsHomePage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery(id);
-  const [activeTab, setActiveTab] = useState("images");
-  const [selectedImage, setSelectedImage] = useState(null);
-
-  useEffect(() => { setSelectedImage(null); }, [id]);
-
-  const userId = getFromLocalstorage("userId");
-  const [inWish, setInWish] = useState(false);
-  const [addWishList] = useAddWishListMutation();
-  const [deleteWishProduct] = useDeleteWishProductMutation();
-  const { data: favData } = useGetFavProductsQuery(userId, { skip: !userId });
-  const favItems = favData?.items ?? favData?.data ?? [];
-
-  useEffect(() => {
-    if (!id) return;
-    if (Array.isArray(favItems) && favItems.length > 0) {
-      const inFavApi = favItems.some(
-        (item) => String(item?.product_id ?? item?.product?.id) === String(id)
-      );
-      setInWish(inFavApi);
-      return;
-    }
-    try {
-      const localWishlist = JSON.parse(localStorage.getItem("wishlist") || "[]");
-      if (Array.isArray(localWishlist)) {
-        setInWish(localWishlist.map(String).includes(String(id)));
-      }
-    } catch {}
-  }, [favItems, id]);
-
-  const handleToggleWish = async (e) => {
-    e?.stopPropagation?.();
-    if (!id) return;
-    if (!userId) {
-      toast.error("Please login to manage wishlist");
-      return;
-    }
-
-    try {
-      if (!inWish) {
-        const res = await addWishList({
-          id: Number(id),
-          product_id: Number(id),
-          user_id: Number(userId),
-        }).unwrap();
-
-        const wishId = res?.data?.id ?? res?.id ?? res?.data?.data?.id ?? null;
-        if (wishId) {
-          try {
-            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
-            localStorage.setItem("wishlistMap", JSON.stringify({ ...map, [String(id)]: wishId }));
-          } catch {}
-        }
-
-        try {
-          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
-          const next = Array.from(new Set([...current, Number(id)]));
-          localStorage.setItem("wishlist", JSON.stringify(next));
-        } catch {}
-
-        setInWish(true);
-        window.dispatchEvent(new Event("wishlist-updated"));
-        toast.success(res?.message || "Product added to wishlist!");
-      } else {
-        let wishItemId = null;
-        if (Array.isArray(favItems)) {
-          const match = favItems.find(
-            (it) => String(it?.product_id ?? it?.product?.id) === String(id)
-          );
-          if (match?.id) wishItemId = match.id;
-        }
-        if (!wishItemId) {
-          try {
-            const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
-            wishItemId = map?.[String(id)] ?? id;
-          } catch {
-            wishItemId = id;
-          }
-        }
-
-        const res = await deleteWishProduct(wishItemId).unwrap();
-
-        try {
-          const current = JSON.parse(localStorage.getItem("wishlist") || "[]");
-          const next = current.filter((x) => String(x) !== String(id));
-          localStorage.setItem("wishlist", JSON.stringify(next));
-
-          const map = JSON.parse(localStorage.getItem("wishlistMap") || "{}");
-          if (map[String(id)]) {
-            delete map[String(id)];
-            localStorage.setItem("wishlistMap", JSON.stringify(map));
-          }
-        } catch {}
-
-        setInWish(false);
-        window.dispatchEvent(new Event("wishlist-updated"));
-        toast.success(res?.message || "Product removed from wishlist!");
-      }
-    } catch (err) {
-      console.error("Wishlist error:", err);
-      toast.error(err?.data?.message || err?.message || "Failed to update wishlist");
-    }
-  };
-
-  if (isLoading) return <div className="pdp-loading">Loading product…</div>;
-  if (isError) return <div className="pdp-error">Error: {error?.message}</div>;
-
-  const product = detail?.data;
-  const galleryImages = product?.images?.length > 0
-    ? product.images.map(img => img.image?.file_name ? `${imgBaseUrl}/${img.image.file_name}` : null).filter(Boolean)
-    : [];
-  const primaryImageUrl = product?.primary_image?.file_name
-    ? `${imgBaseUrl}/${product.primary_image.file_name}`
-    : "https://images.unsplash.com/photo-1518770660439-4636190af475?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80";
-  const allThumbs = [primaryImageUrl, ...galleryImages];
-  const mainImageUrl = selectedImage || primaryImageUrl;
-
-  const detailItems = [
-    { icon: <FaThLarge />, label: "Category", value: product?.category?.name || "N/A" },
-    { icon: <FaLayerGroup />, label: "Sub Category", value: product?.sub_category?.name || "N/A" },
-    { icon: <FaStore />, label: "Shop", value: product?.shop?.name || "N/A" },
+import { useEffect } from "react";
+import {
+  ArrowLeft, ArrowUpRight, Calculator, Copy, Download, FileText, Heart, LayoutTemplate,
+  LockKeyhole, MessageCircleQuestion, Package, Share2, ShoppingCart, Tag, Video,
+} from "lucide-react";
+import PropTypes from "prop-types";
+import { Link, useParams } from "react-router-dom";
+import { useGetProductDetailsQuery } from "../../redux/features/product";
+import { HomeProductImage } from "./HomeProductCard";
+import { formatProductNumber, productImageUrl } from "./homeProductUtils";
+
+const marketingTools = [
+  { icon: Download, label: "ছবি ডাউনলোড", description: "পণ্যের ছবি নিয়ে নিজের পেজে পোস্ট করুন।" },
+  { icon: Copy, label: "নাম ও বিবরণ কপি", description: "তৈরি করা পণ্যের তথ্য দিয়ে দ্রুত পোস্ট লিখুন।" },
+  { icon: Video, label: "ভিডিও লিংক", description: "ভিডিও থাকলে তার লিংক কপি করে শেয়ার করুন।" },
+  { icon: Share2, label: "সোশ্যাল মিডিয়া কনটেন্ট", description: "পণ্যের জন্য তৈরি ক্যাপশন ও পোস্টের লেখা দেখুন।" },
+  { icon: MessageCircleQuestion, label: "প্রশ্নোত্তর সহায়ক", description: "ক্রেতাদের সাধারণ প্রশ্নের উত্তর দেখে নিন।" },
+  { icon: LayoutTemplate, label: "নিজস্ব পণ্য পেজ", description: "নিজের দামে পণ্য সাজিয়ে ক্রেতার সঙ্গে লিংক শেয়ার করুন।" },
+];
+
+function descriptionText(value) {
+  if (!value) return "";
+  const template = document.createElement("template");
+  template.innerHTML = String(value);
+  template.content.querySelectorAll("script, style, template").forEach((node) => node.remove());
+  template.content.querySelectorAll("br, p, div, li, h1, h2, h3, h4").forEach((node) => node.after("\n"));
+  return template.content.textContent.trim().replace(/\n{3,}/g, "\n\n");
+}
+
+function GuestProductPreview({ product }) {
+  const imageFiles = [
+    product.primary_image?.file_name,
+    ...(product.images ?? []).map((item) => item?.image?.file_name ?? item?.file_name ?? item?.image_file_name ?? item),
   ];
+  const images = [...new Set(imageFiles.map(productImageUrl).filter(Boolean))];
+  const description = descriptionText(product.description);
+  const sku = product.sku || product.barcode;
+  const stock = product.current_stock == null ? null : Number(product.current_stock);
+  const attributes = (product.product_attributes ?? [])
+    .filter(({ attribute, value }) => attribute?.name && value?.value);
+  const specifications = [
+    ["ক্যাটাগরি", product.category?.name],
+    ["সাবক্যাটাগরি", product.sub_category?.id !== product.category?.id && product.sub_category?.name],
+    ["ব্র্যান্ড", product.brand?.name],
+    ["সরবরাহকারী", product.vendor?.shop_name || product.shop?.name],
+    ...attributes.map(({ attribute, value }) => [attribute.name, value.value]),
+  ].filter(([, value]) => value);
 
   return (
     <>
-      <style>{styles}</style>
-      <div className="pdp-wrap">
-
-        {/* ─── Hero ─── */}
-        <div className="pdp-hero">
-
-          {/* Image Panel */}
-          <div className="pdp-image-panel">
-            <div className="pdp-main-img-wrap">
-              <img src={mainImageUrl} alt={product?.name} />
-              <button className="pdp-fav-btn" onClick={handleToggleWish} title={inWish ? "Remove from your favourite list" : "Add to your favourite list"}>
-                {inWish
-                  ? <FaHeart size={18} color="#c9622f" />
-                  : <FaRegHeart size={18} color="#7a6e65" />}
-                <span>{inWish ? "Added to your favourite list" : "Add to your favourite list"}</span>
-              </button>
-            </div>
-
-            {allThumbs.length > 1 && (
-              <div className="pdp-gallery">
-                {allThumbs.map((img, idx) => (
-                  <div
-                    key={img + idx}
-                    className={`pdp-thumb ${mainImageUrl === img ? "active" : ""}`}
-                    onClick={() => setSelectedImage(img)}
-                  >
-                    <img src={img} alt={`View ${idx + 1}`} />
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="pdp-kit-badge">📦 Marketing kit available after login</div>
+      <div className="grid items-start gap-5 lg:grid-cols-2 lg:gap-8">
+        <section aria-label="পণ্যের ছবি" className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+          <div className="mx-auto aspect-square max-w-md overflow-hidden rounded-xl bg-slate-50 p-4">
+            <HomeProductImage src={images[0]} alt={product.name} eager />
           </div>
-
-          {/* Info Panel */}
-          <div className="pdp-info-panel">
-            {product?.category?.name && (
-              <span className="pdp-category-chip">
-                <FaTag size={9} /> {product.category.name}
-              </span>
-            )}
-
-            <h1 className="pdp-name">{product?.name}</h1>
-            <p className="pdp-sku">SKU: {product?.barcode || "N/A"}</p>
-
-            <hr className="pdp-divider" />
-
-            {product?.description && (
-              <div
-                className="pdp-description"
-                dangerouslySetInnerHTML={{ __html: product.description }}
-              />
-            )}
-
-            <div className="pdp-stats">
-              <div className="pdp-stat-card price">
-                <span className="pdp-stat-label"><FaTag size={10} /> Base Price</span>
-                <span className="pdp-stat-value">৳{getAdminBasePrice(product)}</span>
-              </div>
-              <div className="pdp-stat-card">
-                <span className="pdp-stat-label"><FaBoxOpen size={10} /> In Stock</span>
-                <span className="pdp-stat-value">{product?.current_stock ?? 0}</span>
-              </div>
-            </div>
-
-            <div className="pdp-profit-banner">
-              <strong>Set your own sell price.</strong> The profit is added to your balance automatically after each successful delivery.
-            </div>
-
-            <div className="pdp-login-section">
-              <p className="pdp-login-note">Login to ResellerBrain for full access & marketing kits</p>
-              <button className="pdp-login-btn" onClick={() => navigate("/")}>
-                Login to Continue →
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* ─── Tabs ─── */}
-        <div className="pdp-tabs-section">
-          <div className="pdp-tab-bar">
-            {["images", "details"].map(tab => (
-              <button
-                key={tab}
-                className={`pdp-tab ${activeTab === tab ? "active" : ""}`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </button>
-            ))}
-          </div>
-
-          {activeTab === "images" && (
-            <div className="pdp-images-tab">
-              <img src={mainImageUrl} alt={product?.name} className="pdp-tab-main-img" />
-              {allThumbs.length > 1 && (
-                <div className="pdp-gallery">
-                  {allThumbs.map((img, idx) => (
-                    <div
-                      key={img + idx}
-                      className={`pdp-thumb ${mainImageUrl === img ? "active" : ""}`}
-                      onClick={() => setSelectedImage(img)}
-                    >
-                      <img src={img} alt={`View ${idx + 1}`} />
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="pdp-kit-badge">📦 Marketing kit available after login</div>
-            </div>
-          )}
-
-          {activeTab === "details" && (
-            <div className="pdp-details-tab">
-              {detailItems.map(item => (
-                <div className="pdp-detail-card" key={item.label}>
-                  <div className="pdp-detail-icon">{item.icon}</div>
-                  <span className="pdp-detail-label">{item.label}</span>
-                  <span className="pdp-detail-value">{item.value}</span>
+          {images.length > 1 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-2">
+              {images.slice(1).map((src, index) => (
+                <div key={src} className="h-16 w-16 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 p-1 sm:h-20 sm:w-20">
+                  <HomeProductImage src={src} alt={`পণ্যের ছবি ${formatProductNumber(index + 2)}`} />
                 </div>
               ))}
             </div>
           )}
-        </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link to="/login" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-blue-300 hover:text-blue-700">
+              <Heart className="h-4 w-4" aria-hidden="true" /> পছন্দের তালিকায় রাখুন
+            </Link>
+            <Link to="/login" className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-blue-300 hover:text-blue-700">
+              <Download className="h-4 w-4" aria-hidden="true" /> ছবি ডাউনলোড
+            </Link>
+          </div>
+        </section>
 
-        <WhatsAppFloatingButton product={product} />
+        <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
+            {product.category?.name && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-blue-700">
+                <Tag className="h-3 w-3" aria-hidden="true" /> {product.category.name}
+              </span>
+            )}
+            {Number.isFinite(stock) && (
+              <span className={`rounded-full px-2.5 py-1 ${stock > 0 ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}>
+                {stock > 0 ? "স্টকে আছে" : "স্টক শেষ"}
+              </span>
+            )}
+          </div>
+          <h1 className="mt-3 break-words text-2xl font-black leading-tight text-slate-900 sm:text-3xl">{product.name}</h1>
+          {sku && <p className="mt-2 break-words text-sm text-slate-500">পণ্য কোড {sku}</p>}
+
+          <div className="mt-5 rounded-xl border border-blue-100 bg-blue-50 p-4">
+            <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+              <Calculator className="h-5 w-5 text-blue-700" aria-hidden="true" /> নিজের বিক্রয়মূল্য ঠিক করুন
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-slate-600">লগইন করে পণ্যের মূল দাম দেখুন, নিজের বিক্রয়মূল্য ও পরিমাণ ঠিক করুন এবং অর্ডারের আগে সম্ভাব্য লাভ হিসাব করুন।</p>
+            <div className="mt-3 grid gap-2 min-[360px]:grid-cols-3">
+              {["মূল দাম", "আপনার বিক্রয়মূল্য", "সম্ভাব্য লাভ"].map((label) => (
+                <Link key={label} to="/login" className="flex items-center gap-1.5 rounded-lg bg-white p-2 text-xs font-semibold text-slate-700 hover:text-blue-700">
+                  <LockKeyhole className="h-3.5 w-3.5 shrink-0 text-blue-600" aria-hidden="true" /> {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <Link to="/login" className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-3 text-center text-sm font-bold text-white hover:bg-blue-800">
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" /> লগইন করে অর্ডার করুন
+          </Link>
+          <p className="mt-3 text-center text-xs text-slate-500">সফল ডেলিভারির পর লাভ আপনার ব্যালেন্সে যোগ হয়।</p>
+        </section>
       </div>
+
+      <section aria-labelledby="product-tools-heading" className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <h2 id="product-tools-heading" className="text-lg font-bold text-slate-900 sm:text-xl">এই পণ্য বিক্রির জন্য যা পাবেন</h2>
+        <p className="mt-1 text-sm text-slate-600">মার্কেটিং টুল ও বিক্রির সুবিধাগুলো ব্যবহার করতে লগইন করুন।</p>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {marketingTools.map(({ icon: Icon, label, description }) => (
+            <li key={label}>
+              <Link to="/login" className="group flex h-full items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3 hover:border-blue-300 hover:bg-blue-50">
+                <Icon className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-bold text-slate-900">{label}</span>
+                  <span className="mt-1 block text-xs leading-relaxed text-slate-600">{description}</span>
+                </span>
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover:text-blue-700" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="product-description-heading" className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 id="product-description-heading" className="flex items-center gap-2 text-lg font-bold text-slate-900 sm:text-xl">
+            <FileText className="h-5 w-5 text-blue-700" aria-hidden="true" /> পণ্যের বিবরণ
+          </h2>
+          {description && <Link to="/login" className="inline-flex items-center gap-1 text-sm font-semibold text-blue-700 hover:underline">বিবরণ কপি করুন <LockKeyhole className="h-3.5 w-3.5" aria-hidden="true" /></Link>}
+        </div>
+        <p className="mt-3 whitespace-pre-line break-words text-sm leading-7 text-slate-700">{description || "এই পণ্যের বিবরণ এখনো যোগ করা হয়নি।"}</p>
+        {specifications.length > 0 && (
+          <dl className="mt-5 grid gap-2 border-t border-slate-200 pt-4 sm:grid-cols-2 lg:grid-cols-3">
+            {specifications.map(([label, value], index) => (
+              <div key={`${label}-${index}`} className="min-w-0 rounded-lg bg-slate-50 p-3">
+                <dt className="text-xs font-medium text-slate-500">{label}</dt>
+                <dd className="mt-1 break-words text-sm font-semibold text-slate-800">{value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
+      </section>
     </>
   );
+}
+
+GuestProductPreview.propTypes = {
+  product: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    sku: PropTypes.string,
+    barcode: PropTypes.string,
+    description: PropTypes.string,
+    current_stock: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    primary_image: PropTypes.shape({ file_name: PropTypes.string }),
+    images: PropTypes.array,
+    product_attributes: PropTypes.array,
+    category: PropTypes.shape({ id: PropTypes.number, name: PropTypes.string }),
+    sub_category: PropTypes.shape({ id: PropTypes.number, name: PropTypes.string }),
+    brand: PropTypes.shape({ name: PropTypes.string }),
+    vendor: PropTypes.shape({ shop_name: PropTypes.string }),
+    shop: PropTypes.shape({ name: PropTypes.string }),
+  }).isRequired,
 };
 
-export default ProductDetailsHomePage;
+export default function ProductDetailsHomePage() {
+  const { id } = useParams();
+  const { currentData, isFetching, isError, error, refetch } = useGetProductDetailsQuery(id);
+  const product = currentData?.data;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  return (
+    <main lang="bn" className="min-h-screen bg-slate-50 text-slate-900">
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
+          <Link to="/#product-catalog" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-blue-700">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" /> পণ্য সংগ্রহে ফিরুন
+          </Link>
+          <Link to="/login" className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-3 py-2 text-sm font-bold text-blue-700 hover:bg-blue-100">
+            লগইন <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </header>
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-8">
+        {isFetching && !product ? (
+          <p role="status" className="rounded-2xl border bg-white p-6 text-sm text-slate-600">পণ্যের তথ্য লোড হচ্ছে…</p>
+        ) : product ? (
+          <GuestProductPreview product={product} />
+        ) : (
+          <div role="status" className="rounded-2xl border bg-white p-6 text-sm text-slate-600">
+            <Package className="mb-3 h-6 w-6 text-slate-400" aria-hidden="true" />
+            {error?.status === 404 || !isError ? "পণ্যটি পাওয়া যায়নি।" : (
+              <>
+                পণ্যের তথ্য লোড করা যায়নি।{" "}
+                <button type="button" className="font-semibold text-blue-700 underline" onClick={refetch}>আবার চেষ্টা করুন</button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}

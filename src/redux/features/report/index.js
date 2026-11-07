@@ -46,6 +46,10 @@ const reportApi = baseApi.injectEndpoints({
         params,
       }),
     }),
+
+    getHomeProductLeaderboard: builder.query({
+      query: () => API_ENDPOINTS.productClicks.homeLeaderboard.path,
+    }),
   }),
 });
 
@@ -56,6 +60,7 @@ export const {
   useGetProductClicksDaywiseReportQuery,
   useGetProductClicksLast7DaysReportQuery,
   useGetProductClicksLeaderboardQuery,
+  useGetHomeProductLeaderboardQuery,
 } = reportApi;
 
 export default reportApi;

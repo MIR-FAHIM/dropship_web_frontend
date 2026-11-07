@@ -13,7 +13,10 @@ const categoryApi = baseApi.injectEndpoints({
     }),
 
     listCategories: builder.query({
-      query: (page = 1) => `${API_ENDPOINTS.categories.list.path}?page=${page}`,
+      query: (filters = 1) => ({
+        url: API_ENDPOINTS.categories.list.path,
+        params: typeof filters === "object" ? filters : { page: filters },
+      }),
       providesTags: ["Category"],
     }),
     listCategoriesWithChildren: builder.query({

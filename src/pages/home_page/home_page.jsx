@@ -7,10 +7,11 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
-import { useListCategoriesQuery } from "../../redux/features/category";
 import { useButtonClickMutation } from "../../redux/features/user";
 import ProductsListHomePage from "./product_list_home";
+import HomeProductLeaderboard from "./HomeProductLeaderboard";
 import FooterHome from "./FooterHome";
+import GrowthToolkit from "../../components/shared/GrowthToolkit";
 
 const globalStyles = `
   @keyframes float {
@@ -30,7 +31,6 @@ const HomePage = () => {
     const navigate = useNavigate();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [trackButtonClick] = useButtonClickMutation();
-    const { error, isLoading } = useListCategoriesQuery();
 
     const handleChangeLanguage = (lng) => {
         i18n.changeLanguage(lng);
@@ -48,7 +48,7 @@ const HomePage = () => {
 
     const stats = [
         { value: "5,000+",  label: "Active Resellers",  icon: <Users className="w-5 h-5" /> },
-        { value: "10,000+", label: "Product Library",   icon: <Package className="w-5 h-5" /> },
+        { value: "100+",    label: "Winning Products", icon: <Package className="w-5 h-5" /> },
         { value: "98%",     label: "Delivery Success",  icon: <Truck className="w-5 h-5" /> },
         { value: "50L+ BDT", label: "Monthly Payouts",  icon: <DollarSign className="w-5 h-5" /> },
     ];
@@ -73,9 +73,9 @@ const HomePage = () => {
     ];
 
     const testimonials = [
-        { name: "রাহেলা বেগম",     location: "ঢাকা",      income: "মাসে ২৫,০০০+", text: "আমি গৃহিণী ছিলাম, এখন মাসে ২৫,০০০+ টাকা আয় করছি। ResellerBrain আমার জীবন বদলে দিয়েছে।",        avatar: "রা", avatarBg: "bg-red-100 text-red-700",     stars: 5 },
-        { name: "মো. সাকিব হাসান", location: "চট্টগ্রাম", income: "মাসে ৪০,০০০+", text: "পার্ট-টাইম করতাম, এখন ফুল-টাইম রিসেলার। স্টক ছাড়াই ব্যবসা করা সত্যিই অবিশ্বাস্য!",          avatar: "স",  avatarBg: "bg-blue-100 text-blue-700",   stars: 5 },
-        { name: "নাফিসা আক্তার",   location: "সিলেট",     income: "মাসে ১৮,০০০+", text: "প্যানেল অনেক সহজ, সাপোর্ট টিম সবসময় সাহায্য করে। বিশ্বাসযোগ্য প্ল্যাটফর্ম।",               avatar: "ন",  avatarBg: "bg-green-100 text-green-700", stars: 5 },
+        { name: "রাহেলা বেগম",     location: "ঢাকা",      income: "মাসে ২৫,০০০+", text: "সংসার সামলানোর পাশাপাশি রিসেলিং শুরু করেন রাহেলা। এখন এই কাজ থেকে মাসে ২৫ হাজার টাকার বেশি আয় করছেন।", avatar: "রা", avatarBg: "bg-red-100 text-red-700",     stars: 5 },
+        { name: "আকিব ভাই",       location: "চট্টগ্রাম", income: "মাসে ৪০,০০০+", text: "আকিব ভাই আগে অন্য কয়েকটি রিসেলিং প্ল্যাটফর্মে কাজ করেছেন। এখানে তাঁর সবচেয়ে ভালো লেগেছে আমাদের পণ্য আর সাপোর্ট টিমের সঙ্গে সহজ যোগাযোগ। হোয়াটসঅ্যাপে নিয়মিত কথা বলতে বলতেই আমাদের ওপর তাঁর আস্থা তৈরি হয়েছে।", avatar: "আ", avatarBg: "bg-blue-100 text-blue-700", stars: 5 },
+        { name: "নাফিসা আক্তার",   location: "সিলেট",     income: "মাসে ১৮,০০০+", text: "রিসেলার প্যানেলটা ব্যবহার করতে নাফিসার সহজ লেগেছে। কোথাও আটকে গেলে সাপোর্ট টিমের কাছ থেকে সাহায্য পেয়েছেন।", avatar: "ন", avatarBg: "bg-green-100 text-green-700", stars: 5 },
     ];
 
     const resources = [
@@ -91,16 +91,6 @@ const HomePage = () => {
         "দ্রুত পেমেন্ট উইথড্র",       "ডেডিকেটেড সাপোর্ট টিম",
         "সারা বাংলাদেশে ডেলিভারি",     "বিক্রয় ও মুনাফার বিশ্লেষণ",
     ];
-
-    if (isLoading) return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900">
-            <div className="text-center">
-                <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-white text-lg">লোড হচ্ছে...</p>
-            </div>
-        </div>
-    );
-    if (error) return <div className="min-h-screen flex items-center justify-center text-red-500">Error fetching data.</div>;
 
     return (
         <>
@@ -132,11 +122,11 @@ const HomePage = () => {
                                     <button onClick={() => handleChangeLanguage("en")} className="px-2.5 py-1 rounded-md hover:bg-white hover:shadow-sm transition-all">EN</button>
                                     <button onClick={() => handleChangeLanguage("bd")} className="px-2.5 py-1 rounded-md hover:bg-white hover:shadow-sm transition-all">বাং</button>
                                 </div>
-                                <button onClick={() => navigate("/vendor")} className="text-sm font-semibold bg-orange-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">Supplier Panel</button>
+                                <button onClick={() => navigate("/vendor")} className="hidden lg:inline-flex text-sm font-semibold bg-orange-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">Supplier Panel</button>
                                 <button
                                     onClick={handleDashboard}
-                                    className="text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
-                                >Droshipper Login</button>
+                                    className="hidden lg:inline-flex text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors shadow-sm"
+                                >Dropshipper Login</button>
                                 <Link to="/register" className="hidden sm:inline-flex items-center gap-1 text-sm font-semibold bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition-colors shadow-sm">
                                     <Zap className="w-3.5 h-3.5" /> ফ্রি শুরু করুন
                                 </Link>
@@ -161,6 +151,17 @@ const HomePage = () => {
                         </div>
                     )}
                 </nav>
+
+                <div className="lg:hidden grid grid-cols-2 gap-2 px-4 py-3 border-b border-gray-100 bg-white">
+                    <button
+                        onClick={() => navigate("/vendor")}
+                        className="rounded-lg bg-orange-600 px-2 py-3 text-sm font-semibold text-white hover:bg-orange-700 transition-colors"
+                    >Supplier Panel</button>
+                    <button
+                        onClick={handleDashboard}
+                        className="rounded-lg bg-blue-600 px-2 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    >Dropshipper Login</button>
+                </div>
 
                 {/* HERO */}
                 <section className="relative overflow-hidden text-white pt-20 pb-28" style={{ background: "linear-gradient(135deg, #0f172a 0%, #0d1b4b 50%, #0f172a 100%)" }}>
@@ -214,7 +215,7 @@ const HomePage = () => {
                             </Link>
                             <button
                                 onClick={handleDashboard}
-                                className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base px-8 py-4 rounded-xl transition-all backdrop-blur-sm"
+                                className="hidden lg:inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-semibold text-base px-8 py-4 rounded-xl transition-all backdrop-blur-sm"
                             >
                                 ড্যাশবোর্ড দেখুন <ArrowRight className="w-4 h-4" />
                             </button>
@@ -245,6 +246,8 @@ const HomePage = () => {
                         </svg>
                     </div>
                 </section>
+
+                <HomeProductLeaderboard onOpen={() => handleButtonClick("product clicked home")} />
 
                 {/* HOW IT WORKS */}
                 <section id="how-it-works" className="py-20 bg-white">
@@ -308,6 +311,8 @@ const HomePage = () => {
                     </div>
                 </section>
 
+                <GrowthToolkit />
+
                 {/* RESPONSIBILITY BANNER */}
                 <section className="py-16 text-white relative overflow-hidden" style={{ background: "linear-gradient(90deg, #2563eb 0%, #1d4ed8 50%, #4f46e5 100%)" }}>
                     <div className="pointer-events-none absolute inset-0">
@@ -330,34 +335,15 @@ const HomePage = () => {
                     </div>
                 </section>
 
-                {/* PRODUCTS SHOWCASE */}
-                <section className="py-16 bg-white">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                        <div className="text-center mb-10">
-                            <span className="text-blue-600 font-semibold text-sm uppercase tracking-widest">পণ্য সংগ্রহ</span>
-                            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-2 mb-3">হাজারো পণ্য আপনার জন্য প্রস্তুত</h2>
-                            <p className="text-gray-500">লগইন করুন এবং যেকোনো পণ্য বেছে বিক্রি শুরু করুন</p>
-                        </div>
-                        <ProductsListHomePage />
-                        <div className="mt-10 text-center">
-                            <Link
-                                to="/register"
-                                onClick={() => handleButtonClick("products cta register")}
-                                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-8 py-3.5 rounded-xl transition-all shadow-md shadow-blue-500/25 hover:-translate-y-0.5"
-                            >
-                                সব পণ্য দেখতে রেজিস্ট্রেশন করুন <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-                    </div>
-                </section>
+                <ProductsListHomePage />
 
                 {/* TESTIMONIALS */}
                 <section id="testimonials" className="py-20 bg-gray-50">
                     <div className="max-w-6xl mx-auto px-4 sm:px-6">
                         <div className="text-center mb-14">
                             <span className="text-blue-600 font-semibold text-sm uppercase tracking-widest">সফলতার গল্প</span>
-                            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-2 mb-3">তারা সফল হয়েছেন</h2>
-                            <p className="text-gray-500">আমাদের রিসেলারদের বাস্তব অভিজ্ঞতা</p>
+                            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 mt-2 mb-3">রিসেলিং করে কেমন চলছে?</h2>
+                            <p className="text-gray-500">পণ্য, রিসেলার প্যানেল আর সাপোর্ট নিয়ে তিনজন রিসেলারের অভিজ্ঞতা।</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -369,7 +355,7 @@ const HomePage = () => {
                                                 <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                                             ))}
                                         </div>
-                                        <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">"{t.text}"</p>
+                                        <p className="text-gray-700 text-sm leading-relaxed mb-5">{t.text}</p>
                                     </div>
                                     <div className="flex items-center gap-3">
                                         <div className={"w-10 h-10 rounded-full flex items-center justify-center font-bold text-base shrink-0 " + t.avatarBg}>
