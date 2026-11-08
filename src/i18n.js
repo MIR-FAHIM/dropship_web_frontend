@@ -42,7 +42,7 @@ const resources = {
       "Get Started": "Get Started",
       "see_product": "Find Products from categories.",
       "home_page_bullets": {
-        "access_verified_products": "১০,০০০+ ভেরিফাইড প্রোডাক্ট সহজেই পাবেন বিভিন্ন ক্যাটেগরিতে",
+        "access_verified_products": "100+ যাচাইকৃত পণ্য",
         "download_images_videos": "ফ্রিতে ডাউনলোড করুন উচ্চমানের পণ্যের ছবি ও ভিডিও",
         "sell_own_platform": "নিজের প্ল্যাটফর্মে বিক্রি করুন (ফেসবুক, হোয়াটসঅ্যাপ, ওয়েবসাইট, বা মার্কেটপ্লেস)",
         "set_own_prices": "নিজের মূল্য নির্ধারণ করুন এবং তাৎক্ষণিক লাভ করুন",
@@ -234,7 +234,7 @@ const resources = {
     "ResellerBrain – Start Your E-Commerce Business with Zero Investment!": "ResellerBrain – বিনিয়োগ ছাড়াই শুরু করুন নিজের ই-কমার্স ব্যবসা!",
     "Now, anyone—from students to homemakers, beginners to professionals—can launch their own e-commerce business without any inventory or upfront investment! ResellerBrain brings you a hassle-free dropshipping and reselling platform where you can:": "এখন যে কেউ—শিক্ষার্থী, গৃহিণী, চাকরিজীবী বা একেবারে নতুন উদ্যোক্তারা—এক টাকাও বিনিয়োগ না করে নিজের ই-কমার্স ব্যবসা শুরু করতে পারবেন! ResellerBrain আপনাকে দিচ্ছে ড্রপশিপিং ও রিসেলিং-এর সেরা সুযোগ, যেখানে আপনি—",
     "home_page_bullets": {
-      "access_verified_products": "১০,০০০+ ভেরিফাইড প্রোডাক্ট সহজেই পাবেন বিভিন্ন ক্যাটেগরিতে",
+      "access_verified_products": "100+ যাচাইকৃত পণ্য",
       "download_images_videos": "ফ্রিতে ডাউনলোড করুন উচ্চমানের পণ্যের ছবি ও ভিডিও",
       "sell_own_platform": "নিজের প্ল্যাটফর্মে বিক্রি করুন (ফেসবুক, হোয়াটসঅ্যাপ, ওয়েবসাইট, বা মার্কেটপ্লেস)",
       "set_own_prices": "নিজের মূল্য নির্ধারণ করুন এবং তাৎক্ষণিক লাভ করুন",

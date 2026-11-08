@@ -40,9 +40,9 @@ const productApi = baseApi.injectEndpoints({
       providesTags: ["Product"],
     }),
     listHomeProducts: builder.query({
-      query: (page = 1) => ({
+      query: (filters = 1) => ({
         url: API_ENDPOINTS.products.listhome.path,
-        params: { page, },
+        params: typeof filters === "object" ? filters : { page: filters },
       }),
       providesTags: ["Product"],
     }),
