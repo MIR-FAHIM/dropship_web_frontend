@@ -1065,10 +1065,6 @@ const ProductDetails = () => {
                 <h3 className="strategy-title">{t("product_details.sub_category")}</h3>
                 <p className="strategy-subtitle">{product?.sub_category?.name || "N/A"}</p>
               </div>
-              <div className="strategy-card">
-                <h3 className="strategy-title">{t("product_details.shop")}</h3>
-                <p className="strategy-subtitle">{product?.shop?.name || "N/A"}</p>
-              </div>
             </div>
           )}
           {activeTab === "social_content" && (

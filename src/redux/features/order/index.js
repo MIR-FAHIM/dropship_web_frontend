@@ -102,6 +102,7 @@ const orderApi = baseApi.injectEndpoints({
     // Inside your redux query definition
     getUserBalance: builder.query({
       query: (id) => `/users/getBalance/${id}`,
+      providesTags: ["ResellerTransactions"],
     }),
 
     checkAdvanceRequirement: builder.query({
@@ -122,21 +123,21 @@ const orderApi = baseApi.injectEndpoints({
     }),
 
     approveAdvance: builder.mutation({
-      query: ({ id, admin_note }) => ({
+      query: ({ id, ...body }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.approveAdvance.path, { id }),
         method: API_ENDPOINTS.orders.approveAdvance.method,
-        body: { admin_note },
+        body,
       }),
-      invalidatesTags: ["OrderAdvance", "OrderDetails"],
+      invalidatesTags: ["OrderAdvance", "OrderDetails", "ResellerTransactions"],
     }),
 
     rejectAdvance: builder.mutation({
-      query: ({ id, reason }) => ({
+      query: ({ id, reason, reverse_approval }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.rejectAdvance.path, { id }),
         method: API_ENDPOINTS.orders.rejectAdvance.method,
-        body: { reason },
+        body: { reason, reverse_approval },
       }),
-      invalidatesTags: ["OrderAdvance", "OrderDetails"],
+      invalidatesTags: ["OrderAdvance", "OrderDetails", "ResellerTransactions"],
     }),
   }),
 });

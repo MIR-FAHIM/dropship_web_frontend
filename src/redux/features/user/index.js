@@ -48,6 +48,13 @@ const userApi = baseApi.injectEndpoints({
       },
       providesTags: ["User"],
     }),
+    getDropshipperLeaderboard: builder.query({
+      query: (page = 1) => ({
+        url: API_ENDPOINTS.users.dropshipperLeaderboard.path,
+        params: { page },
+      }),
+      providesTags: ["User", "Order"],
+    }),
     getUserDetails: builder.query({
       query: (id) => `/users/details/${id}`,
     }),
@@ -85,6 +92,7 @@ export const {
   useGetUserDetailsQuery,
   useGetAdminListQuery,
   useGetDropshippersQuery,
+  useGetDropshipperLeaderboardQuery,
   useUserBanMutation,
   useUserUnbanMutation,
 } = userApi;

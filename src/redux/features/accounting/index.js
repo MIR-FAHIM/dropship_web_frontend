@@ -38,6 +38,14 @@ const accountingApi = baseApi.injectEndpoints({
       }),
       providesTags: ["ResellerTransactions"],
     }),
+    getResellerAdvanceHistory: builder.query({
+      query: (page = 1) => ({
+        url: API_ENDPOINTS.transactions.resellerAdvanceHistory.path,
+        params: { page },
+      }),
+      providesTags: ["ResellerTransactions"],
+    }),
+
     getTransactionReport: builder.query({
       query: () => API_ENDPOINTS.transactions.report.path,
     }),
@@ -112,6 +120,7 @@ export const {
   useGetCreditTransactionsQuery,
   useGetDebitTransactionsQuery,
   useGetResellerTransactionsQuery,
+  useGetResellerAdvanceHistoryQuery,
   useGetTransactionReportQuery,
   useAddUserBankAccountMutation,
   useGetUserBankAccountQuery,

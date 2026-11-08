@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { ClipboardList, Search, Eye, Loader2, User, CheckCircle, CheckCircle2, Clock, Lock, Store, ChevronDown, X, Check, FileText, Truck } from "lucide-react";
+import { ClipboardList, Search, Eye, Loader2, CheckCircle, CheckCircle2, Clock, Lock, Store, ChevronDown, X, Check, FileText, Truck } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import {
@@ -8,6 +8,7 @@ import {
   useGetOrderStatusSummaryQuery,
 } from "../../../redux/features/order";
 import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
+import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import VendorSettlementInvoiceModal from "./VendorSettlementInvoiceModal";
 import ManualCarrybeePaymentModal from "./ManualCarrybeePaymentModal";
 
@@ -29,6 +30,44 @@ const paymentColors = {
   paid: "bg-green-100 text-green-700",
   unpaid: "bg-red-100 text-red-700",
   partial: "bg-yellow-100 text-yellow-700",
+};
+
+const DropshipperCompletedOrderCount = ({ completedCount }) => {
+  const badgeColor = completedCount == null
+    ? "bg-gray-100 text-gray-500"
+    : completedCount > 5
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-red-100 text-red-700";
+  const label = completedCount == null
+    ? "সম্পন্ন অর্ডারের সংখ্যা পাওয়া যায়নি"
+    : `সম্পন্ন অর্ডার: ${completedCount}`;
+
+  return (
+    <span
+      title={label}
+      className={`inline-flex h-7 min-w-[1.75rem] shrink-0 items-center justify-center rounded-full px-2 text-xs font-semibold tabular-nums ${badgeColor}`}
+    >
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true">{completedCount ?? "—"}</span>
+    </span>
+  );
+};
+
+const renderDropshipperPhone = (phone) => {
+  const url = formatWhatsAppUrl(phone);
+  if (!url) return phone;
+
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${phone} নম্বরে WhatsApp চ্যাট খুলুন`}
+      className="font-medium text-emerald-700 underline hover:text-emerald-900"
+    >
+      {phone}
+    </a>
+  );
 };
 
 export const renderOrderPaymentBadge = (order, onManagePayment) => {
@@ -338,10 +377,16 @@ const AdminOrders = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleDateString("bn-BD", {
+    const date = new Date(dateStr);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleString("en-GB", {
+      timeZone: "Asia/Dhaka",
       year: "numeric",
       month: "short",
       day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -627,7 +672,7 @@ const AdminOrders = () => {
                       ড্রপশিপার
                     </th>
                     <th className="text-left py-3 px-4 font-semibold">Items</th>
-                    <th className="text-left py-3 px-4 font-semibold">তারিখ</th>
+                    <th className="text-left py-3 px-4 font-semibold">Date &amp; Time</th>
                     <th className="text-right py-3 px-4 font-semibold">মোট</th>
                     <th className="text-center py-3 px-4 font-semibold">
                       পেমেন্ট
@@ -681,15 +726,13 @@ const AdminOrders = () => {
                       <td className="py-3 px-4">
                         {order.user ? (
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <User className="w-3.5 h-3.5 text-gray-500" />
-                            </div>
+                            <DropshipperCompletedOrderCount completedCount={order.user.completed_order_count} />
                             <div>
                               <p className="font-medium text-gray-700 text-xs">
                                 {order.user.name}
                               </p>
                               <p className="text-[11px] text-gray-400">
-                                {order.user.phone}
+                                {renderDropshipperPhone(order.user.phone)}
                               </p>
                             </div>
                           </div>
@@ -851,9 +894,9 @@ const AdminOrders = () => {
                   {/* Dropshipper info */}
                   {order.user && (
                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
-                      <User className="w-3.5 h-3.5 text-gray-400" />
+                      <DropshipperCompletedOrderCount completedCount={order.user.completed_order_count} />
                       <span className="text-xs text-gray-600">
-                        {order.user.name} &middot; {order.user.phone}
+                        {order.user.name} &middot; {renderDropshipperPhone(order.user.phone)}
                       </span>
                     </div>
                   )}

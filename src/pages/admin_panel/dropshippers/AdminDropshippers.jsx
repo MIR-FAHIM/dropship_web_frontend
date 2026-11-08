@@ -31,20 +31,9 @@ import {
 } from "../../../redux/features/user";
 import { useLoginAsDropshipperMutation } from "../../../redux/features/auth";
 import { saveToLocalstorage } from "../../../utils/localstorage.utils";
+import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import { toast } from "react-toastify";
 import { FaWhatsapp } from "react-icons/fa";
-
-const formatWhatsAppUrl = (phone) => {
-  if (!phone) return null;
-  let cleanNumber = String(phone).replace(/[^0-9]/g, "");
-  if (!cleanNumber) return null;
-  if (cleanNumber.length === 11 && cleanNumber.startsWith("01")) {
-    cleanNumber = "88" + cleanNumber;
-  } else if (cleanNumber.length === 10 && cleanNumber.startsWith("1")) {
-    cleanNumber = "880" + cleanNumber;
-  }
-  return `https://wa.me/${cleanNumber}`;
-};
 
 const AdminDropshippers = () => {
   // Input form filter states (before applying)
@@ -700,6 +689,7 @@ const AdminDropshippers = () => {
                   <th className="py-3 px-3">হোয়াটসঅ্যাপ</th>
                   <th className="py-3 px-3">লগইন</th>
                   <th className="py-3 px-3">ঠিকানা</th>
+                  <th scope="col" className="whitespace-nowrap py-3 px-3 text-right">মোট অর্ডার</th>
                   <th className="py-3 px-3">ব্যালেন্স</th>
                   <th className="py-3 px-3">স্ট্যাটাস</th>
                   <th className="py-3 px-3">রেজিস্ট্রেশন</th>
@@ -837,6 +827,10 @@ const AdminDropshippers = () => {
                         ) : (
                           "—"
                         )}
+                      </td>
+
+                      <td className="py-3 px-3 text-right font-medium tabular-nums text-gray-900">
+                        {user.total_order_count?.toLocaleString("en-IN") ?? "—"}
                       </td>
 
                       {/* Balance */}

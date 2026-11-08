@@ -21,6 +21,7 @@ import {
   Store,
   Users,
   Truck,
+  Trophy,
   FolderTree,
   Tag,
   SlidersHorizontal,
@@ -119,9 +120,21 @@ const adminMenuLinks = [
     icon: <ShieldCheck className="w-5 h-5" />,
   },
   {
-    path: "/admin-panel/dropshippers",
     label: "ড্রপশিপার",
     icon: <Truck className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/dropshippers",
+        label: "সকল ড্রপশিপার",
+        icon: <Users className="w-4 h-4" />,
+        end: true,
+      },
+      {
+        path: "/admin-panel/dropshippers/leaderboard",
+        label: "Dropshipper Leaderboard",
+        icon: <Trophy className="w-4 h-4" />,
+      },
+    ],
   },
   {
     path: "/admin-panel/employees",
@@ -156,6 +169,11 @@ const adminMenuLinks = [
         path: "/admin-panel/wallet-topups",
         label: "ওয়ালেট রিচার্জ",
         icon: <PlusCircle className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/reseller-advance-payment-history",
+        label: "Reseller Advance Payment History",
+        icon: <Receipt className="w-4 h-4" />,
       },
       {
         path: "/admin-panel/settlement-orders",

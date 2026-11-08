@@ -47,6 +47,7 @@ import InactiveAdminVendors from "../pages/admin_panel/vendors/InactiveAdminVend
 import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor_details_tab";
 import AdminKycDocuments from "../pages/admin_panel/kyc/AdminKycDocuments";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
+import DropshipperLeaderboard from "../pages/admin_panel/dropshippers/DropshipperLeaderboard";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
 import AdminAllTransactions from "../pages/admin_panel/accounting/AdminAllTransactions";
@@ -70,6 +71,7 @@ import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
 import AllWithdrawReq from "../pages/admin_panel/accounting/AllWithdrawReq";
 import AllWalletTopupReq from "../pages/admin_panel/accounting/AllWalletTopupReq";
+import ResellerAdvancePaymentHistory from "../pages/admin_panel/accounting/ResellerAdvancePaymentHistory";
 import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanies";
 import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
 import CarrybeeWebhookTester from "../pages/admin_panel/delivery/CarrybeeWebhookTester";
@@ -209,6 +211,7 @@ export const router = createBrowserRouter([
       { path: "vendors/:id", element: <VendorDetailsTab /> },
       { path: "kyc-documents", element: <AdminKycDocuments /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
+      { path: "dropshippers/leaderboard", element: <DropshipperLeaderboard /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
       { path: "transactions", element: <AdminAllTransactions /> },
@@ -218,6 +221,7 @@ export const router = createBrowserRouter([
       { path: "my-business-info", element: <MyBusinessInfo /> },
       { path: "all-withdraw-requests", element: <AllWithdrawReq /> },
       { path: "wallet-topups", element: <AllWalletTopupReq /> },
+      { path: "reseller-advance-payment-history", element: <ResellerAdvancePaymentHistory /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
       { path: "notices", element: <AdminNotices /> },
       { path: "error-logs", element: <ErrorLog /> },

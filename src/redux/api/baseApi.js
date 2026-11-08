@@ -92,6 +92,7 @@ const baseApi = createApi({
     "VendorInvoice",
     "Order",
     "OrderDetails",
+    "OrderAdvance",
     "CarrybeePaidOrders",
     "CarrybeeWebhookEvents",
     "FeedPost",

@@ -42,7 +42,6 @@ function GuestProductPreview({ product }) {
     ["ক্যাটাগরি", product.category?.name],
     ["সাবক্যাটাগরি", product.sub_category?.id !== product.category?.id && product.sub_category?.name],
     ["ব্র্যান্ড", product.brand?.name],
-    ["সরবরাহকারী", product.vendor?.shop_name || product.shop?.name],
     ...attributes.map(({ attribute, value }) => [attribute.name, value.value]),
   ].filter(([, value]) => value);
 
@@ -163,8 +162,6 @@ GuestProductPreview.propTypes = {
     category: PropTypes.shape({ id: PropTypes.number, name: PropTypes.string }),
     sub_category: PropTypes.shape({ id: PropTypes.number, name: PropTypes.string }),
     brand: PropTypes.shape({ name: PropTypes.string }),
-    vendor: PropTypes.shape({ shop_name: PropTypes.string }),
-    shop: PropTypes.shape({ name: PropTypes.string }),
   }).isRequired,
 };
 

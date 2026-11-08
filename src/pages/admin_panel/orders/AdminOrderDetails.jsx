@@ -76,7 +76,7 @@ const AdminOrderDetails = () => {
   const [carrybeePaymentOpen, setCarrybeePaymentOpen] = useState(false);
   const [approveAdvance, { isLoading: isApprovingAdvance }] = useApproveAdvanceMutation();
   const [rejectAdvance, { isLoading: isRejectingAdvance }] = useRejectAdvanceMutation();
-  const [showRejectModal, setShowRejectModal] = useState(false);
+  const [advanceRejectAction, setAdvanceRejectAction] = useState(null);
   const [rejectReason, setRejectReason] = useState("");
 
   // Edit Order Modal state
@@ -101,6 +101,15 @@ const AdminOrderDetails = () => {
 
   const order = data?.data || null;
   const statusList = summaryData?.data || [];
+  const advancePending = ["pending", "submitted"].includes(order?.advance_status);
+  const advanceApproved = order?.advance_status === "approved";
+  const advanceRejected = order?.advance_status === "rejected";
+  const advanceFieldsLocked = advanceApproved || advanceRejected;
+  const reversingAdvance = advanceRejectAction === "reverse";
+  const advanceDecisionBlock = order?.advance_decision_block_reason;
+  const canApproveAdvance = Number(order?.advance_amount) > 0 && order?.advance_payment_method !== "wallet"
+    && ((advancePending && !advanceDecisionBlock) || (advanceRejected && advanceDecisionBlock === null));
+  const canReverseAdvance = advanceApproved && Number(order?.advance_amount) > 0 && advanceDecisionBlock === null;
 
   // Determine lock state
   const hasConsignment = Boolean(
@@ -160,13 +169,22 @@ const AdminOrderDetails = () => {
     return order.status;
   };
 
-  const handleApproveAdvance = async () => {
+  const handleApproveAdvance = async (event) => {
+    event.preventDefault();
+    if (!canApproveAdvance || isApprovingAdvance || isRejectingAdvance) return;
+    const fields = new FormData(event.currentTarget);
     try {
-      await approveAdvance({ id: order.id, admin_note: "Approved by Admin" }).unwrap();
+      await approveAdvance({
+        id: order.id,
+        admin_note: "Approved by Admin",
+        reapprove: advanceRejected,
+        advance_trx_id: fields.get("advance_trx_id")?.trim() || null,
+        advance_sender_phone: fields.get("advance_sender_phone")?.trim() || null,
+      }).unwrap();
       toast.success("অর্ডার অগ্রিম সফলভাবে অনুমোদন করা হয়েছে!");
       refetch();
     } catch (err) {
-      toast.error(err?.data?.message || err?.message || "অগ্রিম অনুমোদন ব্যর্থ হয়েছে");
+      toast.error(err?.data?.errors?.advance_status?.[0] || err?.data?.message || err?.message || "অগ্রিম অনুমোদন ব্যর্থ হয়েছে");
     }
   };
 
@@ -177,13 +195,13 @@ const AdminOrderDetails = () => {
       return;
     }
     try {
-      await rejectAdvance({ id: order.id, reason: rejectReason.trim() }).unwrap();
-      toast.success("অগ্রিম বাতিল করা হয়েছে");
-      setShowRejectModal(false);
+      await rejectAdvance({ id: order.id, reason: rejectReason.trim(), reverse_approval: reversingAdvance }).unwrap();
+      toast.success(reversingAdvance ? "অগ্রিম অনুমোদন প্রত্যাহার করা হয়েছে" : "অগ্রিম বাতিল করা হয়েছে");
+      setAdvanceRejectAction(null);
       setRejectReason("");
       refetch();
     } catch (err) {
-      toast.error(err?.data?.message || err?.message || "অগ্রিম বাতিল করতে সমস্যা হয়েছে");
+      toast.error(err?.data?.errors?.advance_status?.[0] || err?.data?.message || err?.message || "অগ্রিম বাতিল করতে সমস্যা হয়েছে");
     }
   };
 
@@ -344,11 +362,13 @@ const AdminOrderDetails = () => {
       discount: discount,
       total: calculatedTotal,
       payment_status: editForm.payment_status,
-      advance_amount: advance,
-      advance_status: editForm.advance_status,
-      advance_payment_method: editForm.advance_payment_method || null,
-      advance_trx_id: editForm.advance_trx_id || null,
-      advance_sender_phone: editForm.advance_sender_phone || null,
+      ...(!advanceFieldsLocked && {
+        advance_amount: advance,
+        advance_status: editForm.advance_status,
+        advance_payment_method: editForm.advance_payment_method || null,
+        advance_trx_id: editForm.advance_trx_id || null,
+        advance_sender_phone: editForm.advance_sender_phone || null,
+      }),
       items: editForm.items.map((item) => ({
         id: item.id,
         product_id: item.product_id,
@@ -763,7 +783,11 @@ const AdminOrderDetails = () => {
                    order.advance_status === "rejected" ? "Rejected (বাতিল)" : "None"}
                 </span>
               </div>
-              <div className="p-5 space-y-3 text-xs">
+              <form
+                key={JSON.stringify([order.id, order.advance_status, order.advance_trx_id, order.advance_sender_phone])}
+                onSubmit={handleApproveAdvance}
+                className="p-5 space-y-3 text-xs"
+              >
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <span className="text-gray-500 block">রিলায়েবিলিটি ব্যালেন্স:</span>
@@ -776,46 +800,81 @@ const AdminOrderDetails = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-100">
-                  <div>
-                    <span className="text-gray-500 block">Trx ID:</span>
-                    <p className="font-mono text-gray-900 font-medium mt-0.5 select-all">{order.advance_trx_id || "—"}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block">প্রেরক নম্বর:</span>
-                    <p className="font-mono text-gray-900 font-medium mt-0.5">{order.advance_sender_phone || "—"}</p>
-                  </div>
+                  <label className="min-w-0">
+                    <span className="text-gray-500 block">Trx ID</span>
+                    {canApproveAdvance ? (
+                      <input
+                        name="advance_trx_id"
+                        defaultValue={order.advance_trx_id || ""}
+                        maxLength={100}
+                        disabled={isApprovingAdvance || isRejectingAdvance}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm text-gray-900"
+                      />
+                    ) : (
+                      <span className="block break-all font-mono text-gray-900 mt-0.5">{order.advance_trx_id || "—"}</span>
+                    )}
+                  </label>
+                  <label className="min-w-0">
+                    <span className="text-gray-500 block">প্রেরক নম্বর</span>
+                    {canApproveAdvance ? (
+                      <input
+                        type="tel"
+                        name="advance_sender_phone"
+                        defaultValue={order.advance_sender_phone || ""}
+                        maxLength={30}
+                        disabled={isApprovingAdvance || isRejectingAdvance}
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm text-gray-900"
+                      />
+                    ) : (
+                      <span className="block break-all font-mono text-gray-900 mt-0.5">{order.advance_sender_phone || "—"}</span>
+                    )}
+                  </label>
                 </div>
 
                 {order.advance_verified_at && (
                   <div className="pt-2 border-t border-gray-100 text-gray-500">
-                    যাচাইকৃত সময়: {formatDate(order.advance_verified_at)}
+                    সিদ্ধান্তের সময়: {formatDate(order.advance_verified_at)}
+                    {order.advance_verified_by && <span className="block mt-1">অ্যাডমিন আইডি: {order.advance_verified_by}</span>}
                   </div>
                 )}
 
-                {(order.advance_status === "pending" || order.advance_status === "submitted") && (
+                {order.advance_admin_note && (
+                  <p className="break-words text-gray-600">অ্যাডমিন নোট: {order.advance_admin_note}</p>
+                )}
+                {advanceDecisionBlock && (
+                  <p className="text-amber-800">{advanceDecisionBlock}</p>
+                )}
+
+                {(canApproveAdvance || advancePending || canReverseAdvance) && (
                   <div className="pt-3 border-t border-gray-100 flex gap-2">
+                    {canApproveAdvance && (
                     <button
-                      type="button"
-                      onClick={handleApproveAdvance}
+                      type="submit"
                       disabled={isApprovingAdvance || isRejectingAdvance}
                       className="flex-1 py-2 px-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-sm disabled:opacity-50 cursor-pointer"
                       style={{ backgroundColor: "#16a34a", color: "#ffffff" }}
                     >
                       {isApprovingAdvance ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5" />}
-                      অনুমোদন করুন
+                      {advanceRejected ? "পুনরায় অনুমোদন করুন" : "অনুমোদন করুন"}
                     </button>
+                    )}
+                    {(advancePending || canReverseAdvance) && (
                     <button
                       type="button"
-                      onClick={() => setShowRejectModal(true)}
+                      onClick={() => {
+                        setRejectReason("");
+                        setAdvanceRejectAction(canReverseAdvance ? "reverse" : "reject");
+                      }}
                       disabled={isApprovingAdvance || isRejectingAdvance}
                       className="py-2 px-3 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg font-bold text-xs flex items-center justify-center gap-1 transition disabled:opacity-50 cursor-pointer"
                     >
                       <XCircle className="w-3.5 h-3.5" />
-                      বাতিল
+                      {canReverseAdvance ? "অনুমোদন প্রত্যাহার করুন" : "বাতিল"}
                     </button>
+                    )}
                   </div>
                 )}
-              </div>
+              </form>
             </div>
           )}
 
@@ -959,23 +1018,30 @@ const AdminOrderDetails = () => {
       )}
 
       {/* Reject Advance Modal */}
-      {showRejectModal && (
+      {advanceRejectAction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl relative">
             <button
               type="button"
-              onClick={() => setShowRejectModal(false)}
+              onClick={() => setAdvanceRejectAction(null)}
+              disabled={isRejectingAdvance}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
             >
               <X className="w-5 h-5" />
             </button>
-            <h3 className="text-base font-bold text-gray-900 mb-2">অগ্রিম পেমেন্ট বাতিল</h3>
+            <h3 className="text-base font-bold text-gray-900 mb-2">
+              {reversingAdvance ? "অগ্রিম অনুমোদন প্রত্যাহার" : "অগ্রিম পেমেন্ট বাতিল"}
+            </h3>
             <p className="text-xs text-gray-500 mb-4">
-              অর্ডার #{order.order_number}-এর অগ্রিম বাতিলের কারণ উল্লেখ করুন:
+              {reversingAdvance
+                ? "অনুমোদন প্রত্যাহার করলে ওয়ালেট ও হিসাবের এন্ট্রি সমন্বয় হবে। মোবাইল পেমেন্টের টাকা স্বয়ংক্রিয়ভাবে ফেরত যাবে না। কারণ উল্লেখ করুন।"
+                : `অর্ডার #${order.order_number}-এর অগ্রিম বাতিলের কারণ উল্লেখ করুন।`}
             </p>
             <form onSubmit={handleRejectAdvance} className="space-y-4">
               <textarea
                 rows={3}
+                required
+                maxLength={255}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="যেমন: ভুল Trx ID বা টাকা জমা হয়নি"
@@ -984,7 +1050,8 @@ const AdminOrderDetails = () => {
               <div className="flex gap-2 justify-end">
                 <button
                   type="button"
-                  onClick={() => setShowRejectModal(false)}
+                  onClick={() => setAdvanceRejectAction(null)}
+                  disabled={isRejectingAdvance}
                   className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg text-xs font-semibold"
                 >
                   বাতিল
@@ -994,7 +1061,7 @@ const AdminOrderDetails = () => {
                   disabled={isRejectingAdvance}
                   className="px-4 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold"
                 >
-                  {isRejectingAdvance ? "বাতিল হচ্ছে..." : "নিশ্চিত করুন"}
+                  {isRejectingAdvance ? "সংরক্ষণ হচ্ছে…" : "নিশ্চিত করুন"}
                 </button>
               </div>
             </form>
@@ -1257,6 +1324,7 @@ const AdminOrderDetails = () => {
                         min="0"
                         step="any"
                         value={editForm.advance_amount}
+                        disabled={advanceFieldsLocked}
                         onChange={(e) => setEditForm((p) => ({ ...p, advance_amount: parseFloat(e.target.value) || 0 }))}
                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
                       />
@@ -1267,13 +1335,14 @@ const AdminOrderDetails = () => {
                       </label>
                       <select
                         value={editForm.advance_status}
+                        disabled={advanceFieldsLocked}
                         onChange={(e) => setEditForm((p) => ({ ...p, advance_status: e.target.value }))}
                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="none">None</option>
                         <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+                        {advanceApproved && <option value="approved">Approved</option>}
+                        {advanceRejected && <option value="rejected">Rejected</option>}
                       </select>
                     </div>
                   </div>
@@ -1285,6 +1354,7 @@ const AdminOrderDetails = () => {
                       </label>
                       <select
                         value={editForm.advance_payment_method}
+                        disabled={advanceFieldsLocked}
                         onChange={(e) => setEditForm((p) => ({ ...p, advance_payment_method: e.target.value }))}
                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500"
                       >
@@ -1320,6 +1390,7 @@ const AdminOrderDetails = () => {
                       <input
                         type="text"
                         value={editForm.advance_trx_id}
+                        disabled={advanceFieldsLocked}
                         onChange={(e) => setEditForm((p) => ({ ...p, advance_trx_id: e.target.value }))}
                         placeholder="e.g. 9B877XDF"
                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 font-mono"
@@ -1332,6 +1403,7 @@ const AdminOrderDetails = () => {
                       <input
                         type="text"
                         value={editForm.advance_sender_phone}
+                        disabled={advanceFieldsLocked}
                         onChange={(e) => setEditForm((p) => ({ ...p, advance_sender_phone: e.target.value }))}
                         placeholder="e.g. 01700000000"
                         className="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 bg-white focus:ring-2 focus:ring-blue-500 font-mono"
