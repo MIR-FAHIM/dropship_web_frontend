@@ -20,6 +20,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { toast } from "sonner";
+import { FaFacebook } from "react-icons/fa";
+import FacebookFeedPostCreator from "./FacebookFeedPostCreator";
 import {
   useGetSocialMediaTextByProductQuery,
   useAddSocialMediaTextMutation,
@@ -216,7 +218,8 @@ const SAMPLE_TEMPLATES = [
   },
 ];
 
-const SocialContentTab = ({ productId }) => {
+const SocialContentTab = ({ product, productId }) => {
+  const [activeSection, setActiveSection] = useState("feed_post");
   const formRef = useRef(null);
 
   // RTK Query Hooks
@@ -383,7 +386,40 @@ const SocialContentTab = ({ productId }) => {
 
   return (
     <div className="space-y-8">
-      {/* Top Section / Header */}
+      {/* Sub-navigation Switcher */}
+      <div className="flex items-center gap-3 border-b border-gray-200 pb-4">
+        <button
+          type="button"
+          onClick={() => setActiveSection("feed_post")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeSection === "feed_post"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          <FaFacebook className="text-base" />
+          <span>Facebook Marketing Post (Feed)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSection("html_templates")}
+          className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+            activeSection === "html_templates"
+              ? "bg-red-600 text-white shadow-sm"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          <Code className="w-4 h-4" />
+          <span>HTML / CSS Templates</span>
+        </button>
+      </div>
+
+      {activeSection === "feed_post" ? (
+        <FacebookFeedPostCreator product={product} productId={productId} />
+      ) : (
+        <>
+          {/* Top Section / Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-5">
         <div>
           <div className="flex items-center gap-2">
@@ -947,6 +983,8 @@ const SocialContentTab = ({ productId }) => {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

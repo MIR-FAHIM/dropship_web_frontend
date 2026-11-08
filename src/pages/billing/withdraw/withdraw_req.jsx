@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   useAddWithdrawRequestMutation, 
   useGetUserWithdrawRequestsQuery 
@@ -7,6 +8,7 @@ import {
   useGetUserBankAccountQuery, 
   useGetResellerTransactionsQuery 
 } from '../../../redux/features/accounting';
+import { useGetUserBalanceQuery } from '../../../redux/features/order';
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { 
   Wallet, 
@@ -26,31 +28,78 @@ const statusColors = {
 };
 
 const WithdrawPage = () => {
+  const navigate = useNavigate();
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [selectedBankId, setSelectedBankId] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
-  const userId = getFromLocalstorage("userId");
+  const userId = getFromLocalstorage("userId") || localStorage.getItem("userId") || 1;
 
-  // Fetch user balances
-  const { data: balanceData, refetch: refetchBalances } = useGetResellerTransactionsQuery(
+  // 1. Fetch user canonical balance from /users/getBalance/{id} (same as dropshipper panel topbar)
+  const { 
+    data: userBalData, 
+    isLoading: userBalLoading, 
+    refetch: refetchUserBal 
+  } = useGetUserBalanceQuery(userId, { skip: !userId });
+
+  // 2. Fetch user transactions / accounting breakdown
+  const { 
+    data: balanceData, 
+    refetch: refetchBalances 
+  } = useGetResellerTransactionsQuery(
     { reseller_id: userId },
     { skip: !userId }
   );
 
-  const availableBalance = balanceData?.data?.available_balance ?? balanceData?.data?.balance ?? 0;
-  const pendingReserved = balanceData?.data?.pending_reserved ?? 0;
-  const totalBalance = balanceData?.data?.balance ?? 0;
-
-  // Fetching the user's bank/payment accounts
-  const { data: accountsData, error: accountsError, isLoading: accountsLoading } = useGetUserBankAccountQuery(userId, { skip: !userId });
-
-  // Fetching the withdrawal history for the user
-  const { data: historyData, error: historyError, isLoading: historyLoading, refetch } = useGetUserWithdrawRequestsQuery(userId, { skip: !userId });
+  // 3. Fetching the withdrawal history for the user
+  const { 
+    data: historyData, 
+    error: historyError, 
+    isLoading: historyLoading, 
+    refetch: refetchHistory 
+  } = useGetUserWithdrawRequestsQuery(userId, { skip: !userId });
 
   // Mutation hook for making a withdrawal
   const [addWithdraw, { isLoading: withdrawLoading }] = useAddWithdrawRequestMutation();
+
+  // Canonical total balance from the topbar / wallet balance API
+  const totalBalance = (() => {
+    const navBal = userBalData?.data?.balance?.balance;
+    if (navBal !== undefined && navBal !== null && !isNaN(Number(navBal))) {
+      return Number(navBal);
+    }
+    const resBal = balanceData?.data?.balance;
+    if (resBal !== undefined && resBal !== null && !isNaN(Number(resBal))) {
+      return Number(resBal);
+    }
+    return 0;
+  })();
+
+  // Pending reserved amount (withdrawal requests pending admin approval)
+  const pendingReserved = (() => {
+    const apiReserved = balanceData?.data?.pending_reserved;
+    if (apiReserved !== undefined && apiReserved !== null && Number(apiReserved) > 0) {
+      return Number(apiReserved);
+    }
+    const historyItems = historyData?.data || [];
+    const pendingSum = historyItems
+      .filter((item) => String(item.status).toLowerCase() === "pending")
+      .reduce((acc, item) => acc + Number(item.amount || 0), 0);
+    return pendingSum;
+  })();
+
+  // Available balance for withdrawal
+  const availableBalance = (() => {
+    const apiAvailable = balanceData?.data?.available_balance;
+    if (apiAvailable !== undefined && apiAvailable !== null && Number(apiAvailable) > 0) {
+      return Number(apiAvailable);
+    }
+    return Math.max(0, totalBalance - pendingReserved);
+  })();
+
+  // Fetching the user's bank/payment accounts
+  const { data: accountsData, error: accountsError, isLoading: accountsLoading } = useGetUserBankAccountQuery(userId, { skip: !userId });
 
   // Set default bank on page load
   useEffect(() => {
@@ -89,15 +138,16 @@ const WithdrawPage = () => {
 
       setSuccessMessage('উইথড্র রিকোয়েস্ট সফলভাবে পাঠানো হয়েছে এবং অ্যামাউন্টটি সংরক্ষিত রাখা হয়েছে।');
       setWithdrawAmount('');
-      refetch();
+      if (refetchHistory) refetchHistory();
       if (refetchBalances) refetchBalances();
+      if (refetchUserBal) refetchUserBal();
     } catch (error) {
       setErrorMessage(error?.data?.message || error?.message || 'উইথড্র রিকোয়েস্ট ব্যর্থ হয়েছে।');
     }
   };
 
   const formatCurrency = (val) =>
-    `৳${Number(val || 0).toLocaleString("bn-BD", { minimumFractionDigits: 2 })}`;
+    `৳${Number(val || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
@@ -121,7 +171,11 @@ const WithdrawPage = () => {
             </div>
           </div>
           <p className="text-2xl font-bold text-emerald-700">
-            {formatCurrency(availableBalance)}
+            {userBalLoading && !totalBalance ? (
+              <span className="text-base font-normal text-gray-400">লোড হচ্ছে...</span>
+            ) : (
+              formatCurrency(availableBalance)
+            )}
           </p>
         </div>
 
@@ -151,7 +205,11 @@ const WithdrawPage = () => {
             </div>
           </div>
           <p className="text-2xl font-bold text-blue-700">
-            {formatCurrency(totalBalance)}
+            {userBalLoading && !totalBalance ? (
+              <span className="text-base font-normal text-gray-400">লোড হচ্ছে...</span>
+            ) : (
+              formatCurrency(totalBalance)
+            )}
           </p>
         </div>
       </div>
@@ -177,9 +235,20 @@ const WithdrawPage = () => {
         <form onSubmit={handleWithdrawSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                উইথড্র অ্যামাউন্ট (৳) <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-gray-700">
+                  উইথড্র অ্যামাউন্ট (৳) <span className="text-red-500">*</span>
+                </label>
+                {availableBalance > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setWithdrawAmount(String(availableBalance))}
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                  >
+                    সর্বোচ্চ (Max) {formatCurrency(availableBalance)}
+                  </button>
+                )}
+              </div>
               <input
                 type="number"
                 min="1"
@@ -196,9 +265,18 @@ const WithdrawPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-700 mb-1">
-                পেমেন্ট একাউন্ট নির্বাচন করুন <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-gray-700">
+                  পেমেন্ট একাউন্ট নির্বাচন করুন <span className="text-red-500">*</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => navigate("/app/add-payment-account")}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline"
+                >
+                  + নতুন অ্যাকাউন্ট
+                </button>
+              </div>
               <select
                 value={selectedBankId}
                 onChange={(e) => setSelectedBankId(e.target.value)}
@@ -213,9 +291,18 @@ const WithdrawPage = () => {
                 ))}
               </select>
               {(accountsData?.data || []).length === 0 && !accountsLoading && (
-                <p className="text-[11px] text-red-500 mt-1">
-                  কোনো সেভ করা অ্যাকাউন্ট নেই। প্রোফাইল থেকে অ্যাকাউন্ট যোগ করুন।
-                </p>
+                <div className="flex items-center justify-between mt-1.5 p-2 bg-amber-50 rounded-lg border border-amber-200">
+                  <p className="text-[11px] text-amber-800 font-medium">
+                    কোনো সেভ করা অ্যাকাউন্ট নেই।
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/app/add-payment-account")}
+                    className="text-[11px] font-bold text-blue-600 hover:underline"
+                  >
+                    পেমেন্ট অ্যাকাউন্ট যোগ করুন &rarr;
+                  </button>
+                </div>
               )}
             </div>
           </div>

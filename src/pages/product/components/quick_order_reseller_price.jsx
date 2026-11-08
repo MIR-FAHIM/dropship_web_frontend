@@ -1,21 +1,32 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
+import { appendLocationToAddress } from "../../../utils/address.utils";
 import { useGetProductDetailsQuery } from "../../../redux/features/product";
-import {
-  useGetCartQuery,
-  useClearCartMutation,
-  useDeleteCartMutation,
-} from "../../../redux/features/cart";
 import { imgBaseUrl } from "../../../../config";
 import { toast } from "sonner";
 import {
+  useGetDivisionsQuery,
+  useGetDistrictsQuery,
+  useGetUpazilasQuery,
+  useCalculateDeliveryChargeQuery,
+} from "../../../redux/features/address";
+import { useCheckAdvanceRequirementQuery } from "../../../redux/features/order";
+import {
   AlertTriangle,
+  ArrowRight,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  CreditCard,
+  HelpCircle,
+  Info,
   Loader2,
+  MapPin,
+  Phone,
+  ShieldCheck,
   ShoppingBag,
-  Trash2,
+  User,
   X,
   Zap,
 } from "lucide-react";
@@ -31,19 +42,13 @@ const ResellerPriceModal = ({
   outOfStock,
   onSubmit,
   userId,
+  initialData = null,
 }) => {
+  const navigate = useNavigate();
   const activeUserId = userId || localStorage.getItem("userId");
   const basePrice = getAdminBasePrice(product);
 
-  const [resellerPrice, setResellerPrice] = useState(() =>
-    basePrice > 0 ? String(basePrice) : ""
-  );
-  const [quantity, setQuantity] = useState(1);
-  const [selectedAttributes, setSelectedAttributes] = useState({});
-  const [showCartDetails, setShowCartDetails] = useState(false);
-  const [cartClearedLocally, setCartClearedLocally] = useState(false);
-
-  // If product doesn't have product_attributes loaded, fetch details
+  // Attributes & Product Resolution
   const shouldFetchDetails = Boolean(open && product?.id && !product?.product_attributes);
   const { data: detailsData, isLoading: isLoadingDetails } = useGetProductDetailsQuery(
     product?.id,
@@ -52,7 +57,6 @@ const ResellerPriceModal = ({
 
   const resolvedProduct = detailsData?.data || detailsData || product;
 
-  // Attributes list
   const attributes = useMemo(() => {
     const rawAttrs = product?.product_attributes || resolvedProduct?.product_attributes;
     if (Array.isArray(rawAttrs)) return rawAttrs;
@@ -67,7 +71,6 @@ const ResellerPriceModal = ({
     return [];
   }, [product?.product_attributes, resolvedProduct?.product_attributes]);
 
-  // Group attributes by attribute name (e.g. Color, Size)
   const groupedAttributes = useMemo(() => {
     if (!attributes || attributes.length === 0) return {};
     return attributes.reduce((acc, attr) => {
@@ -78,20 +81,140 @@ const ResellerPriceModal = ({
     }, {});
   }, [attributes]);
 
-  // Initialize prices, qty, and default attribute selections when opened
+  // Form states
+  const [resellerPrice, setResellerPrice] = useState(() =>
+    basePrice > 0 ? String(basePrice) : ""
+  );
+  const [quantity, setQuantity] = useState(1);
+  const [selectedAttributes, setSelectedAttributes] = useState({});
+
+  // Quick Order Step 1 fields
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedDivisionId, setSelectedDivisionId] = useState("");
+  const [selectedDistrictId, setSelectedDistrictId] = useState("");
+  const [selectedThanaId, setSelectedThanaId] = useState("");
+  const [address, setAddress] = useState("");
+  const [note, setNote] = useState("");
+  const [collectionAmount, setCollectionAmount] = useState("");
+  const [userTouchedCollection, setUserTouchedCollection] = useState(false);
+
+  // Address Queries
+  const { data: divisionsData, isLoading: loadingDivisions } = useGetDivisionsQuery(undefined, {
+    skip: !open || modalAction !== "quickOrder",
+  });
+  const divisions = safeArray(divisionsData?.data ?? divisionsData ?? []);
+
+  const { data: districtsData, isLoading: loadingDistricts } = useGetDistrictsQuery(
+    selectedDivisionId,
+    { skip: !open || modalAction !== "quickOrder" || !selectedDivisionId }
+  );
+  const districts = safeArray(districtsData?.data ?? districtsData ?? []);
+
+  const { data: upazilasData, isLoading: loadingUpazilas } = useGetUpazilasQuery(
+    selectedDistrictId,
+    { skip: !open || modalAction !== "quickOrder" || !selectedDistrictId }
+  );
+  const upazilas = safeArray(upazilasData?.data ?? upazilasData ?? []);
+
+  const selectedDivision = useMemo(
+    () => divisions.find((d) => String(d.id) === String(selectedDivisionId)),
+    [divisions, selectedDivisionId]
+  );
+  const selectedDistrict = useMemo(
+    () => districts.find((d) => String(d.id) === String(selectedDistrictId)),
+    [districts, selectedDistrictId]
+  );
+  const selectedThana = useMemo(
+    () => upazilas.find((u) => String(u.id) === String(selectedThanaId)),
+    [upazilas, selectedThanaId]
+  );
+
+  // Vendor district resolution for courier charge
+  const vendorDistrictId = useMemo(() => {
+    return (
+      resolvedProduct?.shop?.district_id ??
+      resolvedProduct?.vendor?.district_id ??
+      resolvedProduct?.vendor?.district?.id ??
+      null
+    );
+  }, [resolvedProduct]);
+
+  // Dynamic delivery charge calculation
+  const {
+    data: deliveryChargeData,
+    isLoading: loadingCharge,
+    isFetching: fetchingCharge,
+    error: chargeError,
+  } = useCalculateDeliveryChargeQuery(
+    {
+      vendor_district_id: vendorDistrictId || undefined,
+      customer_district_id: selectedDistrictId,
+      division_id: selectedDivisionId,
+    },
+    { skip: !open || modalAction !== "quickOrder" || !selectedDistrictId }
+  );
+
+  const isCalculatingCharge = Boolean(selectedDistrictId && (loadingCharge || fetchingCharge));
+  const hasCalculatedDelivery = Boolean(
+    selectedDistrictId &&
+      !isCalculatingCharge &&
+      !chargeError &&
+      deliveryChargeData?.data?.charge !== undefined
+  );
+  const deliveryCharge = hasCalculatedDelivery ? Number(deliveryChargeData?.data?.charge) : 0;
+  const deliveryZone = deliveryChargeData?.data?.zone ?? "";
+
+  // Reliability Balance Query
+  const { data: advanceReqData } = useCheckAdvanceRequirementQuery(activeUserId, {
+    skip: !open || !activeUserId || modalAction !== "quickOrder",
+  });
+  const eligibility = advanceReqData?.data || {};
+  const requiresAdvance = Boolean(eligibility.requires_advance);
+  const completedOrdersCount = eligibility.completed_orders_count ?? 0;
+  const availableWalletBalance = Number(eligibility.available_wallet_balance ?? 0);
+
+  // Initialize/Reset values when modal opens or initialData changes
   useEffect(() => {
     if (open) {
-      setResellerPrice(basePrice > 0 ? String(basePrice) : "");
-      setQuantity(1);
-      setShowCartDetails(false);
-      setCartClearedLocally(false);
+      if (initialData) {
+        setCustomerName(initialData.customerName || "");
+        setCustomerPhone(initialData.customerPhone || "");
+        setSelectedDivisionId(initialData.divisionId ? String(initialData.divisionId) : "");
+        setSelectedDistrictId(initialData.districtId ? String(initialData.districtId) : "");
+        setSelectedThanaId(initialData.thanaId ? String(initialData.thanaId) : "");
+        setAddress(initialData.address || "");
+        setNote(initialData.note || "");
+        setQuantity(initialData.quantity || 1);
+        if (initialData.collectionAmount) {
+          setCollectionAmount(String(initialData.collectionAmount));
+          setUserTouchedCollection(true);
+        }
+      } else {
+        setCustomerName("");
+        setCustomerPhone("");
+        setSelectedDivisionId("");
+        setSelectedDistrictId("");
+        setSelectedThanaId("");
+        setAddress("");
+        setNote("");
+        setQuantity(1);
+        setUserTouchedCollection(false);
+      }
 
+      setResellerPrice(basePrice > 0 ? String(basePrice) : "");
+
+      // Attributes default selection
       if (attributes.length > 0) {
         const initial = {};
         Object.entries(groupedAttributes).forEach(([attrName, attrs]) => {
-          const firstInStock = attrs.find((a) => (a.stock ?? 1) > 0) || attrs[0];
-          if (firstInStock) {
-            initial[attrName] = firstInStock.attribute_value_id;
+          if (initialData?.selectedAttributes && initialData.selectedAttributes[attrName] !== undefined) {
+            initial[attrName] = initialData.selectedAttributes[attrName];
+          } else {
+            const firstInStock = attrs.find((a) => (a.stock ?? 1) > 0) || attrs[0];
+            if (firstInStock) {
+              initial[attrName] = firstInStock.attribute_value_id;
+            }
           }
         });
         setSelectedAttributes(initial);
@@ -99,9 +222,9 @@ const ResellerPriceModal = ({
         setSelectedAttributes({});
       }
     }
-  }, [open, basePrice, product?.id, groupedAttributes, attributes.length]);
+  }, [open, basePrice, product?.id, groupedAttributes, attributes.length, initialData]);
 
-  // Determine which attribute record ID corresponds to current selection
+  // Selected attribute ID & readable label
   const selectedAttributeId = useMemo(() => {
     if (!attributes || attributes.length === 0) return null;
     const valueId = Object.values(selectedAttributes).find((v) => v != null);
@@ -112,126 +235,196 @@ const ResellerPriceModal = ({
     return match ? match.id : null;
   }, [attributes, selectedAttributes]);
 
-  // Active cart items query
-  const {
-    data: cartResponse,
-    refetch: refetchCart,
-  } = useGetCartQuery(activeUserId, {
-    skip: !open || !activeUserId || modalAction !== "quickOrder",
-  });
+  const selectedAttributeLabel = useMemo(() => {
+    if (!attributes || attributes.length === 0) return "";
+    return Object.entries(selectedAttributes)
+      .map(([attrName, valId]) => {
+        const match = attributes.find(
+          (a) => Number(a.attribute_value_id) === Number(valId)
+        );
+        return match ? `${attrName}: ${match.value?.value || ""}` : "";
+      })
+      .filter(Boolean)
+      .join(", ");
+  }, [attributes, selectedAttributes]);
 
-  const [clearCart, { isLoading: isClearingCart }] = useClearCartMutation();
-  const [deleteCart, { isLoading: isDeletingItem }] = useDeleteCartMutation();
+  // Financial calculations
+  const productCost = basePrice * quantity;
+  const suggestedDelivery = deliveryCharge > 0 ? deliveryCharge : 130;
 
-  const cartData = useMemo(
-    () => cartResponse?.data ?? cartResponse?.data?.data ?? cartResponse,
-    [cartResponse]
-  );
-
-  const cartItems = useMemo(() => {
-    if (cartClearedLocally) return [];
-    return safeArray(cartData?.items ?? cartData?.data?.items ?? []);
-  }, [cartData, cartClearedLocally]);
-
-  const existingCartCount = cartItems.length;
-
-  const handleClearExistingCart = async () => {
-    if (!activeUserId) return;
-    try {
-      try {
-        await clearCart(activeUserId).unwrap();
-      } catch (err) {
-        // Fallback: delete items individually
-        if (cartItems.length > 0) {
-          await Promise.allSettled(
-            cartItems.map((item) => deleteCart(item.id).unwrap())
-          );
-        }
-      }
-      localStorage.setItem("cartItems", JSON.stringify([]));
-      localStorage.setItem("cart", "0");
-      window.dispatchEvent(new Event("cart-updated"));
-      setCartClearedLocally(true);
-      refetchCart?.();
-      toast.success("Cart cleared! Only this quick order item will be ordered.");
-    } catch (err) {
-      console.error("Failed to clear cart:", err);
-      toast.error("Failed to clear cart");
+  // Auto-suggest collection amount if user hasn't typed their own
+  useEffect(() => {
+    if (modalAction === "quickOrder" && !userTouchedCollection && basePrice > 0) {
+      // Suggest retail price = Product cost + estimated delivery + 25% profit margin
+      const suggestedProfit = Math.max(100, Math.round(productCost * 0.25));
+      const suggestedTotal = Math.round(productCost + suggestedDelivery + suggestedProfit);
+      setCollectionAmount(String(suggestedTotal));
     }
-  };
+  }, [modalAction, userTouchedCollection, basePrice, productCost, suggestedDelivery]);
 
-  const handleDeleteCartItem = async (itemId) => {
-    try {
-      await deleteCart(itemId).unwrap();
-      const current = (() => {
-        try {
-          return JSON.parse(localStorage.getItem("cartItems") || "[]");
-        } catch {
-          return [];
-        }
-      })();
-      const updated = current.filter((id) => id !== itemId);
-      localStorage.setItem("cartItems", JSON.stringify(updated));
-      localStorage.setItem("cart", JSON.stringify(Math.max(0, updated.length)));
-      window.dispatchEvent(new Event("cart-updated"));
-      refetchCart?.();
-      toast.success("Item removed from cart");
-    } catch (err) {
-      console.error("Failed to remove cart item:", err);
-      toast.error("Could not remove item");
-    }
-  };
+  const codAmount = Number(collectionAmount) || 0;
+  const codFee = Math.round(codAmount * 0.01);
+  const estimatedProfit = codAmount - productCost - deliveryCharge - codFee;
 
-  if (!open) return null;
-
-  const resellerPriceVal = Number(resellerPrice) || 0;
-  const profit = resellerPriceVal - basePrice;
-  const margin = basePrice > 0 ? (profit / basePrice) * 100 : 0;
-  const totalSell = resellerPriceVal * quantity;
-  const totalBase = basePrice * quantity;
-  const totalProfit = totalSell - totalBase;
-
-  const productImage = (() => {
+  const productImage = useMemo(() => {
     if (product?.primary_image?.url) return product.primary_image.url;
-    if (product?.primary_image?.file_name) return `${imgBaseUrl}/${product.primary_image.file_name}`;
+    if (product?.primary_image?.file_name)
+      return `${imgBaseUrl}/${product.primary_image.file_name}`;
     if (typeof product?.thumbnail_img === "string" && product.thumbnail_img.startsWith("http")) {
       return product.thumbnail_img;
     }
     return null;
-  })();
+  }, [product]);
 
   const hasAttributes = attributes.length > 0;
   const isMissingAttributeSelection = hasAttributes && selectedAttributeId == null;
 
+  if (!open) return null;
+
+  // Step 2: Validate and continue to Checkout (No order creation, no balance deduction)
+  const handleContinueToCheckout = (e) => {
+    e?.preventDefault?.();
+
+    if (isMissingAttributeSelection) {
+      toast.error("দয়া করে প্রডাক্ট ভ্যারিয়েন্ট নির্বাচন করুন");
+      return;
+    }
+    if (!customerName.trim()) {
+      toast.error("কাস্টমারের পুরো নাম লিখুন");
+      return;
+    }
+    const cleanPhone = customerPhone.trim();
+    if (!cleanPhone || !/^01[3-9]\d{8}$/.test(cleanPhone)) {
+      toast.error("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)");
+      return;
+    }
+    if (!selectedDivisionId) {
+      toast.error("বিভাগ নির্বাচন করুন");
+      return;
+    }
+    if (!selectedDistrictId) {
+      toast.error("জেলা নির্বাচন করুন");
+      return;
+    }
+    if (!selectedThanaId) {
+      toast.error("থানা / উপজেলা নির্বাচন করুন");
+      return;
+    }
+    const finalAddress = appendLocationToAddress(
+      address.trim(),
+      selectedThana?.name || "",
+      selectedDistrict?.name || ""
+    );
+    if (!finalAddress || finalAddress.length < 5) {
+      toast.error("কাস্টমারের বিস্তারিত ডেলিভারি ঠিকানা লিখুন (কমপক্ষে ৫ অক্ষর)");
+      return;
+    }
+    if (!hasCalculatedDelivery || deliveryCharge <= 0) {
+      toast.error("ডেলিভারি চার্জ গণনা সম্পন্ন হওয়া পর্যন্ত অপেক্ষা করুন");
+      return;
+    }
+    if (codAmount <= 0) {
+      toast.error("কাস্টমার কালেকশন এমাউন্ট (COD) লিখুন");
+      return;
+    }
+    if (estimatedProfit < 0) {
+      toast.error("কাস্টমার কালেকশন এমাউন্ট প্রোডাক্ট খরচ ও ডেলিভারি চার্জের চেয়ে বেশি হতে হবে যেন লাভ থাকে");
+      return;
+    }
+
+    setAddress(finalAddress);
+
+    const quickOrderData = {
+      product: resolvedProduct,
+      quantity,
+      selectedAttributeId,
+      selectedAttributeLabel,
+      collectionAmount: codAmount,
+      customerName: customerName.trim(),
+      customerPhone: cleanPhone,
+      divisionId: selectedDivisionId,
+      divisionName: selectedDivision?.name || "",
+      districtId: selectedDistrictId,
+      districtName: selectedDistrict?.name || "",
+      thanaId: selectedThanaId,
+      thanaName: selectedThana?.name || "",
+      address: finalAddress,
+      note: note.trim(),
+      deliveryCharge,
+      deliveryZone,
+      codFee,
+      productCost,
+      basePrice,
+      estimatedProfit,
+      requiresAdvance,
+      completedOrdersCount,
+      availableWalletBalance,
+      minOrdersThreshold: eligibility.min_orders_threshold ?? 5,
+    };
+
+    // Store in sessionStorage fallback
+    sessionStorage.setItem("quickOrderData", JSON.stringify(quickOrderData));
+    onClose?.();
+    navigate("/app/checkout", { state: { quickOrderData } });
+  };
+
+  // Standard cart submission handler
+  const handleCartSubmit = () => {
+    const resellerPriceVal = Number(resellerPrice) || 0;
+    if (resellerPriceVal < basePrice) {
+      toast.error(`Selling price must be at least ৳${basePrice}`);
+      return;
+    }
+    if (isMissingAttributeSelection) {
+      toast.error("Please select a variant");
+      return;
+    }
+    onSubmit?.(resellerPriceVal, quantity, selectedAttributeId);
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
-      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }}
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+      style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", zIndex: 9999 }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md p-5 flex flex-col gap-3.5 max-h-[92vh] overflow-y-auto"
+        className={`bg-white rounded-2xl shadow-2xl w-full flex flex-col max-h-[90vh] my-auto overflow-hidden transition-all ${
+          modalAction === "quickOrder" ? "max-w-xl" : "max-w-md"
+        }`}
+        style={{ margin: "auto" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 border-b border-gray-100 pb-3">
+        {/* Modal Header */}
+        <div className="flex items-start justify-between gap-3 p-4 border-b border-gray-100 bg-gray-50/90 shrink-0 rounded-t-2xl">
           <div className="flex items-center gap-3 min-w-0">
             {productImage ? (
               <img
                 src={productImage}
                 alt=""
-                className="w-11 h-11 rounded-xl object-cover border border-gray-100 shrink-0 shadow-xs"
+                className="w-12 h-12 rounded-xl object-cover border border-gray-200 shrink-0 shadow-xs"
               />
             ) : (
-              <div className="w-11 h-11 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 text-gray-400">
+              <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center shrink-0 text-gray-500">
                 <ShoppingBag className="w-5 h-5" />
               </div>
             )}
             <div className="min-w-0">
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                {modalAction === "quickOrder" ? <><Zap className="w-3 h-3 text-yellow-500 fill-current" /> Quick Order</> : "Add to Cart"}
-              </span>
-              <h3 className="text-sm font-bold text-gray-800 line-clamp-1 mt-0.5">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md">
+                  {modalAction === "quickOrder" ? (
+                    <>
+                      <Zap className="w-3 h-3 text-yellow-500 fill-current" /> Step 1: Quick Order Details
+                    </>
+                  ) : (
+                    "Add to Cart"
+                  )}
+                </span>
+                <span className="text-[11px] font-bold text-gray-500">
+                  Base: ৳{basePrice}
+                </span>
+              </div>
+              <h3 className="text-sm font-bold text-gray-900 truncate mt-0.5" title={product?.name}>
                 {product?.name || "Product"}
               </h3>
             </div>
@@ -245,280 +438,520 @@ const ResellerPriceModal = ({
           </button>
         </div>
 
-        {/* Cart items notification for Quick Order */}
-        {modalAction === "quickOrder" && existingCartCount > 0 && !cartClearedLocally && (
-          <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-3 flex flex-col gap-2 shadow-xs">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                <div>
-                  <p className="text-xs font-bold text-amber-950">
-                    You have {existingCartCount} existing item{existingCartCount > 1 ? "s" : ""} in cart!
-                  </p>
-                  <p className="text-[11px] text-amber-800 mt-0.5 leading-snug">
-                    Quick Order will checkout <strong>{existingCartCount + 1} items</strong> ({existingCartCount} from cart + this product).
-                  </p>
+        {/* Modal Body */}
+        <div className="p-4 sm:p-5 flex flex-col gap-4 overflow-y-auto flex-1">
+
+          {/* Product Variant / Attribute Selection */}
+          {hasAttributes && (
+            <div className="bg-gray-50/80 p-3 rounded-xl border border-gray-200/70">
+              <p className="text-xs font-bold text-gray-700 mb-2">প্রডাক্ট ভ্যারিয়েন্ট নির্বাচন করুন:</p>
+              <div className="flex flex-col gap-2.5">
+                {Object.entries(groupedAttributes).map(([attrName, attrs]) => (
+                  <div key={attrName} className="flex flex-col gap-1">
+                    <span className="text-[11px] font-semibold text-gray-500 uppercase">{attrName}</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {attrs.map((attr) => {
+                        const isSelected = selectedAttributes[attrName] === attr.attribute_value_id;
+                        const inStock = (attr.stock ?? 1) > 0;
+                        const isColor = Boolean(attr.value?.color_code);
+                        return (
+                          <button
+                            key={attr.id}
+                            type="button"
+                            disabled={!inStock}
+                            onClick={() =>
+                              setSelectedAttributes((prev) => ({
+                                ...prev,
+                                [attrName]: attr.attribute_value_id,
+                              }))
+                            }
+                            className={`px-3 py-1 text-xs font-bold rounded-lg border transition-all flex items-center gap-1.5 ${
+                              isSelected
+                                ? "bg-indigo-600 text-white border-indigo-600 shadow-xs"
+                                : inStock
+                                ? "bg-white text-gray-700 border-gray-300 hover:border-indigo-400"
+                                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed line-through"
+                            }`}
+                          >
+                            {isColor && (
+                              <span
+                                className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                                style={{ backgroundColor: attr.value.color_code }}
+                              />
+                            )}
+                            {attr.value?.value || "Default"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Quantity selector */}
+          <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 border border-gray-200/70">
+            <div>
+              <p className="text-xs font-bold text-gray-800">অর্ডার পরিমাণ (Quantity)</p>
+              <p className="text-[11px] text-gray-500">মোট বেস খরচ: ৳{productCost}</p>
+            </div>
+            <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden bg-white shadow-xs">
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-base"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                min="1"
+                value={quantity}
+                onChange={(e) => {
+                  const val = Number(e.target.value);
+                  if (!Number.isNaN(val) && val >= 1) setQuantity(val);
+                }}
+                className="w-10 text-center text-xs font-black text-gray-800 outline-none border-x border-gray-200 py-1"
+              />
+              <button
+                type="button"
+                onClick={() => setQuantity((q) => q + 1)}
+                className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-100 font-bold text-base"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* ═════════ MODAL ACTION === QUICK ORDER (Step 1 Fields) ═════════ */}
+          {modalAction === "quickOrder" && (
+            <>
+              {/* Customer Info Card */}
+              <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/30">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-900 border-b border-indigo-100 pb-1.5">
+                  <User className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>কাস্টমারের তথ্য (Customer Details)</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 block mb-1">
+                      কাস্টমারের নাম <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="পুরো নাম লিখুন"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      className="w-full text-xs font-medium px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-gray-700 block mb-1">
+                      মোবাইল নম্বর <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="tel"
+                        placeholder="01XXXXXXXXX (১১ ডিজিট)"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        className="w-full text-xs font-medium pl-8 pr-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500"
+                      />
+                      <Phone className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              <button
-                type="button"
-                disabled={isClearingCart}
-                onClick={handleClearExistingCart}
-                className="shrink-0 px-2.5 py-1 text-[11px] font-bold text-red-700 bg-red-100 hover:bg-red-200 active:scale-95 rounded-lg transition-all flex items-center gap-1 border border-red-200"
-                title="Clear existing cart items so only this product is checked out"
-              >
-                <Trash2 className="w-3 h-3" />
-                {isClearingCart ? "Clearing..." : "Clear Cart"}
-              </button>
-            </div>
 
-            {/* View / Hide items toggle */}
-            <div className="pt-1.5 border-t border-amber-200/60">
-              <button
-                type="button"
-                onClick={() => setShowCartDetails((v) => !v)}
-                className="flex items-center justify-between w-full text-[11px] font-semibold text-amber-900 hover:text-amber-950"
-              >
-                <span>{showCartDetails ? "▲ Hide existing items" : `▼ View ${existingCartCount} existing item${existingCartCount > 1 ? "s" : ""}`}</span>
-                {showCartDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-
-              {showCartDetails && (
-                <div className="mt-2 space-y-1.5 max-h-36 overflow-y-auto pr-1">
-                  {cartItems.map((cItem) => {
-                    const itemImg = cItem?.product?.primary_image?.file_name
-                      ? `${imgBaseUrl}/${cItem.product.primary_image.file_name}`
-                      : cItem?.product?.thumbnail_img;
-                    return (
-                      <div
-                        key={cItem.id}
-                        className="flex items-center justify-between gap-2 p-1.5 bg-white/90 rounded-lg border border-amber-200/80 text-[11px]"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {itemImg ? (
-                            <img src={itemImg} alt="" className="w-7 h-7 rounded object-cover shrink-0 border" />
-                          ) : (
-                            <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center shrink-0">
-                              <ShoppingBag className="w-3.5 h-3.5 text-gray-400" />
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-800 truncate leading-tight">
-                              {cItem?.product?.name || "Product"}
-                            </p>
-                            <p className="text-[10px] text-gray-500">
-                              Qty: {cItem?.qty || 1} • ৳{cItem?.reseller_price || cItem?.product?.admin_price || 0}
-                            </p>
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteCartItem(cItem.id)}
-                          disabled={isDeletingItem}
-                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                          title="Remove this item"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })}
+              {/* Delivery Address & Hierarchy Card */}
+              <div className="flex flex-col gap-2.5 p-3.5 rounded-xl border border-gray-200 bg-white">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-1.5">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-900">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>ডেলিভারি ঠিকানা ও লোকেশন হায়ারার্কি</span>
+                  </div>
+                  {deliveryZone && hasCalculatedDelivery && (
+                    <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+                      {deliveryZone} (৳{deliveryCharge})
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* Confirmation when cart is cleared */}
-        {modalAction === "quickOrder" && cartClearedLocally && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 flex items-center gap-2 text-xs text-emerald-800 shadow-xs">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span className="font-medium">Cart cleared! Only this quick order item will be ordered.</span>
-          </div>
-        )}
+                {/* Division > District > Thana Cascades */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">
+                      ১. বিভাগ (Division) <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={selectedDivisionId}
+                      onChange={(e) => {
+                        setSelectedDivisionId(e.target.value);
+                        setSelectedDistrictId("");
+                        setSelectedThanaId("");
+                      }}
+                      className="w-full text-xs px-2.5 py-2 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500 font-medium"
+                    >
+                      <option value="">বিভাগ সিলেক্ট করুন</option>
+                      {divisions.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-        {/* Product Attributes / Variants */}
-        {isLoadingDetails && !hasAttributes ? (
-          <div className="py-2 flex items-center gap-2 text-xs text-gray-500">
-            <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />
-            <span>Loading product options...</span>
-          </div>
-        ) : hasAttributes ? (
-          <div className="flex flex-col gap-2.5 bg-gray-50/80 rounded-xl p-3 border border-gray-100">
-            {Object.entries(groupedAttributes).map(([attrName, attrs]) => {
-              const currentSelectedId = selectedAttributes[attrName];
-              const selectedAttr = attrs.find((a) => a.attribute_value_id === currentSelectedId);
-              return (
-                <div key={attrName} className="flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-semibold text-gray-700">{attrName}:</span>
-                    {selectedAttr && (
-                      <span className="text-gray-500 font-medium">
-                        Selected: <strong className="text-gray-900">{selectedAttr.value?.value}</strong>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">
+                      ২. জেলা (District) <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      disabled={!selectedDivisionId || loadingDistricts}
+                      value={selectedDistrictId}
+                      onChange={(e) => {
+                        const newDistId = e.target.value;
+                        const prevDist = selectedDistrict?.name;
+                        const prevThana = selectedThana?.name;
+                        setSelectedDistrictId(newDistId);
+                        setSelectedThanaId("");
+                        const newDist = districts.find((d) => String(d.id) === String(newDistId));
+                        if (address.trim() && newDist?.name) {
+                          setAddress((prev) =>
+                            appendLocationToAddress(prev, "", newDist.name, prevThana, prevDist)
+                          );
+                        }
+                      }}
+                      className="w-full text-xs px-2.5 py-2 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500 font-medium disabled:opacity-50"
+                    >
+                      <option value="">
+                        {!selectedDivisionId ? "আগে বিভাগ সিলেক্ট করুন" : "জেলা সিলেক্ট করুন"}
+                      </option>
+                      {districts.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 block mb-1">
+                      ৩. থানা/উপজেলা <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      disabled={!selectedDistrictId || loadingUpazilas}
+                      value={selectedThanaId}
+                      onChange={(e) => {
+                        const newThanaId = e.target.value;
+                        const prevThana = selectedThana?.name;
+                        const currDist = selectedDistrict?.name;
+                        setSelectedThanaId(newThanaId);
+                        const newThana = upazilas.find((u) => String(u.id) === String(newThanaId));
+                        if (address.trim() && (newThana?.name || currDist)) {
+                          setAddress((prev) =>
+                            appendLocationToAddress(prev, newThana?.name, currDist, prevThana, currDist)
+                          );
+                        }
+                      }}
+                      className="w-full text-xs px-2.5 py-2 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500 font-medium disabled:opacity-50"
+                    >
+                      <option value="">
+                        {!selectedDistrictId ? "আগে জেলা সিলেক্ট করুন" : "থানা সিলেক্ট করুন"}
+                      </option>
+                      {upazilas.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Delivery charge status note */}
+                {selectedDistrictId && (
+                  <div className="text-[11px] flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-gray-50 border border-gray-200">
+                    <span className="text-gray-600 font-medium">ডেলিভারি চার্জ:</span>
+                    {isCalculatingCharge ? (
+                      <span className="text-indigo-600 flex items-center gap-1 font-bold">
+                        <Loader2 className="w-3 h-3 animate-spin" /> হিসাব হচ্ছে…
                       </span>
+                    ) : hasCalculatedDelivery ? (
+                      <span className="text-indigo-700 font-black">
+                        ৳{deliveryCharge} ({deliveryZone})
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-bold">গণনা করা যায়নি</span>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {attrs.map((attr) => {
-                      const isSelected = currentSelectedId === attr.attribute_value_id;
-                      const isColor = Boolean(attr.value?.color_code);
-                      const hasStock = (attr.stock ?? 1) > 0;
-                      return (
-                        <button
-                          key={attr.id}
-                          type="button"
-                          disabled={!hasStock}
-                          onClick={() =>
-                            setSelectedAttributes((prev) => ({
-                              ...prev,
-                              [attrName]: attr.attribute_value_id,
-                            }))
+                )}
+
+                {/* Detailed delivery address */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-bold text-gray-700">
+                      বিস্তারিত ডেলিভারি ঠিকানা <span className="text-red-500">*</span>
+                    </label>
+                    {[selectedThana?.name, selectedDistrict?.name].some(Boolean) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (address.trim()) {
+                            setAddress((prev) =>
+                              appendLocationToAddress(prev, selectedThana?.name, selectedDistrict?.name)
+                            );
+                          } else {
+                            setAddress([selectedThana?.name, selectedDistrict?.name].filter(Boolean).join(", "));
                           }
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                            isSelected
-                              ? "border-black bg-gray-900 text-white shadow-xs ring-2 ring-gray-900/20"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50"
-                          } ${!hasStock ? "opacity-40 cursor-not-allowed line-through" : ""}`}
-                        >
-                          {isColor && (
-                            <span
-                              className="w-3.5 h-3.5 rounded-full border border-white/50 shrink-0"
-                              style={{ backgroundColor: attr.value.color_code }}
-                            />
-                          )}
-                          <span>{attr.value?.value || "Option"}</span>
-                          {attr.stock != null && attr.stock <= 5 && (
-                            <span className={`text-[10px] ${isSelected ? "text-amber-300" : "text-amber-600"}`}>
-                              ({attr.stock} left)
+                        }}
+                        className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200 transition active:scale-95"
+                      >
+                        + থানা ও জেলা যুক্ত করুন
+                      </button>
+                    )}
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="বাড়ি নং, রোড নং, এলাকা, গ্রাম বা পরিচিত কোনো ল্যান্ডমার্ক"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    onBlur={() => {
+                      if (address.trim() && (selectedThana?.name || selectedDistrict?.name)) {
+                        setAddress((prev) =>
+                          appendLocationToAddress(prev, selectedThana?.name, selectedDistrict?.name)
+                        );
+                      }
+                    }}
+                    className="w-full text-xs font-medium px-3 py-2 bg-white rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500"
+                  />
+
+                  {/* Real-time full address preview */}
+                  {Boolean(selectedThana?.name || selectedDistrict?.name) && (
+                    <div className="mt-1 flex flex-col gap-1">
+                      {address.trim() ? (
+                        <div className="text-[11px] text-emerald-900 bg-emerald-50/80 border border-emerald-200 px-2.5 py-1.5 rounded-lg flex items-start gap-1.5">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <span className="leading-tight">
+                            <span className="font-semibold text-gray-600">পূর্ণাঙ্গ ঠিকানা: </span>
+                            <span className="font-bold text-gray-900">
+                              {appendLocationToAddress(address, selectedThana?.name, selectedDistrict?.name)}
                             </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                          💡 থানা ও জেলা ({[selectedThana?.name, selectedDistrict?.name].filter(Boolean).join(", ")}) ঠিকানা লেখার পর শেষে স্বয়ংক্রিয়ভাবে যুক্ত হবে।
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional note */}
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 block mb-1">
+                    অর্ডার নোট (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ডেলিভারির বিশেষ কোনো নির্দেশনা থাকলে লিখুন"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    className="w-full text-xs font-medium px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-300 focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Financial Calculation & COD Fee Box */}
+              <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 flex flex-col gap-2.5">
+                <div className="flex items-center justify-between border-b border-emerald-200/70 pb-1.5">
+                  <span className="text-xs font-black text-emerald-950 flex items-center gap-1">
+                    💰 কাস্টমার কালেকশন ও সম্ভাব্য লাভ
+                  </span>
+                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    1% COD ফি প্রযোজ্য
+                  </span>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-gray-800">
+                      Customer Collection Amount (COD) <span className="text-red-500">*</span>
+                    </label>
+                    <span className="text-[10px] text-gray-500">
+                      কুরিয়ার কাস্টমার থেকে মোট যে টাকা সংগ্রহ করবে
+                    </span>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={productCost + deliveryCharge + codFee}
+                      value={collectionAmount}
+                      onChange={(e) => {
+                        setUserTouchedCollection(true);
+                        setCollectionAmount(e.target.value);
+                      }}
+                      className="w-full text-sm font-black text-gray-900 pl-8 pr-3 py-2 bg-white rounded-xl border-2 border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                      placeholder="যেমন: 1200"
+                    />
+                    <span className="absolute left-3 top-2 text-sm font-black text-gray-500">৳</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-emerald-900 mt-1.5 flex items-center gap-1">
+                    <span className="font-bold text-emerald-950">💡 নোট:</span> ডেলিভারি চার্জসহ মোট টাকা লিখুন। আলাদা করে যোগ করতে হবে না।
+                  </p>
+                </div>
+
+                {/* Live Formula Breakdown */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs pt-1">
+                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
+                    <p className="text-[10px] text-gray-500 font-semibold">প্রোডাক্ট খরচ</p>
+                    <p className="font-black text-gray-800">৳{productCost}</p>
+                  </div>
+                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
+                    <p className="text-[10px] text-gray-500 font-semibold">ডেলিভারি চার্জ</p>
+                    <p className="font-black text-gray-800">৳{deliveryCharge}</p>
+                  </div>
+                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
+                    <p className="text-[10px] text-gray-500 font-semibold">1% COD ফি</p>
+                    <p className="font-black text-gray-800">৳{codFee}</p>
+                  </div>
+                  <div
+                    className="p-2 rounded-lg border font-black transition-all"
+                    style={{
+                      background: estimatedProfit >= 0 ? "#ecfdf5" : "#fef2f2",
+                      borderColor: estimatedProfit >= 0 ? "#86efac" : "#fca5a5",
+                    }}
+                  >
+                    <p
+                      className="text-[10px] font-bold"
+                      style={{ color: estimatedProfit >= 0 ? "#15803d" : "#991b1b" }}
+                    >
+                      সম্ভাব্য প্রফিট
+                    </p>
+                    <p
+                      className="text-sm font-black"
+                      style={{ color: estimatedProfit >= 0 ? "#16a34a" : "#dc2626" }}
+                    >
+                      {estimatedProfit >= 0 ? "+" : ""}৳{estimatedProfit}
+                    </p>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        ) : null}
 
-        {/* Base price */}
-        <div className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2.5">
-          <span className="text-xs text-gray-500 font-medium">Admin / Base Price</span>
-          <span className="text-sm font-black text-gray-800">৳{basePrice.toLocaleString()}</span>
-        </div>
+                {estimatedProfit < 0 && (
+                  <p className="text-[11px] font-bold text-red-600 text-center">
+                    ⚠️ কালেকশন এমাউন্ট খুবই কম। প্রোডাক্ট ও ডেলিভারি খরচের তুলনায় আপনার ক্ষতি (Loss) হবে।
+                  </p>
+                )}
+              </div>
 
-        {/* Reseller price input */}
-        <div className="flex flex-col gap-1">
-          <label className="text-xs font-semibold text-gray-700">Your Selling Price</label>
-          <div className="flex items-center border-2 border-gray-200 focus-within:border-[#158E72] rounded-xl overflow-hidden transition-colors">
-            <span className="px-3 text-sm font-bold text-gray-500 bg-gray-50 border-r border-gray-200 h-full flex items-center">৳</span>
-            <input
-              type="number"
-              min={basePrice}
-              value={resellerPrice}
-              onChange={(e) => {
-                const v = e.target.value;
-                if (v === "" || (!isNaN(Number(v)) && Number(v) >= 0)) setResellerPrice(v);
-              }}
-              placeholder="Enter your price"
-              className="flex-1 px-3 py-2.5 text-sm font-bold text-gray-800 outline-none bg-white"
-            />
-          </div>
-        </div>
-
-        {/* Profit stats */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className={`rounded-xl px-3 py-2 text-center ${profit >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-[10px] text-gray-500 font-medium">Profit / item</p>
-            <p className={`text-sm font-black ${profit >= 0 ? "text-green-600" : "text-red-500"}`}>
-              ৳{Number.isFinite(profit) ? profit.toFixed(0) : 0}
-            </p>
-          </div>
-          <div className="rounded-xl px-3 py-2 text-center bg-gray-50">
-            <p className="text-[10px] text-gray-500 font-medium">Margin</p>
-            <p className="text-sm font-black text-gray-700">{Number.isFinite(margin) ? margin.toFixed(1) : 0}%</p>
-          </div>
-        </div>
-
-        {/* Quantity */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-700">Quantity</span>
-          <div className="flex items-center border border-gray-200 rounded-xl overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold"
-            >−</button>
-            <input
-              type="number"
-              min="1"
-              value={quantity}
-              onChange={(e) => { const v = Number(e.target.value); if (!isNaN(v) && v >= 1) setQuantity(v); }}
-              className="w-12 text-center text-sm font-bold text-gray-800 outline-none border-x border-gray-200 py-2"
-            />
-            <button
-              type="button"
-              onClick={() => setQuantity((q) => q + 1)}
-              className="w-9 h-9 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-lg font-bold"
-            >+</button>
-          </div>
-        </div>
-
-        {/* Totals */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="rounded-xl px-2 py-2 text-center bg-gray-50">
-            <p className="text-[10px] text-gray-500 font-medium">Total Sell</p>
-            <p className="text-xs font-black text-gray-800">৳{Number.isFinite(totalSell) ? totalSell.toFixed(0) : 0}</p>
-          </div>
-          <div className="rounded-xl px-2 py-2 text-center bg-gray-50">
-            <p className="text-[10px] text-gray-500 font-medium">Total Cost</p>
-            <p className="text-xs font-black text-gray-800">৳{Number.isFinite(totalBase) ? totalBase.toFixed(0) : 0}</p>
-          </div>
-          <div className={`rounded-xl px-2 py-2 text-center ${totalProfit >= 0 ? "bg-green-50" : "bg-red-50"}`}>
-            <p className="text-[10px] text-gray-500 font-medium">Total Profit</p>
-            <p className={`text-xs font-black ${totalProfit >= 0 ? "text-green-600" : "text-red-500"}`}>
-              ৳{Number.isFinite(totalProfit) ? totalProfit.toFixed(0) : 0}
-            </p>
-          </div>
-        </div>
-
-        {/* Submit */}
-        <button
-          disabled={
-            isSubmitting ||
-            outOfStock ||
-            resellerPriceVal < basePrice ||
-            isMissingAttributeSelection
-          }
-          onClick={() => onSubmit(resellerPriceVal, quantity, selectedAttributeId)}
-          className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all shadow-sm
-            ${
-              isSubmitting ||
-              outOfStock ||
-              resellerPriceVal < basePrice ||
-              isMissingAttributeSelection
-                ? "opacity-50 cursor-not-allowed bg-gray-200 text-gray-400"
-                : modalAction === "quickOrder"
-                ? "bg-black text-white hover:bg-gray-800 active:scale-[0.99]"
-                : "bg-red-600 text-white hover:bg-red-700 active:scale-[0.99]"
-            }`}
-        >
-          {isSubmitting ? (
-            <span className="flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Processing…
-            </span>
-          ) : modalAction === "quickOrder" ? (
-            existingCartCount > 0 && !cartClearedLocally ? (
-              `⚡ Confirm Quick Order (${existingCartCount + 1} items)`
-            ) : (
-              "⚡ Confirm Quick Order"
-            )
-          ) : (
-            "🛒 Add to Cart"
+              {/* Reliability Balance Status Box */}
+              <div className="p-3 rounded-xl border border-amber-200 bg-amber-50/70 text-xs text-amber-950 flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold flex items-center gap-1.5 text-amber-900">
+                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    রিলায়েবিলিটি ব্যালেন্স স্ট্যাটাস
+                  </span>
+                  <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full">
+                    অর্ডার সম্পন্ন: {completedOrdersCount}/5
+                  </span>
+                </div>
+                {requiresAdvance ? (
+                  <div className="space-y-1.5 text-[11px] leading-relaxed">
+                    <p className="text-amber-900 font-semibold">
+                      নতুন ড্রপশিপার হিসেবে প্রথম ৫টি সফল অর্ডারের ক্ষেত্রে একাউন্ট সিকিউরিটি হিসেবে রিলায়েবিলিটি ব্যালেন্স প্রযোজ্য।
+                    </p>
+                    <div className="bg-emerald-50 border border-emerald-200/80 p-2 rounded-lg text-emerald-950 font-medium">
+                      💡 <strong>গুরুত্বপূর্ণ তথ্য:</strong> এই টাকাটি কোনো চার্জ বা খরচ নয় — এটি আপনার সিকিউরিটি ব্যালেন্স। অর্ডার সম্পন্ন হওয়ার পর এটি আপনার ওয়ালেটে থাকবে এবং আপনি <strong>যেকোনো সময় এটি উইথড্র (উত্তোলন) করে নিতে পারবেন</strong>।
+                    </div>
+                    <p className="text-gray-600 text-[10px]">
+                      বর্তমান ওয়ালেট ব্যালেন্স: <strong>৳{availableWalletBalance}</strong> (চেকআউট পেজে 'Pay Later' অথবা ওয়ালেট থেকে পরিশোধের সুবিধা পাবেন)।
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-emerald-800 leading-snug">
+                    অভিনন্দন! আপনি একজন ভেরিফাইড ড্রপশিপার (৫+ সম্পন্ন অর্ডার)। আপনার জন্য কোনো অগ্রিম সিকিউরিটি ব্যালেন্স আবশ্যক নয়।
+                  </p>
+                )}
+              </div>
+            </>
           )}
-        </button>
+
+          {/* ═════════ MODAL ACTION === CART ═════════ */}
+          {modalAction === "cart" && (
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="text-xs font-bold text-gray-700 block mb-1">
+                  আপনার বিক্রয়মূল্য (Reseller Selling Price)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min={basePrice}
+                    value={resellerPrice}
+                    onChange={(e) => setResellerPrice(e.target.value)}
+                    placeholder={`৳${basePrice} বা তার বেশি`}
+                    className="w-full text-sm font-bold pl-8 pr-3 py-2 bg-white rounded-xl border border-gray-300 focus:outline-none focus:border-indigo-500"
+                  />
+                  <span className="absolute left-3 top-2 text-sm font-bold text-gray-400">৳</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 border-t border-gray-100 bg-gray-50/90 shrink-0 flex items-center justify-between gap-3 rounded-b-2xl">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-xs font-bold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            বাতিল (Cancel)
+          </button>
+
+          {modalAction === "quickOrder" ? (
+            <button
+              type="button"
+              disabled={
+                outOfStock ||
+                isMissingAttributeSelection ||
+                !customerName.trim() ||
+                !customerPhone.trim() ||
+                !selectedDistrictId ||
+                !selectedThanaId ||
+                !address.trim() ||
+                estimatedProfit < 0
+              }
+              onClick={handleContinueToCheckout}
+              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-2 ${
+                outOfStock ||
+                isMissingAttributeSelection ||
+                !customerName.trim() ||
+                !customerPhone.trim() ||
+                !selectedDistrictId ||
+                !selectedThanaId ||
+                !address.trim() ||
+                estimatedProfit < 0
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700 text-white active:scale-95"
+              }`}
+            >
+              <span>Continue to Checkout</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              disabled={isSubmitting || outOfStock || Number(resellerPrice) < basePrice || isMissingAttributeSelection}
+              onClick={handleCartSubmit}
+              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all shadow-md disabled:opacity-50"
+            >
+              {isSubmitting ? "Adding..." : "Add to Cart"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

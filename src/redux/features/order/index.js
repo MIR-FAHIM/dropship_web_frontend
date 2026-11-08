@@ -4,20 +4,11 @@ import API_ENDPOINTS, { buildEndpointPath } from "../../api/apiEndpoints";
 const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     checkoutOrder: builder.mutation({
-      query: (payload) => {
-        const formData = new FormData();
-        Object.entries(payload || {}).forEach(([key, value]) => {
-          if (value !== undefined && value !== null) {
-            formData.append(key, value);
-          }
-        });
-
-        return {
-          url: API_ENDPOINTS.orders.checkout.path,
-          method: API_ENDPOINTS.orders.checkout.method,
-          body: formData,
-        };
-      },
+      query: (payload) => ({
+        url: API_ENDPOINTS.orders.checkout.path,
+        method: API_ENDPOINTS.orders.checkout.method,
+        body: payload,
+      }),
     }),
     listOrdersByUser: builder.query({
       query: ({ userId, page }) => ({

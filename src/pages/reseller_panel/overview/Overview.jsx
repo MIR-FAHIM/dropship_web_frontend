@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useButtonClickMutation } from "../../../redux/features/user";
 import { Outlet } from "react-router-dom";
 import { useGetResellerNoticesQuery } from "../../../redux/features/notice";
 import { formatNoticeDate, formatNoticeLabel, getNoticeList, noticePriorityClass } from "../../../utils/notice.utils";
+import { useGetProductClicksLeaderboardQuery } from "../../../redux/features/report";
+import { getLeaderboardDateRange } from "../../../utils/productLeaderboard.utils";
 import {
   FaBoxOpen, FaTrophy, FaRocket, FaBook, FaVideo,
   FaStore, FaChartBar, FaWallet, FaMoneyBillWave, FaHeadset,
@@ -23,14 +25,6 @@ const menuItems = [
   { name: "Passive Income", icon: <FaMoneyBillWave className="text-orange-500" />, route: "/app/passive-income" },
   { name: "Support Center", icon: <FaHeadset className="text-gray-600" />, route: "/app/users" },
   { name: "General Questions", icon: <FaHeadset className="text-gray-600" />, route: "/app/faq" },
-];
-
-const leaderboardData = [
-  { rank: 1, product: "Smart Watch", sales: "1500+" },
-  { rank: 2, product: "Wireless Earbuds", sales: "1200+" },
-  { rank: 3, product: "Gaming Mouse", sales: "1100+" },
-  { rank: 4, product: "Fitness Band", sales: "900+" },
-  { rank: 5, product: "Portable Speaker", sales: "850+" },
 ];
 
 const tierSteps = [
@@ -196,6 +190,134 @@ const DashboardNoticeWidget = () => {
   );
 };
 
+const DashboardLeaderboardWidget = () => {
+  const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [period, setPeriod] = useState("week");
+  const dateRange = useMemo(() => getLeaderboardDateRange(period), [period]);
+
+  const { data, isLoading, isFetching, isError, refetch } = useGetProductClicksLeaderboardQuery(
+    { limit: 5, ...dateRange },
+    { refetchOnMountOrArgChange: true }
+  );
+
+  const loading = isLoading || isFetching;
+  const items = useMemo(() => {
+    if (Array.isArray(data?.data?.leaderboard)) {
+      return data.data.leaderboard.slice(0, 5);
+    }
+    return [];
+  }, [data]);
+
+  return (
+    <div className="bg-blue-100 p-4 rounded-lg shadow-md">
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h3 className="text-xl font-semibold text-gray-800 flex items-center gap-1.5">
+          <span>🏆</span> {t("Product Leaderboard")}
+        </h3>
+        <div className="flex items-center gap-1.5">
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            className="text-xs bg-white/80 border border-blue-200 rounded px-2 py-1 text-gray-700 font-medium focus:outline-none focus:ring-1 focus:ring-blue-400 cursor-pointer"
+          >
+            <option value="week">Last 7 Days</option>
+            <option value="month">This Month</option>
+            <option value="all">All Time</option>
+          </select>
+          <button
+            type="button"
+            onClick={() => navigate("/app/product-leaderboard")}
+            className="rounded-full bg-blue-200/80 hover:bg-blue-300 px-2.5 py-1 text-xs font-bold text-blue-900 transition cursor-pointer"
+            title="View Full Leaderboard"
+          >
+            View All
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="space-y-2 py-2">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-8 animate-pulse rounded bg-blue-200/60" />
+          ))}
+        </div>
+      ) : isError ? (
+        <div className="py-4 text-center text-xs text-red-600">
+          <p>Failed to load leaderboard data.</p>
+          <button
+            type="button"
+            onClick={() => refetch()}
+            className="mt-2 inline-block px-2.5 py-1 rounded bg-white text-xs font-semibold text-red-700 hover:bg-red-50 border border-red-200 cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      ) : items.length === 0 ? (
+        <div className="py-6 text-center text-xs text-gray-600">
+          <p>No product sales data for this period.</p>
+          {period !== "all" && (
+            <button
+              type="button"
+              onClick={() => setPeriod("all")}
+              className="mt-2 text-xs font-semibold text-blue-800 underline hover:text-blue-950 cursor-pointer"
+            >
+              View All Time
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="border-b border-blue-200 text-gray-800">
+                <th className="p-2 w-14">Rank</th>
+                <th className="p-2">Product</th>
+                <th className="p-2 text-right w-20">Sales</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((item, index) => {
+                const rank = item.rank ?? index + 1;
+                const productId = item.product_id ?? item.product?.id;
+                const productName = item.product?.name || `Product #${productId || index + 1}`;
+                const sales = Number(item.total_clicks ?? 0);
+
+                return (
+                  <tr
+                    key={`${productId || index}-${rank}`}
+                    className="border-b border-blue-200/60 text-gray-700 hover:bg-blue-50/50 transition-colors"
+                  >
+                    <td className="p-2 font-bold text-gray-800 whitespace-nowrap">
+                      #{rank}
+                    </td>
+                    <td className="p-2 max-w-[140px] sm:max-w-[180px]">
+                      {productId ? (
+                        <Link
+                          to={`/app/productdetails/${productId}`}
+                          className="font-medium text-gray-800 hover:text-blue-700 hover:underline line-clamp-1"
+                          title={productName}
+                        >
+                          {productName}
+                        </Link>
+                      ) : (
+                        <span className="line-clamp-1">{productName}</span>
+                      )}
+                    </td>
+                    <td className="p-2 text-right font-semibold tabular-nums text-gray-800 whitespace-nowrap">
+                      {sales.toLocaleString("en-BD")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Overview = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -287,27 +409,7 @@ const Overview = () => {
         </div>
 
         {/* Product Leaderboard */}
-        <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-2">🏆 {t("Product Leaderboard")}</h3>
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="border-b text-gray-800">
-                <th className="p-2">Rank</th>
-                <th className="p-2">Product</th>
-                <th className="p-2">Sales</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboardData.map((item) => (
-                <tr key={item.rank} className="border-b text-gray-700">
-                  <td className="p-2">#{item.rank}</td>
-                  <td className="p-2">{item.product}</td>
-                  <td className="p-2">{item.sales}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DashboardLeaderboardWidget />
       </div>
     </div>
   );

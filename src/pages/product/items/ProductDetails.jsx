@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
 import ResellerSocialContent from "./ResellerSocialContent";
 import ResellerProductQa from "./ResellerProductQa";
+import ResellerPriceModal from "../components/quick_order_reseller_price";
 import WhatsAppFloatingButton from "../../../components/shared/WhatsAppFloatingButton";
 import { htmlToPlainText } from "../../../utils/text.utils";
 
@@ -40,6 +41,7 @@ const ProductDetails = () => {
   const [productPageOpen, setProductPageOpen] = useState(false);
   const [createdProductPage, setCreatedProductPage] = useState(null);
   const [selectedAttributes, setSelectedAttributes] = useState({});
+  const [quickOrderOpen, setQuickOrderOpen] = useState(false);
   const userId = getFromLocalstorage("userId");
 
   const { data: detail, isLoading, isError, error } = useGetProductDetailsQuery({ id, reseller_id: userId }, { skip: !id });
@@ -823,78 +825,38 @@ const ProductDetails = () => {
             );
           })()}
 
-          <div className="reseller-panel">
-            <div className="reseller-head">
-              <h2>{t("product_details.set_selling_price")}</h2>
-              <p>{t("product_details.set_selling_price_sub")} <span style={{ fontWeight: 700, color: "#16a34a", background: "#dcfce7", padding: "1px 8px", borderRadius: "999px", fontSize: "13px" }}>{product?.max_resell_price}৳</span></p>
-            </div>
-
-            <div className="price-input-row">
-              <label htmlFor="reseller-price">{t("product_details.your_price")}</label>
-              <div className="price-input">
-                <span>৳</span>
-                <input
-                  id="reseller-price"
-                  type="number"
-                  value={resellerPrice}
-                  onChange={handleResellerPriceInput}
-                  min={basePrice}
-                  placeholder={t("product_details.enter_price_placeholder")}
-                />
+          <div className="reseller-panel" style={{ marginTop: "16px" }}>
+            {product?.max_resell_price && (
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px", padding: "10px 14px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px" }}>
+                <span style={{ fontSize: "13px", color: "#166534", fontWeight: 600 }}>সর্বোচ্চ বিক্রয় মূল্য (Max Resell Price):</span>
+                <span style={{ fontSize: "14px", fontWeight: 800, color: "#15803d" }}>৳{product.max_resell_price}</span>
               </div>
-            </div>
-
-            <div className="price-stats">
-              <div className={`stat-card ${profitValue >= 0 ? "positive" : "negative"}`}>
-                <p>{t("product_details.profit_per_item")}</p>
-                <strong>৳ {Number.isFinite(profitValue) ? profitValue.toFixed(0) : 0}</strong>
-              </div>
-              <div className="stat-card">
-                <p>{t("product_details.margin_on_base")}</p>
-                <strong>{Number.isFinite(marginValue) ? marginValue.toFixed(1) : 0}%</strong>
-              </div>
-            </div>
-
-            <div className="quantity-selection">
-              <label>{t("product_details.quantity")}</label>
-              <div className="qty-controls">
-                <button type="button" onClick={handleDecreaseQty}>
-                  -
-                </button>
-                <input
-                  type="number"
-                  value={quantity}
-                  onChange={handleQtyInput}
-                  min="1"
-                  className="quantity-input"
-                />
-                <button type="button" onClick={handleIncreaseQty}>
-                  +
-                </button>
-              </div>
-            </div>
-
-            <div className="price-stats totals">
-              <div className="stat-card">
-                <p>{t("product_details.total_sell_value")}</p>
-                <strong>৳ {Number.isFinite(totalSellValue) ? totalSellValue.toFixed(0) : 0}</strong>
-              </div>
-              <div className="stat-card">
-                <p>{t("product_details.total_base_cost")}</p>
-                <strong>৳ {Number.isFinite(totalBaseValue) ? totalBaseValue.toFixed(0) : 0}</strong>
-              </div>
-              <div className={`stat-card ${totalProfitValue >= 0 ? "positive" : "negative"}`}>
-                <p>{t("product_details.total_profit")}</p>
-                <strong>৳ {Number.isFinite(totalProfitValue) ? totalProfitValue.toFixed(0) : 0}</strong>
-              </div>
-            </div>
+            )}
 
             <button
-              onClick={handleAddToCart}
-              disabled={isAddingToCart}
-              className={`primary-btn ${isAddingToCart ? "disabled" : ""}`}
+              type="button"
+              onClick={() => setQuickOrderOpen(true)}
+              className="primary-btn"
+              style={{
+                width: "100%",
+                padding: "16px 20px",
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                boxShadow: "0 6px 20px rgba(37, 99, 235, 0.35)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                color: "#ffffff",
+                fontWeight: 800,
+                fontSize: "16px",
+                borderRadius: "14px",
+                cursor: "pointer",
+                border: "none",
+                transition: "all 0.2s ease-in-out",
+              }}
             >
-              {isAddingToCart ? t("product_details.adding") : t("product_details.add_to_cart")}
+              <span style={{ fontSize: "20px" }}>⚡</span>
+              <span>Quick Order (সরাসরি অর্ডার প্লেস করুন)</span>
             </button>
 
             {currentProductPage && (
@@ -1128,6 +1090,16 @@ const ProductDetails = () => {
         title="Make Product Page"
         onClose={() => setProductPageOpen(false)}
         onSubmit={handleCreateProductPage}
+      />
+      <ResellerPriceModal
+        open={quickOrderOpen}
+        onClose={() => setQuickOrderOpen(false)}
+        product={product}
+        modalAction="quickOrder"
+        userId={userId}
+        initialData={{
+          selectedAttributes,
+        }}
       />
       <WhatsAppFloatingButton product={product} />
     </div>

@@ -35,8 +35,12 @@ import StoreProfile from "../pages/reseller_panel/store_profile/StoreProfile";
 import Notifications from "../pages/reseller_panel/notifications/Notifications";
 import NoticeBoard from "../pages/reseller_panel/notices/NoticeBoard";
 import ProductLeaderBoard from "../pages/reseller_panel/product_leaderboard/ProductLeaderBoard";
+import MyWebsitePage from "../pages/reseller_panel/partner_store/MyWebsitePage";
+import EcommerceWebsitePage from "../pages/reseller_panel/partner_store/EcommerceWebsitePage";
 
 export const pagePaths = [
+  { path: "ecommerce-website",      element: <EcommerceWebsitePage /> },
+  { path: "my-website",             element: <MyWebsitePage /> },
   { path: "dashboard-new",          element: <Overview /> },
   { path: "dashboard",              element: <Overview /> },
   { path: "saleandprofit",          element: <SalesAndProfit /> },

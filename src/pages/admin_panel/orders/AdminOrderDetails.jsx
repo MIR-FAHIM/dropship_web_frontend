@@ -517,7 +517,7 @@ const AdminOrderDetails = () => {
         </div>
       </div>
 
-      {/* Prominent Lock Banner if Consignment Created */}
+      {/* Prominent Lock Banner if Consignment Created or Order Locked */}
       {(!isOrderEditable || hasConsignment) && (
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3.5 text-amber-900 shadow-sm">
           <div className="p-2 bg-amber-100 rounded-lg text-amber-700 flex-shrink-0 mt-0.5">
@@ -528,17 +528,27 @@ const AdminOrderDetails = () => {
               <h3 className="font-bold text-sm text-gray-900">
                 Order Locked / অর্ডার লক করা
               </h3>
-              <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-200 text-amber-800">
-                Consignment Created
-              </span>
-              {consignmentId && (
-                <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white text-gray-800 border border-amber-300">
-                  Consignment ID: {consignmentId}
+              {hasConsignment ? (
+                <>
+                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-200 text-amber-800">
+                    Consignment Created
+                  </span>
+                  {consignmentId && (
+                    <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-white text-gray-800 border border-amber-300">
+                      Consignment ID: {consignmentId}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-200 text-slate-800">
+                  Status Locked
                 </span>
               )}
             </div>
             <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-              এই অর্ডারের জন্য ডেলিভারি কনসাইনমেন্ট তৈরি সম্পন্ন হয়েছে। কনসাইনমেন্ট তৈরি হওয়ার পর অর্ডারের আইটেম, পরিমাণ, মূল্য, ডিসকাউন্ট, ডেলিভারি চার্জ বা কাস্টমার ডেলিভারি তথ্য পরিবর্তন করা নিষেধ।
+              {hasConsignment
+                ? "এই অর্ডারের জন্য ডেলিভারি কনসাইনমেন্ট তৈরি সম্পন্ন হয়েছে। কনসাইনমেন্ট তৈরি হওয়ার পর অর্ডারের আইটেম, পরিমাণ, মূল্য, ডিসকাউন্ট, ডেলিভারি চার্জ বা কাস্টমার ডেলিভারি তথ্য পরিবর্তন করা নিষেধ।"
+                : "বর্তমান স্ট্যাটাসের কারণে এই অর্ডারের তথ্য পরিবর্তন করা লক রয়েছে।"}
             </p>
           </div>
         </div>
@@ -654,10 +664,16 @@ const AdminOrderDetails = () => {
                   <span>{formatCurrency(order.reseller_profit)}</span>
                 </div>
               )}
-              {Number(order.remaining_cod) !== undefined && (
+              {order.total !== undefined && (
                 <div className="flex justify-between text-indigo-700 font-semibold pt-1 border-t border-dashed border-gray-200">
-                  <span>Remaining COD</span>
-                  <span>{formatCurrency(order.remaining_cod)}</span>
+                  <span>Customer COD Collection</span>
+                  <span>{formatCurrency(order.total)}</span>
+                </div>
+              )}
+              {Number(order.advance_amount) > 0 && (
+                <div className="flex justify-between text-purple-700 font-medium">
+                  <span>Reliability Balance / Advance</span>
+                  <span>{formatCurrency(order.advance_amount)}</span>
                 </div>
               )}
             </div>
@@ -724,7 +740,7 @@ const AdminOrderDetails = () => {
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-gray-800 flex items-center gap-2">
                   <CreditCard className="w-4 h-4 text-indigo-600" />
-                  অগ্রিম ডেলিভারি চার্জ
+                  ড্রপশিপার রিলায়েবিলিটি ব্যালেন্স / অগ্রিম
                 </h2>
                 <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                   order.advance_status === "approved" ? "bg-green-100 text-green-800 border border-green-300" :
@@ -739,7 +755,7 @@ const AdminOrderDetails = () => {
               <div className="p-5 space-y-3 text-xs">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-gray-500 block">অগ্রিম পরিমাণ:</span>
+                    <span className="text-gray-500 block">রিলায়েবিলিটি ব্যালেন্স:</span>
                     <p className="font-bold text-gray-900 text-sm mt-0.5">{formatCurrency(order.advance_amount || 0)}</p>
                   </div>
                   <div>

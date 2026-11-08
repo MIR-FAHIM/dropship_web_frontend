@@ -8,7 +8,7 @@ import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { MdOutlineWarehouse } from "react-icons/md";
-import { Bell, ChevronDown, Heart, HomeIcon, Megaphone, PanelLeftClose, PanelLeftOpen, Store, Trophy, Truck } from "lucide-react";
+import { Bell, ChevronDown, Globe, Heart, HomeIcon, Megaphone, PanelLeftClose, PanelLeftOpen, ShoppingBag, Store, Trophy, Truck } from "lucide-react";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
 
@@ -101,6 +101,16 @@ const menuSections = [
         path: "/app/store-profile",
         label: "My Store",
         icon: <Store />,
+      },
+      {
+        path: "/app/my-website",
+        label: "My Website (API)",
+        icon: <Globe />,
+      },
+      {
+        path: "/app/ecommerce-website",
+        label: "Get Ecommerce Website",
+        icon: <ShoppingBag />,
       },
       {
         path: "/app/notifications",

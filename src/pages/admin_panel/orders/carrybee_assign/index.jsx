@@ -369,12 +369,14 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
   const [zoneId, setZoneId] = useState("");
   const [areaId, setAreaId] = useState("");
   const [autoDetected, setAutoDetected] = useState(false);
+  // Customer Collection Amount (COD) is the full order total (e.g. ৳1000).
+  // The dropshipper reliability balance / advance charge must NOT be deducted from customer COD.
   const initialCollectable =
-    order.remaining_cod !== null &&
-    order.remaining_cod !== undefined &&
-    order.remaining_cod !== ""
-      ? Math.max(0, Number(order.remaining_cod))
-      : Math.max(0, Number(order.total || 0));
+    order.total !== null && order.total !== undefined && order.total !== "" && Number(order.total) > 0
+      ? Math.max(0, Number(order.total))
+      : (order.remaining_cod !== null && order.remaining_cod !== undefined && order.remaining_cod !== ""
+          ? Math.max(0, Number(order.remaining_cod))
+          : 0);
 
   const [form, setForm] = useState({
     delivery_type: 1,
@@ -636,7 +638,12 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FLD label="Collectable Amount *" value={form.collectable_amount} onChange={setField("collectable_amount")} type="number" />
+              <div>
+                <FLD label="Collectable Amount *" value={form.collectable_amount} onChange={setField("collectable_amount")} type="number" />
+                <span className="text-[11px] text-gray-500 mt-1 block">
+                  Customer COD Collection: Full Order Total (৳{Number(order.total || 0)})
+                </span>
+              </div>
               <FLD label="Product Description" value={form.product_description} onChange={setField("product_description")} />
             </div>
 
