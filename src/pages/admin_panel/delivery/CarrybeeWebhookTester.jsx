@@ -121,8 +121,12 @@ export default function CarrybeeWebhookTester() {
         success: true,
         data: res,
       });
-      toast.success(res?.message || "Webhook টেস্ট সফলভাবে প্রক্রিয়া হয়েছে!");
-      refetchEvents();
+      if (res?.data?.simulation === true) {
+        toast.success("প্রিভিউ সম্পন্ন। কোনো পেমেন্ট বা অর্ডার পরিবর্তন হয়নি।");
+      } else {
+        toast.warning("পুরোনো টেস্ট API থেকে ফল এসেছে। এটি CarryBee থেকে টাকা জমার প্রমাণ নয়।");
+        refetchEvents();
+      }
     } catch (err) {
       setSimulationResult({
         success: false,
@@ -270,7 +274,7 @@ export default function CarrybeeWebhookTester() {
               className="px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-bold shadow-md transition flex items-center gap-2 disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
-              {isTesting ? "প্রসেস হচ্ছে..." : "টেস্ট Webhook পাঠান"}
+              {isTesting ? "প্রিভিউ হচ্ছে..." : "Webhook প্রিভিউ দেখুন"}
             </button>
           </div>
         </div>
@@ -299,7 +303,7 @@ export default function CarrybeeWebhookTester() {
                   <Activity className="w-10 h-10 text-gray-300 animate-pulse" />
                   <p className="text-xs font-medium">
                     বাম পাশ থেকে পেলোড নির্বাচন করে <br />
-                    <span className="text-indigo-600 font-semibold">"টেস্ট Webhook পাঠান"</span> বাটনে ক্লিক করুন।
+                    <span className="text-indigo-600 font-semibold">Webhook প্রিভিউ দেখুন</span> বাটনে ক্লিক করুন।
                   </p>
                 </div>
               ) : simulationResult.success ? (
@@ -311,16 +315,21 @@ export default function CarrybeeWebhookTester() {
                         {simulationResult.data?.message || "Webhook সফলভাবে রিসিভ ও সম্পন্ন হয়েছে!"}
                       </div>
                       <p className="text-green-700">
-                        সিস্টেম অর্ডার স্ট্যাটাস এবং CarryBee ইনভয়েস রেকর্ড করেছে।
+                        {simulationResult.data?.data?.simulation === true
+                          ? "এটি শুধু প্রিভিউ। অর্ডার, পেমেন্ট বা হিসাবের কোনো রেকর্ড পরিবর্তন হয়নি।"
+                          : "এটি টেস্ট API-এর ফল। CarryBee থেকে টাকা জমা হয়েছে কি না মার্চেন্ট প্যানেলে যাচাই করুন।"}
                       </p>
                     </div>
                   </div>
 
                   <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 space-y-2 text-xs">
-                    <div className="flex justify-between">
+                    {simulationResult.data?.data?.simulation === true ? <div className="flex justify-between">
+                      <span className="text-gray-500">মিল পাওয়া অর্ডার:</span>
+                      <span className="font-mono font-semibold">{simulationResult.data?.data?.order_id ?? "পাওয়া যায়নি"}</span>
+                    </div> : <div className="flex justify-between">
                       <span className="text-gray-500">Event ID:</span>
                       <span className="font-mono font-semibold">{simulationResult.data?.data?.event_id}</span>
-                    </div>
+                    </div>}
                     {simulationResult.data?.data?.invoice_id && (
                       <div className="flex justify-between">
                         <span className="text-gray-500">CarryBee Invoice ID:</span>
@@ -329,7 +338,7 @@ export default function CarrybeeWebhookTester() {
                     )}
                     {simulationResult.data?.data?.disbursed_to && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">টাকা জমা হয়েছে:</span>
+                        <span className="text-gray-500">টেস্টে দেখানো প্রাপক:</span>
                         <span className={`font-semibold ${simulationResult.data?.data?.disbursed_to === 'vendor' ? 'text-amber-700' : 'text-emerald-700'}`}>
                           {simulationResult.data?.data?.disbursed_to === 'vendor' ? 'ভেন্ডরের একাউন্টে' : 'প্ল্যাটফর্মের একাউন্টে'}
                         </span>
@@ -337,7 +346,7 @@ export default function CarrybeeWebhookTester() {
                     )}
                     {simulationResult.data?.data?.disbursed_amount !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-gray-500">নিট জমাকৃত অর্থ:</span>
+                        <span className="text-gray-500">টেস্টে দেখানো নিট অঙ্ক:</span>
                         <span className="font-bold text-emerald-600">৳{simulationResult.data?.data?.disbursed_amount}</span>
                       </div>
                     )}

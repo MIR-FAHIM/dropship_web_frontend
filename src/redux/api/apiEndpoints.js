@@ -105,6 +105,7 @@ export const API_ENDPOINTS = {
     adminGroupOrderHistoryOrders: define("GET", "/admin/orders/history/orders"),
     statusSummary: define("GET", "/orders/status-summary"),
     update: define("PUT", "/orders/update/{id}"),
+    replacementProducts: define("GET", "/orders/replacement-products"),
     completed: define("GET", "/orders/completed"),
     completedByUser: define("GET", "/orders/completed/{userId}"),
     details: define("GET", "/orders/details/{id}"),

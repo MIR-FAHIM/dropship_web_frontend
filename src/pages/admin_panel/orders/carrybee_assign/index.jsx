@@ -9,10 +9,11 @@ import {
   ChevronDown,
   Info,
   RefreshCw,
-  CreditCard,
   CheckCircle2,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import CarrybeeSettlementCard from "../../../../components/shared/CarrybeeSettlementCard";
+import { carrybeeSettlementLabels, getCarrybeeDetails, getCarrybeeSettlement } from "../../../../utils/carrybeeSettlement";
 import {
   useListCarryBeeStoresQuery,
   useGetCitiesQuery,
@@ -69,7 +70,7 @@ const getOrderProductDescription = (order) =>
 /* ──────────────────────────────────────────
    CarryBee Order Details Panel
 ────────────────────────────────────────── */
-export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
+export const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, onRetry }) => {
   if (isLoading)
     return (
       <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
@@ -101,61 +102,7 @@ export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) =
         </span>
       </div>
 
-      {/* CarryBee Payment & Webhook Settlement Status Card */}
-      <div
-        className={`p-3.5 rounded-xl border ${
-          details.is_carrybee_paid
-            ? "bg-emerald-50/90 border-emerald-200 shadow-2xs"
-            : "bg-amber-50/90 border-amber-200 shadow-2xs"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200/60">
-          <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-gray-800">
-            <CreditCard className="w-4 h-4 text-indigo-600" />
-            CarryBee পেমেন্ট ও সেটেলমেন্ট স্ট্যাটাস
-          </span>
-          <span
-            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-              details.is_carrybee_paid
-                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                : "bg-amber-100 text-amber-800 border-amber-300"
-            }`}
-          >
-            {details.is_carrybee_paid ? "✓ CarryBee Paid (পরিশোধিত)" : "⏳ CarryBee Pending (অপেক্ষমান)"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
-          <div>
-            <span className="text-gray-400 block text-[11px]">CarryBee Invoice ID</span>
-            <span className="font-mono font-bold text-gray-900">
-              {details.carrybee_invoice_id || "—"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">পরিশোধের সময় (Paid At)</span>
-            <span className="text-gray-800 font-medium">
-              {details.carrybee_paid_at
-                ? new Date(details.carrybee_paid_at).toLocaleString("bn-BD")
-                : "অনিষ্পন্ন / অপেক্ষমান"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">জমা হয়েছে (Disbursed To)</span>
-            <span className="font-semibold text-gray-800">
-              {details.carrybee_disbursed_to === "vendor"
-                ? "ভেন্ডরের নিজস্ব CarryBee অ্যাকাউন্ট"
-                : "প্ল্যাটফর্ম সেন্ট্রাল অ্যাকাউন্ট"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">ওয়েবহুক ট্র্যাকিং</span>
-            <span className="font-semibold text-gray-800">
-              {details.webhook_event_found ? "✓ ওয়েবহুক ইভেন্ট প্রাপ্ত" : "সিস্টেম সিঙ্ক"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <CarrybeeSettlementCard settlement={settlement} />
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
         <div>
@@ -214,17 +161,14 @@ export const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) =
    CarryBee Delivery Info Card (shown on order page)
    Exported for use in AdminOrderDetails
 ────────────────────────────────────────── */
-export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
+export const CarryBeeInfoCard = ({ deliveryInfo, order }) => {
   const [showDetails, setShowDetails] = useState(false);
-  const [fetchDetails, { data: detailsData, isLoading, isError }] =
+  const [fetchDetails, { currentData: detailsData, isFetching: isLoading, isError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
-  const details = detailsData?.data?.data || detailsData?.data;
-
-  const isPaid = Boolean(
-    details?.is_carrybee_paid ||
-    deliveryInfo?.carrybee_invoice_id ||
-    deliveryInfo?.carrybee_paid_at
-  );
+  const response = getCarrybeeDetails(detailsData)?.consignment_id === deliveryInfo?.consignment_id ? detailsData : undefined;
+  const details = getCarrybeeDetails(response);
+  const settlement = getCarrybeeSettlement(response, order, deliveryInfo);
+  const isPaid = settlement.status === "paid";
 
   const handleToggle = () => {
     if (!showDetails && deliveryInfo) {
@@ -244,19 +188,19 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
         consignmentId: deliveryInfo.consignment_id,
       }).unwrap();
 
-      const info = res?.data?.data || res?.data || {};
-      if (info.is_carrybee_paid) {
+      const info = getCarrybeeSettlement(res, order, deliveryInfo);
+      if (info.status === "paid") {
         toast.success(
-          `CarryBee পেমেন্ট পরিশোধিত! ইনভয়েস #${info.carrybee_invoice_id || "সম্পন্ন"}`
+          info.invoice ? `CarryBee settlement paid. Invoice #${info.invoice}` : "CarryBee settlement paid."
         );
       } else {
         toast.info(
-          "CarryBee কুরিয়ার পেমেন্ট এখনও অনিষ্পন্ন (অপেক্ষমান)। কুরিয়ার থেকে টাকা জমা হয়নি।"
+          carrybeeSettlementLabels[info.status]
         );
       }
       setShowDetails(true);
     } catch (err) {
-      toast.error("CarryBee স্ট্যাটাস চেক করতে সমস্যা হয়েছে।");
+      toast.error("Could not check CarryBee settlement.");
     }
   };
 
@@ -274,10 +218,10 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
             onClick={handleCheckPaymentStatus}
             disabled={isLoading}
             className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-600 hover:bg-teal-700 text-white transition disabled:opacity-50 cursor-pointer shadow-xs"
-            title="CarryBee কুরিয়ার পেমেন্ট ও ওয়েবহুক স্ট্যাটাস চেক করুন"
+            title="Check CarryBee settlement and webhook status"
           >
             <RefreshCw className={`w-3 h-3 ${isLoading ? "animate-spin" : ""}`} />
-            {isLoading ? "চেক হচ্ছে..." : "পেমেন্ট চেক করুন"}
+            {isLoading ? "Checking…" : "Check settlement"}
           </button>
           <button
             onClick={handleToggle}
@@ -301,14 +245,14 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
 
         {/* Quick Payment Status Pill */}
         <div className="flex items-center justify-between py-1 px-2.5 bg-gray-50/80 rounded-lg border border-gray-150">
-          <span className="text-xs text-gray-500 font-medium">কুরিয়ার সেটেলমেন্ট:</span>
+          <span className="text-xs text-gray-500 font-medium">Courier settlement:</span>
           {isPaid ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-              <CheckCircle2 className="w-3 h-3" /> CarryBee Paid (#{deliveryInfo.carrybee_invoice_id || details?.carrybee_invoice_id || "পরিশোধিত"})
+              <CheckCircle2 className="w-3 h-3" /> CarryBee Paid{settlement.invoice ? ` (#${settlement.invoice})` : ""}
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-              কুরিয়ার পেমেন্ট অপেক্ষমান
+              {carrybeeSettlementLabels[settlement.status]}
             </span>
           )}
         </div>
@@ -345,6 +289,7 @@ export const CarryBeeInfoCard = ({ deliveryInfo, onAssign }) => {
       {showDetails && (
         <CarryBeeDetailsPanel
           details={details}
+          settlement={settlement}
           isLoading={isLoading}
           isError={isError}     
           onRetry={() => fetchDetails({
@@ -470,6 +415,7 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
       const res = await createOrder({
         vendorId,
         order_id: order.id,
+        expected_product_id: order.items?.length === 1 ? order.items[0].product_id : undefined,
         store_id: Number(storeId),
         merchant_order_id: order.order_number,
         delivery_type: Number(form.delivery_type),

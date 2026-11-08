@@ -18,9 +18,10 @@ import {
   Wallet,
   Send,
   RefreshCw,
-  CreditCard,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import CarrybeeSettlementCard from "../../../components/shared/CarrybeeSettlementCard";
+import { carrybeeSettlementLabels, getCarrybeeDetails, getCarrybeeSettlement } from "../../../utils/carrybeeSettlement";
 import { useGetOrderBreakdownQuery } from "../../../redux/features/orderSettlement";
 import {
   useGetOrderDetailsQuery,
@@ -35,19 +36,19 @@ import {
   useCreateCarryBeeOrderMutation,
 } from "../../../redux/features/delivery_company/carrybeeStoreApi";
 
-const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
+const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, onRetry }) => {
   if (isLoading)
     return (
       <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
-        <Loader2 className="w-4 h-4 animate-spin" /> লোড হচ্ছে...
+        <Loader2 className="w-4 h-4 animate-spin" /> Loading CarryBee details…
       </div>
     );
 
   if (isError || !details)
     return (
       <div className="px-5 py-4 text-sm text-red-500 flex items-center justify-between">
-        <span>ডেটা লোড করা যায়নি।</span>
-        <button onClick={onRetry} className="text-xs text-red-600 underline">আবার চেষ্টা করুন</button>
+        <span>Could not load CarryBee details.</span>
+        <button onClick={onRetry} className="text-xs text-red-600 underline">Retry</button>
       </div>
     );
 
@@ -61,67 +62,13 @@ const CarryBeeDetailsPanel = ({ details, isLoading, isError, onRetry }) => {
   return (
     <div className="border-t border-teal-100 px-5 py-4 space-y-3 text-sm bg-teal-50/40">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">লাইভ স্ট্যাটাস</span>
+        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live status</span>
         <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold border ${statusColor}`}>
           {details.transfer_status}
         </span>
       </div>
 
-      {/* CarryBee Payment & Webhook Settlement Status Card */}
-      <div
-        className={`p-3.5 rounded-xl border ${
-          details.is_carrybee_paid
-            ? "bg-emerald-50/90 border-emerald-200 shadow-2xs"
-            : "bg-amber-50/90 border-amber-200 shadow-2xs"
-        }`}
-      >
-        <div className="flex items-center justify-between mb-2 pb-2 border-b border-gray-200/60">
-          <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 text-gray-800">
-            <CreditCard className="w-4 h-4 text-indigo-600" />
-            CarryBee পেমেন্ট ও সেটেলমেন্ট স্ট্যাটাস
-          </span>
-          <span
-            className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
-              details.is_carrybee_paid
-                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                : "bg-amber-100 text-amber-800 border-amber-300"
-            }`}
-          >
-            {details.is_carrybee_paid ? "✓ CarryBee Paid (পরিশোধিত)" : "⏳ CarryBee Pending (অপেক্ষমান)"}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-700">
-          <div>
-            <span className="text-gray-400 block text-[11px]">CarryBee Invoice ID</span>
-            <span className="font-mono font-bold text-gray-900">
-              {details.carrybee_invoice_id || "—"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">পরিশোধের সময় (Paid At)</span>
-            <span className="text-gray-800 font-medium">
-              {details.carrybee_paid_at
-                ? new Date(details.carrybee_paid_at).toLocaleString("bn-BD")
-                : "অনিষ্পন্ন / অপেক্ষমান"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">জমা হয়েছে (Disbursed To)</span>
-            <span className="font-semibold text-gray-800">
-              {details.carrybee_disbursed_to === "vendor"
-                ? "আপনার নিজস্ব CarryBee অ্যাকাউন্টে"
-                : "প্ল্যাটফর্ম সেন্ট্রাল অ্যাকাউন্টে"}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-400 block text-[11px]">ওয়েবহুক ট্র্যাকিং</span>
-            <span className="font-semibold text-gray-800">
-              {details.webhook_event_found ? "✓ ওয়েবহুক ইভেন্ট প্রাপ্ত" : "সিস্টেম সিঙ্ক"}
-            </span>
-          </div>
-        </div>
-      </div>
+      <CarrybeeSettlementCard settlement={settlement} />
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
         <div>
@@ -221,18 +168,12 @@ const VendorOrderDetails = () => {
   const order = data?.data || null;
   const [showCarryBeeDetails, setShowCarryBeeDetails] = useState(false);
   const [carryBeeOpen, setCarryBeeOpen] = useState(false);
-  const [fetchCarryBeeDetails, { data: cbDetailsData, isLoading: cbDetailsLoading, isError: cbDetailsError }] =
+  const [fetchCarryBeeDetails, { currentData: cbDetailsData, isFetching: cbDetailsLoading, isError: cbDetailsError }] =
     useLazyGetCarryBeeOrderDetailsQuery();
-  const cbDetails = cbDetailsData?.data?.data;
-
-  // CarryBee only actually confirms payment via its "order.paid" webhook -
-  // until then (order.is_carrybee_paid / carrybee_invoice_id / carrybee_paid_at
-  // all empty, and the on-demand check below hasn't confirmed it either), any
-  // "net received" figure is a projection, not a fact, and must be labelled
-  // as such everywhere it's shown.
-  const isCarrybeePaidConfirmed = Boolean(
-    order?.is_carrybee_paid || order?.carrybee_invoice_id || order?.carrybee_paid_at || cbDetails?.is_carrybee_paid
-  );
+  const response = getCarrybeeDetails(cbDetailsData)?.consignment_id === order?.delivery_information?.consignment_id ? cbDetailsData : undefined;
+  const cbDetails = getCarrybeeDetails(response);
+  const settlement = getCarrybeeSettlement(response, order, order?.delivery_information);
+  const isCarrybeePaidConfirmed = settlement.status === "paid";
 
   const [createCarryBeeOrder, { isLoading: readySubmitting }] = useCreateCarryBeeOrderMutation();
   const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateOrderStatusMutation();
@@ -326,7 +267,11 @@ const VendorOrderDetails = () => {
     try {
       const vendorId = String(order.vendor_id ?? "");
       const { id, created_at, updated_at, ...draftPayload } = order.carry_bee_draft;
-      await createCarryBeeOrder({ vendorId, ...draftPayload }).unwrap();
+      await createCarryBeeOrder({
+        vendorId,
+        ...draftPayload,
+        expected_product_id: order.items?.length === 1 ? order.items[0].product_id : undefined,
+      }).unwrap();
       await updateStatus({ id: order.id, status_id: 3 });
       toast.success("Order successfully submitted to CarryBee!");
       window.location.reload();
@@ -344,20 +289,20 @@ const VendorOrderDetails = () => {
         consignmentId: delivery.consignment_id,
       }).unwrap();
 
-      const info = res?.data?.data || res?.data || {};
-      if (info.is_carrybee_paid) {
+      const info = getCarrybeeSettlement(res, order, delivery);
+      if (info.status === "paid") {
         toast.success(
-          `CarryBee কুরিয়ার পেমেন্ট পরিশোধিত! ইনভয়েস #${info.carrybee_invoice_id || "সম্পন্ন"}`
+          info.invoice ? `CarryBee settlement paid. Invoice #${info.invoice}` : "CarryBee settlement paid."
         );
       } else {
         toast.info(
-          "CarryBee কুরিয়ার পেমেন্ট এখনও অনিষ্পন্ন (Pending)। কুরিয়ার থেকে অ্যাকাউন্টে টাকা জমা হয়নি।"
+          carrybeeSettlementLabels[info.status]
         );
       }
       setShowCarryBeeDetails(true);
       refetch();
     } catch (err) {
-      toast.error("CarryBee স্ট্যাটাস চেক করতে সমস্যা হয়েছে।");
+      toast.error("Could not check CarryBee settlement.");
     }
   };
 
@@ -825,13 +770,13 @@ const VendorOrderDetails = () => {
                     title="CarryBee কুরিয়ার পেমেন্ট ও ওয়েবহুক স্ট্যাটাস চেক করুন"
                   >
                     <RefreshCw className={`w-3 h-3 ${cbDetailsLoading ? "animate-spin" : ""}`} />
-                    {cbDetailsLoading ? "চেক হচ্ছে..." : "কুরিয়ার পেমেন্ট চেক"}
+                    {cbDetailsLoading ? "Checking…" : "Check settlement"}
                   </button>
                   <button
                     onClick={handleShowCarryBeeDetails}
                     className="text-xs font-medium text-teal-700 hover:text-teal-900 underline underline-offset-2 transition cursor-pointer"
                   >
-                    {showCarryBeeDetails ? "লুকান" : "লাইভ স্ট্যাটাস দেখুন"}
+                    {showCarryBeeDetails ? "Hide" : "View live status"}
                   </button>
                 </div>
               </div>
@@ -843,14 +788,14 @@ const VendorOrderDetails = () => {
                   </div>
                   {/* Quick Payment Status Pill */}
                   <div className="flex items-center justify-between py-1.5 px-3 bg-gray-50/90 rounded-lg border border-gray-150">
-                    <span className="text-xs text-gray-500 font-medium">কুরিয়ার সেটেলমেন্ট:</span>
+                    <span className="text-xs text-gray-500 font-medium">Courier settlement:</span>
                     {isCarrybeePaidConfirmed ? (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                        <CheckCircle2 className="w-3 h-3" /> CarryBee Paid (#{order.carrybee_invoice_id || cbDetails?.carrybee_invoice_id || "পরিশোধিত"})
+                        <CheckCircle2 className="w-3 h-3" /> CarryBee Paid{settlement.invoice ? ` (#${settlement.invoice})` : ""}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200">
-                        কুরিয়ার পেমেন্ট অপেক্ষমান
+                        {carrybeeSettlementLabels[settlement.status]}
                       </span>
                     )}
                   </div>
@@ -887,6 +832,7 @@ const VendorOrderDetails = () => {
               {showCarryBeeDetails && (
                 <CarryBeeDetailsPanel
                   details={cbDetails}
+                  settlement={settlement}
                   isLoading={cbDetailsLoading}
                   isError={cbDetailsError}
                   onRetry={() => fetchCarryBeeDetails({

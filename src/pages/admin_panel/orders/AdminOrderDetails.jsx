@@ -29,8 +29,10 @@ import {
   useRejectAdvanceMutation,
 } from "../../../redux/features/order";
 import AssignCarryBeeModal, { CarryBeeInfoCard } from "./carrybee_assign";
+import { getCarrybeeSettlement, isNonPayableCarrybeeOrder } from "../../../utils/carrybeeSettlement";
 import ManualCarrybeePaymentModal from "./ManualCarrybeePaymentModal";
 import FinancialStakeBreakdownCard from "./FinancialStakeBreakdownCard";
+import ReplaceOrderProductDialog from "./ReplaceOrderProductDialog";
 import {
   getAdminBasePrice,
   getAdminCommission,
@@ -79,6 +81,7 @@ const AdminOrderDetails = () => {
 
   // Edit Order Modal state
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showReplaceProduct, setShowReplaceProduct] = useState(false);
   const [editForm, setEditForm] = useState({
     customer_name: "",
     customer_phone: "",
@@ -107,13 +110,8 @@ const AdminOrderDetails = () => {
   );
   const isOrderEditable = order?.is_editable !== undefined ? Boolean(order.is_editable) : !hasConsignment;
   const consignmentId = order?.consignment_id || order?.delivery_information?.consignment_id || null;
-  const isCancelledOrReturned = [7, 8, 10, 11].includes(Number(order?.status?.id || order?.status));
-  const isCarrybeePaid = !isCancelledOrReturned && hasConsignment && Boolean(
-    order?.is_carrybee_paid ||
-    order?.carrybee_paid_at ||
-    order?.carrybee_invoice_id ||
-    order?.delivery_information?.carrybee_invoice_id
-  );
+  const isCancelledOrReturned = isNonPayableCarrybeeOrder(order);
+  const isCarrybeePaid = hasConsignment && getCarrybeeSettlement(null, order, order?.delivery_information).status === "paid";
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "—";
@@ -354,6 +352,7 @@ const AdminOrderDetails = () => {
       items: editForm.items.map((item) => ({
         id: item.id,
         product_id: item.product_id,
+        expected_product_id: item.product_id ?? null,
         qty: Number(item.qty),
         reseller_price: Number(item.reseller_price),
         admin_price: Number(item.admin_price),
@@ -568,12 +567,24 @@ const AdminOrderDetails = () => {
                 Order Items
               </h2>
               {isOrderEditable ? (
-                <button
-                  onClick={handleOpenEditModal}
-                  className="text-xs text-blue-600 hover:text-blue-700 font-medium border border-blue-200 rounded-lg px-2.5 py-1 hover:bg-blue-50 transition flex items-center gap-1"
-                >
-                  <Edit3 className="w-3 h-3" /> Edit Items & Prices
-                </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {order.item_replacement_block_reason === null && (
+                    <button
+                      type="button"
+                      onClick={() => setShowReplaceProduct(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-blue-700"
+                    >
+                      <Package className="h-3.5 w-3.5 shrink-0" /> Replace Product
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleOpenEditModal}
+                    className="flex items-center gap-1 rounded-lg border border-blue-200 px-2.5 py-1.5 text-xs font-medium text-blue-600 hover:bg-blue-50"
+                  >
+                    <Edit3 className="h-3 w-3 shrink-0" /> Edit Items & Prices
+                  </button>
+                </div>
               ) : (
                 <span className="text-[11px] text-gray-400 font-medium flex items-center gap-1">
                   <Lock className="w-3 h-3 text-gray-400" /> Locked
@@ -918,7 +929,7 @@ const AdminOrderDetails = () => {
             </div>
           )}
 
-          <CarryBeeInfoCard deliveryInfo={order.delivery_information} />
+          <CarryBeeInfoCard deliveryInfo={order.delivery_information} order={order} />
 
           {/* Note */}
           {order.note && (
@@ -994,6 +1005,14 @@ const AdminOrderDetails = () => {
       {/* ──────────────────────────────────────────
           Comprehensive Order Edit Modal
       ────────────────────────────────────────── */}
+      {showReplaceProduct && order.item_replacement_block_reason === null && (
+        <ReplaceOrderProductDialog
+          order={order}
+          onClose={() => setShowReplaceProduct(false)}
+          onSaved={() => { setShowReplaceProduct(false); refetch(); }}
+        />
+      )}
+
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-5 overflow-y-auto">
           <div className="bg-white rounded-2xl max-w-4xl w-full shadow-2xl my-8 flex flex-col max-h-[92vh] overflow-hidden">

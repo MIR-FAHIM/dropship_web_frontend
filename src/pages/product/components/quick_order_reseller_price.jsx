@@ -47,10 +47,14 @@ const ResellerPriceModal = ({
   const navigate = useNavigate();
   const activeUserId = userId || localStorage.getItem("userId");
   const basePrice = getAdminBasePrice(product);
+  const listedMaxResellPrice = Number(product?.max_resell_price);
+  const hasListedMaxResellPrice = Number.isFinite(listedMaxResellPrice) && listedMaxResellPrice > 0;
 
   // Attributes & Product Resolution
-  const shouldFetchDetails = Boolean(open && product?.id && !product?.product_attributes);
-  const { data: detailsData, isLoading: isLoadingDetails } = useGetProductDetailsQuery(
+  const shouldFetchDetails = Boolean(open && product?.id && (
+    !product?.product_attributes || (modalAction === "quickOrder" && !hasListedMaxResellPrice)
+  ));
+  const { currentData: detailsData, isLoading: isLoadingDetails } = useGetProductDetailsQuery(
     product?.id,
     { skip: !shouldFetchDetails }
   );
@@ -96,8 +100,12 @@ const ResellerPriceModal = ({
   const [selectedThanaId, setSelectedThanaId] = useState("");
   const [address, setAddress] = useState("");
   const [note, setNote] = useState("");
-  const [collectionAmount, setCollectionAmount] = useState("");
-  const [userTouchedCollection, setUserTouchedCollection] = useState(false);
+  const [editedCollectionAmount, setEditedCollectionAmount] = useState(null);
+  const savedCollectionAmount = initialData?.collectionAmount;
+
+  useEffect(() => {
+    setEditedCollectionAmount(null);
+  }, [open, product?.id, savedCollectionAmount]);
 
   // Address Queries
   const { data: divisionsData, isLoading: loadingDivisions } = useGetDivisionsQuery(undefined, {
@@ -186,10 +194,6 @@ const ResellerPriceModal = ({
         setAddress(initialData.address || "");
         setNote(initialData.note || "");
         setQuantity(initialData.quantity || 1);
-        if (initialData.collectionAmount) {
-          setCollectionAmount(String(initialData.collectionAmount));
-          setUserTouchedCollection(true);
-        }
       } else {
         setCustomerName("");
         setCustomerPhone("");
@@ -199,7 +203,6 @@ const ResellerPriceModal = ({
         setAddress("");
         setNote("");
         setQuantity(1);
-        setUserTouchedCollection(false);
       }
 
       setResellerPrice(basePrice > 0 ? String(basePrice) : "");
@@ -250,17 +253,13 @@ const ResellerPriceModal = ({
 
   // Financial calculations
   const productCost = basePrice * quantity;
-  const suggestedDelivery = deliveryCharge > 0 ? deliveryCharge : 130;
-
-  // Auto-suggest collection amount if user hasn't typed their own
-  useEffect(() => {
-    if (modalAction === "quickOrder" && !userTouchedCollection && basePrice > 0) {
-      // Suggest retail price = Product cost + estimated delivery + 25% profit margin
-      const suggestedProfit = Math.max(100, Math.round(productCost * 0.25));
-      const suggestedTotal = Math.round(productCost + suggestedDelivery + suggestedProfit);
-      setCollectionAmount(String(suggestedTotal));
-    }
-  }, [modalAction, userTouchedCollection, basePrice, productCost, suggestedDelivery]);
+  const maxResellPrice = hasListedMaxResellPrice ? listedMaxResellPrice : Number(resolvedProduct?.max_resell_price);
+  const suggestedCollectionAmount = Number.isFinite(maxResellPrice) && maxResellPrice > 0
+    ? String(Math.round(maxResellPrice * quantity * 100) / 100)
+    : "";
+  const collectionAmount = editedCollectionAmount ?? (
+    savedCollectionAmount == null || savedCollectionAmount === "" ? suggestedCollectionAmount : String(savedCollectionAmount)
+  );
 
   const codAmount = Number(collectionAmount) || 0;
   const codFee = Math.round(codAmount * 0.01);
@@ -789,10 +788,7 @@ const ResellerPriceModal = ({
                       type="number"
                       min={productCost + deliveryCharge + codFee}
                       value={collectionAmount}
-                      onChange={(e) => {
-                        setUserTouchedCollection(true);
-                        setCollectionAmount(e.target.value);
-                      }}
+                      onChange={(e) => setEditedCollectionAmount(e.target.value)}
                       className="w-full text-sm font-black text-gray-900 pl-8 pr-3 py-2 bg-white rounded-xl border-2 border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                       placeholder="যেমন: 1200"
                     />

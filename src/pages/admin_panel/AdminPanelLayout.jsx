@@ -1,5 +1,4 @@
-/* eslint-disable react/prop-types */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminNotification from "./notification/AdminNotification";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
@@ -317,18 +316,24 @@ const AdminPanelLayout = () => {
     setExpandedMenus((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const isChildActive = (children) => {
-    return children?.some(
-      (child) =>
-        location.pathname === child.path ||
-        (child.path !== "/admin-panel" && location.pathname.startsWith(`${child.path}/`))
-    );
-  };
+  const activeGroup = menuLinks.find((item) =>
+    item.children?.some(
+      (child) => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
+    )
+  )?.label;
 
-  const SidebarContent = ({ isMobile = false }) => (
-    <div className="flex flex-col h-full">
+  // Keep the group open after navigating away so links below it stay in place.
+  useEffect(() => {
+    if (activeGroup) {
+      setExpandedMenus((prev) => prev[activeGroup] ? prev : { ...prev, [activeGroup]: true });
+    }
+  }, [activeGroup]);
+
+  // Render into the existing sidebar tree so route changes keep the same scroll container.
+  const renderSidebar = (isMobile = false) => (
+    <div className="flex h-full min-h-0 flex-col">
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-gray-700">
+      <div className="h-16 shrink-0 flex items-center justify-between px-4 border-b border-gray-700">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-6 h-6 text-red-400" />
           {(sidebarOpen || isMobile) && (
@@ -344,20 +349,21 @@ const AdminPanelLayout = () => {
 
       {/* Admin Badge */}
       {(sidebarOpen || isMobile) && (
-        <div className="px-4 py-3 border-b border-gray-700">
+        <div className="shrink-0 px-4 py-3 border-b border-gray-700">
           <p className="text-xs text-red-400 uppercase tracking-wide font-semibold">অ্যাডমিন প্যানেল</p>
         </div>
       )}
 
       {/* Menu Links */}
-      <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+      <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain px-2 py-4">
         {menuLinks.map((item) =>
           item.children ? (
             <div key={item.label}>
               <button
-                onClick={() => toggleMenu(item.label)}
+                onClick={() => item.label !== activeGroup && toggleMenu(item.label)}
+                aria-expanded={(sidebarOpen || isMobile) && Boolean(expandedMenus[item.label] || item.label === activeGroup)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors w-full ${
-                  isChildActive(item.children)
+                  item.label === activeGroup
                     ? "bg-red-600/20 text-red-400"
                     : "text-gray-300 hover:bg-gray-700 hover:text-white"
                 } ${!sidebarOpen && !isMobile ? "justify-center" : ""}`}
@@ -368,14 +374,14 @@ const AdminPanelLayout = () => {
                     <span className="flex-1 text-left">{item.label}</span>
                     <ChevronDown
                       className={`w-4 h-4 transition-transform duration-200 ${
-                        expandedMenus[item.label] || isChildActive(item.children) ? "rotate-180" : ""
+                        expandedMenus[item.label] || item.label === activeGroup ? "rotate-180" : ""
                       }`}
                     />
                   </>
                 )}
               </button>
               {(sidebarOpen || isMobile) &&
-                (expandedMenus[item.label] || isChildActive(item.children)) && (
+                (expandedMenus[item.label] || item.label === activeGroup) && (
                   <div className="ml-4 mt-1 space-y-1 border-l border-gray-700 pl-3">
                     {item.children.map((child) => (
                       <NavLink
@@ -426,7 +432,7 @@ const AdminPanelLayout = () => {
       </nav>
 
       {/* Logout */}
-      <div className="p-3 border-t border-gray-700">
+      <div className="shrink-0 p-3 border-t border-gray-700">
         <button
           onClick={handleLogout}
           className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-red-600/20 hover:text-red-400 transition-colors ${
@@ -448,21 +454,19 @@ const AdminPanelLayout = () => {
           sidebarOpen ? "w-60" : "w-[72px]"
         }`}
       >
-        <SidebarContent />
+        {renderSidebar()}
       </aside>
 
       {/* Mobile Sidebar Overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileOpen(false)}
-          />
-          <aside className="relative w-64 h-full bg-gray-900">
-            <SidebarContent isMobile />
-          </aside>
-        </div>
-      )}
+      <div className={`fixed inset-0 z-50 md:hidden ${mobileOpen ? "" : "hidden"}`}>
+        <div
+          className="absolute inset-0 bg-black/50"
+          onClick={() => setMobileOpen(false)}
+        />
+        <aside className="relative w-64 h-full bg-gray-900">
+          {renderSidebar(true)}
+        </aside>
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">

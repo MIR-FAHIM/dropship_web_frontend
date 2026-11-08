@@ -32,7 +32,6 @@ import {
 	Typography,
 } from "@mui/material";
 import {
-	ArrowBack as ArrowBackIcon,
 	DeleteOutline as DeleteOutlineIcon,
 	LocalShipping as LocalShippingIcon,
 	Person as PersonIcon,
@@ -62,6 +61,7 @@ import {
 } from "../../redux/features/address";
 import { getAdminBasePrice, getResellerSellingPrice } from "../../utils/pricing.utils";
 import { appendLocationToAddress } from "../../utils/address.utils";
+import CheckoutOrderGuide from "./CheckoutOrderGuide";
 
 const safeArray = (v) => (Array.isArray(v) ? v : []);
 
@@ -363,8 +363,8 @@ const QuickOrderConfirmationView = ({
 				const orderNum = createdOrder.order_number || "ORD";
 
 				sessionStorage.removeItem("quickOrderData");
-				notify(`অর্ডার সফলভাবে প্লেস হয়েছে! Order #${orderNum}`, "success");
-				toast.success(`অর্ডার নিশ্চিত হয়েছে! (#${orderNum})`);
+				notify(`অর্ডার জমা হয়েছে (#${orderNum})। এখন অ্যাডমিন যাচাই করবেন।`, "success");
+				toast.success(`অর্ডার #${orderNum} যাচাইয়ের জন্য জমা হয়েছে।`);
 
 				setTimeout(() => {
 					navigate("/app/order");
@@ -396,30 +396,7 @@ const QuickOrderConfirmationView = ({
 
 	return (
 		<Box sx={{ minHeight: "100vh", background: "#f8fafc", p: { xs: 1.5, sm: 3 } }}>
-			{/* Top Bar */}
-			<Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-				<Stack direction="row" alignItems="center" spacing={1.5}>
-					<IconButton
-						onClick={handleBackToEdit}
-						sx={{
-							borderRadius: 2,
-							border: "1px solid #e2e8f0",
-							background: "#fff",
-							"&:hover": { background: "#f1f5f9" },
-						}}
-					>
-						<ArrowBackIcon fontSize="small" />
-					</IconButton>
-					<Box>
-						<Typography sx={{ fontWeight: 900, fontSize: { xs: 18, sm: 22 }, color: "#0f172a" }}>
-							Step 3: Review & Confirm Order
-						</Typography>
-						<Typography sx={{ fontSize: 12, color: "#64748b", fontWeight: 600 }}>
-							অর্ডার চূড়ান্ত করার পূর্বে সকল তথ্য ভালোভাবে যাচাই করুন
-						</Typography>
-					</Box>
-				</Stack>
-			</Stack>
+			<CheckoutOrderGuide onBack={handleBackToEdit} quick />
 
 			<Grid container spacing={3}>
 				{/* ════════ LEFT COLUMN: Summary Sections A, B & D ════════ */}
@@ -435,10 +412,7 @@ const QuickOrderConfirmationView = ({
 						}}
 					>
 						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							<span style={{ background: "#ede9fe", color: "#6366f1", padding: "2px 8px", borderRadius: "6px", fontSize: "11px" }}>
-								Section A
-							</span>
-							প্রোডাক্ট সামারি (Product Summary)
+							অর্ডারের পণ্য
 						</Typography>
 
 						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }} sx={{ p: 2, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
@@ -493,10 +467,7 @@ const QuickOrderConfirmationView = ({
 					>
 						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
 							<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", display: "flex", alignItems: "center", gap: 1 }}>
-								<span style={{ background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "6px", fontSize: "11px" }}>
-									Section B
-								</span>
-								কাস্টমার ও ডেলিভারি বিবরণ (Customer & Delivery)
+								কাস্টমারের তথ্য ও ডেলিভারি
 							</Typography>
 							<Button
 								size="small"
@@ -513,7 +484,7 @@ const QuickOrderConfirmationView = ({
 									"&:hover": { background: "#dbeafe" },
 								}}
 							>
-								Edit Details
+								তথ্য বদলান
 							</Button>
 						</Stack>
 
@@ -588,10 +559,7 @@ const QuickOrderConfirmationView = ({
 						}}
 					>
 						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#9a3412", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							<span style={{ background: "#ffedd5", color: "#c2410c", padding: "2px 8px", borderRadius: "6px", fontSize: "11px" }}>
-								Section D
-							</span>
-							🛡️ রিলায়েবিলিটি ব্যালেন্স সামারি (Reliability Balance)
+							রিলায়েবিলিটি ব্যালেন্স
 						</Typography>
 
 						<Grid container spacing={2} sx={{ mb: 2 }}>
@@ -640,7 +608,7 @@ const QuickOrderConfirmationView = ({
 							</Typography>
 						</Box>
 
-						{/* Payment Method Selector for Advance (if required) */}
+						{/* কাস্টমার যেভাবে টাকা দেবেন Selector for Advance (if required) */}
 						{requiresAdvance && (
 							<Box sx={{ mb: 2 }}>
 								<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#334155", mb: 1 }}>
@@ -719,16 +687,13 @@ const QuickOrderConfirmationView = ({
 						}}
 					>
 						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2.5, display: "flex", alignItems: "center", gap: 1 }}>
-							<span style={{ background: "#fef3c7", color: "#b45309", padding: "2px 8px", borderRadius: "6px", fontSize: "11px" }}>
-								Section C
-							</span>
-							আর্থিক সামারি (Financial Breakdown)
+							টাকার হিসাব
 						</Typography>
 
 						<Stack spacing={1.6}>
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									Customer Collection Amount (COD)
+									কাস্টমার যে টাকা দেবেন (COD)
 								</Typography>
 								<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#0f172a" }}>
 									{money(quickOrderData.collectionAmount)}
@@ -737,7 +702,7 @@ const QuickOrderConfirmationView = ({
 
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									ResellerBrain Product Cost
+									পণ্যের খরচ
 								</Typography>
 								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
 									- {money(quickOrderData.productCost)}
@@ -746,7 +711,7 @@ const QuickOrderConfirmationView = ({
 
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									Delivery Charge ({quickOrderData.deliveryZone || "Standard"})
+									ডেলিভারি চার্জ
 								</Typography>
 								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
 									- {money(quickOrderData.deliveryCharge)}
@@ -755,7 +720,7 @@ const QuickOrderConfirmationView = ({
 
 							<Stack direction="row" justifyContent="space-between" alignItems="center">
 								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									1% COD Fee
+									COD ফি (১%)
 								</Typography>
 								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
 									- {money(quickOrderData.codFee)}
@@ -780,7 +745,7 @@ const QuickOrderConfirmationView = ({
 							>
 								<Box>
 									<Typography sx={{ fontSize: 12.5, fontWeight: 900, color: quickOrderData.estimatedProfit >= 0 ? "#166534" : "#991b1b" }}>
-										💰 আপনার আনুমানিক লাভ (Estimated Profit)
+										আপনার আনুমানিক লাভ
 									</Typography>
 									<Typography sx={{ fontSize: 10.5, color: quickOrderData.estimatedProfit >= 0 ? "#15803d" : "#b91c1c", mt: 0.2 }}>
 										COD - প্রোডাক্ট খরচ - ডেলিভারি - COD ফি
@@ -804,14 +769,11 @@ const QuickOrderConfirmationView = ({
 						}}
 					>
 						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							<span style={{ background: "#ede9fe", color: "#6366f1", padding: "2px 8px", borderRadius: "6px", fontSize: "11px" }}>
-								Section E
-							</span>
-							চূড়ান্ত নিশ্চিতকরণ (Final Confirmation)
+							অর্ডার জমা দিন
 						</Typography>
 
 						<Typography sx={{ fontSize: 12, color: "#64748b", mb: 2.5, lineHeight: 1.5 }}>
-							'Confirm & Place Order' বাটনে ক্লিক করলে সিস্টেম সার্ভার সাইডে সকল হিসাব পুনঃযাচাই করে অর্ডারটি সফলভাবে দাখিল করবে।
+							নাম, ফোন, ঠিকানা ও COD-এর অঙ্ক মিলিয়ে নিন। অর্ডার জমা হলে প্রথমে অ্যাডমিন যাচাই করবেন।
 						</Typography>
 
 						<Stack spacing={1.5}>
@@ -844,11 +806,11 @@ const QuickOrderConfirmationView = ({
 								{loadingCheckout ? (
 									<Stack direction="row" spacing={1} alignItems="center">
 										<CircularProgress size={18} color="inherit" />
-										<span>যাচাই ও প্লেস হচ্ছে… (Processing)</span>
+										<span>অর্ডার জমা হচ্ছে…</span>
 									</Stack>
 								) : (
 									<Stack direction="row" spacing={1} alignItems="center">
-										<span>Confirm & Place Order ➔</span>
+										<span>অর্ডার নিশ্চিত করুন</span>
 									</Stack>
 								)}
 							</Button>
@@ -874,7 +836,7 @@ const QuickOrderConfirmationView = ({
 									},
 								}}
 							>
-								Back to Edit (তথ্য পরিবর্তন করুন)
+								তথ্য পরিবর্তন করুন
 							</Button>
 						</Stack>
 					</Paper>
@@ -890,7 +852,7 @@ const QuickOrderConfirmationView = ({
 				PaperProps={{ sx: { borderRadius: 3, p: 1 } }}
 			>
 				<DialogTitle sx={{ fontWeight: 900, fontSize: 16, color: "#0f172a", pb: 1 }}>
-					✏️ কাস্টমার ও ডেলিভারি তথ্য সম্পাদনা করুন
+					✏️ কাস্টমারের তথ্য ও ডেলিভারি তথ্য সম্পাদনা করুন
 				</DialogTitle>
 				<DialogContent dividers sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
 					<TextField
@@ -1002,7 +964,7 @@ const QuickOrderConfirmationView = ({
 					/>
 
 					<TextField
-						label="Customer Collection Amount (COD)"
+						label="কাস্টমার যে টাকা দেবেন (COD)"
 						size="small"
 						type="number"
 						fullWidth
@@ -1187,7 +1149,7 @@ const StandardCartCheckoutView = ({
 
 	const handlePlaceOrder = async () => {
 		if (!userId) return notify("Please login to place an order.", "warning");
-		if (!cartItems.length) return notify("Your cart is empty.", "warning");
+		if (!cartItems.length) return notify("আপনার কার্টে কোনো পণ্য নেই।", "warning");
 		if (!fullName.trim()) return notify("Please enter Customer full name.", "warning");
 		if (!phone.trim()) return notify("Please enter Customer phone number.", "warning");
 		if (!address.trim()) return notify("Please enter Customer full address.", "warning");
@@ -1223,7 +1185,7 @@ const StandardCartCheckoutView = ({
 			const ok = res?.data?.status === "success" || res?.status === "success" || res?.status === 200;
 
 			if (ok) {
-				notify(res?.data?.message || "Order placed successfully!", "success");
+				notify("অর্ডার জমা হয়েছে। এখন অ্যাডমিন যাচাই করবেন।", "success");
 				localStorage.setItem("cart", JSON.stringify(0));
 				window.dispatchEvent(new Event("cart-updated"));
 				setTimeout(() => navigate("/app/order"), 1200);
@@ -1239,34 +1201,26 @@ const StandardCartCheckoutView = ({
 
 	return (
 		<Box sx={{ minHeight: "100vh", background: "#f5f6fa", p: { xs: 1.5, sm: 2.5 } }}>
-			<Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2.5 }}>
-				<IconButton
-					onClick={() => navigate(-1)}
-					sx={{ borderRadius: 2, border: "1px solid #e0e0e0", background: "#fff", "&:hover": { background: "#f0f0f0" } }}
-				>
-					<ArrowBackIcon fontSize="small" />
-				</IconButton>
-				<Typography sx={{ fontWeight: 900, fontSize: 20, color: "#1a1a2e" }}>Cart Checkout</Typography>
-			</Stack>
+			<CheckoutOrderGuide onBack={() => navigate(-1)} />
 
 			<Grid container spacing={3} alignItems="flex-start">
-				<Grid item xs={12} sm={6} lg={4}>
+				<Grid item xs={12} md={5} lg={4}>
 					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", overflow: "hidden", background: "#fff" }}>
 						<Box sx={{ background: "linear-gradient(135deg, #5b21b6 0%, #4338ca 100%)", px: 3, py: 2 }}>
 							<Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.5 }}>
-								Complete your order by filling in the details and clicking the order button.
+								কাস্টমারের তথ্য ও ডেলিভারি
 							</Typography>
 						</Box>
 
 						<Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2.5 }}>
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									Full Name <span style={{ color: "#ef4444" }}>*</span>
+									কাস্টমারের নাম <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter customer full name"
+									placeholder="কাস্টমারের পুরো নাম লিখুন"
 									value={fullName}
 									onChange={(e) => setFullName(e.target.value)}
 									InputProps={{
@@ -1282,12 +1236,12 @@ const StandardCartCheckoutView = ({
 
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									Phone Number <span style={{ color: "#ef4444" }}>*</span>
+									কাস্টমারের ফোন নম্বর <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter customer mobile number"
+									placeholder="যেমন: 01XXXXXXXXX"
 									value={phone}
 									onChange={(e) => setPhone(e.target.value)}
 									InputProps={{
@@ -1303,12 +1257,12 @@ const StandardCartCheckoutView = ({
 
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									Full Address <span style={{ color: "#ef4444" }}>*</span>
+									সম্পূর্ণ ঠিকানা <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
 								<TextField
 									fullWidth
 									size="small"
-									placeholder="Enter customer full address"
+									placeholder="বাড়ি, রাস্তা বা গ্রামের নাম লিখুন"
 									value={address}
 									onChange={(e) => setAddress(e.target.value)}
 									onBlur={() => {
@@ -1330,7 +1284,7 @@ const StandardCartCheckoutView = ({
 
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									Division <span style={{ color: "#ef4444" }}>*</span>
+									বিভাগ <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
 								<Select
 									fullWidth
@@ -1354,7 +1308,7 @@ const StandardCartCheckoutView = ({
 										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
 									}}
 								>
-									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select division</MenuItem>
+									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>বিভাগ নির্বাচন করুন</MenuItem>
 									{divisions.map((d) => (
 										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
 									))}
@@ -1363,7 +1317,7 @@ const StandardCartCheckoutView = ({
 
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									District <span style={{ color: "#ef4444" }}>*</span>
+									জেলা <span style={{ color: "#ef4444" }}>*</span>
 								</Typography>
 								<Select
 									fullWidth
@@ -1380,14 +1334,14 @@ const StandardCartCheckoutView = ({
 										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
 									}}
 								>
-									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>Select district</MenuItem>
+									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>জেলা নির্বাচন করুন</MenuItem>
 									{districts.map((d) => (
 										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
 									))}
 								</Select>
 								{vendorDistrictName && (
 									<Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.6 }}>
-										<Typography sx={{ fontSize: 12, color: "#6b7280" }}>Vendor district is —</Typography>
+										<Typography sx={{ fontSize: 12, color: "#6b7280" }}>ভেন্ডরের জেলা:</Typography>
 										<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#374151" }}>{vendorDistrictName}</Typography>
 									</Box>
 								)}
@@ -1401,18 +1355,18 @@ const StandardCartCheckoutView = ({
 										{isCalculatingCharge ? (
 											<Stack direction="row" spacing={1} alignItems="center">
 												<CircularProgress size={14} sx={{ color: "#6366f1" }} />
-												<Typography sx={{ fontSize: 13, color: "#6b7280" }}>Calculating delivery charge…</Typography>
+												<Typography sx={{ fontSize: 13, color: "#6b7280" }}>ডেলিভারি চার্জ হিসাব করা হচ্ছে…</Typography>
 											</Stack>
 										) : chargeError || !hasCalculatedDelivery ? (
 											<Typography sx={{ fontSize: 13, color: "#dc2626", fontWeight: 600 }}>
-												ডেলিভারি চার্জ গণনা করা যায়নি। অন্য ডিস্ট্রিক্ট নির্বাচন করুন।
+												ডেলিভারি চার্জ হিসাব করা যায়নি। জেলা আবার নির্বাচন করুন।
 											</Typography>
 										) : (
 											<>
 												<Stack direction="row" spacing={0.8} alignItems="center">
 													<LocalShippingIcon sx={{ fontSize: 16, color: "#6366f1" }} />
 													<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
-														{deliveryZone || "Delivery Charge"}
+														{deliveryZone || "ডেলিভারি চার্জ"}
 													</Typography>
 												</Stack>
 												<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#4f46e5" }}>
@@ -1426,18 +1380,18 @@ const StandardCartCheckoutView = ({
 
 							<Box>
 								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
-									Payment Method
+									কাস্টমার যেভাবে টাকা দেবেন
 								</Typography>
 								<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
 									<Paper elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: 2, px: 2, py: 1, mb: 1 }}>
 										<FormControlLabel
 											value="cod"
 											control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
-											label={<Typography sx={{ fontSize: 14, fontWeight: 700 }}>Cash on delivery</Typography>}
+											label={<Typography sx={{ fontSize: 14, fontWeight: 700 }}>ক্যাশ অন ডেলিভারি (COD)</Typography>}
 										/>
 										{paymentMethod === "cod" && (
 											<Typography sx={{ fontSize: 12, color: "#6b7280", ml: 4, mb: 0.5 }}>
-												Pay with cash upon delivery.
+												পণ্য হাতে পেলে কাস্টমার ডেলিভারি কর্মীকে টাকা দেবেন।
 											</Typography>
 										)}
 									</Paper>
@@ -1466,6 +1420,9 @@ const StandardCartCheckoutView = ({
 								</Box>
 							)}
 
+							<Typography sx={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>
+								অর্ডার জমা হলে অ্যাডমিন যাচাই করবেন। এরপর অর্ডার তালিকা থেকে অগ্রগতি দেখতে পারবেন।
+							</Typography>
 							<Button
 								variant="contained"
 								fullWidth
@@ -1487,19 +1444,19 @@ const StandardCartCheckoutView = ({
 								{loadingCheckout ? (
 									<Stack direction="row" spacing={1} alignItems="center">
 										<CircularProgress size={16} color="inherit" />
-										<span>Placing Order…</span>
+										<span>অর্ডার জমা হচ্ছে…</span>
 									</Stack>
-								) : "Place Order"}
+								) : "অর্ডার নিশ্চিত করুন"}
 							</Button>
 						</Box>
 					</Paper>
 				</Grid>
 
-				<Grid item xs={12} sm={7} lg={8}>
+				<Grid item xs={12} md={7} lg={8}>
 					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", background: "#fff" }}>
 						<Box sx={{ px: 3, pt: 2.5, pb: 1 }}>
 							<Typography sx={{ fontWeight: 900, fontSize: 17, color: "#1a1a2e" }}>
-								Order Information
+								অর্ডারের পণ্য ও টাকার হিসাব
 							</Typography>
 						</Box>
 
@@ -1507,15 +1464,15 @@ const StandardCartCheckoutView = ({
 							<Box sx={{ p: 3 }}><LinearProgress /></Box>
 						) : cartItems.length === 0 ? (
 							<Box sx={{ p: 4, textAlign: "center" }}>
-								<Typography sx={{ color: "#9ca3af", fontWeight: 700 }}>Your cart is empty.</Typography>
+								<Typography sx={{ color: "#9ca3af", fontWeight: 700 }}>আপনার কার্টে কোনো পণ্য নেই।</Typography>
 							</Box>
 						) : (
 							<TableContainer>
 								<Table size="small">
 									<TableHead>
 										<TableRow sx={{ background: "#f9fafb" }}>
-											{["Delete", "Product", "Quantity", "Price"].map((h) => (
-												<TableCell key={h} align={h === "Price" ? "right" : h === "Quantity" ? "center" : "center"}
+											{["বাদ দিন", "পণ্য", "পরিমাণ", "দাম"].map((h) => (
+												<TableCell key={h} align={h === "দাম" ? "right" : "center"}
 													sx={{ fontWeight: 900, fontSize: 13, color: "#374151", borderBottom: "1px solid #e5e7eb", py: 1.5 }}>
 													{h}
 												</TableCell>
@@ -1585,15 +1542,17 @@ const StandardCartCheckoutView = ({
 								<Divider sx={{ mb: 2 }} />
 								<Stack spacing={1.2} sx={{ mb: 2 }}>
 									{[
-										{ label: "Subtotal", value: money(subtotal) },
-										{ label: "Discount", value: money(discount) },
+										{ label: "পণ্যের মোট দাম", value: money(subtotal) },
+										{ label: "ছাড়", value: money(discount) },
 										{
-											label: "Delivery Charge",
+											label: "ডেলিভারি চার্জ",
 											value: isCalculatingCharge
 												? "হিসাব করা হচ্ছে…"
 												: !selectedDistrictId
-												? "Select district"
-												: money(deliveryCharge),
+												? "জেলা নির্বাচন করুন"
+												: hasCalculatedDelivery
+												? money(deliveryCharge)
+												: "হিসাব পাওয়া যায়নি",
 										},
 									].map(({ label, value }) => (
 										<Stack key={label} direction="row" justifyContent="space-between" alignItems="center">
@@ -1609,7 +1568,7 @@ const StandardCartCheckoutView = ({
 											border: "1px solid #86efac", borderRadius: 2, px: 2, py: 1,
 										}}>
 											<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#15803d" }}>
-												💰 Your Profit
+												পণ্যে আপনার আনুমানিক লাভ
 											</Typography>
 											<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#16a34a" }}>
 												+{money(resellerProfit)}
@@ -1618,9 +1577,11 @@ const StandardCartCheckoutView = ({
 									)}
 
 									<Divider />
-									<Stack direction="row" justifyContent="space-between" alignItems="center">
-										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#1f2937" }}>Grand Total</Typography>
-										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#4f46e5" }}>{money(grandTotal)}</Typography>
+									<Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#1f2937" }}>কাস্টমারের মোট টাকা (COD)</Typography>
+										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#4f46e5", textAlign: "right" }}>
+											{hasCalculatedDelivery ? money(grandTotal) : "ডেলিভারি চার্জের অপেক্ষায়"}
+										</Typography>
 									</Stack>
 								</Stack>
 							</Box>

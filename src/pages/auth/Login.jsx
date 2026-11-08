@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { LogIn, Eye, EyeOff, ArrowRight } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useLoginMutation } from "../../redux/features/auth";
 import { saveToLocalstorage } from "../../utils/localstorage.utils";
@@ -7,6 +8,9 @@ import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
 import AccountActivationModal from "../../components/shared/AccountActivationModal";
+
+const SUPPORT_NUMBER = "01941606310";
+const LOGIN_SUPPORT_URL = `https://wa.me/88${SUPPORT_NUMBER}?text=${encodeURIComponent("আমি ResellerBrain-এ লগইন করতে পারছি না। দয়া করে সাহায্য করবেন?")}`;
 
 const isActivationRequired = (dataOrMsg) => {
   if (!dataOrMsg) return false;
@@ -263,6 +267,21 @@ const Login = () => {
             </button>
           </form>
 
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2.5">
+            <p className="text-xs leading-relaxed text-emerald-900">
+              লগইন করতে সমস্যা হচ্ছে? সাহায্যের জন্য আমাদের WhatsApp-এ মেসেজ করুন।
+            </p>
+            <a
+              href={LOGIN_SUPPORT_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="লগইন সহায়তার জন্য WhatsApp চ্যাট খুলুন"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-emerald-200 bg-white transition hover:bg-emerald-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+            >
+              <FaWhatsapp aria-hidden="true" className="h-7 w-7 text-[#128C4A]" />
+            </a>
+          </div>
+
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-gray-200" />
@@ -295,7 +314,7 @@ const Login = () => {
         onClose={() => setActivationModalOpen(false)}
         message={activationMessage || "You need to activate your account"}
         userEmail={formData.email}
-        supportNumber="01941606310"
+        supportNumber={SUPPORT_NUMBER}
       />
     </>
   );

@@ -75,6 +75,17 @@ const orderApi = baseApi.injectEndpoints({
         method: API_ENDPOINTS.orders.update.method,
         body: payload,
       }),
+      invalidatesTags: (result, error, { id }) => result ? [
+        { type: "OrderSettlement", id: `breakdown-${id}` },
+        { type: "Grid", id: "VendorOrderHistory" },
+        "CarryBeeOrder",
+      ] : [],
+    }),
+    orderReplacementProducts: builder.query({
+      query: ({ search, page }) => ({
+        url: API_ENDPOINTS.orders.replacementProducts.path,
+        params: { search, page },
+      }),
     }),
     createContactUs: builder.mutation({
       query: (orderData) => ({
@@ -143,6 +154,7 @@ export const {
   useUpdateOrderStatusMutation,
   useUpdateOrderItemStatusMutation,
   useUpdateOrderInfoMutation,
+  useOrderReplacementProductsQuery,
   useVendorOrdersQuery,
   useCheckAdvanceRequirementQuery,
   usePayAdvanceMutation,

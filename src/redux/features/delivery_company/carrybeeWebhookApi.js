@@ -42,7 +42,7 @@ const carrybeeWebhookApi = baseApi.injectEndpoints({
         method: "POST",
         body,
       }),
-      invalidatesTags: ["CarrybeePaidOrders", "CarrybeeWebhookEvents", "Order", "OrderDetails"],
+      invalidatesTags: ["CarrybeePaidOrders", "CarrybeeWebhookEvents", "Order", "OrderDetails", "CarryBeeOrder"],
     }),
   }),
 });
