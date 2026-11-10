@@ -21,6 +21,7 @@ import {
   Search,
   Receipt,
   ArrowRight,
+  Flag,
   Store,
   Package,
 } from "lucide-react";
@@ -188,13 +189,14 @@ export default function VendorInvoices() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {invoices.map((inv) => {
             const statusCfg = STATUS_CONFIG[inv.status] || STATUS_CONFIG.pending;
-            const isPending = inv.status === "pending" || inv.status === "rejected";
+            const isPending = inv.status === "pending";
+            const isRejected = inv.status === "rejected";
 
             return (
               <div
                 key={inv.id}
-                className={`bg-white rounded-xl border shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between ${
-                  isPending ? "border-amber-200 bg-amber-50/20" : "border-gray-200"
+                className={`rounded-xl border shadow-xs hover:shadow-md transition overflow-hidden flex flex-col justify-between ${
+                  isRejected ? "bg-red-50 border-red-200" : isPending ? "bg-amber-50/20 border-amber-200" : "bg-white border-gray-200"
                 }`}
               >
                 <div className="p-4 space-y-3">
@@ -220,7 +222,7 @@ export default function VendorInvoices() {
                   </div>
 
                   {/* 3 Key Metrics Summary */}
-                  <div className="space-y-2 bg-gray-50/80 p-3 rounded-lg border border-gray-100">
+                  <div className={`space-y-2 p-3 rounded-lg border ${isRejected ? "bg-red-100/40 border-red-100" : "bg-gray-50/80 border-gray-100"}`}>
                     <div className="flex items-center justify-between text-xs pb-1.5 border-b border-gray-200">
                       <span className="text-gray-500">অন্তর্ভুক্ত অর্ডার:</span>
                       <span className="font-bold text-gray-800 font-mono">{inv.orders_count} টি</span>
@@ -243,12 +245,12 @@ export default function VendorInvoices() {
                         <span className="text-[9px] text-blue-600 block truncate">আপনার নিজের</span>
                       </div>
 
-                      <div className="p-2 bg-amber-50 rounded-md border-2 border-amber-300">
-                        <span className="text-[10px] font-bold text-amber-900 block truncate">৩. ফেরত দিতে হবে</span>
-                        <span className="text-xs font-extrabold text-amber-950 font-mono block mt-1 truncate">
+                      <div className={`p-2 rounded-md border-2 ${isRejected ? "bg-red-50 border-red-200 text-red-900" : "bg-amber-50 border-amber-300 text-amber-950"}`}>
+                        <span className="text-[10px] font-bold block break-words">{isRejected ? "৩. ইনভয়েসের পরিমাণ" : "৩. ফেরত দিতে হবে"}</span>
+                        <span className="text-xs font-extrabold font-mono block mt-1 truncate">
                           {formatBDT(inv.total_amount_owed)}
                         </span>
-                        <span className="text-[9px] text-amber-800 font-medium block truncate">ResellerBrain-কে</span>
+                        {!isRejected && <span className="text-[9px] text-amber-800 font-medium block truncate">ResellerBrain-কে</span>}
                       </div>
                     </div>
 
@@ -262,6 +264,14 @@ export default function VendorInvoices() {
                 </div>
 
                 {/* Bottom Action */}
+                {isRejected ? (
+                  <div className="border-t border-red-200 p-3 text-xs font-semibold text-red-800">
+                    <span className="inline-flex items-center gap-1.5">
+                      <Flag className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                      বাতিল (Cancelled)
+                    </span>
+                  </div>
+                ) : (
                 <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
                   <span className="text-[11px] text-gray-500">
                     {isPending ? "⚠️ পেমেন্ট বাকি আছে" : "✓ হিসাব পর্যালোচিত"}
@@ -278,6 +288,7 @@ export default function VendorInvoices() {
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                )}
               </div>
             );
           })}
@@ -307,7 +318,8 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
   const [copiedId, setCopiedId] = useState(null);
   const [showOrdersBreakdown, setShowOrdersBreakdown] = useState(false);
 
-  const isPending = invoice.status === "pending" || invoice.status === "rejected";
+  const isPending = invoice.status === "pending";
+  const isRejected = invoice.status === "rejected";
   const isPaid = invoice.status === "paid" || invoice.status === "approved";
 
   const adminAccounts = invoice.admin_payment_details || [
@@ -353,6 +365,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
 
   const handleSubmitPayment = async (e) => {
     e.preventDefault();
+    if (!isPending) return;
 
     if (!form.trx_id.trim()) {
       toast.error("ট্রানজেকশন আইডি (Trx ID) আবশ্যক");
@@ -453,11 +466,11 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
             <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-xl flex flex-col justify-between shadow-xs">
               <div>
                 <span className="text-[11px] font-extrabold text-amber-900 uppercase tracking-wide flex items-center justify-between">
-                  <span>৩. ResellerBrain-কে প্রদেয়</span>
-                  <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">ফেরত</span>
+                  <span>{isRejected ? "৩. ইনভয়েসের পরিমাণ" : "৩. ResellerBrain-কে প্রদেয়"}</span>
+                  {!isRejected && <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">ফেরত</span>}
                 </span>
                 <p className="text-[11px] text-amber-800 mt-0.5">
-                  ইনভয়েস অনুযায়ী এডমিনকে পাঠাতে হবে
+                  {isRejected ? "বাতিল (Cancelled)" : "ইনভয়েস অনুযায়ী এডমিনকে পাঠাতে হবে"}
                 </p>
               </div>
               <div className="mt-2 text-right sm:text-left">
@@ -469,6 +482,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
           </div>
 
           {/* Admin Bank & bKash Payment Accounts Card */}
+          {!isRejected && (
           <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
               <span className="text-xs font-bold text-slate-800 flex items-center gap-2">
@@ -531,6 +545,8 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
             </div>
           </div>
 
+          )}
+
           {/* If already paid, show payment status */}
           {isPaid && (
             <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-xs space-y-2">
@@ -564,7 +580,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Payment Form (if pending or rejected) */}
+          {/* Payment Form */}
           {isPending && (
             <form id="vendor-pay-form" onSubmit={handleSubmitPayment} className="p-4 bg-white border border-gray-200 rounded-xl space-y-4">
               <div className="font-bold text-xs text-gray-800 border-b pb-2">

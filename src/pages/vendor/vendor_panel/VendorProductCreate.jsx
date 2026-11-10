@@ -8,7 +8,7 @@ import { useListCategoriesQuery } from "../../../redux/features/category";
 import { useListBrandsQuery } from "../../../redux/features/brand";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { useGetAttributesQuery, useGetAttributeDetailsQuery } from "../../../redux/features/attribute";
-import { useCreateProductAttributeMutation, useListProductAttributesQuery } from "../../../redux/features/productAttribute";
+import { useCreateProductAttributeMutation, useListByProductAttributesQuery } from "../../../redux/features/productAttribute";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import MediaPickerModal from "../../../components/shared/MediaPickerModal";
@@ -77,7 +77,12 @@ const VendorProductCreate = () => {
   const [selectedAttrId, setSelectedAttrId] = useState(null);
   const { data: attrData } = useGetAttributesQuery();
   const [createProductAttribute, { isLoading: creatingProdAttr }] = useCreateProductAttributeMutation();
-  const { data: prodAttrList, refetch: refetchProdAttr } = useListProductAttributesQuery(createdProductId, { skip: !createdProductId });
+  const {
+    data: prodAttrList,
+    isLoading: loadingProdAttrList,
+    error: prodAttrListError,
+    refetch: refetchProdAttr,
+  } = useListByProductAttributesQuery(createdProductId, { skip: !createdProductId });
   const attributeOptions = (attrData?.data || []).map((a) => ({ value: a.id, label: a.name }));
   const { data: selectedAttrDetails, isLoading: loadingAttrDetails } = useGetAttributeDetailsQuery(selectedAttrId, { skip: selectedAttrId == null });
   const valuesArr = selectedAttrDetails?.data?.values || selectedAttrDetails?.data?.attribute_values || [];
@@ -297,6 +302,9 @@ const VendorProductCreate = () => {
               loadingAttrDetails={loadingAttrDetails}
               creatingProdAttr={creatingProdAttr}
               prodAttrList={prodAttrList}
+              loadingProdAttrList={loadingProdAttrList}
+              prodAttrListError={prodAttrListError}
+              refetchProdAttr={refetchProdAttr}
             />
           )}
 

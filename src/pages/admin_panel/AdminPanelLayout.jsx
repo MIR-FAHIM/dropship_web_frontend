@@ -137,6 +137,11 @@ const adminMenuLinks = [
     ],
   },
   {
+    path: "/admin-panel/marketers",
+    label: "মার্কেটার (Marketers)",
+    icon: <Megaphone className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/employees",
     label: "টিমমেট",
     icon: <Users className="w-5 h-5" />,

@@ -99,6 +99,12 @@ const baseApi = createApi({
     "FeedPostComments",
     "PartnerStore",
     "EcommerceWebsiteLead",
+    "MarketerPerformance",
+    "MarketerClients",
+    "MarketerInvitations",
+    "MarketerRelationship",
+    "AdminMarketers",
+    "AdminMarketerClients",
   ],
   endpoints: () => ({}),
 });

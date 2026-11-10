@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Copy, Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Check, Copy, Package, Pencil, Plus, Search, Trash2, Eye, Loader2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useGetVendorProductsQuery, useGetVendorIdQuery } from "../../../../redux/features/vendor_api";
@@ -30,9 +30,11 @@ const VendorProducts = () => {
     { skip: !vendorId }
   );
   const [deleteProduct] = useDeleteProductMutation();
-  const [updateProduct] = useUpdateProductMutation();
+  const [updateProduct, { isLoading: isSavingEdit }] = useUpdateProductMutation();
+  const savingEdit = useRef(false);
 
   const startEdit = (productId, field, currentValue) => {
+    if (savingEdit.current) return;
     setEditingCell({ productId, field });
     setEditValue(String(currentValue ?? ""));
   };
@@ -43,12 +45,21 @@ const VendorProducts = () => {
   };
 
   const commitEdit = async (product) => {
+    if (savingEdit.current || editingCell?.productId !== product.id) return;
     const field = editingCell?.field;
+    const isStock = field === "current_stock";
     const numericFields = ["unit_price", "max_resell_price"];
     const isNumeric = numericFields.includes(field);
 
     let finalValue = editValue;
-    if (isNumeric) {
+    if (isStock) {
+      const stock = editValue.trim();
+      if (!/^\d+$/.test(stock) || Number(stock) > 2147483647) {
+        toast.error("স্টকের জন্য শূন্য বা ধনাত্মক পূর্ণসংখ্যা দিন");
+        return;
+      }
+      finalValue = Number(stock);
+    } else if (isNumeric) {
       const parsed = parseFloat(editValue);
       if (isNaN(parsed) || parsed < 0) {
         toast.error("সঠিক মূল্য দিন");
@@ -58,11 +69,13 @@ const VendorProducts = () => {
       finalValue = parsed;
     }
 
-    if (finalValue === (isNumeric ? parseFloat(product[field]) : product[field])) {
+    const currentValue = isStock ? Number(product.current_stock ?? 0) : isNumeric ? parseFloat(product[field]) : product[field];
+    if (finalValue === currentValue) {
       cancelEdit();
       return;
     }
 
+    savingEdit.current = true;
     const patchResult = dispatch(
       vendorApi.util.updateQueryData("getVendorProducts", { vendorId, page: currentPage }, (draft) => {
         const item = draft?.data?.data?.find((p) => p.id === product.id);
@@ -72,11 +85,14 @@ const VendorProducts = () => {
     try {
       await updateProduct({ id: product.id, [field]: finalValue, updated_by: userId }).unwrap();
       toast.success("আপডেট হয়েছে!");
+      cancelEdit();
     } catch (err) {
       patchResult.undo();
       toast.error(err?.data?.message || "আপডেট ব্যর্থ!");
+      if (!isStock) cancelEdit();
+    } finally {
+      savingEdit.current = false;
     }
-    cancelEdit();
   };
 
   const products = data?.data?.data || [];
@@ -267,15 +283,64 @@ const VendorProducts = () => {
                           <span className="hover:underline hover:text-blue-600" title="ক্লিক করে সম্পাদনা করুন">৳{product.max_resell_price || 0}</span>
                         )}
                       </td>
-                      <td className="py-3">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${product.current_stock > 0
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-600"
+                      <td className="py-3 min-w-[9rem]">
+                        {editingCell?.productId === product.id && editingCell.field === "current_stock" ? (
+                          <form
+                            className="flex items-center gap-1"
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              commitEdit(product);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape" && !savingEdit.current) cancelEdit();
+                            }}
+                          >
+                            <input
+                              autoFocus
+                              type="text"
+                              inputMode="numeric"
+                              aria-label="স্টকের পরিমাণ"
+                              value={editValue}
+                              disabled={isSavingEdit}
+                              onChange={(e) => setEditValue(e.target.value)}
+                              className="w-20 rounded border border-blue-400 px-1.5 py-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            />
+                            <button
+                              type="submit"
+                              title="স্টক সংরক্ষণ করুন"
+                              aria-label="স্টক সংরক্ষণ করুন"
+                              disabled={isSavingEdit}
+                              className="rounded p-1 text-green-700 hover:bg-green-50 disabled:opacity-50"
+                            >
+                              {isSavingEdit ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                            </button>
+                            <button
+                              type="button"
+                              title="বাতিল করুন"
+                              aria-label="বাতিল করুন"
+                              disabled={isSavingEdit}
+                              onClick={cancelEdit}
+                              className="rounded p-1 text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </form>
+                        ) : (
+                          <button
+                            type="button"
+                            title="স্টক সম্পাদনা করুন"
+                            aria-label={`${product.name}: স্টক সম্পাদনা করুন`}
+                            disabled={isSavingEdit}
+                            onClick={() => startEdit(product.id, "current_stock", product.current_stock ?? 0)}
+                            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium disabled:opacity-50 ${product.current_stock > 0
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-red-100 text-red-600 hover:bg-red-200"
                             }`}
-                        >
-                          {product.current_stock ?? 0}
-                        </span>
+                          >
+                            {product.current_stock ?? 0}
+                            <Pencil className="h-3 w-3" />
+                          </button>
+                        )}
                       </td>
                       <td className="py-3">
                         <button

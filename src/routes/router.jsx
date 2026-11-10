@@ -4,6 +4,7 @@ import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import RegisterPage from "../pages/auth/register";
 import PrivateRoute from "./PrivateRoute";
+import MarketerRoute from "./MarketerRoute";
 import { pagePaths } from "./pages.routes";
 import HomePage from "../pages/home_page/home_page";
 import PrivacyPolicyPage from "../pages/privacy_policy/privacy_policy";
@@ -83,6 +84,12 @@ import LoginSuccessReport from "../pages/admin_panel/error_logs/LoginSuccessRepo
 import AdminNotices from "../pages/admin_panel/notices/AdminNotices";
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
 import RouteErrorBoundary from "../components/shared/RouteErrorBoundary";
+import AdminMarketers from "../pages/admin_panel/marketers/AdminMarketers";
+import MarketerPanelLayout from "../pages/marketer_panel/MarketerPanelLayout";
+import MarketerDashboard from "../pages/marketer_panel/dashboard/MarketerDashboard";
+import MarketerClients from "../pages/marketer_panel/clients/MarketerClients";
+import MarketerInvitations from "../pages/marketer_panel/invitations/MarketerInvitations";
+import MarketerProfile from "../pages/marketer_panel/MarketerProfile";
 // route generator func
 import { routeGenerator } from "../utils/routeGenerator";
 
@@ -229,6 +236,22 @@ export const router = createBrowserRouter([
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
       { path: "delivery/webhook-tester", element: <CarrybeeWebhookTester /> },
+      { path: "marketers", element: <AdminMarketers /> },
+    ],
+  },
+  {
+    path: "/marketer-panel",
+    element: (
+      <MarketerRoute>
+        <MarketerPanelLayout />
+      </MarketerRoute>
+    ),
+    errorElement: <RouteErrorBoundary />,
+    children: [
+      { index: true, element: <MarketerDashboard /> },
+      { path: "clients", element: <MarketerClients /> },
+      { path: "invitations", element: <MarketerInvitations /> },
+      { path: "profile", element: <MarketerProfile /> },
     ],
   },
   {

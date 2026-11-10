@@ -402,6 +402,30 @@ export const API_ENDPOINTS = {
     list:         define("GET",  "/ecommerce-website-leads"),
     updateStatus: define("POST", "/ecommerce-website-leads/{id}/status"),
   },
+
+  marketer: {
+    performance:      define("GET",    "/marketer/performance"),
+    clients:          define("GET",    "/marketer/clients"),
+    createClient:     define("POST",   "/marketer/clients/create"),
+    invitations:      define("GET",    "/marketer/invitations"),
+    createInvitation: define("POST",   "/marketer/invitations"),
+    revokeInvitation: define("DELETE", "/marketer/invitations/{id}"),
+  },
+
+  marketerClient: {
+    relationship:      define("GET",   "/marketer-client/relationship"),
+    previewInvitation: define("POST",  "/marketer-client/invitation/preview"),
+    acceptInvitation:  define("POST",  "/marketer-client/invitation/accept"),
+    endRelationship:   define("PATCH", "/marketer-client/{id}/end"),
+  },
+
+  adminMarketers: {
+    list:             define("GET",   "/admin/marketers"),
+    create:           define("POST",  "/admin/marketers"),
+    updateSuspension: define("PATCH", "/admin/marketers/{id}/suspension"),
+    clients:          define("GET",   "/admin/marketers/{id}/clients"),
+    endClientLink:    define("PATCH", "/admin/marketers/clients/{id}/end"),
+  },
 };
 
 export const buildEndpointPath = (template, params = {}) =>

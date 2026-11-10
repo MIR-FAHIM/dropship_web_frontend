@@ -6,6 +6,7 @@ import { useCreateProductAttributeMutation, useListByProductAttributesQuery } fr
 import FormikForm from "../../../../../components/formik/FormikForm";
 import FormikDropdown from "../../../../../components/formik/FormikDropdown";
 import FormikInput from "../../../../../components/formik/FormikInput";
+import ProductAttributeList from "../ProductAttributeList";
 
 const prodAttrInitial = { attribute_id: "", attribute_value_id: "", stock: "" };
 const prodAttrSchema = Yup.object({
@@ -18,7 +19,12 @@ const AttributesTab = ({ productId }) => {
   const [selectedAttrId, setSelectedAttrId] = useState("");
 
   const { data: attrData } = useGetAttributesQuery();
-  const { data: prodAttrList, refetch: refetchProdAttr } = useListByProductAttributesQuery(productId);
+  const {
+    data: prodAttrList,
+    isLoading: loadingProdAttrList,
+    error: prodAttrListError,
+    refetch: refetchProdAttr,
+  } = useListByProductAttributesQuery(productId);
   const { data: selectedAttrDetails, isLoading: loadingAttrDetails } = useGetAttributeDetailsQuery(
     selectedAttrId ? Number(selectedAttrId) : undefined,
     { skip: selectedAttrId === "" }
@@ -89,20 +95,12 @@ const AttributesTab = ({ productId }) => {
         </button>
       </FormikForm>
 
-      <div className="mt-6">
-        <h3 className="font-semibold mb-2">Attribute List</h3>
-        {prodAttrList?.data?.length > 0 ? (
-          <ul className="list-disc ml-6">
-            {prodAttrList.data.map((item) => (
-              <li key={item.id}>
-                Attribute: {item.attribute?.name} | Value: {item.value?.value} | Stock: {item.stock}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-gray-400">No attributes added yet.</div>
-        )}
-      </div>
+      <ProductAttributeList
+        items={prodAttrList?.data ?? []}
+        isLoading={loadingProdAttrList}
+        error={prodAttrListError}
+        onRetry={refetchProdAttr}
+      />
     </div>
   );
 };

@@ -102,9 +102,14 @@ const Login = () => {
 
       toast.success(res?.message || "লগইন সফল হয়েছে!");
 
+      const isMarketer = user?.user_type === "marketer" || user?.role === "marketer";
       const destination =
         location.state?.from?.pathname ||
-        (user?.user_type === "dropshipper" ? "/app/dashboard-new" : "/");
+        (isMarketer
+          ? "/marketer-panel"
+          : user?.user_type === "dropshipper"
+          ? "/app/dashboard-new"
+          : "/");
       navigate(destination, { replace: true });
     } catch (err) {
       const errorData = err?.data || err;

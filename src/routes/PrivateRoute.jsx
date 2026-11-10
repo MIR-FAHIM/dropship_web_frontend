@@ -10,11 +10,11 @@ const PrivateRoute = ({ children }) => {
   const location = useLocation();
   const reduxToken = useSelector(useCurrentToken);
   const localToken = getFromLocalstorage("token");
+  const localUser = getFromLocalstorage("user");
 
   // If Redux lost state but token exists in localStorage, rehydrate Redux
   if (!reduxToken && localToken) {
     const localUserId = getFromLocalstorage("userId");
-    const localUser = getFromLocalstorage("user");
     dispatch(
       setToken({
         token: localToken,
@@ -22,7 +22,6 @@ const PrivateRoute = ({ children }) => {
         user: localUser,
       })
     );
-    return children;
   }
 
   // If neither has a token, redirect to login
@@ -30,6 +29,12 @@ const PrivateRoute = ({ children }) => {
     toast.error("অনুগ্রহ করে লগইন করুন", { id: "auth-login-required", duration: 2000 });
     dispatch(logout());
     return <Navigate to="/login" state={{ from: location }} replace={true} />;
+  }
+
+  // Redirect marketers out of the dropshipper panel
+  const isMarketer = localUser?.user_type === "marketer" || localUser?.role === "marketer";
+  if (isMarketer) {
+    return <Navigate to="/marketer-panel" replace />;
   }
 
   return children;

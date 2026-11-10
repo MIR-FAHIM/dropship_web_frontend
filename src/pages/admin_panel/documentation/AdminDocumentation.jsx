@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { BookOpen, Wallet, LineChart, Scale } from "lucide-react";
+import { BookOpen, Handshake, Wallet, LineChart, Scale } from "lucide-react";
 import PaymentFlowDoc from "./tabs/PaymentFlowDoc";
 import CashflowReportPlanDoc from "./tabs/CashflowReportPlanDoc";
 import LedgerAndLiabilitiesDoc from "./tabs/LedgerAndLiabilitiesDoc";
+import PartnershipPlanDoc from "./tabs/PartnershipPlanDoc";
 
 /* Each future documentation topic is just another entry here. */
 const DOC_TABS = [
@@ -23,6 +24,12 @@ const DOC_TABS = [
     label: "লেজার ও দায়",
     icon: Scale,
     Component: LedgerAndLiabilitiesDoc,
+  },
+  {
+    id: "partnership-plan",
+    label: "পার্টনারশিপ পরিকল্পনা",
+    icon: Handshake,
+    Component: PartnershipPlanDoc,
   },
 ];
 
