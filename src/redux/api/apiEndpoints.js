@@ -168,6 +168,7 @@ export const API_ENDPOINTS = {
     daywiseReport: define("GET", "/product-clicks/report/daywise"),
     last7DaysReport: define("GET", "/product-clicks/report/last-7-days"),
     leaderboard: define("GET", "/product-clicks/leaderboard"),
+    dropshipperLeaderboard: define("GET", "/product-clicks/leaderboard/dropshippers"),
     homeLeaderboard: define("GET", "/product-clicks/leaderboard/home"),
   },
 

@@ -4,6 +4,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { useGetUserDetailsQuery } from "../../redux/features/user";
+import { useCheckAdminQuery } from "../../redux/features/auth";
 import { logout } from "../../redux/slices/authSlice";
 import { getFromLocalstorage, removeFromLocalstorage } from "../../utils/localstorage.utils";
 import {
@@ -22,6 +23,7 @@ import {
   Users,
   Truck,
   Trophy,
+  MousePointerClick,
   FolderTree,
   Tag,
   SlidersHorizontal,
@@ -133,6 +135,12 @@ const adminMenuLinks = [
         path: "/admin-panel/dropshippers/leaderboard",
         label: "Dropshipper Leaderboard",
         icon: <Trophy className="w-4 h-4" />,
+      },
+      {
+        path: "/admin-panel/dropshippers/click-leaderboard",
+        label: "Product Click Leaderboard",
+        icon: <MousePointerClick className="w-4 h-4 shrink-0" />,
+        requiresAdminRole: true,
       },
     ],
   },
@@ -331,6 +339,15 @@ const AdminPanelLayout = () => {
   const userId = getFromLocalstorage("userId");
   const { data: userDetailsData } = useGetUserDetailsQuery(userId, { skip: !userId });
   const currentUser = userDetailsData?.data || userDetailsData?.user || null;
+  const { data: adminCheck } = useCheckAdminQuery();
+  const verifiedAdmin = adminCheck?.data;
+  const canViewProductClickLeaderboard = Boolean(
+    adminCheck?.status === "success" && verifiedAdmin?.is_admin &&
+    [verifiedAdmin.user_type, verifiedAdmin.role].some((role) =>
+      ["admin", "superadmin"].includes(String(role ?? "").toLowerCase())
+    )
+  );
+  const canViewMenuItem = (item) => !item.requiresAdminRole || canViewProductClickLeaderboard;
 
   const isProductManager = currentUser?.role === "product manager";
   const menuLinks = isProductManager ? productManagerMenuLinks : adminMenuLinks;
@@ -341,7 +358,8 @@ const AdminPanelLayout = () => {
 
   const activeGroup = menuLinks.find((item) =>
     item.children?.some(
-      (child) => location.pathname === child.path || location.pathname.startsWith(`${child.path}/`)
+      (child) => canViewMenuItem(child) &&
+        (location.pathname === child.path || location.pathname.startsWith(`${child.path}/`))
     )
   )?.label;
 
@@ -406,7 +424,7 @@ const AdminPanelLayout = () => {
               {(sidebarOpen || isMobile) &&
                 (expandedMenus[item.label] || item.label === activeGroup) && (
                   <div className="ml-4 mt-1 space-y-1 border-l border-gray-700 pl-3">
-                    {item.children.map((child) => (
+                    {item.children.filter(canViewMenuItem).map((child) => (
                       <NavLink
                         key={child.path}
                         to={child.path}
@@ -552,7 +570,7 @@ const AdminPanelLayout = () => {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <Outlet />
+          <Outlet context={{ canViewProductClickLeaderboard }} />
         </main>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import { cloneElement, useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { matchPath, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import CustomNavbar from "./components/shared/CustomNavbar";
+import WeeklyProductRecommendation from "./pages/reseller_panel/components/WeeklyProductRecommendation";
 
 import { PiReceipt, PiUsers } from "react-icons/pi";
 import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
@@ -11,6 +12,12 @@ import { MdOutlineWarehouse } from "react-icons/md";
 import { Bell, ChevronDown, Globe, Handshake, Heart, HomeIcon, Megaphone, PanelLeftClose, PanelLeftOpen, ShoppingBag, Store, Trophy, Truck } from "lucide-react";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
+
+const weeklyRecommendationPages = [
+  "/app/dashboard-new",
+  "/app/all-product-category",
+  "/app/items/category",
+];
 
 const menuSections = [
   {
@@ -362,6 +369,11 @@ const App = () => {
         <main className="flex min-w-0 flex-1 flex-col">
           <CustomNavbar onMenuToggle={() => setMobileOpen((prev) => !prev)} />
           <div className="min-h-0 flex-1 overflow-y-auto">
+            {weeklyRecommendationPages.some((path) => matchPath(path, location.pathname)) && (
+              <div className="mx-3 mt-3 sm:mx-5 sm:mt-5">
+                <WeeklyProductRecommendation />
+              </div>
+            )}
             <div className="m-3 rounded-2xl bg-white p-0 shadow-sm sm:m-5">
               <Outlet />
             </div>

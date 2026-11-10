@@ -49,6 +49,7 @@ import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor
 import AdminKycDocuments from "../pages/admin_panel/kyc/AdminKycDocuments";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import DropshipperLeaderboard from "../pages/admin_panel/dropshippers/DropshipperLeaderboard";
+import ProductClickLeaderboard from "../pages/admin_panel/dropshippers/ProductClickLeaderboard";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
 import AdminAllTransactions from "../pages/admin_panel/accounting/AdminAllTransactions";
@@ -219,6 +220,7 @@ export const router = createBrowserRouter([
       { path: "kyc-documents", element: <AdminKycDocuments /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
       { path: "dropshippers/leaderboard", element: <DropshipperLeaderboard /> },
+      { path: "dropshippers/click-leaderboard", element: <ProductClickLeaderboard /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "accounting", element: <AdminAccounting /> },
       { path: "transactions", element: <AdminAllTransactions /> },

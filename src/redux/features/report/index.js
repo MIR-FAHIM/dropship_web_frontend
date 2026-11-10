@@ -47,6 +47,13 @@ const reportApi = baseApi.injectEndpoints({
       }),
     }),
 
+    getDropshipperProductClickLeaderboard: builder.query({
+      query: (params) => ({
+        url: API_ENDPOINTS.productClicks.dropshipperLeaderboard.path,
+        params,
+      }),
+    }),
+
     getHomeProductLeaderboard: builder.query({
       query: () => API_ENDPOINTS.productClicks.homeLeaderboard.path,
     }),
@@ -60,6 +67,7 @@ export const {
   useGetProductClicksDaywiseReportQuery,
   useGetProductClicksLast7DaysReportQuery,
   useGetProductClicksLeaderboardQuery,
+  useGetDropshipperProductClickLeaderboardQuery,
   useGetHomeProductLeaderboardQuery,
 } = reportApi;
 
