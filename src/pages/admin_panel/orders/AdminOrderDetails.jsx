@@ -33,6 +33,10 @@ import { getCarrybeeSettlement, isNonPayableCarrybeeOrder } from "../../../utils
 import ManualCarrybeePaymentModal from "./ManualCarrybeePaymentModal";
 import FinancialStakeBreakdownCard from "./FinancialStakeBreakdownCard";
 import ReplaceOrderProductDialog from "./ReplaceOrderProductDialog";
+import OrderNotesPanel from "./OrderNotesPanel";
+import OrderCompletionModal from "./OrderCompletionModal";
+import CourierTrackingCard from "../../../components/shared/CourierTrackingCard";
+import { changeOrderStatus } from "../../../utils/orderStatusChange.utils";
 import {
   getAdminBasePrice,
   getAdminCommission,
@@ -51,6 +55,10 @@ const statusColorMap = {
   Cancelled: "bg-red-100 text-red-700 border-red-200",
   Returned: "bg-pink-100 text-pink-700 border-pink-200",
   Completed: "bg-green-100 text-green-700 border-green-200",
+  "Carrybee Paid": "bg-emerald-100 text-emerald-800 border-emerald-300",
+  "Partially Delivered": "bg-amber-100 text-amber-800 border-amber-300",
+  "Return in Transit": "bg-pink-100 text-pink-700 border-pink-200",
+  "Lost / Damaged": "bg-gray-200 text-gray-800 border-gray-300",
 };
 
 const paymentColors = {
@@ -81,6 +89,7 @@ const AdminOrderDetails = () => {
 
   // Edit Order Modal state
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showReplaceProduct, setShowReplaceProduct] = useState(false);
   const [editForm, setEditForm] = useState({
     customer_name: "",
@@ -206,16 +215,23 @@ const AdminOrderDetails = () => {
   };
 
   const handleStatusChange = async (newStatusId) => {
-    const userId = localStorage.getItem("userId");
-    try {
-      await updateStatus({
-        id: order.id,
-        status_id: Number(newStatusId),
-        changed_by: userId || undefined,
-      }).unwrap();
+    // Completed goes through the checklist modal: everything must be done first.
+    if (Number(newStatusId) === 9 && Number(order.status) !== 9) {
+      setShowCompletionModal(true);
+      return;
+    }
+    const result = await changeOrderStatus({
+      updateStatus,
+      id: order.id,
+      statusId: newStatusId,
+      isAdmin: true,
+      changedBy: localStorage.getItem("userId"),
+    });
+    if (result.ok) {
+      toast.success(result.message || "Order status updated");
       refetch();
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    } else if (!result.cancelled) {
+      toast.error(result.message);
     }
   };
 
@@ -535,6 +551,13 @@ const AdminOrderDetails = () => {
           )}
         </div>
       </div>
+
+      {/* Customer note + internal admin note, shown at the top */}
+      <OrderNotesPanel
+        key={`${order.id}-${order.admin_note_updated_at || ""}`}
+        order={order}
+        onSaved={refetch}
+      />
 
       {/* Prominent Lock Banner if Consignment Created or Order Locked */}
       {(!isOrderEditable || hasConsignment) && (
@@ -988,21 +1011,20 @@ const AdminOrderDetails = () => {
             </div>
           )}
 
-          <CarryBeeInfoCard deliveryInfo={order.delivery_information} order={order} />
+          <CourierTrackingCard orderId={order.id} isAdmin onReviewApproved={refetch} />
 
-          {/* Note */}
-          {order.note && (
-            <div className="bg-white rounded-xl border border-gray-200">
-              <div className="px-5 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-800">Note</h2>
-              </div>
-              <div className="px-5 py-4 text-sm text-gray-600">
-                <p>{order.note}</p>
-              </div>
-            </div>
-          )}
+          <CarryBeeInfoCard deliveryInfo={order.delivery_information} order={order} />
         </div>
       </div>
+
+      {showCompletionModal && (
+        <OrderCompletionModal
+          orderId={order.id}
+          orderNumber={order.order_number}
+          onClose={() => setShowCompletionModal(false)}
+          onCompleted={refetch}
+        />
+      )}
 
       {carryBeeOpen && !order.delivery_information && (
         <AssignCarryBeeModal order={order} onClose={() => setCarryBeeOpen(false)} />

@@ -21,6 +21,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { toast } from "react-toastify";
+import DropshipperPayoutReview from "./DropshipperPayoutReview";
 import {
   calculateOrderStakeBreakdown,
   formatBDT,
@@ -35,6 +36,11 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
   const [isEditing, setIsEditing] = useState(false);
   const [copiedConsignment, setCopiedConsignment] = useState(false);
   const [showDisburseModal, setShowDisburseModal] = useState(false);
+  // Admin must confirm they reviewed balance / withdraws / advances before paying.
+  const [payoutReviewConfirmed, setPayoutReviewConfirmed] = useState(false);
+  useEffect(() => {
+    if (showDisburseModal) setPayoutReviewConfirmed(false);
+  }, [showDisburseModal]);
 
   // Direct disbursement form state
   const [disburseForm, setDisburseForm] = useState({
@@ -278,6 +284,26 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
   if (!order || !liveBreakdown) return null;
 
   const b = liveBreakdown;
+
+  // Dropshipper profit steps: COD collection − admin price − customer delivery charge − COD fee.
+  const dropshipperCollected = Number(
+    b.dropshipper?.customer_collected ?? b.courier?.collectable_amount ?? 0
+  );
+  const dropshipperDeliveryCharge = Number(
+    b.dropshipper?.customer_delivery_charge ??
+      b.dropshipper?.customer_shipping_fee ??
+      order?.shipping_fee ??
+      0
+  );
+  const dropshipperFormulaResult =
+    Math.round(
+      (dropshipperCollected -
+        Number(b.dropshipper?.admin_base_price || 0) -
+        dropshipperDeliveryCharge -
+        Number(b.courier?.cod_fee || 0)) *
+        100
+    ) / 100;
+
   const isSettled = Boolean(
     b.supplier?.is_settled && b.dropshipper?.is_settled
   );
@@ -348,6 +374,10 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
 
   const handleDisburseProfit = async (e) => {
     e.preventDefault();
+    if (!payoutReviewConfirmed) {
+      toast.error("Please confirm you reviewed the dropshipper's balance, withdraws and advances.");
+      return;
+    }
     if (disburseForm.amount <= 0) {
       toast.error("প্রফিটের পরিমাণ ০-এর বেশি হতে হবে");
       return;
@@ -361,6 +391,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         trx_id: disburseForm.trx_id,
         bank_reference: disburseForm.bank_reference,
         note: disburseForm.admin_note,
+        payout_review_confirmed: true,
       }).unwrap();
 
       toast.success(
@@ -867,9 +898,10 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
             </p>
 
             <div className="space-y-2 text-xs text-gray-600 mt-3">
-              <div className="flex justify-between">
-                <span>কাস্টমার বিক্রয়মূল্য:</span>
-                {isEditing ? (
+              {/* Profit = COD collection − admin price − delivery charge − COD fee */}
+              {isEditing && (
+                <div className="flex justify-between">
+                  <span>কাস্টমার বিক্রয়মূল্য:</span>
                   <input
                     type="number"
                     step="0.01"
@@ -879,11 +911,11 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                     }
                     className="w-20 px-1.5 py-0.5 text-xs border rounded text-right font-mono font-bold"
                   />
-                ) : (
-                  <span className="font-mono">
-                    {formatBDT(b.dropshipper?.reseller_price)}
-                  </span>
-                )}
+                </div>
+              )}
+              <div className="flex justify-between font-semibold text-gray-800">
+                <span>মোট COD কালেকশন:</span>
+                <span className="font-mono">{formatBDT(dropshipperCollected)}</span>
               </div>
               <div className="flex justify-between">
                 <span>বেস/অ্যাডমিন মূল্য:</span>
@@ -903,10 +935,23 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                   </span>
                 )}
               </div>
+              <div className="flex justify-between">
+                <span>ডেলিভারি চার্জ (কাস্টমার):</span>
+                <span className="font-mono">−{formatBDT(dropshipperDeliveryCharge)}</span>
+              </div>
               <div className="flex justify-between text-red-600 text-[11px]">
                 <span>COD ফি সমন্বয় (১%):</span>
                 <span className="font-mono">−{formatBDT(b.courier?.cod_fee)}</span>
               </div>
+              <div className="flex justify-between border-t border-dashed border-gray-200 pt-2 font-semibold text-emerald-800">
+                <span>= হিসাব:</span>
+                <span className="font-mono">{formatBDT(dropshipperFormulaResult)}</span>
+              </div>
+              {Math.abs(dropshipperFormulaResult - Number(b.dropshipper?.profit || 0)) >= 0.05 && (
+                <p className="text-[10px] leading-snug text-amber-700">
+                  হিসাব ও নিট প্রফিট আলাদা: ম্যানুয়াল অ্যাডজাস্টমেন্ট আছে, অথবা ঋণাত্মক হলে প্রফিট ০ ধরা হয়।
+                </p>
+              )}
             </div>
           </div>
 
@@ -1004,7 +1049,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
       {/* Direct Profit Disbursement Modal */}
       {showDisburseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+          <div className="bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl relative">
             <button
               type="button"
               onClick={() => setShowDisburseModal(false)}
@@ -1131,6 +1176,12 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                 />
               </div>
 
+              <DropshipperPayoutReview
+                userId={b.dropshipper?.user_id || order?.user_id}
+                confirmed={payoutReviewConfirmed}
+                onConfirmChange={setPayoutReviewConfirmed}
+              />
+
               <div className="flex gap-2 justify-end pt-2">
                 <button
                   type="button"
@@ -1141,7 +1192,8 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={isDisbursing}
+                  disabled={isDisbursing || !payoutReviewConfirmed}
+                  title={payoutReviewConfirmed ? undefined : "Tick the review checkbox first"}
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
                   style={{ backgroundColor: "#059669", color: "#ffffff" }}
                 >

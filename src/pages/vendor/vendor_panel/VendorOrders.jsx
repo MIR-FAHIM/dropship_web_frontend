@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ClipboardList,
   Loader2,
@@ -12,12 +12,110 @@ import {
   Eye,
   Search,
   CheckCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { useGetVendorIdQuery, useGetVendorProfileQuery } from "../../../redux/features/vendor_api";
 import { useVendorOrdersQuery, useGetOrderStatusSummaryQuery, useUpdateOrderStatusMutation } from "../../../redux/features/order";
 import AssignCarryBeeModal from "../../admin_panel/orders/carrybee_assign";
+import CourierIssueBadge from "../../../components/shared/CourierIssueBadge";
 import { toast } from "react-toastify";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+import { imgBaseUrl } from "../../../../config";
+
+// Small product thumbnail (same URL pattern as the admin orders list).
+const getItemImageUrl = (item) => {
+  const image = item?.product?.primary_image;
+  if (!image) return null;
+  if (image.external_link) return image.external_link;
+  const fileName = image.file_name;
+  if (!fileName) return null;
+  if (/^https?:\/\//i.test(fileName)) return fileName;
+  return `${imgBaseUrl}/${fileName}`;
+};
+
+const ItemThumbnail = ({ item }) => {
+  const [failed, setFailed] = useState(false);
+  const src = getItemImageUrl(item);
+
+  if (!src || failed) {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-300">
+        <Package className="h-4 w-4" />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={item?.product_name || "Product"}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="h-8 w-8 shrink-0 rounded border border-gray-200 bg-white object-cover"
+    />
+  );
+};
+
+// Selected variant (e.g. Color: Pink) from item.product_attribute, highlighted so
+// the vendor packs the right one.
+const ItemAttributeBadge = ({ item }) => {
+  const pa = item?.product_attribute;
+  const value = pa?.value?.value;
+  if (!value) return null;
+  const name = pa?.attribute?.name;
+  const swatch = pa?.value?.color_code;
+
+  return (
+    <span
+      className="mt-0.5 inline-flex max-w-[150px] items-center gap-1 rounded border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[11px] font-semibold leading-tight text-amber-800"
+      title={name ? `${name}: ${value}` : value}
+    >
+      {swatch && (
+        <span
+          className="h-2.5 w-2.5 shrink-0 rounded-full border border-black/10"
+          style={{ backgroundColor: swatch }}
+        />
+      )}
+      <span className="truncate">
+        {name && <span className="font-normal text-amber-700">{name}: </span>}
+        {value}
+      </span>
+    </span>
+  );
+};
+
+// Delivery/COD note (order.note) in amber, admin note in indigo. Clamped to
+// 3 lines; full text in the tooltip.
+const OrderNotesCell = ({ order }) => {
+  const deliveryNote = order?.note?.trim();
+  const adminNote = order?.admin_note?.trim();
+  if (!deliveryNote && !adminNote) {
+    return <span className="text-xs text-gray-300">—</span>;
+  }
+
+  const notes = [
+    deliveryNote && { key: "delivery", label: "Delivery / COD", text: deliveryNote, Icon: Truck,
+      bar: "border-amber-400", chip: "bg-amber-100 text-amber-700" },
+    adminNote && { key: "admin", label: "Admin", text: adminNote, Icon: ShieldCheck,
+      bar: "border-indigo-400", chip: "bg-indigo-100 text-indigo-700" },
+  ].filter(Boolean);
+
+  return (
+    <div className="flex w-[210px] flex-col gap-2">
+      {notes.map(({ key, label, text, Icon, bar, chip }) => (
+        <div key={key} className={`border-l-[3px] pl-2 ${bar}`} title={`${label} note: ${text}`}>
+          <span className={`inline-flex items-center gap-1 rounded px-1.5 py-px text-[10px] font-semibold leading-4 ${chip}`}>
+            <Icon className="h-3 w-3" />
+            {label}
+          </span>
+          <p className="mt-0.5 line-clamp-2 whitespace-pre-line break-words text-xs leading-snug text-gray-700">
+            {text}
+          </p>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 const STATUS_CONFIG = {
   Pending:    { label: "পেন্ডিং",     cls: "bg-yellow-100 text-yellow-700 border-yellow-200" },
@@ -30,6 +128,11 @@ const STATUS_CONFIG = {
   Returned:   { label: "রিটার্ন",     cls: "bg-orange-100 text-orange-700 border-orange-200" },
   "Out for Delivery": { label: "আউট ফর ডেলিভারি", cls: "bg-orange-100 text-orange-700 border-orange-200" },
   Completed:  { label: "সম্পন্ন",     cls: "bg-green-100 text-green-700 border-green-200" },
+  "Assigned To Vendor": { label: "ভেন্ডরকে দেওয়া", cls: "bg-indigo-100 text-indigo-700 border-indigo-200" },
+  "Vendor Is Ready": { label: "ভেন্ডর প্রস্তুত", cls: "bg-blue-100 text-blue-700 border-blue-200" },
+  "Partially Delivered": { label: "আংশিক ডেলিভারি", cls: "bg-amber-100 text-amber-800 border-amber-300" },
+  "Return in Transit": { label: "রিটার্ন পথে", cls: "bg-pink-100 text-pink-700 border-pink-200" },
+  "Lost / Damaged": { label: "হারানো / ক্ষতিগ্রস্ত", cls: "bg-gray-200 text-gray-800 border-gray-300" },
 };
 
 const DEFAULT_STATUS_LIST = [
@@ -58,7 +161,10 @@ const latestStatus = (order) => {
 const formatDate = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("bn-BD", { day: "2-digit", month: "short", year: "numeric" });
+  if (Number.isNaN(d.getTime())) return "—";
+  const date = d.toLocaleDateString("bn-BD", { day: "2-digit", month: "short", year: "numeric" });
+  const time = d.toLocaleTimeString("bn-BD", { hour: "numeric", minute: "2-digit", hour12: true });
+  return `${date}, ${time}`;
 };
 
 const VendorOrders = () => {
@@ -254,6 +360,7 @@ const VendorOrders = () => {
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">অর্ডার</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">কাস্টমার</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">পণ্য</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">নোট</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">স্ট্যাটাস</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">পেমেন্ট</th>
             
@@ -274,7 +381,12 @@ const VendorOrders = () => {
                       >
                         {/* Order */}
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <p className="font-medium text-gray-800 text-xs">{order.order_number}</p>
+                          <Link
+                            to={`/vendor-panel/orders/${order.id}`}
+                            className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {order.order_number}
+                          </Link>
                           <p className="text-gray-400 text-xs mt-0.5">{formatDate(order.created_at)}</p>
                         </td>
 
@@ -289,28 +401,63 @@ const VendorOrders = () => {
                               {order.customer_phone?.slice(-4)}
                             </span>
                           </div>
-                          {order.zone && (
-                            <div className="flex items-center gap-1 text-gray-400 text-xs mt-0.5">
-                              <MapPin className="w-3 h-3 flex-shrink-0" />
-                              <span>{order.zone}</span>
-                            </div>
-                          )}
+                          {order.zone && (() => {
+                            // Inside District = green, Outside District = orange, anything else = gray.
+                            const zone = String(order.zone).trim().toLowerCase();
+                            const zoneCls = zone.startsWith("inside")
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : zone.startsWith("outside")
+                                ? "bg-orange-50 text-orange-700 border-orange-200"
+                                : "bg-gray-50 text-gray-600 border-gray-200";
+                            return (
+                              <span className={`mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold ${zoneCls}`}>
+                                <MapPin className="w-3 h-3 flex-shrink-0" />
+                                {order.zone}
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         {/* Items */}
                         <td className="px-4 py-3">
                           <div className="space-y-1">
-                            {order.items?.map((item) => (
-                              <div key={item.id} className="flex items-start gap-1">
-                                <Package className="w-3 h-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                                <span className="text-gray-700 text-xs leading-tight line-clamp-1 max-w-[150px]">
-                                  {item.product_name}
-                                </span>
-                                <span className="text-gray-400 text-xs whitespace-nowrap">× {item.qty}</span>
-                                <span className="text-gray-400 text-xs whitespace-nowrap">× {item.unit_price} TK</span>
-                              </div>
-                            ))}
+                            {order.items?.map((item) => {
+                              // Link only when the product still belongs to this vendor;
+                              // the vendor product page can't open another vendor's product.
+                              const canOpenProduct = Boolean(item.product_id)
+                                && (item.product?.vendor_id == null || Number(item.product.vendor_id) === Number(vendorId));
+                              return (
+                                <div key={item.id} className="flex items-center gap-2">
+                                  <ItemThumbnail item={item} />
+                                  <div className="min-w-0">
+                                    {canOpenProduct ? (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => { e.stopPropagation(); navigate(`/vendor-panel/products/${item.product_id}`); }}
+                                        className="block text-left text-blue-600 hover:text-blue-800 hover:underline text-xs leading-tight line-clamp-1 max-w-[150px]"
+                                        title={item.product_name}
+                                      >
+                                        {item.product_name}
+                                      </button>
+                                    ) : (
+                                      <span className="block text-gray-700 text-xs leading-tight line-clamp-1 max-w-[150px]" title={item.product_name}>
+                                        {item.product_name}
+                                      </span>
+                                    )}
+                                    <ItemAttributeBadge item={item} />
+                                    <span className="block text-gray-400 text-[11px] whitespace-nowrap">
+                                      × {item.qty} · {item.unit_price} TK
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
+                        </td>
+
+                        {/* Notes: delivery/COD note (amber) + admin note (indigo) */}
+                        <td className="px-4 py-3 align-top">
+                          <OrderNotesCell order={order} />
                         </td>
 
                         {/* Status */}
@@ -335,8 +482,7 @@ const VendorOrders = () => {
                               {statusCfg.label}
                             </span>
                           )}
-
-
+                          <CourierIssueBadge deliveryInfo={order.delivery_information} />
                         </td>
 
                         {/* Payment */}

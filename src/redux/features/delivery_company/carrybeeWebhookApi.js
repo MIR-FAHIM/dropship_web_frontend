@@ -44,6 +44,31 @@ const carrybeeWebhookApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["CarrybeePaidOrders", "CarrybeeWebhookEvents", "Order", "OrderDetails", "CarryBeeOrder"],
     }),
+
+    reprocessCarrybeeWebhookEvent: builder.mutation({
+      query: (id) => ({
+        url: `/delivery-companies/carrybee/webhook-events/${id}/reprocess`,
+        method: "POST",
+      }),
+      invalidatesTags: ["CarrybeeWebhookEvents", "CarrybeeWebhookHealth", "CourierEvents"],
+    }),
+
+    getCarrybeeWebhookHealth: builder.query({
+      query: (days = 7) => ({
+        url: "/delivery-companies/carrybee/webhook-health",
+        params: { days },
+      }),
+      providesTags: ["CarrybeeWebhookHealth"],
+    }),
+
+    runCarrybeeCatchUp: builder.mutation({
+      query: (body = {}) => ({
+        url: "/delivery-companies/carrybee/catch-up",
+        method: "POST",
+        body,
+      }),
+      invalidatesTags: ["CarrybeeWebhookEvents", "CarrybeeWebhookHealth", "CourierEvents"],
+    }),
   }),
 });
 
@@ -53,6 +78,9 @@ export const {
   useTestCarrybeeWebhookMutation,
   useGetCarrybeeWebhookEventsQuery,
   useManualCarrybeeOrderPaymentMutation,
+  useReprocessCarrybeeWebhookEventMutation,
+  useGetCarrybeeWebhookHealthQuery,
+  useRunCarrybeeCatchUpMutation,
 } = carrybeeWebhookApi;
 
 export default carrybeeWebhookApi;

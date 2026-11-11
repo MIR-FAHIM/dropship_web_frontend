@@ -78,6 +78,14 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Vendor"],
     }),
+    setVendorDefaultCarrybeeStore: builder.mutation({
+      query: ({ id, carryb_store_id }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.vendors.setCarrybeeStore.path, { id }),
+        method: API_ENDPOINTS.vendors.setCarrybeeStore.method,
+        body: { carryb_store_id },
+      }),
+      invalidatesTags: ["Vendor"],
+    }),
     updateVendor: builder.mutation({
       query: ({ id, data }) => ({
         url: buildEndpointPath(API_ENDPOINTS.vendors.update.path, { id }),
@@ -137,6 +145,7 @@ export const {
   useGetVendorProductsQuery,
   useGetVendorDashboardReportQuery,
   useVendorIsActiveMutation,
+  useSetVendorDefaultCarrybeeStoreMutation,
   useUpdateVendorMutation,
   useLoginAsVendorMutation,
   useGetKycDocumentsListQuery,

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
-import { ClipboardList, Search, Eye, Loader2, CheckCircle, CheckCircle2, Clock, Lock, Store, ChevronDown, X, Check, FileText, Truck } from "lucide-react";
+import { ClipboardList, Search, Eye, Loader2, CheckCircle, CheckCircle2, Clock, Lock, Store, ChevronDown, X, Check, FileText, Truck, Package } from "lucide-react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,6 +11,45 @@ import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
 import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import VendorSettlementInvoiceModal from "./VendorSettlementInvoiceModal";
 import ManualCarrybeePaymentModal from "./ManualCarrybeePaymentModal";
+import { imgBaseUrl } from "../../../../config";
+import { changeOrderStatus } from "../../../utils/orderStatusChange.utils";
+import CourierIssueBadge from "../../../components/shared/CourierIssueBadge";
+import OrderCompletionModal from "./OrderCompletionModal";
+
+// Small product thumbnail for the Items column. Same URL pattern as the
+// reseller order details page (imgBaseUrl + primary_image.file_name).
+const getItemImageUrl = (item) => {
+  const image = item?.product?.primary_image;
+  if (!image) return null;
+  if (image.external_link) return image.external_link;
+  const fileName = image.file_name;
+  if (!fileName) return null;
+  if (/^https?:\/\//i.test(fileName)) return fileName;
+  return `${imgBaseUrl}/${fileName}`;
+};
+
+const ItemThumbnail = ({ item }) => {
+  const [failed, setFailed] = useState(false);
+  const src = getItemImageUrl(item);
+
+  if (!src || failed) {
+    return (
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-gray-200 bg-gray-50 text-gray-300">
+        <Package className="h-4 w-4" />
+      </span>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={item?.product_name || "Product"}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="h-8 w-8 shrink-0 rounded border border-gray-200 bg-white object-cover"
+    />
+  );
+};
 
 const statusColorMap = {
   Pending: "bg-yellow-100 text-yellow-700",
@@ -24,6 +63,9 @@ const statusColorMap = {
   Cancelled: "bg-red-100 text-red-700",
   Returned: "bg-pink-100 text-pink-700",
   Completed: "bg-green-100 text-green-700",
+  "Partially Delivered": "bg-amber-100 text-amber-800",
+  "Return in Transit": "bg-pink-100 text-pink-700",
+  "Lost / Damaged": "bg-gray-200 text-gray-800",
 };
 
 const paymentColors = {
@@ -31,6 +73,96 @@ const paymentColors = {
   unpaid: "bg-red-100 text-red-700",
   partial: "bg-yellow-100 text-yellow-700",
 };
+
+// Advance payment badges. Derived from orders.advance_status plus the
+// advance_transaction / advance_refund_transaction objects returned by
+// GET /orders/all/orders. advance_status stays "approved" after the advance is
+// released (delivered) or refunded (cancelled), so the refund row is checked first.
+const ADVANCE_BADGES = {
+  none: {
+    label: "অগ্রিম নেই",
+    legend: "No advance",
+    className: "bg-gray-100 text-gray-500 border-gray-200",
+  },
+  pending: {
+    label: "যাচাই বাকি",
+    legend: "Pending verification (bKash/Nagad)",
+    className: "bg-amber-100 text-amber-800 border-amber-300",
+  },
+  approved: {
+    label: "অগ্রিম অনুমোদিত",
+    legend: "Approved (wallet or bKash/Nagad)",
+    className: "bg-green-100 text-green-800 border-green-300",
+  },
+  rejected: {
+    label: "অগ্রিম বাতিল",
+    legend: "Rejected / approval reversed",
+    className: "bg-red-100 text-red-700 border-red-300",
+  },
+  released: {
+    label: "ফেরত দেওয়া হয়েছে",
+    legend: "Released or refunded to wallet",
+    className: "bg-blue-100 text-blue-700 border-blue-300",
+  },
+};
+
+const getAdvanceState = (order) => {
+  const status = order?.advance_status || "none";
+  const hasAdvance = Number(order?.advance_amount || 0) > 0 || Boolean(order?.advance_transaction);
+
+  if (order?.advance_refund_transaction) return "released";
+  if (!hasAdvance || status === "none") return "none";
+  if (status === "pending" || status === "submitted") return "pending";
+  if (status === "approved") return "approved";
+  if (status === "rejected") return "rejected";
+  return "none";
+};
+
+const getAdvanceMethodLabel = (order) => {
+  const trx = order?.advance_transaction;
+  const method = order?.advance_payment_method || trx?.source;
+  if (trx?.trx_type === "debit" || method === "wallet") return "Wallet";
+  return method ? String(method).toUpperCase() : null;
+};
+
+const AdvanceBadge = ({ order }) => {
+  const state = getAdvanceState(order);
+  const badge = ADVANCE_BADGES[state];
+  const amount = Number(order?.advance_amount || order?.advance_transaction?.amount || 0);
+  const method = state === "none" ? null : getAdvanceMethodLabel(order);
+  const title = [
+    `Advance: ${badge.legend}`,
+    amount > 0 ? `৳${amount.toLocaleString("en-BD")}` : null,
+    method,
+    order?.advance_admin_note ? `Note: ${order.advance_admin_note}` : null,
+  ].filter(Boolean).join(" • ");
+
+  return (
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}
+    >
+      {badge.label}
+      {amount > 0 && state !== "none" && <span className="tabular-nums">৳{amount.toLocaleString("en-BD")}</span>}
+      {method && <span className="opacity-75">· {method}</span>}
+    </span>
+  );
+};
+
+const AdvanceBadgeLegend = () => (
+  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-xs text-gray-600">
+    <span className="font-semibold text-gray-700">অগ্রিম পেমেন্ট (Advance):</span>
+    {Object.entries(ADVANCE_BADGES).map(([key, badge]) => (
+      <span key={key} className="inline-flex items-center gap-1.5">
+        <span className={`inline-block h-3 w-3 rounded-full border ${badge.className}`} aria-hidden="true" />
+        <span>
+          <span className="font-medium text-gray-700">{badge.label}</span>
+          <span className="text-gray-400"> — {badge.legend}</span>
+        </span>
+      </span>
+    ))}
+  </div>
+);
 
 const DropshipperCompletedOrderCount = ({ completedCount }) => {
   const badgeColor = completedCount == null
@@ -200,6 +332,7 @@ const AdminOrders = () => {
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [manualPaymentOrder, setManualPaymentOrder] = useState(null);
+  const [completionOrder, setCompletionOrder] = useState(null);
   const vendorDropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -362,16 +495,24 @@ const AdminOrders = () => {
   }, [orders, selectedOrderIds]);
 
   const handleStatusChange = async (orderId, newStatusId) => {
-    const userId = localStorage.getItem("userId");
-    try {
-      await updateStatus({
-        id: orderId,
-        status_id: Number(newStatusId),
-        changed_by: userId || undefined,
-      }).unwrap();
+    // Completed goes through the checklist modal: everything must be done first.
+    const target = orders.find((o) => o.id === orderId);
+    if (Number(newStatusId) === 9 && Number(target?.status) !== 9) {
+      setCompletionOrder({ id: orderId, order_number: target?.order_number });
+      return;
+    }
+    const result = await changeOrderStatus({
+      updateStatus,
+      id: orderId,
+      statusId: newStatusId,
+      isAdmin: true,
+      changedBy: localStorage.getItem("userId"),
+    });
+    if (result.ok) {
+      toast.success(result.message || "Order status updated");
       refetch();
-    } catch (err) {
-      console.error("Failed to update status:", err);
+    } else if (!result.cancelled) {
+      toast.error(result.message);
     }
   };
 
@@ -605,6 +746,9 @@ const AdminOrders = () => {
         ))}
       </div>
 
+      {/* Advance payment badge legend */}
+      <AdvanceBadgeLegend />
+
       {/* Orders Table / List */}
       <div className="bg-white rounded-xl border border-gray-200">
         {isLoading ? (
@@ -747,7 +891,9 @@ const AdminOrders = () => {
                               {order.items.length} item{order.items.length > 1 ? 's' : ''}
                             </span>
                             {order.items.map((item) => (
-                              <div key={item.id}>
+                              <div key={item.id} className="flex items-start gap-2">
+                                <ItemThumbnail item={item} />
+                                <div className="min-w-0">
                                 {item.product_id ? (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/products/${item.product_id}`); }}
@@ -770,6 +916,7 @@ const AdminOrders = () => {
                                     <p className="text-[11px] text-gray-400 leading-tight">{item.shop.shop_name}</p>
                                   )
                                 )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -781,7 +928,10 @@ const AdminOrders = () => {
                         {formatDate(order.created_at)}
                       </td>
                       <td className="py-3 px-4 text-right font-semibold text-gray-800">
-                        {formatCurrency(order.total)}
+                        <div className="flex flex-col items-end gap-1">
+                          <span>{formatCurrency(order.total)}</span>
+                          <AdvanceBadge order={order} />
+                        </div>
                       </td>
                       <td className="py-3 px-4 text-center">
                         {renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))}
@@ -804,6 +954,9 @@ const AdminOrders = () => {
                             </option>
                           ))}
                         </select>
+                        <div className="flex justify-center">
+                          <CourierIssueBadge deliveryInfo={order.delivery_information} />
+                        </div>
                         {Number(getStatusId(order)) === 10 && (
                           <p className="text-[10px] text-emerald-700 font-semibold mt-0.5">
                             কুরিয়ার পেইড (সেটেলমেন্ট বাকি)
@@ -886,9 +1039,12 @@ const AdminOrders = () => {
                         {order.customer_phone}
                       </p>
                     </div>
-                    <p className="text-sm font-bold text-gray-800">
-                      {formatCurrency(order.total)}
-                    </p>
+                    <div className="flex flex-col items-end gap-1">
+                      <p className="text-sm font-bold text-gray-800">
+                        {formatCurrency(order.total)}
+                      </p>
+                      <AdvanceBadge order={order} />
+                    </div>
                   </div>
 
                   {/* Dropshipper info */}
@@ -909,6 +1065,7 @@ const AdminOrders = () => {
                       </p>
                       {order.items.map((item) => (
                         <div key={item.id} className="flex items-start justify-between gap-2">
+                          <ItemThumbnail item={item} />
                           {item.product_id ? (
                             <button
                               onClick={(e) => { e.stopPropagation(); navigate(`/admin-panel/products/${item.product_id}`); }}
@@ -953,6 +1110,7 @@ const AdminOrders = () => {
                           </option>
                         ))}
                       </select>
+                      <CourierIssueBadge deliveryInfo={order.delivery_information} />
                     </div>
                     <button
                       onClick={() => navigate(`/admin-panel/orders/${order.id}`)}
@@ -1041,6 +1199,15 @@ const AdminOrders = () => {
       )}
 
       {/* Manual CarryBee Payment Modal */}
+      {completionOrder && (
+        <OrderCompletionModal
+          orderId={completionOrder.id}
+          orderNumber={completionOrder.order_number}
+          onClose={() => setCompletionOrder(null)}
+          onCompleted={refetch}
+        />
+      )}
+
       {manualPaymentOrder && (
         <ManualCarrybeePaymentModal
           order={manualPaymentOrder}

@@ -20,7 +20,9 @@ import { toast } from "sonner";
 import {
   useTestCarrybeeWebhookMutation,
   useGetCarrybeeWebhookEventsQuery,
+  useReprocessCarrybeeWebhookEventMutation,
 } from "../../../redux/features/delivery_company/carrybeeWebhookApi";
+import CarrybeeWebhookHealthPanel from "./CarrybeeWebhookHealthPanel";
 
 const PRESETS = {
   paid: {
@@ -85,6 +87,17 @@ export default function CarrybeeWebhookTester() {
   } = useGetCarrybeeWebhookEventsQuery(
     filterEvent ? { event: filterEvent } : {}
   );
+
+  const [reprocessEvent, { isLoading: isReprocessing }] = useReprocessCarrybeeWebhookEventMutation();
+  const handleReprocess = async (item) => {
+    try {
+      const res = await reprocessEvent(item.id).unwrap();
+      toast.success(res?.data?.status || res?.message || "Event processed");
+      refetchEvents();
+    } catch (err) {
+      toast.error(err?.data?.message || "Could not reprocess this event");
+    }
+  };
 
   const webhookUrl = "https://apidropship.resellerbrain.com/public/api/delivery-companies/carrybee/webhook";
 
@@ -166,6 +179,8 @@ export default function CarrybeeWebhookTester() {
           অ্যাডমিন ড্যাশবোর্ডে ফিরে যান <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
+
+      <CarrybeeWebhookHealthPanel />
 
       {/* Webhook Configuration & Instructions Card */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5 shadow-sm space-y-3">
@@ -506,11 +521,17 @@ export default function CarrybeeWebhookTester() {
                             ? "bg-green-100 text-green-700"
                             : item.processing_status === "duplicate"
                             ? "bg-yellow-100 text-yellow-700"
+                            : ["failed", "rejected"].includes(item.processing_status)
+                            ? "bg-red-100 text-red-700"
                             : "bg-gray-100 text-gray-600"
                         }`}
+                        title={item.message || undefined}
                       >
                         {item.processing_status}
                       </span>
+                      {item.message && item.processing_status !== "processed" && (
+                        <p className="mt-0.5 max-w-[180px] truncate text-[10px] text-gray-500" title={item.message}>{item.message}</p>
+                      )}
                     </td>
                     <td className="py-3 px-3">
                       {item.event === "order.paid" ? (
@@ -531,13 +552,26 @@ export default function CarrybeeWebhookTester() {
                       {item.created_at ? new Date(item.created_at).toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" }) : ""}
                     </td>
                     <td className="py-3 px-3 text-right">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedEventPayload(item)}
-                        className="px-2.5 py-1 text-[11px] font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
-                      >
-                        JSON দেখুন
-                      </button>
+                      <div className="flex justify-end gap-1.5">
+                        {["failed", "ignored"].includes(item.processing_status) && (
+                          <button
+                            type="button"
+                            onClick={() => handleReprocess(item)}
+                            disabled={isReprocessing}
+                            title="Run this event again (after fixing the consignment link or secret)"
+                            className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50"
+                          >
+                            Reprocess
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedEventPayload(item)}
+                          className="px-2.5 py-1 text-[11px] font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                        >
+                          JSON দেখুন
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

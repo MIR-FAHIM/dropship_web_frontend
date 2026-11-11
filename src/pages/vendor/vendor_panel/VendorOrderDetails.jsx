@@ -18,6 +18,8 @@ import {
   Wallet,
   Send,
   RefreshCw,
+  MessageSquareText,
+  ShieldCheck,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import CarrybeeSettlementCard from "../../../components/shared/CarrybeeSettlementCard";
@@ -30,11 +32,59 @@ import {
 } from "../../../redux/features/order";
 import { useGetVendorIdQuery, useGetVendorProfileQuery } from "../../../redux/features/vendor_api";
 import AssignCarryBeeModal from "../../admin_panel/orders/carrybee_assign";
+import CourierTrackingCard from "../../../components/shared/CourierTrackingCard";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import {
   useLazyGetCarryBeeOrderDetailsQuery,
   useCreateCarryBeeOrderMutation,
 } from "../../../redux/features/delivery_company/carrybeeStoreApi";
+
+// Selected variant for an order item, from item.product_attribute
+// (getOrderDetails loads items.productAttribute.attribute + .value).
+const getItemVariant = (item) => {
+  const pa = item?.product_attribute;
+  const name = pa?.attribute?.name;
+  const value = pa?.value?.value;
+  if (!name && !value) return null;
+  return {
+    name: name || "Variant",
+    value: value || "—",
+    colorCode: pa?.value?.color_code || null,
+    isColor: /colou?r|রং/i.test(name || ""),
+  };
+};
+
+// Swatch colour: the saved color_code, or the value itself when it's a valid
+// CSS colour name (e.g. "Pink", "Red"). Returns null when neither works.
+const getSwatchColor = (variant) => {
+  if (!variant?.isColor) return null;
+  const candidates = [variant.colorCode, variant.value].filter(Boolean);
+  for (const c of candidates) {
+    if (typeof CSS !== "undefined" && CSS.supports?.("color", c)) return c;
+  }
+  return null;
+};
+
+const VariantChip = ({ variant, size = "sm" }) => {
+  if (!variant) return null;
+  const swatch = getSwatchColor(variant);
+  const sizeCls = size === "lg"
+    ? "px-3 py-1 text-sm"
+    : "px-2 py-0.5 text-xs";
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full border border-pink-200 bg-pink-50 font-semibold text-pink-800 ${sizeCls}`}>
+      {swatch && (
+        <span
+          className={`inline-block rounded-full border border-black/10 ${size === "lg" ? "h-4 w-4" : "h-3 w-3"}`}
+          style={{ backgroundColor: swatch }}
+          aria-hidden="true"
+        />
+      )}
+      <span className="font-medium text-pink-600">{variant.name}:</span>
+      <span>{variant.value}</span>
+    </span>
+  );
+};
 
 const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, onRetry }) => {
   if (isLoading)
@@ -137,6 +187,10 @@ const STATUS_COLOR = {
   Cancelled:         "bg-red-100 text-red-700 border-red-200",
   Returned:          "bg-pink-100 text-pink-700 border-pink-200",
   Completed:         "bg-green-100 text-green-700 border-green-200",
+  "Carrybee Paid":   "bg-emerald-100 text-emerald-800 border-emerald-300",
+  "Partially Delivered": "bg-amber-100 text-amber-800 border-amber-300",
+  "Return in Transit": "bg-pink-100 text-pink-700 border-pink-200",
+  "Lost / Damaged":  "bg-gray-200 text-gray-800 border-gray-300",
 };
 
 const fmt = (iso) => {
@@ -392,6 +446,68 @@ const VendorOrderDetails = () => {
         </div>
       </div>
 
+      {/* Order note + admin note, highlighted at the top (read-only for vendors) */}
+      {(order.note?.trim() || order.admin_note?.trim()) && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {order.note?.trim() && (
+            <div className="rounded-xl border-2 border-amber-300 bg-amber-50 p-4 shadow-sm">
+              <h2 className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-amber-900">
+                <MessageSquareText className="h-4 w-4 text-amber-600" />
+                Delivery/COD Note
+              </h2>
+              <p className="whitespace-pre-line break-words text-sm font-medium text-amber-900">
+                {order.note.trim()}
+              </p>
+            </div>
+          )}
+          {order.admin_note?.trim() && (
+            <div className="rounded-xl border-2 border-indigo-300 bg-indigo-50 p-4 shadow-sm">
+              <h2 className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-indigo-900">
+                <ShieldCheck className="h-4 w-4 text-indigo-600" />
+                অ্যাডমিন নোট / Admin Note
+              </h2>
+              <p className="whitespace-pre-line break-words text-sm font-medium text-indigo-900">
+                {order.admin_note.trim()}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Ordered product + selected attribute, highlighted at the top */}
+      {order.items?.length > 0 && (
+        <div className="rounded-xl border-2 border-amber-300 bg-amber-50 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-amber-200 px-5 py-3">
+            <Package className="h-4 w-4 text-amber-700" />
+            <h2 className="text-sm font-bold text-amber-900">অর্ডারকৃত পণ্য (Ordered product)</h2>
+          </div>
+          <div className="divide-y divide-amber-200">
+            {order.items.map((item) => {
+              const variant = getItemVariant(item);
+              return (
+                <div key={item.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-lg font-bold leading-snug text-gray-900">{item.product_name}</p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {variant ? (
+                        <VariantChip variant={variant} size="lg" />
+                      ) : (
+                        <span className="text-xs text-gray-500">কোনো ভ্যারিয়েন্ট নেই (No variant)</span>
+                      )}
+                      {item.sku && <span className="text-xs text-gray-500">SKU: {item.sku}</span>}
+                    </div>
+                  </div>
+                  <div className="shrink-0 rounded-lg bg-white px-4 py-2 text-center ring-1 ring-amber-200">
+                    <p className="text-[11px] text-gray-500">পরিমাণ</p>
+                    <p className="text-xl font-bold text-gray-900 tabular-nums">{item.qty}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
@@ -406,6 +522,11 @@ const VendorOrderDetails = () => {
                 <div key={item.id} className="px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex-1">
                     <p className="font-medium text-gray-800">{item.product_name}</p>
+                    {getItemVariant(item) && (
+                      <div className="mt-1">
+                        <VariantChip variant={getItemVariant(item)} />
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-gray-500">
                       {item.sku && <span>SKU: {item.sku}</span>}
                       <span>পরিমাণ: {item.qty}</span>
@@ -700,14 +821,10 @@ const VendorOrderDetails = () => {
                   {order.zone && <p className="text-xs text-gray-400 mt-1">জোন: {order.zone}</p>}
                 </div>
               </div>
-              {order.note && (
-                <div className="flex items-start gap-3">
-                  <span className="text-gray-400 text-xs mt-0.5 shrink-0">নোট</span>
-                  <p className="text-gray-600 text-xs">{order.note}</p>
-                </div>
-              )}
             </div>
           </div>
+
+          <CourierTrackingCard orderId={order.id} />
 
           {/* Assign CarryBee for Own Delivery Vendor */}
           {hasOwnDeliveryAccount && !delivery && !order.carry_bee_draft && (

@@ -49,11 +49,15 @@ const orderApi = baseApi.injectEndpoints({
     }),
 
     updateOrderStatus: builder.mutation({
-      query: ({ id, status_id, note, changed_by }) => {
+      query: ({ id, status_id, note, changed_by, override_reason, completion_confirmed }) => {
         const formData = new FormData();
         formData.append("status_id", status_id);
         if (note) formData.append("note", note);
         if (changed_by) formData.append("changed_by", changed_by);
+        // Admin-only reason for a change the status rules would otherwise block.
+        if (override_reason) formData.append("override_reason", override_reason);
+        // Admin confirmed the completion checklist (required to set Completed).
+        if (completion_confirmed) formData.append("completion_confirmed", "1");
         return {
           url: buildEndpointPath(API_ENDPOINTS.orders.updateStatus.path, { id }),
           method: API_ENDPOINTS.orders.updateStatus.method,
@@ -139,6 +143,42 @@ const orderApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["OrderAdvance", "OrderDetails", "ResellerTransactions"],
     }),
+
+    getDropshipperPayoutReview: builder.query({
+      query: (userId) => `/users/${userId}/payout-review`,
+      providesTags: ["ResellerTransactions"],
+      keepUnusedDataFor: 0,
+    }),
+
+    getOrderCompletionCheck: builder.query({
+      query: (id) => `/orders/${id}/completion-check`,
+      keepUnusedDataFor: 0,
+    }),
+
+    getOrderCourierEvents: builder.query({
+      query: (id) => `/orders/${id}/courier-events`,
+      providesTags: (result, error, id) => [{ type: "CourierEvents", id }],
+    }),
+
+    approveCourierReview: builder.mutation({
+      query: ({ id, note }) => ({
+        url: `/orders/${id}/courier-review/approve`,
+        method: "POST",
+        body: { note },
+      }),
+      invalidatesTags: (result, error, { id }) => [
+        { type: "CourierEvents", id },
+        { type: "OrderSettlement", id: `breakdown-${id}` },
+      ],
+    }),
+
+    updateOrderAdminNote: builder.mutation({
+      query: ({ id, admin_note }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.orders.updateAdminNote.path, { id }),
+        method: API_ENDPOINTS.orders.updateAdminNote.method,
+        body: { admin_note },
+      }),
+    }),
   }),
 });
 
@@ -161,6 +201,11 @@ export const {
   usePayAdvanceMutation,
   useApproveAdvanceMutation,
   useRejectAdvanceMutation,
+  useUpdateOrderAdminNoteMutation,
+  useGetDropshipperPayoutReviewQuery,
+  useGetOrderCompletionCheckQuery,
+  useGetOrderCourierEventsQuery,
+  useApproveCourierReviewMutation,
 } = orderApi;
 
 export default orderApi;

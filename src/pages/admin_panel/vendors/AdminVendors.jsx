@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { setToken } from "../../../redux/slices/authSlice";
 import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { toast } from "react-toastify";
+import VendorDefaultStorePicker from "./VendorDefaultStorePicker";
 
 const AdminVendors = () => {
   const { data, isLoading, error } = useGetVendorListQuery();
@@ -165,6 +166,7 @@ const AdminVendors = () => {
                             </span>
                           )}
                         </div>
+                        <VendorDefaultStorePicker vendor={vendor} />
                       </div>
                     </td>
                     <td className="py-3 text-gray-600">{vendor.user?.phone}</td>

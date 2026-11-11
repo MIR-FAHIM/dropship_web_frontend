@@ -330,7 +330,9 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     recipient_phone: order.customer_phone || "",
     recipient_secendary_phone: "",
     recipient_address: order.shipping_address || "",
-    special_instruction: "",
+    // Prefilled from the order: customer/dropshipper note goes to CarryBee,
+    // the internal admin note stays in own_note. Both stay editable.
+    special_instruction: order.note?.trim() || "",
     product_description: orderProductDescription,
     item_weight: 500,
     item_quantity: order.items?.reduce((s, i) => s + Number(i.qty || 1), 0) || 1,
@@ -341,11 +343,30 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
     own_created_by: "",
     own_admin_status: "",
     own_is_vendor_ready: false,
-    own_note: "",
+    own_note: order.admin_note?.trim() || "",
   });
 
   const { data: storesData } = useListCarryBeeStoresQuery(vendorId);
   const stores = Array.isArray(storesData?.data?.data?.stores) ? storesData.data.data.stores : [];
+
+  // Auto-select the vendor's default store (set in Admin → Vendors). If none is
+  // set but the vendor has exactly one store, pick that. Never overrides a choice.
+  const defaultStoreId = String(
+    order.vendor?.carryb_store_id
+      ?? order.items?.find((i) => String(i.shop?.id) === vendorId)?.shop?.carryb_store_id
+      ?? order.items?.[0]?.shop?.carryb_store_id
+      ?? ""
+  );
+  const storeAutoPickedRef = useRef(false);
+  useEffect(() => {
+    // Run once, after stores load, so clearing the field by hand sticks.
+    if (storeAutoPickedRef.current || stores.length === 0) return;
+    storeAutoPickedRef.current = true;
+    if (storeId) return;
+    const match = defaultStoreId && stores.find((s) => String(s.id) === defaultStoreId);
+    if (match) setStoreId(String(match.id));
+    else if (stores.length === 1) setStoreId(String(stores[0].id));
+  }, [stores, defaultStoreId, storeId]);
 
   const { data: citiesData, isLoading: citiesLoading } = useGetCitiesQuery(vendorId);
   const { data: zonesData, isLoading: zonesLoading } = useGetZonesQuery(
@@ -416,7 +437,8 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         vendorId,
         order_id: order.id,
         expected_product_id: order.items?.length === 1 ? order.items[0].product_id : undefined,
-        store_id: Number(storeId),
+        // CarryBee store ids are strings ("abcd-1234"); Number() would turn those into NaN.
+        store_id: String(storeId),
         merchant_order_id: order.order_number,
         delivery_type: Number(form.delivery_type),
         product_type: Number(form.product_type),
@@ -440,7 +462,11 @@ const AssignCarryBeeModal = ({ order, onClose }) => {
         own_is_vendor_ready: form.own_is_vendor_ready,
         own_note: form.own_note || null,
       }).unwrap();
-      await updateStatus({ id: order.id, status_id: 2 });
+      // Only move a Pending order to "Assigned To Vendor". Re-saving a draft must not
+      // pull a "Vendor Is Ready" order back (that caused the Assigned <-> Ready loops).
+      if (Number(order.status) === 1) {
+        await updateStatus({ id: order.id, status_id: 2 });
+      }
       toast.success("Order successfully assigned to CarryBee!");
       window.location.reload();
     } catch (err) {

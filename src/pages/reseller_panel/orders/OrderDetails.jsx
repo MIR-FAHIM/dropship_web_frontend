@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useGetOrderDetailsQuery, usePayAdvanceMutation, useCheckAdvanceRequirementQuery } from "../../../redux/features/order";
 import { Wallet, X } from "lucide-react";
 import { imgBaseUrl } from "../../../../config";
+import CourierTrackingCard from "../../../components/shared/CourierTrackingCard";
 import {
   FaArrowLeft, FaBoxOpen, FaUser, FaPhone, FaMapMarkerAlt,
   FaCalendarAlt, FaStickyNote, FaChartLine, FaCheckCircle, FaClock,
@@ -466,6 +467,11 @@ const OrderDetailsPage = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* CarryBee courier tracking (rider, delivery problems, timeline) */}
+        <div className="mb-4">
+          <CourierTrackingCard orderId={order?.id} />
         </div>
 
         {/* Order Items */}

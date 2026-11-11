@@ -116,6 +116,7 @@ export const API_ENDPOINTS = {
     payAdvance: define("POST", "/orders/{id}/pay-advance"),
     approveAdvance: define("POST", "/orders/{id}/approve-advance"),
     rejectAdvance: define("POST", "/orders/{id}/reject-advance"),
+    updateAdminNote: define("PATCH", "/orders/{id}/admin-note"),
   },
 
   wallet: {
@@ -282,6 +283,7 @@ export const API_ENDPOINTS = {
     resellerStores: define("GET", "/reseller/stores"),
     update: define("PUT", "/vendors/update/{id}"),
     isActive: define("PATCH", "/vendors/is-active/{id}"),
+    setCarrybeeStore: define("PATCH", "/vendors/{id}/carrybee-store"),
     products: define("GET", "/vendors/products/{vendorId}"),
     dashboardReport: define("GET", "/vendors/dashboard/report/{vendorId}"),
   },
