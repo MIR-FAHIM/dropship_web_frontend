@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Globe,
   Key,
@@ -145,6 +146,12 @@ export default function MyWebsitePage() {
           <p className="mt-2 text-sm leading-relaxed text-blue-100 sm:text-base">
             আপনার নিজস্ব ডোমেইনে চলা আলাদা ই-কমার্স ওয়েবসাইটের সাথে ResellerBrain সরাসরি কানেক্ট করুন। আপনার সাইটে কাস্টমার অর্ডার করলে অটোমেটিক্যালি ResellerBrain এ পৌঁছাবে এবং আমরা আপনার ব্র্যান্ড নামে কুরিয়ারে ক্যাশ অন ডেলিভারিতে পাঠিয়ে দেব।
           </p>
+          <Link
+            to="/app/ecommerce-website"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#D9F279] px-4 py-2.5 text-sm font-bold text-[#18382E] shadow-sm transition hover:-translate-y-0.5 hover:bg-[#C8E84E] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            ই-কমার্স ওয়েবসাইট সম্পর্কে জানুন <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </div>
 
         {/* Decorative background glow */}

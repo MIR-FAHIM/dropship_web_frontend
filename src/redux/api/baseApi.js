@@ -97,6 +97,7 @@ const baseApi = createApi({
     "CarrybeePaidOrders",
     "CarrybeeWebhookEvents",
     "CarrybeeWebhookHealth",
+    "DropshipperPayout",
     "FeedPost",
     "FeedPostComments",
     "PartnerStore",

@@ -198,6 +198,11 @@ const adminMenuLinks = [
         label: "ভেন্ডর ইনভয়েস",
         icon: <Receipt className="w-4 h-4" />,
       },
+      {
+        path: "/admin-panel/dropshipper-payouts",
+        label: "ড্রপশিপার পেআউট ইনভয়েস",
+        icon: <Receipt className="w-4 h-4" />,
+      },
     ],
   },
    {

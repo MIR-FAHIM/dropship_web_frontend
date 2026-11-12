@@ -765,15 +765,6 @@ const ResellerPriceModal = ({
 
               {/* Financial Calculation & COD Fee Box */}
               <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/40 flex flex-col gap-2.5">
-                <div className="flex items-center justify-between border-b border-emerald-200/70 pb-1.5">
-                  <span className="text-xs font-black text-emerald-950 flex items-center gap-1">
-                    💰 কাস্টমার কালেকশন ও সম্ভাব্য লাভ
-                  </span>
-                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full">
-                    1% COD ফি প্রযোজ্য
-                  </span>
-                </div>
-
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-xs font-bold text-gray-800">
@@ -795,47 +786,52 @@ const ResellerPriceModal = ({
                     <span className="absolute left-3 top-2 text-sm font-black text-gray-500">৳</span>
                   </div>
                   <p className="text-[11px] font-medium text-emerald-900 mt-1.5 flex items-center gap-1">
-                    <span className="font-bold text-emerald-950">💡 নোট:</span> ডেলিভারি চার্জসহ মোট টাকা লিখুন। আলাদা করে যোগ করতে হবে না।
+                    ডেলিভারি চার্জ ও COD অ্যামাউন্টের ১% ফি-সহ কাস্টমারের কাছ থেকে মোট যে টাকা সংগ্রহ করতে চান, তা লিখুন। আলাদা করে যোগ করতে হবে না। যেমন, ১২০০ লিখলে কাস্টমারের কাছ থেকে মোট ১২০০ টাকাই সংগ্রহ করা হবে।
                   </p>
                 </div>
 
                 {/* Live Formula Breakdown */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs pt-1">
-                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
-                    <p className="text-[10px] text-gray-500 font-semibold">প্রোডাক্ট খরচ</p>
-                    <p className="font-black text-gray-800">৳{productCost}</p>
+                <div className="rounded-xl border border-emerald-100 bg-white/90 p-3 sm:p-4" aria-label="সম্ভাব্য লাভের হিসাব">
+                  <div className="flex items-center justify-between border-b border-dashed border-gray-200 pb-2 text-xs">
+                    <span className="font-semibold text-gray-600">কাস্টমারের কাছ থেকে সংগ্রহ</span>
+                    <span className="font-black text-gray-900">৳{codAmount}</span>
                   </div>
-                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
-                    <p className="text-[10px] text-gray-500 font-semibold">ডেলিভারি চার্জ</p>
-                    <p className="font-black text-gray-800">৳{deliveryCharge}</p>
+                  <div className="space-y-2 py-2.5 text-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-gray-600"><span className="w-4 text-center font-black text-rose-500">−</span>প্রোডাক্ট খরচ</span>
+                      <span className="font-bold text-gray-800">৳{productCost}</span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-gray-600"><span className="w-4 text-center font-black text-rose-500">−</span>ডেলিভারি চার্জ</span>
+                      {!selectedDistrictId || (hasCalculatedDelivery && deliveryCharge <= 0) ? (
+                        <span className="rounded-md bg-amber-50 px-2 py-1 text-right text-[10px] font-bold text-amber-800">আগে ঠিকানা নির্বাচন করুন</span>
+                      ) : isCalculatingCharge ? (
+                        <span className="text-[10px] font-bold text-indigo-600">হিসাব হচ্ছে…</span>
+                      ) : hasCalculatedDelivery ? (
+                        <span className="font-bold text-gray-800">৳{deliveryCharge}</span>
+                      ) : (
+                        <span className="text-[10px] font-bold text-red-600">চার্জ হিসাব করা যায়নি</span>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-gray-600"><span className="w-4 text-center font-black text-rose-500">−</span>১% COD ফি</span>
+                      <span className="font-bold text-gray-800">৳{codFee}</span>
+                    </div>
                   </div>
-                  <div className="bg-white/90 p-2 rounded-lg border border-emerald-100">
-                    <p className="text-[10px] text-gray-500 font-semibold">1% COD ফি</p>
-                    <p className="font-black text-gray-800">৳{codFee}</p>
+                  <div className="flex items-center justify-between border-t-2 border-emerald-200 pt-2.5">
+                    <span className="flex items-center gap-2 text-xs font-black text-gray-800"><span className="w-4 text-center text-emerald-700">=</span>সম্ভাব্য প্রফিট</span>
+                    <span className={`text-base font-black ${hasCalculatedDelivery && deliveryCharge > 0 ? (estimatedProfit >= 0 ? "text-emerald-700" : "text-red-600") : "text-amber-700"}`}>
+                      {hasCalculatedDelivery && deliveryCharge > 0 ? (estimatedProfit >= 0 ? "+" : "−") + "৳" + Math.abs(estimatedProfit) : "—"}
+                    </span>
                   </div>
-                  <div
-                    className="p-2 rounded-lg border font-black transition-all"
-                    style={{
-                      background: estimatedProfit >= 0 ? "#ecfdf5" : "#fef2f2",
-                      borderColor: estimatedProfit >= 0 ? "#86efac" : "#fca5a5",
-                    }}
-                  >
-                    <p
-                      className="text-[10px] font-bold"
-                      style={{ color: estimatedProfit >= 0 ? "#15803d" : "#991b1b" }}
-                    >
-                      সম্ভাব্য প্রফিট
+                  {(!selectedDistrictId || (hasCalculatedDelivery && deliveryCharge <= 0)) && (
+                    <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-center text-[11px] font-semibold text-amber-800">
+                      সঠিক লাভের হিসাব দেখতে আগে ডেলিভারির ঠিকানা নির্বাচন করুন।
                     </p>
-                    <p
-                      className="text-sm font-black"
-                      style={{ color: estimatedProfit >= 0 ? "#16a34a" : "#dc2626" }}
-                    >
-                      {estimatedProfit >= 0 ? "+" : ""}৳{estimatedProfit}
-                    </p>
-                  </div>
+                  )}
                 </div>
 
-                {estimatedProfit < 0 && (
+                {hasCalculatedDelivery && deliveryCharge > 0 && estimatedProfit < 0 && (
                   <p className="text-[11px] font-bold text-red-600 text-center">
                     ⚠️ কালেকশন এমাউন্ট খুবই কম। প্রোডাক্ট ও ডেলিভারি খরচের তুলনায় আপনার ক্ষতি (Loss) হবে।
                   </p>

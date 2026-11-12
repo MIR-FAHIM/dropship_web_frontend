@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowDownLeft, ArrowUpRight, Loader2, Wallet, Lock, CheckCircle2, PlusCircle, X } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Loader2, Wallet, Lock, CheckCircle2, PlusCircle, X, Receipt } from "lucide-react";
 import { toast } from "react-toastify";
 import { useGetResellerTransactionsQuery, useRequestWalletTopupMutation } from "../../../redux/features/accounting";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
@@ -180,7 +180,7 @@ const Payments = () => {
             রিসেলার ওয়ালেট ব্যালেন্স, উইথড্রযোগ্য ফান্ড ও লেনদেনের ইতিহাস।
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => setShowRechargeModal(true)}
@@ -196,6 +196,14 @@ const Payments = () => {
           >
             <Wallet className="w-4 h-4" />
             উইথড্র রিকোয়েস্ট পাঠান
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/billing/payout-invoices')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold shadow-sm transition"
+          >
+            <Receipt className="w-4 h-4" />
+            প্রফিট পেআউট ইনভয়েস
           </button>
         </div>
       </div>

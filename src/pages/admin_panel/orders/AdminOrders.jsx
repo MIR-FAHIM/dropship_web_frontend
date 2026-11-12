@@ -15,6 +15,8 @@ import { imgBaseUrl } from "../../../../config";
 import { changeOrderStatus } from "../../../utils/orderStatusChange.utils";
 import CourierIssueBadge from "../../../components/shared/CourierIssueBadge";
 import OrderCompletionModal from "./OrderCompletionModal";
+import DropshipperPayoutModal from "./DropshipperPayoutModal";
+import { ClearFilterChip, DropshipperFilter, OrderDateFilter, describeDateRange } from "./OrderListFilters";
 
 // Small product thumbnail for the Items column. Same URL pattern as the
 // reseller order details page (imgBaseUrl + primary_image.file_name).
@@ -333,6 +335,9 @@ const AdminOrders = () => {
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [manualPaymentOrder, setManualPaymentOrder] = useState(null);
   const [completionOrder, setCompletionOrder] = useState(null);
+  const [selectedDropshipper, setSelectedDropshipper] = useState(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const vendorDropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -397,8 +402,42 @@ const AdminOrders = () => {
     if (selectedVendorId) {
       params.vendor_id = selectedVendorId;
     }
+    if (selectedDropshipper?.id) {
+      params.dropshipper_id = selectedDropshipper.id;
+    }
+    if (dateFrom) params.date_from = dateFrom;
+    if (dateTo) params.date_to = dateTo;
     return params;
-  }, [page, selectedVendorId]);
+  }, [page, selectedVendorId, selectedDropshipper, dateFrom, dateTo]);
+
+  // Dropshipper payout invoice: { dropshipper, orderIds } while the modal is open.
+  const [payoutModal, setPayoutModal] = useState(null);
+
+  // From ticked orders: they must all belong to one dropshipper.
+  const openPayoutForSelection = () => {
+    const picked = (data?.data?.data || []).filter((o) => selectedOrderIds.includes(o.id));
+    const ids = [...new Set(picked.map((o) => o.user_id).filter(Boolean))];
+    if (ids.length !== 1) {
+      toast.error(ids.length === 0 ? "These orders have no dropshipper." : "Select orders of one dropshipper only. Use the dropshipper filter first.");
+      return;
+    }
+    const user = picked.find((o) => o.user_id === ids[0])?.user;
+    setPayoutModal({
+      dropshipper: { id: ids[0], name: user?.name, phone: user?.phone },
+      orderIds: picked.map((o) => o.id),
+    });
+  };
+
+  const handleSelectDropshipper = (user) => {
+    setSelectedDropshipper(user);
+    setPage(1);
+  };
+
+  const handleDateChange = (from, to) => {
+    setDateFrom(from || "");
+    setDateTo(to || "");
+    setPage(1);
+  };
 
   const { data, isLoading, isError, refetch } = useListAllOrdersQuery(queryParams);
   const { data: summaryData } = useGetOrderStatusSummaryQuery();
@@ -672,6 +711,21 @@ const AdminOrders = () => {
             )}
           </div>
 
+          <DropshipperFilter selected={selectedDropshipper} onSelect={handleSelectDropshipper} />
+
+          {selectedDropshipper && (
+            <button
+              type="button"
+              onClick={() => setPayoutModal({ dropshipper: selectedDropshipper, orderIds: selectedOrderIds })}
+              className="flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2.5 text-xs font-semibold text-white shadow-2xs hover:bg-emerald-700"
+              title="Pay this dropshipper's profit for many orders with one invoice"
+            >
+              <FileText className="h-4 w-4" /> Payout invoice
+            </button>
+          )}
+
+          <OrderDateFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateChange} />
+
           {/* Payment Status Filter Dropdown */}
           <select
             value={paymentFilter}
@@ -697,6 +751,22 @@ const AdminOrders = () => {
           </div>
         </div>
       </div>
+
+      {(selectedDropshipper || dateFrom || dateTo) && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+          <span>Filtered by:</span>
+          {selectedDropshipper && (
+            <ClearFilterChip
+              label={`Dropshipper: ${selectedDropshipper.name || `#${selectedDropshipper.id}`}${selectedDropshipper.phone ? ` (${selectedDropshipper.phone})` : ""}`}
+              onClear={() => handleSelectDropshipper(null)}
+            />
+          )}
+          {(dateFrom || dateTo) && (
+            <ClearFilterChip label={`Date: ${describeDateRange(dateFrom, dateTo)}`} onClear={() => handleDateChange("", "")} />
+          )}
+          {pagination?.total != null && <span className="ml-auto font-medium text-gray-600">{pagination.total} orders</span>}
+        </div>
+      )}
 
       {/* Active Vendor Filter Banner */}
       {selectedVendor && (
@@ -1177,12 +1247,33 @@ const AdminOrders = () => {
           </button>
           <button
             type="button"
+            onClick={openPayoutForSelection}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-bold shadow transition flex items-center gap-1.5 cursor-pointer"
+            style={{ backgroundColor: "#059669", color: "#ffffff" }}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            ড্রপশিপার পেআউট ইনভয়েস
+          </button>
+          <button
+            type="button"
             onClick={() => setSelectedOrderIds([])}
             className="text-xs text-gray-400 hover:text-white transition cursor-pointer"
           >
             মুছুন (Clear)
           </button>
         </div>
+      )}
+
+      {payoutModal && (
+        <DropshipperPayoutModal
+          initialDropshipper={payoutModal.dropshipper}
+          preselectedOrderIds={payoutModal.orderIds}
+          onClose={() => setPayoutModal(null)}
+          onCreated={() => {
+            setSelectedOrderIds([]);
+            refetch();
+          }}
+        />
       )}
 
       {/* Vendor Settlement Invoice Modal */}

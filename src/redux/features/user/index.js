@@ -66,6 +66,14 @@ const userApi = baseApi.injectEndpoints({
       providesTags: ["User"],
     }),
 
+    editUserProfile: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: "/users/edituserprofile/" + id,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["User"],
+    }),
     userBan: builder.mutation({
       query: (id) => ({
         url: API_ENDPOINTS.users.ban.path.replace('{id}', id),
@@ -93,6 +101,7 @@ export const {
   useGetAdminListQuery,
   useGetDropshippersQuery,
   useGetDropshipperLeaderboardQuery,
+  useEditUserProfileMutation,
   useUserBanMutation,
   useUserUnbanMutation,
 } = userApi;

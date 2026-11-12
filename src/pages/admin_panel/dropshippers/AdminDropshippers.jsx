@@ -23,6 +23,7 @@ import {
   Wallet,
   Calendar,
   LogIn,
+  Pencil,
 } from "lucide-react";
 import {
   useGetDropshippersQuery,
@@ -34,6 +35,7 @@ import { saveToLocalstorage } from "../../../utils/localstorage.utils";
 import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import { toast } from "react-toastify";
 import { FaWhatsapp } from "react-icons/fa";
+import EditDropshipperModal from "./EditDropshipperModal";
 
 const AdminDropshippers = () => {
   // Input form filter states (before applying)
@@ -100,6 +102,7 @@ const AdminDropshippers = () => {
   const [userUnban, { isLoading: isUnbanLoading }] = useUserUnbanMutation();
   const [loginAsDropshipper, { isLoading: isLoginLoading }] = useLoginAsDropshipperMutation();
   const [loginUserId, setLoginUserId] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
 
   // Extract pagination & dropshipper records safely
   const rawData = data?.data;
@@ -693,6 +696,7 @@ const AdminDropshippers = () => {
                   <th className="py-3 px-3">ব্যালেন্স</th>
                   <th className="py-3 px-3">স্ট্যাটাস</th>
                   <th className="py-3 px-3">রেজিস্ট্রেশন</th>
+                  <th className="py-3 px-3">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -889,6 +893,7 @@ const AdminDropshippers = () => {
                           </span>
                         </div>
                       </td>
+                      <td className="py-3 px-3"><button type="button" onClick={() => setEditingUser(user)} className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /> সম্পাদনা</button></td>
                     </tr>
                   );
                 })}
@@ -953,6 +958,7 @@ const AdminDropshippers = () => {
           </div>
         )}
       </div>
+      {editingUser && <EditDropshipperModal user={editingUser} onClose={() => setEditingUser(null)} />}
     </div>
   );
 };

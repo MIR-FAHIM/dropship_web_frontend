@@ -23,6 +23,7 @@ import Post from "../pages/post/Post";
 import WarehouseDetails from "../pages/post/WarehouseDetails";
 import SalesGuidelines from "../pages/reseller_panel/saleguideline/saleguideline";
 import WithdrawPage from "../pages/billing/withdraw/withdraw_req";
+import PayoutInvoices from "../pages/billing/pages/PayoutInvoices";
 import AddPaymentAccount from "../pages/billing/payment_account/add_payment_account";
 
 import ContactUsPage from "../pages/contactus/contact_us_form";
@@ -71,6 +72,7 @@ export const pagePaths = [
   { path: "billing/payments",       element: <Payments /> },
   { path: "adminactivity",          element: <AdminActivity /> },
   { path: "billing/transactions",   element: <Transactions /> },
+  { path: "billing/payout-invoices", element: <PayoutInvoices /> },
   { path: "activity",               element: <Activity /> },
   { path: "post",                   element: <Post /> },
   { path: "faq",                    element: <FAQPage /> },

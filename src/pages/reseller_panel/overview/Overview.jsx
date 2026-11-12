@@ -60,81 +60,55 @@ const ResellerTierJourney = () => {
   const progress = Math.round(((completedCount + 0.45) / tierSteps.length) * 100);
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl border border-[#BDEAD8] bg-[#E1F5EE] shadow-sm">
-      <div className="bg-gradient-to-r from-[#085041] via-[#158E72] to-[#5DCAA5] p-4 text-white sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/70">Reseller Tier Journey</p>
-            <h3 className="mt-1 text-xl font-black">Current tier: {currentTier.name}</h3>
-            <p className="mt-1 text-sm text-white/80">Complete the next milestones to unlock better benefits.</p>
+    <section className="mt-5 rounded-2xl border border-[#BDEAD8] bg-white p-4 shadow-sm sm:p-5" aria-labelledby="reseller-tier-heading">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1">
+          <p id="reseller-tier-heading" className="text-xs font-bold uppercase tracking-wide text-[#28755f]">Reseller Tier Journey</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <h3 className="text-base font-black text-gray-900">Current tier: {currentTier.name}</h3>
+            <span className="rounded-full bg-[#CDEFE1] px-2.5 py-1 text-xs font-bold text-[#085041]">{progress}%</span>
           </div>
-          <div className="w-full rounded-2xl bg-white/15 p-3 sm:w-[170px]">
-            <p className="text-xs font-semibold text-white/70">Progress</p>
-            <p className="mt-1 text-2xl font-black">{progress}%</p>
-          </div>
+          <p className="mt-1 text-xs text-gray-600">Complete milestones to unlock better benefits.</p>
         </div>
-
-        <div className="mt-4">
-          <div className="h-2 overflow-hidden rounded-full bg-white/25">
-            <div className="h-full rounded-full bg-white" style={{ width: `${progress}%` }} />
+        <div className="w-full sm:w-52">
+          <div className="h-2 overflow-hidden rounded-full bg-[#E1F5EE]" role="progressbar" aria-label="Reseller tier progress" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full rounded-full bg-[#158E72]" style={{ width: `${progress}%` }} />
           </div>
-          <div className="mt-2 flex justify-between text-[11px] font-semibold text-white/75">
-            <span>Started</span>
-            <span>Next: Platinum</span>
-          </div>
+          <p className="mt-1 text-right text-[11px] font-semibold text-gray-500">Next: Platinum</p>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
-        {tierSteps.map((tier, index) => {
-          const isDone = tier.state === "done";
-          const isCurrent = tier.state === "current";
-          const isLocked = tier.state === "locked";
-
-          return (
-            <div
-              key={tier.name}
-              className={`rounded-xl border p-4 ${
-                isCurrent
-                  ? "border-[#158E72] bg-[#CDEFE1] shadow-sm"
-                  : isDone
-                    ? "border-[#BDEAD8] bg-[#DDF4EA]"
-                    : "border-gray-200 bg-white/70"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-black ${
-                    isDone
-                      ? "bg-[#158E72] text-white"
-                      : isCurrent
-                        ? "bg-white text-[#085041]"
-                        : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {isDone ? "OK" : isLocked ? "L" : index + 1}
-                </div>
-                <span
-                  className={`rounded-full px-2 py-1 text-[11px] font-bold ${
-                    isDone
-                      ? "bg-green-100 text-green-700"
-                      : isCurrent
-                        ? "bg-white text-[#085041]"
-                        : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {tier.status}
-                </span>
-              </div>
-              <h4 className="mt-4 text-base font-black text-gray-900">{tier.name}</h4>
-              <p className="mt-1 text-sm leading-5 text-gray-600">{tier.helper}</p>
-            </div>
-          );
-        })}
-      </div>
+      <ol className="mt-3 flex flex-wrap gap-2" aria-label="Reseller tiers">
+        {tierSteps.map((tier) => (
+          <li key={tier.name} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+            tier.state === "current" ? "bg-[#158E72] text-white" : tier.state === "done" ? "bg-[#DDF4EA] text-[#085041]" : "bg-gray-100 text-gray-500"
+          }`}>
+            {tier.name}
+          </li>
+        ))}
+      </ol>
     </section>
   );
 };
+
+const EcommerceFeatureCard = () => (
+  <Link
+    to="/app/ecommerce-website"
+    className="group mt-4 flex items-center gap-4 overflow-hidden rounded-2xl border border-[#BDEAD8] bg-gradient-to-r from-[#E1F5EE] to-[#F1FBF6] p-4 shadow-sm transition hover:border-[#78C7A7] hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#158E72] sm:p-5"
+  >
+    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#085041] text-white">
+      <FaStore aria-hidden="true" />
+    </span>
+    <span className="min-w-0 flex-1">
+      <span className="block text-sm font-black text-[#085041]">আপনার ব্যবসার জন্য স্বয়ংক্রিয় ই-কমার্স</span>
+      <span className="mt-1 block text-sm leading-relaxed text-gray-700">
+        আপনার ফেসবুক পেজ বা ব্যবসার জন্য কি একটি স্বয়ংক্রিয় ই-কমার্স ওয়েবসাইট প্রয়োজন? রিসেলারব্রেইনের সব পণ্য, স্টক ও অর্ডার স্বয়ংক্রিয়ভাবে পরিচালিত হবে—সম্পূর্ণ ব্যবসার জন্য প্রস্তুত একটি অনলাইন স্টোর।
+      </span>
+      <span className="mt-2 inline-flex min-h-10 items-center gap-1 text-sm font-bold text-[#08634F]">
+        বিস্তারিত জানতে যোগাযোগ করুন <span aria-hidden="true" className="transition-transform group-hover:translate-x-1">→</span>
+      </span>
+    </span>
+  </Link>
+);
 
 const DashboardNoticeWidget = () => {
   const navigate = useNavigate();
@@ -392,6 +366,7 @@ const Overview = () => {
         </div>
 
         <ResellerTierJourney />
+        <EcommerceFeatureCard />
       </div>
 
       {/* Right Section - Notice Board, Tips Board, and Leaderboard */}

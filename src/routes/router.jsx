@@ -68,6 +68,7 @@ import AdminGroupOrderHistory from "../pages/admin_panel/orders/AdminGroupOrderH
 import AdminSettlementOrders from "../pages/admin_panel/settlement_orders/AdminSettlementOrders";
 import AdminSettlementOrderDetails from "../pages/admin_panel/settlement_orders/AdminSettlementOrderDetails";
 import AdminVendorInvoices from "../pages/admin_panel/orders/AdminVendorInvoices";
+import AdminDropshipperPayouts from "../pages/admin_panel/accounting/AdminDropshipperPayouts";
 import AdminTasks from "../pages/admin_panel/tasks/AdminTasks";
 import TaskShareDetail from "../pages/admin_panel/tasks/TaskShareDetail";
 import MyBusinessInfo from "../pages/admin_panel/my_business_info/MyBusinessInfo";
@@ -214,6 +215,7 @@ export const router = createBrowserRouter([
       { path: "settlement-orders", element: <AdminSettlementOrders /> },
       { path: "settlement-orders/:orderId", element: <AdminSettlementOrderDetails /> },
       { path: "vendor-invoices", element: <AdminVendorInvoices /> },
+      { path: "dropshipper-payouts", element: <AdminDropshipperPayouts /> },
       { path: "vendors", element: <AdminVendors /> },
       { path: "vendors/inactive", element: <InactiveAdminVendors /> },
       { path: "vendors/:id", element: <VendorDetailsTab /> },

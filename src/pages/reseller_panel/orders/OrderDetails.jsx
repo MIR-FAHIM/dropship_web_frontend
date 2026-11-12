@@ -160,10 +160,16 @@ const OrderDetailsPage = () => {
 
   const statusName = getStatusName(order?.status);
   const st = getStatus(statusName);
-  const subtotal = Number(order?.subtotal ?? 0);
   const profit   = Number(order?.reseller_profit ?? 0);
   const delivery = Number(order?.shipping_fee ?? 0);
   const grand    = Number(order?.grand_total ?? order?.total ?? 0);
+  const codCash = Number(deliveryInfo?.collectable_amount ?? order?.remaining_cod ?? grand);
+  const codCharge = Math.round(codCash * 0.01);
+  const adminPrice = Number(
+    order?.admin_price_total ??
+    order?.admin_price ??
+    (codCash - delivery - codCharge - profit)
+  );
   const profitMargin = grand > 0 ? ((profit / grand) * 100).toFixed(1) : 0;
 
   return (
@@ -411,27 +417,33 @@ const OrderDetailsPage = () => {
           {/* Order Summary */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
             <h2 className="text-sm font-black text-gray-700 mb-3 flex items-center gap-1.5">
-              <FaBoxOpen className="text-indigo-400" /> Order Summary
+              <FaBoxOpen className="text-indigo-400" /> Order Profit Calculation
             </h2>
-            <div className="flex flex-col gap-2.5 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Subtotal</span>
-                <span className="font-bold text-gray-800">{money(subtotal)}</span>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50/40 p-3 sm:p-4">
+              <div className="flex justify-between gap-3 border-b border-dashed border-gray-200 pb-2 text-sm">
+                <span className="font-bold text-gray-700">Total COD cash</span>
+                <span className="font-black text-gray-900">{money(codCash)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Delivery Charge</span>
-                <span className="font-bold text-gray-800">{money(delivery)}</span>
-              </div>
-              <div className="border-t border-dashed border-gray-100 pt-2 flex justify-between">
-                <span className="font-black text-gray-800">Grand Total</span>
-                <span className="font-black text-indigo-700 text-base">{money(grand)}</span>
-              </div>
-              {profit > 0 && (
-                <div className="flex justify-between bg-green-50 rounded-xl px-3 py-2 border border-green-100">
-                  <span className="font-black text-green-700 text-xs">Your Profit</span>
-                  <span className="font-black text-green-600">+{money(profit)}</span>
+              <div className="flex flex-col gap-2 py-3 text-sm">
+                <div className="flex justify-between gap-3">
+                  <span className="text-gray-600"><b className="mr-2 text-rose-500">−</b>Admin price</span>
+                  <span className="font-bold text-gray-800">{money(adminPrice)}</span>
                 </div>
-              )}
+                <div className="flex justify-between gap-3">
+                  <span className="text-gray-600"><b className="mr-2 text-rose-500">−</b>Delivery charge</span>
+                  <span className="font-bold text-gray-800">{money(delivery)}</span>
+                </div>
+                <div className="flex justify-between gap-3">
+                  <span className="text-gray-600"><b className="mr-2 text-rose-500">−</b>1% COD charge</span>
+                  <span className="font-bold text-gray-800">{money(codCharge)}</span>
+                </div>
+              </div>
+              <div className="flex justify-between gap-3 border-t-2 border-indigo-200 pt-2.5">
+                <span className="font-black text-gray-800"><span className="mr-2 text-indigo-600">=</span>Profit</span>
+                <span className={`font-black ${profit >= 0 ? "text-green-700" : "text-red-600"}`}>{profit >= 0 ? "+" : "−"}{money(Math.abs(profit))}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-col gap-2.5 text-sm">
               <div className="flex justify-between text-xs text-gray-400 pt-1">
                 <span>Payment Method</span>
                 <span className="font-semibold text-gray-600 capitalize">{order?.payment_method || "—"}</span>
