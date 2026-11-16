@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Eye, FilePlus2, Loader2, Receipt, Search, X } from "lucide-react";
+import { Eye, FilePlus2, Loader2, Receipt, Search, Wallet, X } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   useCancelPayoutInvoiceMutation,
@@ -10,7 +10,9 @@ import {
 } from "../../../redux/features/dropshipperPayout";
 import PayoutInvoiceDocument, { METHOD_LABELS, PayoutStatusPill, bdt, fmtDateTime } from "../../../components/shared/PayoutInvoiceDocument";
 import DropshipperPayoutModal from "../orders/DropshipperPayoutModal";
+import WalletPayoutModal from "./WalletPayoutModal";
 import DropshipperPayoutReview from "../orders/DropshipperPayoutReview";
+import FinalAmountField, { finalAmountMissingReason, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
 import { ClearFilterChip, DropshipperFilter, OrderDateFilter, describeDateRange } from "../orders/OrderListFilters";
 
 const METHODS = ["wallet", "bkash", "nagad", "rocket", "bank_transfer", "cash"];
@@ -83,6 +85,15 @@ const InvoiceDialog = ({ invoiceId, onClose }) => {
   const invoice = data?.data;
   const needsTrx = method !== "wallet" && method !== "cash";
 
+  // Final payout: starts from what was set when the invoice was issued.
+  const calculated = Number(invoice?.calculated_amount ?? invoice?.total_dropshipper_payout ?? 0);
+  const [finalOverride, setFinalOverride] = useState(null);
+  const finalAmount = finalOverride ?? (Number(invoice?.adjustment_amount || 0) !== 0
+    ? { enabled: true, amount: String(invoice.total_dropshipper_payout), reason: invoice.adjustment_reason || "" }
+    : { enabled: false, amount: "", reason: "" });
+  const payout = resolveFinalAmount(calculated, finalAmount);
+  const missingReason = finalAmountMissingReason(calculated, finalAmount);
+
   const handlePay = async () => {
     try {
       await payInvoice({
@@ -91,6 +102,9 @@ const InvoiceDialog = ({ invoiceId, onClose }) => {
         trx_id: trxId.trim() || undefined,
         receiver_account: account.trim() || undefined,
         payout_review_confirmed: true,
+        // Always send the final figure so turning the override off clears an earlier adjustment.
+        final_amount: payout,
+        adjustment_reason: (finalAmount.reason || "").trim() || undefined,
       }).unwrap();
       toast.success("Invoice paid");
     } catch (err) {
@@ -148,6 +162,7 @@ const InvoiceDialog = ({ invoiceId, onClose }) => {
                     </>
                   )}
                 </div>
+                <FinalAmountField id="pay-final" calculated={calculated} value={finalAmount} onChange={setFinalOverride} label="Total payout" />
                 <DropshipperPayoutReview userId={invoice.dropshipper_id} confirmed={confirmed} onConfirmChange={setConfirmed} />
                 <div className="flex flex-wrap justify-end gap-2">
                   <button type="button" onClick={handleCancel} disabled={cancelling || paying} className="rounded-lg border border-red-200 px-4 py-2 font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50">
@@ -156,10 +171,10 @@ const InvoiceDialog = ({ invoiceId, onClose }) => {
                   <button
                     type="button"
                     onClick={handlePay}
-                    disabled={!confirmed || paying || (needsTrx && !trxId.trim())}
+                    disabled={!confirmed || paying || missingReason || (needsTrx && !trxId.trim())}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-4 py-2 font-bold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:bg-blue-200 disabled:text-blue-950 disabled:opacity-100"
                   >
-                    {paying && <Loader2 className="h-4 w-4 animate-spin" />} Pay {bdt(invoice.total_dropshipper_payout)}
+                    {paying && <Loader2 className="h-4 w-4 animate-spin" />} Pay {bdt(payout)}
                   </button>
                 </div>
                 </div>
@@ -185,6 +200,7 @@ const AdminDropshipperPayouts = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [showCreate, setShowCreate] = useState(false);
+  const [showWalletPayout, setShowWalletPayout] = useState(false);
   const [viewId, setViewId] = useState(null);
 
   const params = { page };
@@ -207,9 +223,19 @@ const AdminDropshipperPayouts = () => {
           <h1 className="flex items-center gap-2 text-xl font-bold text-gray-800"><Receipt className="h-5 w-5 text-emerald-600" /> Dropshipper payout invoices</h1>
           <p className="text-xs text-gray-500">Pay a dropshipper&apos;s profit for many orders with one invoice. Each invoice is visible to the dropshipper.</p>
         </div>
-        <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-          <FilePlus2 className="h-4 w-4" /> New payout invoice
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowWalletPayout(true)}
+            title="You paid a dropshipper's wallet balance by hand: record it so the balance drops"
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-300 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+          >
+            <Wallet className="h-4 w-4" /> Record wallet payout
+          </button>
+          <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+            <FilePlus2 className="h-4 w-4" /> New payout invoice
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -310,6 +336,7 @@ const AdminDropshipperPayouts = () => {
         <DropshipperPayoutModal initialDropshipper={dropshipper} onClose={() => setShowCreate(false)} onCreated={(inv) => inv?.id && setViewId(inv.id)} />
       )}
       {viewId && <InvoiceDialog invoiceId={viewId} onClose={() => setViewId(null)} />}
+      {showWalletPayout && <WalletPayoutModal initialDropshipper={dropshipper} onClose={() => setShowWalletPayout(false)} />}
     </div>
   );
 };

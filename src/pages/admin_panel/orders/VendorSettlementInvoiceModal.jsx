@@ -18,6 +18,27 @@ import {
   formatBDT,
 } from "../../../utils/orderBreakdown.utils";
 import { useCreateVendorInvoiceMutation, useGetAdminPaymentAccountsQuery } from "../../../redux/features/orderSettlement";
+import FinalAmountField, { finalAmountMissingReason, finalAmountPayload, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
+
+const getOrderStatusName = (order) => {
+  const status = order?.status ?? order?.order_status;
+  if (status && typeof status === "object") {
+    if (status.name || status.label) return status.name || status.label;
+  }
+  const historicalName = order?.status_history?.[0]?.status?.name;
+  if (order?.status_name || historicalName) return order.status_name || historicalName;
+
+  const statusId = Number(status?.id ?? status ?? order?.status_id);
+  const knownStatusNames = {
+    7: "Cancelled",
+    8: "Returned",
+    11: "Return in Transit",
+  };
+  return knownStatusNames[statusId] || status || order?.status_id || "—";
+};
+
+const isReturnedOrCancelled = (statusName) =>
+  /return|cancel/i.test(String(statusName));
 
 export default function VendorSettlementInvoiceModal({
   selectedOrders = [],
@@ -148,8 +169,19 @@ export default function VendorSettlementInvoiceModal({
     admin_note: "",
   });
 
+  // Admin's real final amount when the calculated sum is wrong.
+  const [finalAmount, setFinalAmount] = useState({ enabled: false, amount: "", reason: "" });
+  const calculatedOwed = Math.round(Number(totals.supplier_owes || 0) * 100) / 100;
+  const invoiceTotal = resolveFinalAmount(calculatedOwed, finalAmount);
+  const missingReason = finalAmountMissingReason(calculatedOwed, finalAmount);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (missingReason) {
+      toast.error("চূড়ান্ত পরিমাণ পরিবর্তনের কারণ লিখুন (Reason required)");
+      return;
+    }
 
     if (isPaidDirectly && !form.trx_id.trim()) {
       toast.error("সরাসরি পেইড হিসেবে রেকর্ড করতে ট্রানজেকশন আইডি (Trx ID) আবশ্যক");
@@ -174,8 +206,9 @@ export default function VendorSettlementInvoiceModal({
         trx_id: form.trx_id.trim() || null,
         status: isPaidDirectly ? "paid" : "pending",
         admin_payment_details: attachedAccounts.length > 0 ? attachedAccounts : adminAccounts,
-        total_amount_owed: totals.supplier_owes,
+        total_amount_owed: invoiceTotal,
         note: form.admin_note,
+        ...finalAmountPayload(calculatedOwed, finalAmount),
       };
 
       const res = await createInvoice(payload).unwrap();
@@ -290,6 +323,7 @@ export default function VendorSettlementInvoiceModal({
                 <thead>
                   <tr className="bg-gray-100/60 text-gray-600 border-b">
                     <th className="py-2.5 px-3 text-left">অর্ডার নম্বর</th>
+                    <th className="py-2.5 px-3 text-left">স্ট্যাটাস</th>
                     <th className="py-2.5 px-3 text-left">কাস্টমার</th>
                     <th className="py-2.5 px-3 text-right">কুরিয়ার সংগৃহীত</th>
                     <th className="py-2.5 px-3 text-right" title="CarryBee সিস্টেমে পূর্বেই কেটে রাখা হয়েছে">
@@ -311,15 +345,24 @@ export default function VendorSettlementInvoiceModal({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {orderBreakdowns.map(({ order, breakdown: b }) => (
-                    <tr key={order.id} className="hover:bg-gray-50/80">
-                      <td className="py-2 px-3 font-medium text-gray-900">
+                  {orderBreakdowns.map(({ order, breakdown: b }) => {
+                    const statusName = getOrderStatusName(order);
+                    const isRedMarked = isReturnedOrCancelled(statusName);
+
+                    return (
+                    <tr key={order.id} className={isRedMarked ? "bg-red-50/80 text-red-900 hover:bg-red-100/80" : "hover:bg-gray-50/80"}>
+                      <td className={`py-2 px-3 font-medium ${isRedMarked ? "border-l-4 border-red-400 text-red-900" : "text-gray-900"}`}>
                         <div>{order.order_number}</div>
                         {b?.consignment_id && (
                           <div className="text-[10px] font-mono text-gray-400">
                             {b.consignment_id}
                           </div>
                         )}
+                      </td>
+                      <td className="py-2 px-3 text-left">
+                        <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold ${isRedMarked ? "border-red-300 bg-red-100 text-red-800" : "border-gray-200 bg-gray-100 text-gray-700"}`}>
+                          {statusName}
+                        </span>
                       </td>
                       <td className="py-2 px-3 text-gray-700">
                         <div>{order.customer_name}</div>
@@ -352,11 +395,12 @@ export default function VendorSettlementInvoiceModal({
                         {formatBDT(b?.platform?.net_profit)}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
                 <tfoot>
                   <tr className="bg-gray-100 font-bold text-gray-900 border-t-2 border-gray-300">
-                    <td colSpan={2} className="py-2.5 px-3">
+                    <td colSpan={3} className="py-2.5 px-3">
                       মোট সমষ্টি (Sum — Supplier V{vendor?.id || "41"})
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono">
@@ -451,13 +495,21 @@ export default function VendorSettlementInvoiceModal({
                   মোট ইনভয়েস পরিশোধযোগ্য অর্থ (Net Invoiced Amount):
                 </label>
                 <div className="px-3 py-2 text-xs font-mono font-bold bg-amber-50/70 border border-amber-200 rounded-lg text-amber-950 flex items-center justify-between">
-                  <span>{formatBDT(totals.supplier_owes)}</span>
+                  <span>{formatBDT(invoiceTotal)}</span>
                   <span className="text-[10px] text-amber-800 font-sans font-normal">
-                    (কুরিয়ার ফি কর্তন সমন্বিত)
+                    {finalAmount.enabled && Math.abs(invoiceTotal - calculatedOwed) >= 0.01 ? "(অ্যাডজাস্ট করা)" : "(কুরিয়ার ফি কর্তন সমন্বিত)"}
                   </span>
                 </div>
               </div>
             </div>
+
+            <FinalAmountField
+              id="vendor-invoice-final"
+              calculated={calculatedOwed}
+              value={finalAmount}
+              onChange={setFinalAmount}
+              label="Vendor owes (invoice total)"
+            />
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
@@ -495,7 +547,7 @@ export default function VendorSettlementInvoiceModal({
             <button
               type="submit"
               form="vendor-settlement-form"
-              disabled={isSubmitting || (isPaidDirectly && !form.trx_id.trim())}
+              disabled={isSubmitting || (isPaidDirectly && !form.trx_id.trim()) || missingReason}
               className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
             >

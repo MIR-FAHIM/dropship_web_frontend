@@ -108,6 +108,7 @@ const baseApi = createApi({
     "MarketerRelationship",
     "AdminMarketers",
     "AdminMarketerClients",
+    "PasswordLog",
   ],
   endpoints: () => ({}),
 });

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { formatBDT } from "../../../utils/orderBreakdown.utils";
+import InvoiceAdjustmentNote from "../../../components/shared/InvoiceAdjustmentNote";
 
 export default function ShareVendorInvoiceModal({ invoice, isOpen, onClose }) {
   const [copiedLink, setCopiedLink] = useState(false);
@@ -49,7 +50,8 @@ export default function ShareVendorInvoiceModal({ invoice, isOpen, onClose }) {
 📊 ইনভয়েস সারসংক্ষেপ:
 ১. CarryBee থেকে প্রাপ্তি: ${formatBDT(invoice.total_courier_net)}
 ২. আপনার পণ্যের মূল্য: ${formatBDT(invoice.total_supplier_price)}
-৩. ResellerBrain-কে প্রদেয়: ${formatBDT(invoice.total_amount_owed)}
+৩. ResellerBrain-কে প্রদেয়: ${formatBDT(invoice.total_amount_owed)}${Math.abs(Number(invoice.adjustment_amount || 0)) >= 0.01 ? `
+   (হিসাব ${formatBDT(invoice.calculated_amount)}, সমন্বয় ${formatBDT(invoice.adjustment_amount)}${invoice.adjustment_reason ? ` — ${invoice.adjustment_reason}` : ""})` : ""}
 
 ইনভয়েসের বিস্তারিত দেখতে ও পরিশোধ করতে নিচের লিংকে ক্লিক করুন:
 ${vendorInvoiceUrl}
@@ -142,6 +144,7 @@ ResellerBrain`;
             <span className="font-mono font-black text-xs text-amber-950">
               {formatBDT(invoice.total_amount_owed)}
             </span>
+            <InvoiceAdjustmentNote invoice={invoice} compact />
           </div>
         </div>
 

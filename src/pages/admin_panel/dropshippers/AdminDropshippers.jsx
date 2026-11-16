@@ -24,18 +24,58 @@ import {
   Calendar,
   LogIn,
   Pencil,
+  Eye,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   useGetDropshippersQuery,
   useUserBanMutation,
   useUserUnbanMutation,
 } from "../../../redux/features/user";
-import { useLoginAsDropshipperMutation } from "../../../redux/features/auth";
-import { saveToLocalstorage } from "../../../utils/localstorage.utils";
+import LoginAsDropshipperButton from "./LoginAsDropshipperButton";
 import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import { toast } from "react-toastify";
 import { FaWhatsapp } from "react-icons/fa";
 import EditDropshipperModal from "./EditDropshipperModal";
+import DropshipperLink from "../../../components/shared/DropshipperLink";
+
+const formatTaka = (value) =>
+  `৳${Number(value || 0).toLocaleString("en-IN", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+
+// Wallet balance from GET /users/dropshippers -> balance:
+// { total_credit, total_debit, net_balance, pending_reserved, available_balance }
+// (reseller_transactions ledger). Net is the headline; available / held / credit-debit below.
+const DropshipperBalanceCell = ({ balance, fallbackNet }) => {
+  const isObject = balance && typeof balance === "object";
+  const net = Number(isObject ? balance.net_balance : fallbackNet ?? 0);
+  if (!isObject) {
+    return <span className="font-mono font-semibold text-gray-900">{formatTaka(net)}</span>;
+  }
+  const available = Number(balance.available_balance || 0);
+  const reserved = Number(balance.pending_reserved || 0);
+
+  return (
+    <div
+      className="min-w-[150px] space-y-0.5 text-xs"
+      title={`Credit ${formatTaka(balance.total_credit)} − Debit ${formatTaka(balance.total_debit)} = Net ${formatTaka(net)}`}
+    >
+      <p className={`font-mono text-sm font-bold ${net < 0 ? "text-rose-700" : "text-gray-900"}`}>{formatTaka(net)}</p>
+      <p className="text-gray-500">
+        উত্তোলনযোগ্য: <span className="font-mono font-semibold text-emerald-700">{formatTaka(available)}</span>
+      </p>
+      {reserved > 0 && (
+        <p className="text-gray-500">
+          উত্তোলনে আটকে: <span className="font-mono font-semibold text-amber-700">{formatTaka(reserved)}</span>
+        </p>
+      )}
+      <p className="text-[11px] text-gray-400">
+        <span className="text-emerald-600">+{formatTaka(balance.total_credit)}</span>
+        {" / "}
+        <span className="text-rose-600">−{formatTaka(balance.total_debit)}</span>
+      </p>
+    </div>
+  );
+};
 
 const AdminDropshippers = () => {
   // Input form filter states (before applying)
@@ -100,8 +140,6 @@ const AdminDropshippers = () => {
   // Ban / Unban mutations
   const [userBan, { isLoading: isBanLoading }] = useUserBanMutation();
   const [userUnban, { isLoading: isUnbanLoading }] = useUserUnbanMutation();
-  const [loginAsDropshipper, { isLoading: isLoginLoading }] = useLoginAsDropshipperMutation();
-  const [loginUserId, setLoginUserId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
 
   // Extract pagination & dropshipper records safely
@@ -224,47 +262,6 @@ const AdminDropshippers = () => {
       toast.error(backendError);
     } finally {
       setBanUserId(null);
-    }
-  };
-
-  // Login as dropshipper handler
-  const handleLoginAsDropshipper = async (user) => {
-    const email = user.email || user.user?.email;
-    const phone = user.phone || user.mobile || user.user?.phone;
-    if (!email && !phone) {
-      toast.error("এই ড্রপশিপারের কোনো ইমেইল বা ফোন নম্বর পাওয়া যায়নি!");
-      return;
-    }
-
-    setLoginUserId(user.id);
-    try {
-      const payload = {
-        ...(email ? { email } : {}),
-        ...(phone ? { phone } : {}),
-        id: user.id,
-        user_id: user.id,
-      };
-      const res = await loginAsDropshipper(payload).unwrap();
-      const token = res?.data?.token || res?.token;
-      const loggedUser = res?.data?.user || res?.user || user;
-      if (token) {
-        saveToLocalstorage("token", token);
-        saveToLocalstorage("userId", loggedUser?.id || user.id);
-        saveToLocalstorage("user", JSON.stringify(loggedUser));
-        toast.success(res?.message || "লগইন সফল হয়েছে!");
-        window.open("/app/dashboard-new", "_blank");
-      } else {
-        toast.error(res?.message || "লগইন টোকেন পাওয়া যায়নি!");
-      }
-    } catch (err) {
-      console.error("Login as dropshipper error:", err);
-      toast.error(
-        err?.data?.message ||
-        err?.message ||
-        "লগইন ব্যর্থ হয়েছে! ব্যাকএন্ডে /auth/login-as-dropshipper নিশ্চিত করুন।"
-      );
-    } finally {
-      setLoginUserId(null);
     }
   };
 
@@ -732,7 +729,7 @@ const AdminDropshippers = () => {
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900 leading-tight">
-                              {user.name || "অজ্ঞাত নাম"}
+                              <DropshipperLink id={user.id}>{user.name || "অজ্ঞাত নাম"}</DropshipperLink>
                             </p>
                             {user.business_name && (
                               <p className="text-xs text-blue-600 font-medium mt-0.5">
@@ -800,25 +797,7 @@ const AdminDropshippers = () => {
 
                       {/* Dropshipper Panel Login */}
                       <td className="py-3 px-3">
-                        <button
-                          type="button"
-                          disabled={loginUserId === user.id}
-                          onClick={() => handleLoginAsDropshipper(user)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-blue-500 text-blue-600 hover:bg-blue-50 font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap transition-colors"
-                          title={`${user.name || "ড্রপশিপার"} এর প্যানেলে লগইন করুন`}
-                        >
-                          {loginUserId === user.id ? (
-                            <>
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              <span>অপেক্ষা করুন...</span>
-                            </>
-                          ) : (
-                            <>
-                              <LogIn className="w-3.5 h-3.5" />
-                              <span>লগইন করুন</span>
-                            </>
-                          )}
-                        </button>
+                        <LoginAsDropshipperButton user={user} />
                       </td>
 
                       {/* Address */}
@@ -837,13 +816,9 @@ const AdminDropshippers = () => {
                         {user.total_order_count?.toLocaleString("en-IN") ?? "—"}
                       </td>
 
-                      {/* Balance */}
+                      {/* Balance: user.balance object from the reseller_transactions ledger */}
                       <td className="py-3 px-3">
-                        <div className="flex items-center gap-1 font-semibold text-gray-900">
-                          <span className="text-emerald-700 font-mono">
-                            ৳{Number(user.balance || 0).toLocaleString("en-IN")}
-                          </span>
-                        </div>
+                        <DropshipperBalanceCell balance={user.balance} fallbackNet={user.wallet_balance} />
                       </td>
 
                       {/* Status & Ban Toggle */}
@@ -893,7 +868,17 @@ const AdminDropshippers = () => {
                           </span>
                         </div>
                       </td>
-                      <td className="py-3 px-3"><button type="button" onClick={() => setEditingUser(user)} className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /> সম্পাদনা</button></td>
+                      <td className="py-3 px-3">
+                        <div className="flex items-center gap-2">
+                          <Link
+                            to={`/admin-panel/dropshippers/${user.id}`}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                          >
+                            <Eye className="h-3.5 w-3.5" /> বিস্তারিত
+                          </Link>
+                          <button type="button" onClick={() => setEditingUser(user)} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /> সম্পাদনা</button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Trophy } from "lucide-react";
 import Pagination from "../../../components/shared/Pagination";
+import DropshipperLink from "../../../components/shared/DropshipperLink";
 import { useGetDropshipperLeaderboardQuery } from "../../../redux/features/user";
 
 const countFormatter = new Intl.NumberFormat("en-BD");
@@ -67,7 +68,7 @@ export default function DropshipperLeaderboard() {
                   <tr key={dropshipper.id}>
                     <td className="px-3 py-3 font-semibold tabular-nums sm:px-4">{countFormatter.format(dropshipper.rank)}</td>
                     <th scope="row" className="px-3 py-3 font-medium text-gray-900 sm:px-4">
-                      {dropshipper.name || `#${dropshipper.id}`}
+                      <DropshipperLink id={dropshipper.id}>{dropshipper.name || `#${dropshipper.id}`}</DropshipperLink>
                     </th>
                     <td className="px-3 py-3 text-right font-semibold tabular-nums sm:px-4">
                       {countFormatter.format(dropshipper.total_order_count)}

@@ -147,6 +147,22 @@ const PayoutInvoiceDocument = ({ invoice }) => {
               ))}
             </tbody>
             <tfoot>
+              {Number(invoice.adjustment_amount || 0) !== 0 && (
+                <>
+                  <tr>
+                    <td colSpan={7} className="pt-3 text-right text-xs text-gray-600">Calculated profit</td>
+                    <td className="pt-3 text-right text-xs">{bdt(invoice.calculated_amount)}</td>
+                  </tr>
+                  <tr>
+                    <td colSpan={7} className="pt-1 text-right text-xs text-gray-600">
+                      Adjustment{invoice.adjustment_reason ? `: ${invoice.adjustment_reason}` : ""}
+                    </td>
+                    <td className={`pt-1 text-right text-xs font-semibold ${Number(invoice.adjustment_amount) < 0 ? "text-red-700" : "text-emerald-700"}`}>
+                      {Number(invoice.adjustment_amount) > 0 ? "+" : "−"}{bdt(Math.abs(Number(invoice.adjustment_amount)))}
+                    </td>
+                  </tr>
+                </>
+              )}
               <tr>
                 <td colSpan={7} className="pt-3 text-right text-sm font-semibold text-gray-700">
                   Total payout ({rows.length} order{rows.length === 1 ? "" : "s"})

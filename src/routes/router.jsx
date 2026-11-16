@@ -48,8 +48,10 @@ import InactiveAdminVendors from "../pages/admin_panel/vendors/InactiveAdminVend
 import VendorDetailsTab from "../pages/admin_panel/vendors/vendor_details/vendor_details_tab";
 import AdminKycDocuments from "../pages/admin_panel/kyc/AdminKycDocuments";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
+import AdminDropshipperDetails from "../pages/admin_panel/dropshippers/AdminDropshipperDetails";
 import DropshipperLeaderboard from "../pages/admin_panel/dropshippers/DropshipperLeaderboard";
 import ProductClickLeaderboard from "../pages/admin_panel/dropshippers/ProductClickLeaderboard";
+import AdminPasswordLogs from "../pages/admin_panel/dropshippers/AdminPasswordLogs";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
 import AdminAllTransactions from "../pages/admin_panel/accounting/AdminAllTransactions";
@@ -65,6 +67,7 @@ import AdminProductDetail from "../pages/admin_panel/products/AdminProductDetail
 import AdminPriceUpdateLogs from "../pages/admin_panel/products/AdminPriceUpdateLogs";
 import AdminOrderDetails from "../pages/admin_panel/orders/AdminOrderDetails";
 import AdminGroupOrderHistory from "../pages/admin_panel/orders/AdminGroupOrderHistory";
+import AdminCancelledOrders from "../pages/admin_panel/orders/AdminCancelledOrders";
 import AdminSettlementOrders from "../pages/admin_panel/settlement_orders/AdminSettlementOrders";
 import AdminSettlementOrderDetails from "../pages/admin_panel/settlement_orders/AdminSettlementOrderDetails";
 import AdminVendorInvoices from "../pages/admin_panel/orders/AdminVendorInvoices";
@@ -211,6 +214,7 @@ export const router = createBrowserRouter([
       { path: "product/clicks", element: <ProductClicksReport /> },
       { path: "orders", element: <AdminOrders /> },
       { path: "orders/group-history", element: <AdminGroupOrderHistory /> },
+      { path: "orders/cancelled", element: <AdminCancelledOrders /> },
       { path: "orders/:id", element: <AdminOrderDetails /> },
       { path: "settlement-orders", element: <AdminSettlementOrders /> },
       { path: "settlement-orders/:orderId", element: <AdminSettlementOrderDetails /> },
@@ -221,6 +225,8 @@ export const router = createBrowserRouter([
       { path: "vendors/:id", element: <VendorDetailsTab /> },
       { path: "kyc-documents", element: <AdminKycDocuments /> },
       { path: "dropshippers", element: <AdminDropshippers /> },
+      { path: "dropshippers/password-logs", element: <AdminPasswordLogs /> },
+      { path: "dropshippers/:id", element: <AdminDropshipperDetails /> },
       { path: "dropshippers/leaderboard", element: <DropshipperLeaderboard /> },
       { path: "dropshippers/click-leaderboard", element: <ProductClickLeaderboard /> },
       { path: "employees", element: <AdminEmployees /> },

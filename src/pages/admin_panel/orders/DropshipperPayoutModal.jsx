@@ -6,6 +6,7 @@ import { useCreatePayoutInvoiceMutation, useGetPayableOrdersQuery } from "../../
 import { DropshipperFilter } from "./OrderListFilters";
 import DropshipperPayoutReview from "./DropshipperPayoutReview";
 import { METHOD_LABELS, bdt } from "../../../components/shared/PayoutInvoiceDocument";
+import FinalAmountField, { finalAmountMissingReason, finalAmountPayload, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
 
 const METHODS = ["wallet", "bkash", "nagad", "rocket", "bank_transfer", "cash"];
 
@@ -69,9 +70,15 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
     () => rows.filter((r) => selected.includes(r.order_id)).reduce((sum, r) => sum + Number(r.profit || 0), 0),
     [rows, selected]
   );
+  // Admin's real payout when the calculated profit sum is wrong.
+  const [finalAmount, setFinalAmount] = useState({ enabled: false, amount: "", reason: "" });
+  const calculated = Math.round(total * 100) / 100;
+  const payout = resolveFinalAmount(calculated, finalAmount);
+  const missingReason = finalAmountMissingReason(calculated, finalAmount);
+
   const needsTrx = method !== "wallet" && method !== "cash";
-  const canPay = dropshipper?.id && selected.length > 0 && reviewConfirmed && (!needsTrx || trxId.trim()) && !saving;
-  const canIssue = dropshipper?.id && selected.length > 0 && !saving;
+  const canPay = dropshipper?.id && selected.length > 0 && reviewConfirmed && (!needsTrx || trxId.trim()) && !missingReason && !saving;
+  const canIssue = dropshipper?.id && selected.length > 0 && !missingReason && !saving;
 
   const submit = async (status) => {
     try {
@@ -84,8 +91,9 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
         receiver_account: account.trim() || undefined,
         note: note.trim() || undefined,
         payout_review_confirmed: status === "paid" ? true : undefined,
+        ...finalAmountPayload(calculated, finalAmount),
       }).unwrap();
-      toast.success(status === "paid" ? `Paid ${bdt(total)} — invoice ${res?.data?.invoice_number}` : `Invoice ${res?.data?.invoice_number} issued (unpaid)`);
+      toast.success(status === "paid" ? `Paid ${bdt(payout)} — invoice ${res?.data?.invoice_number}` : `Invoice ${res?.data?.invoice_number} issued (unpaid)`);
       onCreated?.(res?.data);
       onClose();
     } catch (err) {
@@ -181,8 +189,12 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
                   <b>{selected.length}</b> of {payableRows.length} payable order{payableRows.length === 1 ? "" : "s"} selected
                   {rows.length > payableRows.length ? ` · ${rows.length - payableRows.length} not payable yet` : ""}
                 </span>
-                <span className="text-sm font-extrabold text-emerald-800">Total payout {bdt(total)}</span>
+                <span className="text-sm font-extrabold text-emerald-800">Calculated profit {bdt(total)}</span>
               </div>
+
+              {selected.length > 0 && (
+                <FinalAmountField id="payout-final" calculated={calculated} value={finalAmount} onChange={setFinalAmount} label="Total payout" />
+              )}
 
               {/* 3. Payment */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -259,11 +271,11 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
             type="button"
             onClick={() => submit("paid")}
             disabled={!canPay}
-            title={!reviewConfirmed ? "Tick the review checkbox first" : needsTrx && !trxId.trim() ? "Enter the transaction ID" : undefined}
+            title={missingReason ? "Give a reason for the changed amount" : !reviewConfirmed ? "Tick the review checkbox first" : needsTrx && !trxId.trim() ? "Enter the transaction ID" : undefined}
             className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            Pay {bdt(total)} &amp; create invoice
+            Pay {bdt(payout)} &amp; create invoice
           </button>
         </div>
       </div>

@@ -9,9 +9,13 @@ import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { MdOutlineWarehouse } from "react-icons/md";
-import { Bell, ChevronDown, Globe, Handshake, Heart, HomeIcon, Megaphone, PanelLeftClose, PanelLeftOpen, ShoppingBag, Store, Trophy, Truck } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, Trophy, Truck } from "lucide-react";
+import { useGetUserDetailsQuery } from "./redux/features/user";
+import { getImpersonation } from "./utils/impersonation";
 import logo from "../src/assets/jayga-logo.png";
 import sLogo from "../src/assets/jayga-logo-without-label.png";
+
+const ACCOUNT_PATH = "/app/profile";
 
 const weeklyRecommendationPages = [
   "/app/dashboard-new",
@@ -139,6 +143,11 @@ const menuSections = [
         label: "মার্কেটার পার্টনারশিপ",
         icon: <Handshake />,
       },
+      {
+        path: "/app/change-password",
+        label: "Change Password",
+        icon: <KeyRound />,
+      },
     ],
   },
 ];
@@ -161,6 +170,13 @@ const App = () => {
   const [expandedMenus, setExpandedMenus] = useState({});
   const { t } = useTranslation();
   const location = useLocation();
+
+  // Logged-in dropshipper for the sidebar account button (same userId the topbar uses).
+  const accountUserId = localStorage.getItem("userId");
+  const { data: accountResponse } = useGetUserDetailsQuery(accountUserId, { skip: !accountUserId });
+  const accountUser = accountResponse?.data?.data || accountResponse?.data || null;
+  // Set when an admin opened this tab with "লগইন করুন" (utils/impersonation.js).
+  const impersonation = getImpersonation();
 
   const activeParent = useMemo(
     () => allMenuItems.find((item) => isPathActive(location.pathname, item)),
@@ -291,6 +307,68 @@ const App = () => {
     </nav>
   );
 
+  // Account button at the top of the sidebar: name + mobile, opens /app/profile.
+  const SidebarAccount = ({ collapsed = false, onNavClick } = {}) => {
+    const accountActive = location.pathname === ACCOUNT_PATH;
+    const name = accountUser?.name || "My Account";
+    const phone = accountUser?.phone || accountUser?.mobile || "";
+    const initials = (accountUser?.name || "A").trim().slice(0, 2).toUpperCase();
+    const avatar = (
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#1D9E75] text-sm font-black text-white shadow-sm">
+        {initials}
+      </span>
+    );
+
+    if (collapsed) {
+      return (
+        <div className="flex justify-center border-b border-[#BDEAD8] px-3 py-3">
+          <NavLink
+            to={ACCOUNT_PATH}
+            title={phone ? `${name} · ${phone}` : name}
+            aria-label={`Account: ${name}`}
+            className={`group relative rounded-full transition ${accountActive ? "ring-2 ring-[#1D9E75] ring-offset-2 ring-offset-[#E1F5EE]" : "hover:opacity-90"}`}
+          >
+            {avatar}
+            <span className="pointer-events-none absolute left-[calc(100%+10px)] top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-950 px-2.5 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:block">
+              {name}{phone ? ` · ${phone}` : ""}
+            </span>
+          </NavLink>
+        </div>
+      );
+    }
+
+    return (
+      <div className="border-b border-[#BDEAD8] px-4 py-3">
+        <NavLink
+          to={ACCOUNT_PATH}
+          onClick={onNavClick}
+          aria-label={`Account: ${name}`}
+          className={`flex items-center gap-3 rounded-2xl border px-3 py-2.5 text-left transition ${
+            accountActive
+              ? "border-[#9DDDC5] bg-[#CDEFE1] shadow-sm ring-1 ring-[#9DDDC5]"
+              : "border-[#BDEAD8] bg-white/70 hover:border-[#9DDDC5] hover:bg-[#DDF4EA]"
+          }`}
+        >
+          {avatar}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-black text-[#085041]">{name}</span>
+            <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-[#085041]/65">
+              {phone ? (
+                <>
+                  <Phone className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{phone}</span>
+                </>
+              ) : (
+                "Account"
+              )}
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-[#085041]/50" />
+        </NavLink>
+      </div>
+    );
+  };
+
   const SidebarBrand = ({ collapsed = false, mobile = false }) => (
     <div className={`flex h-20 items-center border-b border-[#BDEAD8] bg-[#DDF4EA] px-4 ${collapsed ? "justify-center" : "justify-between"}`}>
       <div className={`flex min-w-0 items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
@@ -332,6 +410,7 @@ const App = () => {
         }`}
       >
         <SidebarBrand mobile />
+        <SidebarAccount onNavClick={closeMobileSidebar} />
         <div className="min-h-0 flex-1 overflow-y-auto bg-[#E1F5EE] py-5">
           {renderSidebarNavigation({ onNavClick: closeMobileSidebar })}
         </div>
@@ -348,6 +427,7 @@ const App = () => {
           }`}
         >
           <SidebarBrand collapsed={isCollapse} />
+          <SidebarAccount collapsed={isCollapse} />
           <div className="min-h-0 flex-1 overflow-y-auto bg-[#E1F5EE] py-5">
             {renderSidebarNavigation({ collapsed: isCollapse })}
           </div>
@@ -367,6 +447,21 @@ const App = () => {
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
+          {impersonation && (
+            <div className="flex flex-wrap items-center gap-2 border-b border-amber-300 bg-amber-50 px-4 py-2 text-xs text-amber-900">
+              <span className="font-semibold">
+                অ্যাডমিন হিসেবে আপনি {impersonation.name || accountUser?.name || "ড্রপশিপার"}-এর প্যানেল দেখছেন।
+              </span>
+              <span className="text-amber-800/80">এই ট্যাবের লগইন আলাদা, অ্যাডমিন প্যানেলে কোনো প্রভাব নেই।</span>
+              <button
+                type="button"
+                onClick={() => window.close()}
+                className="ml-auto rounded-md border border-amber-400 bg-white px-2.5 py-1 font-semibold text-amber-900 hover:bg-amber-100"
+              >
+                ট্যাব বন্ধ করুন
+              </button>
+            </div>
+          )}
           <CustomNavbar onMenuToggle={() => setMobileOpen((prev) => !prev)} />
           <div className="min-h-0 flex-1 overflow-y-auto">
             {weeklyRecommendationPages.some((path) => matchPath(path, location.pathname)) && (

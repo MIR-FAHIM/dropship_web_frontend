@@ -156,9 +156,12 @@ export const calculateOrderStakeBreakdown = (order, adjustments = null) => {
   } else if (courierCollectable <= 0 && (!isAdvanceApproved || advanceAmount <= 0)) {
     dropshipperProfit = 0;
   } else {
+    // Same formula as the server (OrderAccountingService::calculateOrderStakeBreakdown),
+    // so editing the customer delivery charge moves money between the platform's
+    // shipping margin and the dropshipper's profit instead of counting it twice.
     dropshipperProfit = Math.max(
       0,
-      Math.round((resellerPrice - adminBasePrice - courierCodFee) * 100) / 100
+      Math.round((courierCollectable - adminBasePrice - customerShippingFee - courierCodFee) * 100) / 100
     );
   }
 

@@ -1,5 +1,30 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+	ArrowLeft,
+	CheckCircle2,
+	Edit3,
+	FileText,
+	Printer,
+	Receipt,
+	ShoppingBag,
+	Truck,
+	User,
+	Phone,
+	MapPin,
+	AlertCircle,
+	Calendar,
+	ShieldCheck,
+	HelpCircle,
+	Clock,
+	Sparkles,
+	Package,
+	Wallet,
+	Banknote,
+	Check,
+	Loader2,
+	Trash2,
+} from "lucide-react";
+import {
 	Alert,
 	Avatar,
 	Box,
@@ -146,6 +171,8 @@ const CheckoutPage = () => {
 			eligibility={eligibility}
 			requiresAdvance={requiresAdvance}
 			completedOrdersCount={completedOrdersCount}
+			availableWalletBalance={availableWalletBalance}
+			minOrdersThreshold={minOrdersThreshold}
 			checkoutOrder={checkoutOrder}
 			loadingCheckout={loadingCheckout}
 			notify={notify}
@@ -395,453 +422,441 @@ const QuickOrderConfirmationView = ({
 	})();
 
 	return (
-		<Box sx={{ minHeight: "100vh", background: "#f8fafc", p: { xs: 1.5, sm: 3 } }}>
+		<Box sx={{ minHeight: "100vh", background: "#f1f5f9", p: { xs: 1.5, sm: 3 } }}>
 			<CheckoutOrderGuide onBack={handleBackToEdit} quick />
 
-			<Grid container spacing={3}>
-				{/* ════════ LEFT COLUMN: Summary Sections A, B & D ════════ */}
-				<Grid item xs={12} lg={7} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-					{/* SECTION A: PRODUCT SUMMARY */}
-					<Paper
-						elevation={0}
-						sx={{
-							borderRadius: 3,
-							border: "1px solid #e2e8f0",
-							p: 2.5,
-							background: "#ffffff",
-						}}
+			{/* ════════ TOP SMART ACTION BAR (CONFIRM BUTTON AT TOP) ════════ */}
+			<div className="sticky top-2 z-30 mb-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 border-2 border-slate-300 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+				<div className="flex items-center gap-3">
+					<button
+						type="button"
+						onClick={handleBackToEdit}
+						className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl border border-slate-300 transition-all cursor-pointer shadow-xs active:scale-95"
 					>
-						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							অর্ডারের পণ্য
-						</Typography>
+						<ArrowLeft className="w-4 h-4 text-slate-700" />
+						<span>আগের পেজে</span>
+					</button>
 
-						<Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }} sx={{ p: 2, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-							{prodImg ? (
-								<Avatar
-									src={prodImg}
-									variant="rounded"
-									sx={{ width: 72, height: 72, borderRadius: 2, border: "1px solid #e2e8f0" }}
-								/>
-							) : (
-								<Box sx={{ width: 72, height: 72, borderRadius: 2, background: "#e2e8f0", display: "grid", placeItems: "center" }}>
-									📦
-								</Box>
-							)}
+					<div>
+						<div className="flex items-center gap-2">
+							<span className="font-black text-slate-900 text-sm">অর্ডার ইনভয়েস সামারি</span>
+							<span className="text-[10px] bg-blue-100 text-blue-900 font-bold px-2 py-0.5 rounded-full border border-blue-300">
+								PRE-ORDER DRAFT
+							</span>
+						</div>
+						<p className="text-[11px] text-slate-500 font-medium">
+							চূড়ান্ত অনুমোদনের জন্য তথ্য ও হিসাব মিলিয়ে নিন
+						</p>
+					</div>
+				</div>
 
-							<Box sx={{ flex: 1 }}>
-								<Typography sx={{ fontSize: 15, fontWeight: 800, color: "#0f172a", lineHeight: 1.4 }}>
-									{quickOrderData.product?.name || "Product"}
-								</Typography>
-								<Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" sx={{ mt: 0.8 }}>
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#475569", background: "#e2e8f0", px: 1, py: 0.3, borderRadius: 1 }}>
-										SKU: {quickOrderData.product?.sku || quickOrderData.product?.id || "N/A"}
-									</Typography>
-									{quickOrderData.selectedAttributeLabel && (
-										<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#4338ca", background: "#ede9fe", px: 1, py: 0.3, borderRadius: 1 }}>
-											{quickOrderData.selectedAttributeLabel}
-										</Typography>
-									)}
-								</Stack>
-							</Box>
+				<div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5">
+					{/* Estimated Profit Pill */}
+					<div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-xl text-xs font-bold text-emerald-950">
+						<span className="text-emerald-800">নিট লাভ:</span>
+						<span className="text-emerald-700 font-black text-sm">
+							{quickOrderData.estimatedProfit >= 0 ? "+" : ""}{money(quickOrderData.estimatedProfit)}
+						</span>
+					</div>
 
-							<Box sx={{ textAlign: { xs: "left", sm: "right" }, minWidth: 120 }}>
-								<Typography sx={{ fontSize: 11, color: "#64748b", fontWeight: 700 }}>
-									বেস প্রাইস: {money(quickOrderData.basePrice)} × {quickOrderData.quantity}
-								</Typography>
-								<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#0f172a", mt: 0.2 }}>
-									মোট খরচ: {money(quickOrderData.productCost)}
-								</Typography>
-							</Box>
-						</Stack>
-					</Paper>
-
-					{/* SECTION B: CUSTOMER & DELIVERY SUMMARY */}
-					<Paper
-						elevation={0}
-						sx={{
-							borderRadius: 3,
-							border: "1px solid #e2e8f0",
-							p: 2.5,
-							background: "#ffffff",
-						}}
+					{/* Secondary Edit Details Button */}
+					<button
+						type="button"
+						onClick={handleOpenEdit}
+						disabled={loadingCheckout}
+						className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl border border-slate-300 transition-all cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
 					>
-						<Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-							<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", display: "flex", alignItems: "center", gap: 1 }}>
-								কাস্টমারের তথ্য ও ডেলিভারি
-							</Typography>
-							<Button
-								size="small"
-								startIcon={<EditIcon sx={{ fontSize: 15 }} />}
-								onClick={handleOpenEdit}
-								sx={{
-									textTransform: "none",
-									fontSize: 12,
-									fontWeight: 800,
-									color: "#2563eb",
-									background: "#eff6ff",
-									borderRadius: 1.5,
-									px: 1.5,
-									"&:hover": { background: "#dbeafe" },
-								}}
-							>
-								তথ্য বদলান
-							</Button>
-						</Stack>
+						<Edit3 className="w-3.5 h-3.5 text-slate-600" />
+						<span>তথ্য পরিবর্তন</span>
+					</button>
 
-						<Grid container spacing={2}>
-							<Grid item xs={12} sm={6}>
-								<Box sx={{ p: 1.8, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#64748b", mb: 0.5 }}>
-										কাস্টমারের নাম
-									</Typography>
-									<Typography sx={{ fontSize: 13.5, fontWeight: 800, color: "#0f172a" }}>
-										{quickOrderData.customerName}
-									</Typography>
-								</Box>
-							</Grid>
-
-							<Grid item xs={12} sm={6}>
-								<Box sx={{ p: 1.8, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#64748b", mb: 0.5 }}>
-										মোবাইল নম্বর
-									</Typography>
-									<Typography sx={{ fontSize: 13.5, fontWeight: 800, color: "#0f172a" }}>
-										{quickOrderData.customerPhone}
-									</Typography>
-								</Box>
-							</Grid>
-
-							<Grid item xs={12}>
-								<Box sx={{ p: 1.8, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#64748b", mb: 0.5 }}>
-										লোকেশন হায়ারার্কি (Division &gt; District &gt; Thana)
-									</Typography>
-									<Typography sx={{ fontSize: 13, fontWeight: 800, color: "#4338ca" }}>
-										{quickOrderData.divisionName} ➔ {quickOrderData.districtName} ➔ {quickOrderData.thanaName}
-									</Typography>
-								</Box>
-							</Grid>
-
-							<Grid item xs={12}>
-								<Box sx={{ p: 1.8, borderRadius: 2, background: "#f8fafc", border: "1px solid #f1f5f9" }}>
-									<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#64748b", mb: 0.5 }}>
-										সম্পূর্ণ ডেলিভারি ঠিকানা
-									</Typography>
-									<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#0f172a", lineHeight: 1.5 }}>
-										{quickOrderData.address}
-									</Typography>
-								</Box>
-							</Grid>
-
-							{quickOrderData.note && (
-								<Grid item xs={12}>
-									<Box sx={{ p: 1.5, borderRadius: 2, background: "#fffbeb", border: "1px solid #fef3c7" }}>
-										<Typography sx={{ fontSize: 11, fontWeight: 700, color: "#92400e", mb: 0.3 }}>
-											অর্ডার নোট:
-										</Typography>
-										<Typography sx={{ fontSize: 12, fontWeight: 600, color: "#78350f" }}>
-											{quickOrderData.note}
-										</Typography>
-									</Box>
-								</Grid>
-							)}
-						</Grid>
-					</Paper>
-
-					{/* SECTION D: RELIABILITY BALANCE SUMMARY */}
-					<Paper
-						elevation={0}
-						sx={{
-							borderRadius: 3,
-							border: "1px solid #fed7aa",
-							p: 2.5,
-							background: "#fffaf5",
-						}}
+					{/* ── TOP CONFIRM BUTTON ── */}
+					<button
+						type="button"
+						disabled={loadingCheckout}
+						onClick={handleConfirmAndPlaceOrder}
+						className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white font-black text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-600/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
 					>
-						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#9a3412", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							রিলায়েবিলিটি ব্যালেন্স
-						</Typography>
-
-						<Grid container spacing={2} sx={{ mb: 2 }}>
-							<Grid item xs={6} sm={3}>
-								<Box sx={{ p: 1.5, borderRadius: 2, background: "#fff", border: "1px solid #fed7aa", textAlign: "center" }}>
-									<Typography sx={{ fontSize: 10.5, fontWeight: 700, color: "#78350f" }}>বর্তমান ওয়ালেট ব্যালেন্স</Typography>
-									<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#0f172a", mt: 0.3 }}>
-										{money(availableWalletBalance)}
-									</Typography>
-								</Box>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Box sx={{ p: 1.5, borderRadius: 2, background: "#fff", border: "1px solid #fed7aa", textAlign: "center" }}>
-									<Typography sx={{ fontSize: 10.5, fontWeight: 700, color: "#78350f" }}>প্রয়োজনীয় ব্যালেন্স</Typography>
-									<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#0f172a", mt: 0.3 }}>
-										{money(requiredMinimumBalance)}
-									</Typography>
-								</Box>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Box sx={{ p: 1.5, borderRadius: 2, background: "#fff", border: "1px solid #fed7aa", textAlign: "center" }}>
-									<Typography sx={{ fontSize: 10.5, fontWeight: 700, color: "#78350f" }}>ঘাটতি (Shortfall)</Typography>
-									<Typography sx={{ fontSize: 14, fontWeight: 900, color: shortfall > 0 ? "#dc2626" : "#16a34a", mt: 0.3 }}>
-										{money(shortfall)}
-									</Typography>
-								</Box>
-							</Grid>
-							<Grid item xs={6} sm={3}>
-								<Box sx={{ p: 1.5, borderRadius: 2, background: "#fff", border: "1px solid #fed7aa", textAlign: "center" }}>
-									<Typography sx={{ fontSize: 10.5, fontWeight: 700, color: "#78350f" }}>অর্ডার কাউন্ট</Typography>
-									<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#0f172a", mt: 0.3 }}>
-										{completedOrdersCount}/{minOrdersThreshold}
-									</Typography>
-								</Box>
-							</Grid>
-						</Grid>
-
-						{/* Eligibility Indicator */}
-						<Box sx={{ p: 2, borderRadius: 2, mb: 2, background: requiresAdvance ? (shortfall === 0 ? "#f0fdf4" : "#fefce8") : "#f0fdf4", border: `1px solid ${requiresAdvance ? (shortfall === 0 ? "#bbf7d0" : "#fef08a") : "#bbf7d0"}` }}>
-							<Typography sx={{ fontSize: 12.5, fontWeight: 800, color: requiresAdvance ? (shortfall === 0 ? "#15803d" : "#854d0e") : "#15803d" }}>
-								{!requiresAdvance
-									? "✅ অর্ডার করার সম্পূর্ণ উপযুক্ত (Eligible): ৫+ সফল অর্ডার থাকায় আপনি ভেরিফাইড রিসেলার। কোনো সিকিউরিটি ব্যালেন্স প্রযোজ্য নয়।"
-									: shortfall === 0
-									? `✅ ব্যালেন্স উপযুক্ত (Eligible): ওয়ালেটে পর্যাপ্ত রিলায়েবিলিটি ব্যালেন্স (${money(availableWalletBalance)}) মজুদ রয়েছে।`
-									: `⚠️ পে লেটার প্রযোজ্য (Pay Later Eligible): ওয়ালেটে ঘাটতি রয়েছে (${money(shortfall)}), তবে আপনি 'Pay Later' নির্বাচন করে অর্ডার প্লেস করতে পারবেন এবং ২৪ ঘণ্টার মধ্যে ক্লিয়ার করতে পারবেন।`}
-							</Typography>
-						</Box>
-
-						{/* কাস্টমার যেভাবে টাকা দেবেন Selector for Advance (if required) */}
-						{requiresAdvance && (
-							<Box sx={{ mb: 2 }}>
-								<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#334155", mb: 1 }}>
-									অগ্রিম ডেলিভারি ফি অপশন নির্বাচন করুন:
-								</Typography>
-								<RadioGroup
-									row
-									value={advancePaymentChoice}
-									onChange={(e) => setAdvancePaymentChoice(e.target.value)}
-								>
-									<Paper
-										elevation={0}
-										sx={{
-											border: `1px solid ${advancePaymentChoice === "later" ? "#6366f1" : "#e2e8f0"}`,
-											borderRadius: 2,
-											px: 2,
-											py: 0.8,
-											mr: 1.5,
-											mb: 1,
-											background: advancePaymentChoice === "later" ? "#f5f3ff" : "#fff",
-										}}
-									>
-										<FormControlLabel
-											value="later"
-											control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
-											label={<Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>পরে পরিশোধ (Pay Later)</Typography>}
-										/>
-									</Paper>
-
-									<Paper
-										elevation={0}
-										sx={{
-											border: `1px solid ${advancePaymentChoice === "wallet" ? "#6366f1" : "#e2e8f0"}`,
-											borderRadius: 2,
-											px: 2,
-											py: 0.8,
-											mb: 1,
-											opacity: canPayFromWallet ? 1 : 0.5,
-											background: advancePaymentChoice === "wallet" ? "#f5f3ff" : "#fff",
-										}}
-									>
-										<FormControlLabel
-											value="wallet"
-											disabled={!canPayFromWallet}
-											control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
-											label={
-												<Typography sx={{ fontSize: 12.5, fontWeight: 800 }}>
-													ওয়ালেট থেকে পরিশোধ ({money(availableWalletBalance)})
-												</Typography>
-											}
-										/>
-									</Paper>
-								</RadioGroup>
-							</Box>
+						{loadingCheckout ? (
+							<>
+								<Loader2 className="w-4 h-4 animate-spin text-white" />
+								<span>জমা হচ্ছে...</span>
+							</>
+						) : (
+							<>
+								<CheckCircle2 className="w-4 h-4 text-white" />
+								<span>অর্ডার নিশ্চিত করুন (Confirm)</span>
+							</>
 						)}
+					</button>
+				</div>
+			</div>
 
-						{/* Explanatory Policy Note */}
-						<Box sx={{ p: 2, borderRadius: 2, background: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-							<Typography sx={{ fontSize: 11.5, color: "#166534", lineHeight: 1.5, fontWeight: 600 }}>
-								ℹ️ <strong>গুরুত্বপূর্ণ তথ্য:</strong> রিলায়েবিলিটি ব্যালেন্স কোনো চার্জ বা ফি নয় — এটি আপনার অ্যাকাউন্ট সিকিউরিটি ব্যালেন্স। এটি কাস্টমারের COD থেকে কাটা হয় না এবং আপনার প্রফিট থেকেও কর্তন হয় না। সফল ডেলিভারির পর এই ব্যালেন্সটি সম্পূর্ণ ফেরত পাবেন অথবা সিকিউরিটি হিসেবে জমা রেখে <strong>যেকোনো সময় উইথড্র (উত্তোলন) করে নিতে পারবেন</strong>।
-							</Typography>
-						</Box>
-					</Paper>
-				</Grid>
+			{/* ════════ MAIN INVOICE DOCUMENT SHEET ════════ */}
+			<div className="max-w-5xl mx-auto bg-white rounded-3xl border-2 border-slate-300 shadow-xl overflow-hidden mb-8">
+				{/* Top Security & Branding Accent Stripe */}
+				<div className="h-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500" />
 
-				{/* ════════ RIGHT COLUMN: Financial Summary C & Confirmation E ════════ */}
-				<Grid item xs={12} lg={5} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-					{/* SECTION C: FINANCIAL SUMMARY */}
-					<Paper
-						elevation={0}
-						sx={{
-							borderRadius: 3,
-							border: "1px solid #e2e8f0",
-							p: 3,
-							background: "#ffffff",
-						}}
-					>
-						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2.5, display: "flex", alignItems: "center", gap: 1 }}>
-							টাকার হিসাব
-						</Typography>
+				<div className="p-6 sm:p-8 space-y-6">
+					{/* INVOICE HEADER BAR */}
+					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b-2 border-slate-200">
+						<div className="space-y-1">
+							<div className="flex items-center gap-2">
+								<div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+									RB
+								</div>
+								<span className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+									ResellerBrain Dropship Network
+								</span>
+							</div>
+							<h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+								ORDER INVOICE & SETTLEMENT BILL
+							</h1>
+							<p className="text-xs text-slate-600 font-semibold">
+								অর্ডার ইনভয়েস ও রিসেলার আর্থিক হিসাব বিবরণী
+							</p>
+						</div>
 
-						<Stack spacing={1.6}>
-							<Stack direction="row" justifyContent="space-between" alignItems="center">
-								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									কাস্টমার যে টাকা দেবেন (COD)
-								</Typography>
-								<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#0f172a" }}>
-									{money(quickOrderData.collectionAmount)}
-								</Typography>
-							</Stack>
+						<div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200 text-right sm:min-w-[240px] space-y-1.5 shadow-xs">
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Invoice Draft No:</span>
+								<span className="font-mono font-bold text-slate-900">
+									INV-{quickOrderData.product?.id || "ORD"}-{(quickOrderData.customerPhone || "0000").slice(-4)}
+								</span>
+							</div>
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Issue Date:</span>
+								<span className="font-bold text-slate-800">
+									{new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}
+								</span>
+							</div>
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Payment Mode:</span>
+								<span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md text-[11px] border border-emerald-300">
+									Cash On Delivery (COD)
+								</span>
+							</div>
+						</div>
+					</div>
 
-							<Stack direction="row" justifyContent="space-between" alignItems="center">
-								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									পণ্যের খরচ
-								</Typography>
-								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
-									- {money(quickOrderData.productCost)}
-								</Typography>
-							</Stack>
+					{/* 2-COLUMN PARTY & LOGISTICS DETAILS */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+						{/* Bill To: Customer Details */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 space-y-3">
+							<div className="flex items-center justify-between">
+								<span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+									<User className="w-4 h-4 text-blue-600" />
+									BILL TO / CUSTOMER (গ্রাহকের তথ্য)
+								</span>
+								<button
+									type="button"
+									onClick={handleOpenEdit}
+									className="text-xs text-blue-600 hover:text-blue-800 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+								>
+									<Edit3 className="w-3.5 h-3.5" />
+									<span>সম্পাদনা করুন</span>
+								</button>
+							</div>
 
-							<Stack direction="row" justifyContent="space-between" alignItems="center">
-								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									ডেলিভারি চার্জ
-								</Typography>
-								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
-									- {money(quickOrderData.deliveryCharge)}
-								</Typography>
-							</Stack>
-
-							<Stack direction="row" justifyContent="space-between" alignItems="center">
-								<Typography sx={{ fontSize: 13.5, fontWeight: 700, color: "#475569" }}>
-									COD ফি (১%)
-								</Typography>
-								<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#dc2626" }}>
-									- {money(quickOrderData.codFee)}
-								</Typography>
-							</Stack>
-
-							<Divider sx={{ my: 1 }} />
-
-							{/* Estimated Dropshipper Profit Highlight Card */}
-							<Box
-								sx={{
-									p: 2,
-									borderRadius: 2.5,
-									background: quickOrderData.estimatedProfit >= 0
-										? "linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)"
-										: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
-									border: `1.5px solid ${quickOrderData.estimatedProfit >= 0 ? "#86efac" : "#fca5a5"}`,
-									display: "flex",
-									justifyContent: "space-between",
-									alignItems: "center",
-								}}
-							>
-								<Box>
-									<Typography sx={{ fontSize: 12.5, fontWeight: 900, color: quickOrderData.estimatedProfit >= 0 ? "#166534" : "#991b1b" }}>
-										আপনার আনুমানিক লাভ
-									</Typography>
-									<Typography sx={{ fontSize: 10.5, color: quickOrderData.estimatedProfit >= 0 ? "#15803d" : "#b91c1c", mt: 0.2 }}>
-										COD - প্রোডাক্ট খরচ - ডেলিভারি - COD ফি
-									</Typography>
-								</Box>
-								<Typography sx={{ fontSize: 20, fontWeight: 900, color: quickOrderData.estimatedProfit >= 0 ? "#16a34a" : "#dc2626" }}>
-									{quickOrderData.estimatedProfit >= 0 ? "+" : ""}{money(quickOrderData.estimatedProfit)}
-								</Typography>
-							</Box>
-						</Stack>
-					</Paper>
-
-					{/* SECTION E: FINAL CONFIRMATION & ACTIONS */}
-					<Paper
-						elevation={0}
-						sx={{
-							borderRadius: 3,
-							border: "1px solid #e2e8f0",
-							p: 3,
-							background: "#ffffff",
-						}}
-					>
-						<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#1e293b", mb: 2, display: "flex", alignItems: "center", gap: 1 }}>
-							অর্ডার জমা দিন
-						</Typography>
-
-						<Typography sx={{ fontSize: 12, color: "#64748b", mb: 2.5, lineHeight: 1.5 }}>
-							নাম, ফোন, ঠিকানা ও COD-এর অঙ্ক মিলিয়ে নিন। অর্ডার জমা হলে প্রথমে অ্যাডমিন যাচাই করবেন।
-						</Typography>
-
-						<Stack spacing={1.5}>
-							{/* Confirm & Place Order Button */}
-							<Button
-								variant="contained"
-								fullWidth
-								size="large"
-								disabled={loadingCheckout}
-								onClick={handleConfirmAndPlaceOrder}
-								sx={{
-									borderRadius: 2.5,
-									textTransform: "none",
-									fontWeight: 900,
-									fontSize: 15,
-									py: 1.6,
-									background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
-									boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-									"&:hover": {
-										background: "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)",
-										boxShadow: "0 6px 20px rgba(99,102,241,0.45)",
-									},
-									"&.Mui-disabled": {
-										opacity: 0.6,
-										background: "#e2e8f0",
-										color: "#94a3b8",
-									},
-								}}
-							>
-								{loadingCheckout ? (
-									<Stack direction="row" spacing={1} alignItems="center">
-										<CircularProgress size={18} color="inherit" />
-										<span>অর্ডার জমা হচ্ছে…</span>
-									</Stack>
-								) : (
-									<Stack direction="row" spacing={1} alignItems="center">
-										<span>অর্ডার নিশ্চিত করুন</span>
-									</Stack>
+							<div className="space-y-1.5">
+								<p className="text-base font-black text-slate-900">{quickOrderData.customerName}</p>
+								<p className="text-xs font-bold text-slate-700 flex items-center gap-1.5 font-mono">
+									<Phone className="w-3.5 h-3.5 text-slate-500" />
+									{quickOrderData.customerPhone}
+								</p>
+								<p className="text-xs font-semibold text-indigo-700 flex items-center gap-1.5">
+									<MapPin className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+									<span>{quickOrderData.divisionName} ➔ {quickOrderData.districtName} ➔ {quickOrderData.thanaName}</span>
+								</p>
+								<p className="text-xs text-slate-700 font-medium leading-relaxed pl-5">
+									{quickOrderData.address}
+								</p>
+								{quickOrderData.note && (
+									<div className="mt-2 p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900 font-medium">
+										<strong>অর্ডার নোট:</strong> {quickOrderData.note}
+									</div>
 								)}
-							</Button>
+							</div>
+						</div>
 
-							{/* Back to Edit Button */}
-							<Button
-								variant="outlined"
-								fullWidth
-								size="medium"
-								disabled={loadingCheckout}
-								onClick={handleOpenEdit}
-								sx={{
-									borderRadius: 2.5,
-									textTransform: "none",
-									fontWeight: 800,
-									fontSize: 13.5,
-									py: 1.2,
-									color: "#475569",
-									borderColor: "#cbd5e1",
-									"&:hover": {
-										background: "#f1f5f9",
-										borderColor: "#94a3b8",
-									},
-								}}
-							>
-								তথ্য পরিবর্তন করুন
-							</Button>
-						</Stack>
-					</Paper>
-				</Grid>
-			</Grid>
+						{/* Logistics & Reseller Details */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 space-y-3">
+							<span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+								<Truck className="w-4 h-4 text-indigo-600" />
+								LOGISTICS & ATTRIBUTION (ডেলিভারি বিবরণী)
+							</span>
+
+							<div className="space-y-2 text-xs">
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Billed By / Reseller:</span>
+									<span className="font-bold text-slate-900">Reseller #{userId || "N/A"}</span>
+								</div>
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Courier Partner:</span>
+									<span className="font-bold text-slate-900 flex items-center gap-1.5">
+										<span className="w-2 h-2 rounded-full bg-emerald-500" />
+										Carrybee Courier Express
+									</span>
+								</div>
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Delivery Zone:</span>
+									<span className="font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+										{quickOrderData.deliveryZone || "Standard Delivery Zone"}
+									</span>
+								</div>
+								<div className="flex items-center justify-between">
+									<span className="text-slate-600 font-semibold">Estimated Transit:</span>
+									<span className="font-bold text-slate-800">২–৪ কার্যদিবস (Standard Transit)</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					{/* ITEMIZED INVOICE TABLE */}
+					<div className="space-y-3">
+						<div className="flex items-center justify-between">
+							<h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+								<Receipt className="w-4 h-4 text-blue-600" />
+								অর্ডারের পণ্য তালিকা (ITEMIZED ORDER STATEMENT)
+							</h3>
+							<span className="text-xs text-slate-500 font-semibold">
+								১টি আইটেম • {quickOrderData.quantity} পিস
+							</span>
+						</div>
+
+						<div className="overflow-x-auto rounded-2xl border-2 border-slate-200">
+							<table className="w-full text-left text-xs">
+								<thead className="bg-slate-100 border-b-2 border-slate-200 text-slate-700 uppercase font-black tracking-wider text-[11px]">
+									<tr>
+										<th className="px-4 py-3 text-center w-12">#</th>
+										<th className="px-4 py-3">পণ্যের বিবরণ (Item Details)</th>
+										<th className="px-4 py-3 text-center">পরিমাণ (Qty)</th>
+										<th className="px-4 py-3 text-right">বেস রেট (Base)</th>
+										<th className="px-4 py-3 text-right">পণ্যের মোট খরচ (Cost)</th>
+										<th className="px-4 py-3 text-right">কাস্টমার প্রদেয় (COD)</th>
+									</tr>
+								</thead>
+								<tbody className="divide-y divide-slate-200 bg-white">
+									<tr className="hover:bg-slate-50 transition-colors">
+										<td className="px-4 py-3.5 text-center font-bold text-slate-500">01</td>
+										<td className="px-4 py-3.5">
+											<div className="flex items-center gap-3">
+												{prodImg ? (
+													<img
+														src={prodImg}
+														alt={quickOrderData.product?.name}
+														className="w-12 h-12 object-cover rounded-xl border border-slate-200 shrink-0"
+													/>
+												) : (
+													<div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 shrink-0">
+														📦
+													</div>
+												)}
+												<div>
+													<p className="font-bold text-slate-900 text-sm leading-tight">
+														{quickOrderData.product?.name || "Product"}
+													</p>
+													<div className="flex flex-wrap items-center gap-2 mt-1">
+														<span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+															SKU: {quickOrderData.product?.sku || quickOrderData.product?.id || "N/A"}
+														</span>
+														{quickOrderData.selectedAttributeLabel && (
+															<span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+																{quickOrderData.selectedAttributeLabel}
+															</span>
+														)}
+													</div>
+												</div>
+											</div>
+										</td>
+										<td className="px-4 py-3.5 text-center font-black text-slate-900">
+											{quickOrderData.quantity} পিস
+										</td>
+										<td className="px-4 py-3.5 text-right font-bold text-slate-600 font-mono">
+											{money(quickOrderData.basePrice)}
+										</td>
+										<td className="px-4 py-3.5 text-right font-black text-slate-900 font-mono">
+											{money(quickOrderData.productCost)}
+										</td>
+										<td className="px-4 py-3.5 text-right font-black text-blue-900 font-mono text-sm">
+											{money(quickOrderData.collectionAmount)}
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					{/* FINANCIAL SUMMARY & SETTLEMENT BREAKDOWN (INVOICE LEDGER) */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+						{/* Left: Reliability & Terms Statement */}
+						<div className="space-y-4">
+							{/* Reliability & Security Balance Card */}
+							<div className="bg-amber-50/70 rounded-2xl p-5 border-2 border-amber-300 space-y-3">
+								<div className="flex items-center justify-between">
+									<span className="text-xs font-black text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+										<ShieldCheck className="w-4 h-4 text-amber-700" />
+										রিলায়েবিলিটি ও সিকিউরিটি ব্যালেন্স
+									</span>
+									<span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+										{completedOrdersCount}/{minOrdersThreshold} অর্ডার সম্পন্ন
+									</span>
+								</div>
+
+								<div className="grid grid-cols-2 gap-2 text-center text-xs">
+									<div className="bg-white p-2.5 rounded-xl border border-amber-200">
+										<span className="text-slate-500 font-semibold block text-[11px]">বর্তমান ওয়ালেট</span>
+										<strong className="text-slate-900 font-black text-sm">{money(availableWalletBalance)}</strong>
+									</div>
+									<div className="bg-white p-2.5 rounded-xl border border-amber-200">
+										<span className="text-slate-500 font-semibold block text-[11px]">প্রয়োজনীয় ব্যালেন্স</span>
+										<strong className="text-slate-900 font-black text-sm">{money(requiredMinimumBalance)}</strong>
+									</div>
+								</div>
+
+								{requiresAdvance && (
+									<div className="space-y-2 pt-1">
+										<span className="text-xs font-bold text-slate-800 block">
+											অগ্রিম ডেলিভারি ফি পরিশোধের পদ্ধতি:
+										</span>
+										<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+											<label className={`flex items-center gap-2 p-2.5 rounded-xl border-2 cursor-pointer transition-all ${advancePaymentChoice === "later" ? "bg-indigo-50 border-indigo-600 text-indigo-950" : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"}`}>
+												<input
+													type="radio"
+													name="advance_choice"
+													value="later"
+													checked={advancePaymentChoice === "later"}
+													onChange={(e) => setAdvancePaymentChoice(e.target.value)}
+													className="accent-indigo-600"
+												/>
+												<div className="text-xs">
+													<strong className="block font-bold">পরে পরিশোধ (Pay Later)</strong>
+													<span className="text-[10px] text-slate-500">অর্ডার প্লেস করে ২৪ ঘণ্টার মধ্যে পরিশোধ</span>
+												</div>
+											</label>
+
+											<label className={`flex items-center gap-2 p-2.5 rounded-xl border-2 transition-all ${canPayFromWallet ? "cursor-pointer" : "opacity-50 cursor-not-allowed"} ${advancePaymentChoice === "wallet" ? "bg-indigo-50 border-indigo-600 text-indigo-950" : "bg-white border-slate-200 text-slate-700"}`}>
+												<input
+													type="radio"
+													name="advance_choice"
+													value="wallet"
+													disabled={!canPayFromWallet}
+													checked={advancePaymentChoice === "wallet"}
+													onChange={(e) => setAdvancePaymentChoice(e.target.value)}
+													className="accent-indigo-600"
+												/>
+												<div className="text-xs">
+													<strong className="block font-bold">ওয়ালেট থেকে কর্তন</strong>
+													<span className="text-[10px] text-slate-500">মজুদ: {money(availableWalletBalance)}</span>
+												</div>
+											</label>
+										</div>
+									</div>
+								)}
+
+								<p className="text-[11px] text-amber-900 leading-relaxed font-medium bg-amber-100/60 p-2.5 rounded-xl border border-amber-200/80">
+									ℹ️ <strong>পলিসি নিশ্চয়তা:</strong> রিলায়েবিলিটি ব্যালেন্স কোনো চার্জ নয়। ডেলিভারি সম্পন্ন হলে এটি সম্পূর্ণ ফেরত পাবেন অথবা যেকোনো সময় উইথড্র করতে পারবেন।
+								</p>
+							</div>
+						</div>
+
+						{/* Right: Formal Ledger Breakdown */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-300 space-y-3">
+							<span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between pb-2 border-b-2 border-slate-200">
+								<span>আর্থিক হিসাব বিবরণী (SETTLEMENT BREAKDOWN)</span>
+								<span className="text-blue-700 font-bold">ইনভয়েস সমাপনী</span>
+							</span>
+
+							<div className="space-y-2 text-xs">
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">কাস্টমার যে টাকা দেবেন (COD Collection):</span>
+									<span className="font-mono font-black text-slate-900 text-sm">{money(quickOrderData.collectionAmount)}</span>
+								</div>
+
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">বাদ: পণ্যের পাইকারি খরচ (Product Cost):</span>
+									<span className="font-mono font-bold text-rose-700">- {money(quickOrderData.productCost)}</span>
+								</div>
+
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">বাদ: কুরিয়ার ডেলিভারি চার্জ ({quickOrderData.deliveryZone || "ডেলিভারি"}):</span>
+									<span className="font-mono font-bold text-rose-700">- {money(quickOrderData.deliveryCharge)}</span>
+								</div>
+
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">বাদ: COD প্রসেসিং ফি (১%):</span>
+									<span className="font-mono font-bold text-rose-700">- {money(quickOrderData.codFee)}</span>
+								</div>
+							</div>
+
+							{/* Highlighted Profit Margin Card */}
+							<div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border-2 border-emerald-500 flex items-center justify-between gap-3 shadow-xs">
+								<div>
+									<div className="flex items-center gap-1.5">
+										<span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+											আপনার আনুমানিক নিট লাভ
+										</span>
+										<span className="text-[10px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded-full">
+											NET MARGIN
+										</span>
+									</div>
+									<p className="text-[11px] text-emerald-800 font-semibold mt-0.5">
+										[COD - প্রোডাক্ট খরচ - ডেলিভারি - COD ফি]
+									</p>
+								</div>
+
+								<p className="text-2xl sm:text-3xl font-black text-emerald-700 font-mono tracking-tight">
+									{quickOrderData.estimatedProfit >= 0 ? "+" : ""}{money(quickOrderData.estimatedProfit)}
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ════════ BOTTOM ACTION BAR (CONFIRM BUTTON AT BOTTOM) ════════ */}
+				<div className="bg-slate-100 p-5 sm:p-6 border-t-2 border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="space-y-0.5 text-xs">
+						<p className="font-bold text-slate-800">
+							কাস্টমারের নাম, ফোন নম্বর, ডেলিভারি ঠিকানা ও COD মিলিয়ে অর্ডার নিশ্চিত করুন।
+						</p>
+						<p className="text-slate-500 font-medium">
+							অর্ডার প্লেস করার পর প্রথমে অ্যাডমিন ভেরিফাই করবেন, এরপর ভেন্ডরের কাছে যাবে।
+						</p>
+					</div>
+
+					<div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+						<button
+							type="button"
+							disabled={loadingCheckout}
+							onClick={handleOpenEdit}
+							className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-3 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs rounded-xl border-2 border-slate-300 shadow-sm transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+						>
+							<Edit3 className="w-3.5 h-3.5 text-slate-600" />
+							<span>তথ্য পরিবর্তন করুন</span>
+						</button>
+
+						{/* ── BOTTOM CONFIRM BUTTON ── */}
+						<button
+							type="button"
+							disabled={loadingCheckout}
+							onClick={handleConfirmAndPlaceOrder}
+							className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-indigo-600/30 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+						>
+							{loadingCheckout ? (
+								<>
+									<Loader2 className="w-5 h-5 animate-spin text-white" />
+									<span>অর্ডার জমা হচ্ছে...</span>
+								</>
+							) : (
+								<>
+									<CheckCircle2 className="w-5 h-5 text-white" />
+									<span>অর্ডার নিশ্চিত করুন (Confirm Order)</span>
+								</>
+							)}
+						</button>
+					</div>
+				</div>
+			</div>
 
 			{/* ════════ IN-PLACE EDIT MODAL ════════ */}
 			<Dialog
@@ -1016,12 +1031,15 @@ const QuickOrderConfirmationView = ({
 };
 
 /* ══════════════════════════════════════════════════════════
-   STANDARD CART CHECKOUT VIEW (UNCHANGED FALLBACK)
+   STANDARD MULTI-ITEM CART CHECKOUT VIEW (INVOICE PATTERN)
 ══════════════════════════════════════════════════════════ */
 const StandardCartCheckoutView = ({
 	userId,
+	eligibility,
 	requiresAdvance,
 	completedOrdersCount,
+	availableWalletBalance = 0,
+	minOrdersThreshold = 5,
 	checkoutOrder,
 	loadingCheckout,
 	notify,
@@ -1038,7 +1056,7 @@ const StandardCartCheckoutView = ({
 	const [coupon, setCoupon] = useState("");
 	const [couponApplied, setCouponApplied] = useState(false);
 	const [discount, setDiscount] = useState(0);
-	const [note] = useState("");
+	const [note, setNote] = useState("");
 	const [processing, setProcessing] = useState({});
 
 	const {
@@ -1200,395 +1218,606 @@ const StandardCartCheckoutView = ({
 	const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
 
 	return (
-		<Box sx={{ minHeight: "100vh", background: "#f5f6fa", p: { xs: 1.5, sm: 2.5 } }}>
-			<CheckoutOrderGuide onBack={() => navigate(-1)} />
+		<div className="min-h-screen bg-slate-100/80 py-6 px-3 sm:px-6">
+			{/* ════════ TOP STICKY BAR WITH TOP CONFIRM BUTTON ════════ */}
+			<div className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b-2 border-slate-200 shadow-sm px-4 py-3 mb-6 rounded-2xl flex flex-wrap items-center justify-between gap-3">
+				<div className="flex items-center gap-3">
+					<button
+						type="button"
+						onClick={() => navigate(-1)}
+						className="p-2 rounded-xl border border-slate-300 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+						title="পেছনে ফিরে যান"
+					>
+						<ArrowLeft className="w-5 h-5" />
+					</button>
+					<div>
+						<div className="flex items-center gap-2">
+							<span className="text-xs font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+								কার্ট চেকআউট ও ইনভয়েস
+							</span>
+							<span className="text-xs text-slate-500 font-semibold hidden sm:inline">
+								Cart Invoice Summary
+							</span>
+						</div>
+						<h2 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
+							অর্ডার ইনভয়েস ও হিসাব বিবরণী
+						</h2>
+					</div>
+				</div>
 
-			<Grid container spacing={3} alignItems="flex-start">
-				<Grid item xs={12} md={5} lg={4}>
-					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", overflow: "hidden", background: "#fff" }}>
-						<Box sx={{ background: "linear-gradient(135deg, #5b21b6 0%, #4338ca 100%)", px: 3, py: 2 }}>
-							<Typography sx={{ color: "#fff", fontWeight: 700, fontSize: 14, lineHeight: 1.5 }}>
-								কাস্টমারের তথ্য ও ডেলিভারি
-							</Typography>
-						</Box>
+				<div className="flex items-center gap-2.5 sm:gap-3">
+					{resellerProfit > 0 && (
+						<div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-black">
+							<Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+							<span>আনুমানিক লাভ: +{money(resellerProfit)}</span>
+						</div>
+					)}
 
-						<Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2.5 }}>
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									কাস্টমারের নাম <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									placeholder="কাস্টমারের পুরো নাম লিখুন"
-									value={fullName}
-									onChange={(e) => setFullName(e.target.value)}
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<PersonIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
-											</InputAdornment>
-										),
-									}}
-									sx={fieldSx}
-								/>
-							</Box>
+					<div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold">
+						<ShoppingBag className="w-3.5 h-3.5 text-slate-600" />
+						<span>{cartItems.length} টি পণ্য</span>
+					</div>
 
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									কাস্টমারের ফোন নম্বর <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									placeholder="যেমন: 01XXXXXXXXX"
-									value={phone}
-									onChange={(e) => setPhone(e.target.value)}
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<PhoneIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
-											</InputAdornment>
-										),
-									}}
-									sx={fieldSx}
-								/>
-							</Box>
+					{/* ── TOP CONFIRM BUTTON ── */}
+					<button
+						type="button"
+						disabled={loadingCheckout || !cartItems.length}
+						onClick={handlePlaceOrder}
+						className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white font-black text-xs sm:text-sm rounded-xl shadow-md shadow-indigo-600/25 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+					>
+						{loadingCheckout ? (
+							<>
+								<Loader2 className="w-4 h-4 animate-spin text-white" />
+								<span>জমা হচ্ছে...</span>
+							</>
+						) : (
+							<>
+								<CheckCircle2 className="w-4 h-4 text-white" />
+								<span>অর্ডার নিশ্চিত করুন (Confirm)</span>
+							</>
+						)}
+					</button>
+				</div>
+			</div>
 
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									সম্পূর্ণ ঠিকানা <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<TextField
-									fullWidth
-									size="small"
-									placeholder="বাড়ি, রাস্তা বা গ্রামের নাম লিখুন"
-									value={address}
-									onChange={(e) => setAddress(e.target.value)}
-									onBlur={() => {
-										const distObj = districts.find((d) => String(d.id) === String(selectedDistrictId));
-										if (address.trim() && distObj?.name) {
-											setAddress(appendLocationToAddress(address, "", distObj.name));
-										}
-									}}
-									InputProps={{
-										startAdornment: (
-											<InputAdornment position="start">
-												<LocationOnIcon sx={{ fontSize: 18, color: "#9ca3af" }} />
-											</InputAdornment>
-										),
-									}}
-									sx={fieldSx}
-								/>
-							</Box>
+			{/* Top guide banner */}
+			<div className="max-w-5xl mx-auto mb-6">
+				<CheckoutOrderGuide onBack={() => navigate(-1)} />
+			</div>
 
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									বিভাগ <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<Select
-									fullWidth
-									size="small"
-									displayEmpty
-									value={selectedDivisionId}
-									onChange={(e) => {
-										setSelectedDivisionId(e.target.value);
-										setSelectedDistrictId("");
-									}}
-									startAdornment={
-										<InputAdornment position="start">
-											<LocalShippingIcon sx={{ fontSize: 18, color: "#9ca3af", mr: 0.5 }} />
-										</InputAdornment>
-									}
-									sx={{
-										borderRadius: 2,
-										fontSize: 14,
-										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
-										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-									}}
-								>
-									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>বিভাগ নির্বাচন করুন</MenuItem>
-									{divisions.map((d) => (
-										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
-									))}
-								</Select>
-							</Box>
+			{/* ════════ MAIN INVOICE DOCUMENT SHEET ════════ */}
+			<div className="max-w-5xl mx-auto bg-white rounded-3xl border-2 border-slate-300 shadow-xl overflow-hidden mb-8">
+				{/* Top Security & Branding Accent Stripe */}
+				<div className="h-2.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500" />
 
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 0.8 }}>
-									জেলা <span style={{ color: "#ef4444" }}>*</span>
-								</Typography>
-								<Select
-									fullWidth
-									size="small"
-									displayEmpty
-									disabled={!selectedDivisionId}
-									value={selectedDistrictId}
-									onChange={(e) => setSelectedDistrictId(e.target.value)}
-									sx={{
-										borderRadius: 2,
-										fontSize: 14,
-										"& .MuiOutlinedInput-notchedOutline": { borderColor: "#e5e7eb" },
-										"&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-										"&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: "#6366f1" },
-									}}
-								>
-									<MenuItem value="" disabled sx={{ fontSize: 14, color: "#9ca3af" }}>জেলা নির্বাচন করুন</MenuItem>
-									{districts.map((d) => (
-										<MenuItem key={d.id} value={d.id} sx={{ fontSize: 14 }}>{d.name}</MenuItem>
-									))}
-								</Select>
+				<div className="p-6 sm:p-8 space-y-6">
+					{/* INVOICE HEADER BAR */}
+					<div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b-2 border-slate-200">
+						<div className="space-y-1">
+							<div className="flex items-center gap-2">
+								<div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-black text-sm shadow-xs">
+									RB
+								</div>
+								<span className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+									ResellerBrain Dropship Network
+								</span>
+							</div>
+							<h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+								CART ORDER INVOICE & SETTLEMENT BILL
+							</h1>
+							<p className="text-xs text-slate-600 font-semibold">
+								কার্ট অর্ডার ইনভয়েস ও রিসেলার আর্থিক হিসাব বিবরণী
+							</p>
+						</div>
+
+						<div className="bg-slate-50 rounded-2xl p-4 border-2 border-slate-200 text-right sm:min-w-[240px] space-y-1.5 shadow-xs">
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Invoice Draft No:</span>
+								<span className="font-mono font-bold text-slate-900">
+									INV-CART-#{userId || "0000"}-{cartItems.length}ITM
+								</span>
+							</div>
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Issue Date:</span>
+								<span className="font-bold text-slate-800">
+									{new Date().toLocaleDateString("en-US", { day: "2-digit", month: "short", year: "numeric" })}
+								</span>
+							</div>
+							<div className="flex items-center justify-between gap-4 text-xs">
+								<span className="text-slate-500 font-semibold">Payment Mode:</span>
+								<span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md text-[11px] border border-emerald-300">
+									Cash On Delivery (COD)
+								</span>
+							</div>
+						</div>
+					</div>
+
+					{/* 2-COLUMN PARTY & LOGISTICS DETAILS */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+						{/* Left: Customer Information & Delivery Form */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 space-y-4">
+							<span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 pb-2 border-b border-slate-200">
+								<User className="w-4 h-4 text-blue-600" />
+								BILL TO / CUSTOMER (গ্রাহকের তথ্য ও ঠিকানা)
+							</span>
+
+							<div className="space-y-3">
+								<div>
+									<label className="block text-xs font-bold text-slate-700 mb-1">
+										কাস্টমারের পুরো নাম <span className="text-rose-500">*</span>
+									</label>
+									<div className="relative">
+										<User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+										<input
+											type="text"
+											placeholder="কাস্টমারের পুরো নাম লিখুন"
+											value={fullName}
+											onChange={(e) => setFullName(e.target.value)}
+											className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium text-slate-900"
+										/>
+									</div>
+								</div>
+
+								<div>
+									<label className="block text-xs font-bold text-slate-700 mb-1">
+										কাস্টমারের ফোন নম্বর <span className="text-rose-500">*</span>
+									</label>
+									<div className="relative">
+										<Phone className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+										<input
+											type="tel"
+											placeholder="যেমন: 01XXXXXXXXX"
+											value={phone}
+											onChange={(e) => setPhone(e.target.value)}
+											className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium font-mono text-slate-900"
+										/>
+									</div>
+								</div>
+
+								<div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+									<div>
+										<label className="block text-xs font-bold text-slate-700 mb-1">
+											বিভাগ <span className="text-rose-500">*</span>
+										</label>
+										<select
+											value={selectedDivisionId}
+											onChange={(e) => {
+												setSelectedDivisionId(e.target.value);
+												setSelectedDistrictId("");
+											}}
+											className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium text-slate-900"
+										>
+											<option value="" disabled>বিভাগ নির্বাচন করুন</option>
+											{divisions.map((d) => (
+												<option key={d.id} value={d.id}>{d.name}</option>
+											))}
+										</select>
+									</div>
+
+									<div>
+										<label className="block text-xs font-bold text-slate-700 mb-1">
+											জেলা <span className="text-rose-500">*</span>
+										</label>
+										<select
+											value={selectedDistrictId}
+											disabled={!selectedDivisionId}
+											onChange={(e) => setSelectedDistrictId(e.target.value)}
+											className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium text-slate-900 disabled:opacity-50"
+										>
+											<option value="" disabled>জেলা নির্বাচন করুন</option>
+											{districts.map((d) => (
+												<option key={d.id} value={d.id}>{d.name}</option>
+											))}
+										</select>
+									</div>
+								</div>
+
+								<div>
+									<label className="block text-xs font-bold text-slate-700 mb-1">
+										সম্পূর্ণ ডেলিভারি ঠিকানা <span className="text-rose-500">*</span>
+									</label>
+									<div className="relative">
+										<MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+										<textarea
+											rows={2}
+											placeholder="বাড়ি, ফ্ল্যাট, রাস্তা বা এলাকার স্পষ্ট ঠিকানা দিন"
+											value={address}
+											onChange={(e) => setAddress(e.target.value)}
+											onBlur={() => {
+												const distObj = districts.find((d) => String(d.id) === String(selectedDistrictId));
+												if (address.trim() && distObj?.name) {
+													setAddress(appendLocationToAddress(address, "", distObj.name));
+												}
+											}}
+											className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium resize-none text-slate-900"
+										/>
+									</div>
+								</div>
+
+								<div>
+									<label className="block text-xs font-bold text-slate-700 mb-1">
+										অর্ডার নোট (ঐচ্ছিক)
+									</label>
+									<input
+										type="text"
+										placeholder="যেমন: ডেলিভারির আগে কল দিন"
+										value={note}
+										onChange={(e) => setNote(e.target.value)}
+										className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-indigo-600 focus:ring-1 focus:ring-indigo-600 font-medium text-slate-900"
+									/>
+								</div>
+							</div>
+						</div>
+
+						{/* Right: Logistics, Courier Attribution & Live Status */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-200 space-y-4">
+							<span className="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5 pb-2 border-b border-slate-200">
+								<Truck className="w-4 h-4 text-indigo-600" />
+								LOGISTICS & ATTRIBUTION (ডেলিভারি ও কুরিয়ার বিবরণ)
+							</span>
+
+							<div className="space-y-2.5 text-xs">
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Billed By / Reseller:</span>
+									<span className="font-bold text-slate-900">Reseller #{userId || "N/A"}</span>
+								</div>
+
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Courier Partner:</span>
+									<span className="font-bold text-slate-900 flex items-center gap-1.5">
+										<span className="w-2 h-2 rounded-full bg-emerald-500" />
+										Carrybee Courier Express
+									</span>
+								</div>
+
 								{vendorDistrictName && (
-									<Box sx={{ mt: 1, display: "flex", alignItems: "center", gap: 0.6 }}>
-										<Typography sx={{ fontSize: 12, color: "#6b7280" }}>ভেন্ডরের জেলা:</Typography>
-										<Typography sx={{ fontSize: 12, fontWeight: 800, color: "#374151" }}>{vendorDistrictName}</Typography>
-									</Box>
+									<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+										<span className="text-slate-600 font-semibold">ভেন্ডরের জেলা:</span>
+										<span className="font-bold text-slate-800 bg-slate-200/80 px-2 py-0.5 rounded">
+											{vendorDistrictName}
+										</span>
+									</div>
 								)}
-								{selectedDistrictId && (
-									<Box sx={{
-										mt: 1, borderRadius: 2, px: 2, py: 1.2,
-										background: isCalculatingCharge ? "#f9fafb" : "linear-gradient(135deg, #ede9fe 0%, #e0e7ff 100%)",
-										border: `1px solid ${isCalculatingCharge ? "#e5e7eb" : "#a5b4fc"}`,
-										display: "flex", alignItems: "center", justifyContent: "space-between"
-									}}>
-										{isCalculatingCharge ? (
-											<Stack direction="row" spacing={1} alignItems="center">
-												<CircularProgress size={14} sx={{ color: "#6366f1" }} />
-												<Typography sx={{ fontSize: 13, color: "#6b7280" }}>ডেলিভারি চার্জ হিসাব করা হচ্ছে…</Typography>
-											</Stack>
-										) : chargeError || !hasCalculatedDelivery ? (
-											<Typography sx={{ fontSize: 13, color: "#dc2626", fontWeight: 600 }}>
-												ডেলিভারি চার্জ হিসাব করা যায়নি। জেলা আবার নির্বাচন করুন।
-											</Typography>
-										) : (
-											<>
-												<Stack direction="row" spacing={0.8} alignItems="center">
-													<LocalShippingIcon sx={{ fontSize: 16, color: "#6366f1" }} />
-													<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#4338ca" }}>
-														{deliveryZone || "ডেলিভারি চার্জ"}
-													</Typography>
-												</Stack>
-												<Typography sx={{ fontSize: 14, fontWeight: 900, color: "#4f46e5" }}>
-													{money(deliveryCharge)}
-												</Typography>
-											</>
-										)}
-									</Box>
+
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Delivery Zone:</span>
+									<span className="font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-200">
+										{deliveryZone || "জেলা নির্বাচন করুন"}
+									</span>
+								</div>
+
+								<div className="flex items-center justify-between pb-1.5 border-b border-slate-200">
+									<span className="text-slate-600 font-semibold">Estimated Transit:</span>
+									<span className="font-bold text-slate-800">২–৪ কার্যদিবস (Standard Transit)</span>
+								</div>
+
+								<div className="flex items-center justify-between">
+									<span className="text-slate-600 font-semibold">Payment Option:</span>
+									<span className="font-bold text-slate-900">ক্যাশ অন ডেলিভারি (COD)</span>
+								</div>
+							</div>
+
+							{/* Delivery Calculation Live Indicator Card */}
+							<div className={`p-3 rounded-xl border-2 transition-all ${
+								isCalculatingCharge
+									? "bg-slate-100 border-slate-300"
+									: hasCalculatedDelivery
+									? "bg-indigo-50 border-indigo-300"
+									: "bg-amber-50 border-amber-300"
+							}`}>
+								{isCalculatingCharge ? (
+									<div className="flex items-center gap-2 text-xs font-bold text-indigo-700">
+										<Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
+										<span>ডেলিভারি চার্জ হিসাব করা হচ্ছে…</span>
+									</div>
+								) : hasCalculatedDelivery ? (
+									<div className="flex items-center justify-between text-xs">
+										<div className="flex items-center gap-1.5">
+											<Truck className="w-4 h-4 text-indigo-600" />
+											<span className="font-bold text-indigo-950">
+												ডেলিভারি ফি ({deliveryZone || "Standard"}):
+											</span>
+										</div>
+										<span className="font-black text-indigo-900 text-sm font-mono">
+											{money(deliveryCharge)}
+										</span>
+									</div>
+								) : (
+									<div className="flex items-center gap-1.5 text-xs font-semibold text-amber-900">
+										<AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+										<span>ডেলিভারি চার্জ হিসাবের জন্য জেলা নির্বাচন করুন।</span>
+									</div>
 								)}
-							</Box>
+							</div>
+						</div>
+					</div>
 
-							<Box>
-								<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#374151", mb: 1 }}>
-									কাস্টমার যেভাবে টাকা দেবেন
-								</Typography>
-								<RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
-									<Paper elevation={0} sx={{ border: "1px solid #e5e7eb", borderRadius: 2, px: 2, py: 1, mb: 1 }}>
-										<FormControlLabel
-											value="cod"
-											control={<Radio size="small" sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
-											label={<Typography sx={{ fontSize: 14, fontWeight: 700 }}>ক্যাশ অন ডেলিভারি (COD)</Typography>}
-										/>
-										{paymentMethod === "cod" && (
-											<Typography sx={{ fontSize: 12, color: "#6b7280", ml: 4, mb: 0.5 }}>
-												পণ্য হাতে পেলে কাস্টমার ডেলিভারি কর্মীকে টাকা দেবেন।
-											</Typography>
-										)}
-									</Paper>
-								</RadioGroup>
-							</Box>
-
-							{requiresAdvance && (
-								<Box sx={{ mb: 2.5, p: 2, borderRadius: 2, border: "1px solid #fed7aa", background: "#fffbeb" }}>
-									<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#9a3412", mb: 0.5 }}>
-										⚠️ অগ্রিম ডেলিভারি চার্জ আবশ্যক ({money(advanceAmount)})
-									</Typography>
-									<Typography sx={{ fontSize: 11.5, color: "#78350f", mb: 1.5, lineHeight: 1.4 }}>
-										নতুন ড্রপশিপার হিসেবে প্রথম ৫টি অর্ডারের ডেলিভারি ফি অগ্রিম প্রদান আবশ্যক। আপনার সম্পন্ন অর্ডার: <strong>{completedOrdersCount}/5</strong>
-									</Typography>
-									<Paper elevation={0} sx={{ border: "1px solid #6366f1", borderRadius: 2, px: 1.5, py: 1, background: "#f5f3ff" }}>
-										<FormControlLabel
-											value="later"
-											checked={true}
-											control={<Radio size="small" checked sx={{ color: "#6366f1", "&.Mui-checked": { color: "#6366f1" } }} />}
-											label={<Typography sx={{ fontSize: 13, fontWeight: 700 }}>পরে পরিশোধ করুন (Pay Later)</Typography>}
-										/>
-										<Typography sx={{ fontSize: 11, color: "#6b7280", ml: 3.5, mt: 0.2 }}>
-											অর্ডারটি জমা হবে এবং আপনি Order Details পেজ থেকে ২৪ ঘণ্টার মধ্যে অগ্রিম ডেলিভারি চার্জ পরিশোধ করতে পারবেন।
-										</Typography>
-									</Paper>
-								</Box>
-							)}
-
-							<Typography sx={{ fontSize: 12, color: "#475569", lineHeight: 1.6 }}>
-								অর্ডার জমা হলে অ্যাডমিন যাচাই করবেন। এরপর অর্ডার তালিকা থেকে অগ্রগতি দেখতে পারবেন।
-							</Typography>
-							<Button
-								variant="contained"
-								fullWidth
-								size="large"
-								disabled={loadingCheckout || !cartItems.length}
-								onClick={handlePlaceOrder}
-								sx={{
-									borderRadius: 2,
-									textTransform: "none",
-									fontWeight: 900,
-									fontSize: 15,
-									py: 1.5,
-									background: "linear-gradient(135deg, #4f46e5 0%, #6366f1 100%)",
-									boxShadow: "0 4px 16px rgba(99,102,241,0.35)",
-									"&:hover": { background: "linear-gradient(135deg, #4338ca 0%, #4f46e5 100%)", boxShadow: "0 6px 20px rgba(99,102,241,0.45)" },
-									"&.Mui-disabled": { opacity: 0.5, background: "#e5e7eb", color: "#9ca3af" },
-								}}
-							>
-								{loadingCheckout ? (
-									<Stack direction="row" spacing={1} alignItems="center">
-										<CircularProgress size={16} color="inherit" />
-										<span>অর্ডার জমা হচ্ছে…</span>
-									</Stack>
-								) : "অর্ডার নিশ্চিত করুন"}
-							</Button>
-						</Box>
-					</Paper>
-				</Grid>
-
-				<Grid item xs={12} md={7} lg={8}>
-					<Paper elevation={0} sx={{ borderRadius: 3, border: "1px solid #e8e8f0", background: "#fff" }}>
-						<Box sx={{ px: 3, pt: 2.5, pb: 1 }}>
-							<Typography sx={{ fontWeight: 900, fontSize: 17, color: "#1a1a2e" }}>
-								অর্ডারের পণ্য ও টাকার হিসাব
-							</Typography>
-						</Box>
+					{/* ITEMIZED INVOICE TABLE */}
+					<div className="space-y-3">
+						<div className="flex items-center justify-between">
+							<h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+								<Receipt className="w-4 h-4 text-blue-600" />
+								অর্ডারের পণ্য তালিকা (ITEMIZED ORDER STATEMENT)
+							</h3>
+							<span className="text-xs text-slate-500 font-semibold">
+								{cartItems.length} টি আইটেম
+							</span>
+						</div>
 
 						{cartLoading ? (
-							<Box sx={{ p: 3 }}><LinearProgress /></Box>
+							<div className="p-8 text-center text-slate-500 font-bold">
+								<Loader2 className="w-6 h-6 animate-spin mx-auto text-indigo-600 mb-2" />
+								কার্টের পণ্য লোড হচ্ছে...
+							</div>
 						) : cartItems.length === 0 ? (
-							<Box sx={{ p: 4, textAlign: "center" }}>
-								<Typography sx={{ color: "#9ca3af", fontWeight: 700 }}>আপনার কার্টে কোনো পণ্য নেই।</Typography>
-							</Box>
+							<div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300">
+								<ShoppingBag className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+								<p className="font-bold text-slate-600 text-sm">আপনার কার্টে কোনো পণ্য নেই।</p>
+								<button
+									type="button"
+									onClick={() => navigate("/app/products")}
+									className="mt-3 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold cursor-pointer"
+								>
+									পণ্য ব্রাউজ করুন
+								</button>
+							</div>
 						) : (
-							<TableContainer>
-								<Table size="small">
-									<TableHead>
-										<TableRow sx={{ background: "#f9fafb" }}>
-											{["বাদ দিন", "পণ্য", "পরিমাণ", "দাম"].map((h) => (
-												<TableCell key={h} align={h === "দাম" ? "right" : "center"}
-													sx={{ fontWeight: 900, fontSize: 13, color: "#374151", borderBottom: "1px solid #e5e7eb", py: 1.5 }}>
-													{h}
-												</TableCell>
-											))}
-										</TableRow>
-									</TableHead>
-									<TableBody>
-										{cartItems.map((it) => {
+							<div className="overflow-x-auto rounded-2xl border-2 border-slate-200">
+								<table className="w-full text-left text-xs">
+									<thead className="bg-slate-100 border-b-2 border-slate-200 text-slate-700 uppercase font-black tracking-wider text-[11px]">
+										<tr>
+											<th className="px-4 py-3 text-center w-12">#</th>
+											<th className="px-4 py-3">পণ্যের বিবরণ (Item Details)</th>
+											<th className="px-4 py-3 text-center">পরিমাণ (Qty)</th>
+											<th className="px-4 py-3 text-right">একক মূল্য (Unit Rate)</th>
+											<th className="px-4 py-3 text-right">মোট প্রদেয় (Line Total)</th>
+											<th className="px-4 py-3 text-center w-16">অ্যাকশন</th>
+										</tr>
+									</thead>
+									<tbody className="divide-y divide-slate-200 bg-white">
+										{cartItems.map((it, idx) => {
 											const imgSrc = it?.product?.primary_image?.file_name
 												? `${imgBaseUrl}/${it.product.primary_image.file_name}`
 												: null;
-											const linePrice =
-												it?.line_total ?? it?.total ??
-												(it?.qty || 1) * getResellerSellingPrice(it);
+											const unitPrice = getResellerSellingPrice(it);
+											const linePrice = it?.line_total ?? it?.total ?? (it?.qty || 1) * unitPrice;
 											const isProc = processing[it.id];
+
 											return (
-												<TableRow key={it.id} sx={{ "&:hover": { background: "#fafafa" } }}>
-													<TableCell align="center" sx={{ borderBottom: "1px solid #f3f4f6", width: 48 }}>
-														<IconButton size="small" onClick={() => handleDeleteItem(it)} disabled={isProc}
-															sx={{ color: "#ef4444", background: "#fef2f2", borderRadius: 1.5, width: 30, height: 30 }}>
-															<DeleteOutlineIcon sx={{ fontSize: 16 }} />
-														</IconButton>
-													</TableCell>
-													<TableCell sx={{ borderBottom: "1px solid #f3f4f6" }}>
-														<Stack direction="row" spacing={1.2} alignItems="center">
-															<Avatar src={imgSrc} variant="rounded"
-																sx={{ width: 44, height: 44, borderRadius: 1.5, border: "1px solid #e5e7eb", background: "#f3f4f6" }} />
-															<Box>
-																<Typography sx={{ fontSize: 13, fontWeight: 700, color: "#1f2937", maxWidth: 140, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-																	{it.product?.name || "Item"}
-																</Typography>
-															</Box>
-														</Stack>
-													</TableCell>
-													<TableCell align="center" sx={{ borderBottom: "1px solid #f3f4f6", width: 110 }}>
-														<Stack direction="row" spacing={0.5} alignItems="center" justifyContent="center">
-															<IconButton size="small" disabled={isProc || (it.qty || 1) <= 1}
+												<tr key={it.id || idx} className="hover:bg-slate-50 transition-colors">
+													<td className="px-4 py-3.5 text-center font-bold text-slate-500">
+														{String(idx + 1).padStart(2, "0")}
+													</td>
+													<td className="px-4 py-3.5">
+														<div className="flex items-center gap-3">
+															{imgSrc ? (
+																<img
+																	src={imgSrc}
+																	alt={it.product?.name}
+																	className="w-12 h-12 object-cover rounded-xl border border-slate-200 shrink-0"
+																/>
+															) : (
+																<div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-400 shrink-0">
+																	📦
+																</div>
+															)}
+															<div>
+																<p className="font-bold text-slate-900 text-sm leading-tight line-clamp-1">
+																	{it.product?.name || "Product Item"}
+																</p>
+																<div className="flex flex-wrap items-center gap-2 mt-1">
+																	<span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+																		SKU: {it.product?.sku || it.product?.id || "N/A"}
+																	</span>
+																	{it.variation_label && (
+																		<span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200">
+																			{it.variation_label}
+																		</span>
+																	)}
+																</div>
+															</div>
+														</div>
+													</td>
+													<td className="px-4 py-3.5 text-center">
+														<div className="inline-flex items-center border border-slate-300 rounded-lg overflow-hidden bg-white shadow-xs">
+															<button
+																type="button"
+																disabled={isProc || (it.qty || 1) <= 1}
 																onClick={() => handleUpdateQty(it, (it.qty || 1) - 1)}
-																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1 }}>
-																−
-															</IconButton>
-															<Box sx={{ minWidth: 28, height: 26, border: "1px solid #e5e7eb", borderRadius: 1, display: "grid", placeItems: "center", fontSize: 13, fontWeight: 900 }}>
+																className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition disabled:opacity-40 cursor-pointer"
+															>
+																-
+															</button>
+															<span className="px-2.5 py-1 text-xs font-black text-slate-900 min-w-[28px] text-center">
 																{it.qty || 1}
-															</Box>
-															<IconButton size="small" disabled={isProc}
+															</span>
+															<button
+																type="button"
+																disabled={isProc}
 																onClick={() => handleUpdateQty(it, (it.qty || 1) + 1)}
-																sx={{ width: 26, height: 26, border: "1px solid #e5e7eb", borderRadius: 1 }}>
+																className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition disabled:opacity-40 cursor-pointer"
+															>
 																+
-															</IconButton>
-														</Stack>
-													</TableCell>
-													<TableCell align="right" sx={{ borderBottom: "1px solid #f3f4f6", width: 80 }}>
-														<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#1f2937" }}>
-															{money(linePrice)}
-														</Typography>
-													</TableCell>
-												</TableRow>
+															</button>
+														</div>
+													</td>
+													<td className="px-4 py-3.5 text-right font-bold text-slate-700 font-mono">
+														{money(unitPrice)}
+													</td>
+													<td className="px-4 py-3.5 text-right font-black text-blue-950 font-mono text-sm">
+														{money(linePrice)}
+													</td>
+													<td className="px-4 py-3.5 text-center">
+														<button
+															type="button"
+															disabled={isProc}
+															onClick={() => handleDeleteItem(it)}
+															className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+															title="মুছে ফেলুন"
+														>
+															<Trash2 className="w-4 h-4" />
+														</button>
+													</td>
+												</tr>
 											);
 										})}
-									</TableBody>
-								</Table>
-							</TableContainer>
+									</tbody>
+								</table>
+							</div>
 						)}
+					</div>
 
-						{cartItems.length > 0 && (
-							<Box sx={{ px: 3, pb: 3, pt: 1 }}>
-								<Divider sx={{ mb: 2 }} />
-								<Stack spacing={1.2} sx={{ mb: 2 }}>
-									{[
-										{ label: "পণ্যের মোট দাম", value: money(subtotal) },
-										{ label: "ছাড়", value: money(discount) },
-										{
-											label: "ডেলিভারি চার্জ",
-											value: isCalculatingCharge
-												? "হিসাব করা হচ্ছে…"
-												: !selectedDistrictId
-												? "জেলা নির্বাচন করুন"
-												: hasCalculatedDelivery
-												? money(deliveryCharge)
-												: "হিসাব পাওয়া যায়নি",
-										},
-									].map(({ label, value }) => (
-										<Stack key={label} direction="row" justifyContent="space-between" alignItems="center">
-											<Typography sx={{ fontSize: 14, fontWeight: 700, color: "#374151" }}>{label}</Typography>
-											<Typography sx={{ fontSize: 14, fontWeight: 800, color: "#1f2937" }}>{value}</Typography>
-										</Stack>
-									))}
+					{/* FINANCIAL SUMMARY & SETTLEMENT BREAKDOWN (INVOICE LEDGER) */}
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+						{/* Left: Reliability & Terms Statement */}
+						<div className="space-y-4">
+							{requiresAdvance && (
+								<div className="bg-amber-50/70 rounded-2xl p-5 border-2 border-amber-300 space-y-3">
+									<div className="flex items-center justify-between">
+										<span className="text-xs font-black text-amber-950 uppercase tracking-wider flex items-center gap-1.5">
+											<ShieldCheck className="w-4 h-4 text-amber-700" />
+											অগ্রিম ডেলিভারি চার্জ আবশ্যক ({money(advanceAmount)})
+										</span>
+										<span className="text-[11px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+											{completedOrdersCount}/{minOrdersThreshold} সম্পন্ন
+										</span>
+									</div>
 
-									{resellerProfit > 0 && (
-										<Box sx={{
-											display: "flex", justifyContent: "space-between", alignItems: "center",
-											background: "linear-gradient(135deg, #dcfce7 0%, #d1fae5 100%)",
-											border: "1px solid #86efac", borderRadius: 2, px: 2, py: 1,
-										}}>
-											<Typography sx={{ fontSize: 13, fontWeight: 900, color: "#15803d" }}>
-												পণ্যে আপনার আনুমানিক লাভ
-											</Typography>
-											<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#16a34a" }}>
-												+{money(resellerProfit)}
-											</Typography>
-										</Box>
-									)}
+									<p className="text-xs text-amber-900 leading-relaxed font-medium">
+										নতুন ড্রপশিপার হিসেবে প্রথম ৫টি অর্ডারের ডেলিভারি ফি অগ্রিম প্রদান আবশ্যক। আপনার সম্পন্ন অর্ডার: <strong>{completedOrdersCount}/{minOrdersThreshold}</strong>
+									</p>
 
-									<Divider />
-									<Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#1f2937" }}>কাস্টমারের মোট টাকা (COD)</Typography>
-										<Typography sx={{ fontSize: 15, fontWeight: 900, color: "#4f46e5", textAlign: "right" }}>
-											{hasCalculatedDelivery ? money(grandTotal) : "ডেলিভারি চার্জের অপেক্ষায়"}
-										</Typography>
-									</Stack>
-								</Stack>
-							</Box>
-						)}
-					</Paper>
-				</Grid>
-			</Grid>
+									<div className="bg-white p-3 rounded-xl border border-amber-300 text-xs">
+										<span className="font-bold text-slate-900 block mb-0.5">পরে পরিশোধ করুন (Pay Later)</span>
+										<span className="text-slate-600 text-[11px]">
+											অর্ডারটি জমা হবে এবং আপনি Order Details পেজ থেকে ২৪ ঘণ্টার মধ্যে অগ্রিম ডেলিভারি চার্জ পরিশোধ করতে পারবেন।
+										</span>
+									</div>
+								</div>
+							)}
+
+							<div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed space-y-2">
+								<p className="font-bold text-slate-800 flex items-center gap-1.5">
+									<HelpCircle className="w-4 h-4 text-indigo-600" />
+									অর্ডার প্রক্রিয়া ও লাভ পাওয়ার নিয়ম:
+								</p>
+								<p>
+									১. অর্ডার সাবমিট করার পর আমাদের অ্যাডমিন টিম কাস্টমার ও ডেলিভারি তথ্য যাচাই করবেন।
+								</p>
+								<p>
+									২. ডেলিভারি সম্পন্ন হলে সংগৃহীত COD টাকা থেকে পাইকারি খরচ ও ডেলিভারি ফি বাদ দিয়ে বাকি নিট লাভ সরাসরি আপনার ড্রপশিপার ওয়ালেটে জমা হবে।
+								</p>
+							</div>
+						</div>
+
+						{/* Right: Formal Ledger Breakdown */}
+						<div className="bg-slate-50 rounded-2xl p-5 border-2 border-slate-300 space-y-3">
+							<span className="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center justify-between pb-2 border-b-2 border-slate-200">
+								<span>আর্থিক হিসাব বিবরণী (SETTLEMENT BREAKDOWN)</span>
+								<span className="text-blue-700 font-bold">ইনভয়েস সমাপনী</span>
+							</span>
+
+							<div className="space-y-2 text-xs">
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">পণ্যের মোট বিক্রয় মূল্য (Subtotal):</span>
+									<span className="font-mono font-black text-slate-900 text-sm">{money(subtotal)}</span>
+								</div>
+
+								{discount > 0 && (
+									<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+										<span className="text-slate-700">বাদ: বিশেষ ছাড় (Discount):</span>
+										<span className="font-mono font-bold text-rose-700">- {money(discount)}</span>
+									</div>
+								)}
+
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">কুরিয়ার ডেলিভারি চার্জ ({deliveryZone || "ডেলিভারি"}):</span>
+									<span className="font-mono font-bold text-indigo-700">
+										{isCalculatingCharge ? "হিসাব করা হচ্ছে…" : hasCalculatedDelivery ? `+ ${money(deliveryCharge)}` : "জেলা নির্বাচন করুন"}
+									</span>
+								</div>
+
+								<div className="flex items-center justify-between py-1 border-b border-slate-200 font-semibold">
+									<span className="text-slate-700">বাদ: ভেন্ডর পাইকারি খরচ (Product Cost):</span>
+									<span className="font-mono font-bold text-rose-700">- {money(calculatedBaseTotal)}</span>
+								</div>
+							</div>
+
+							{/* Highlighted Profit Margin Card */}
+							{resellerProfit > 0 && (
+								<div className="mt-3 p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-teal-500/10 border-2 border-emerald-500 flex items-center justify-between gap-3 shadow-xs">
+									<div>
+										<div className="flex items-center gap-1.5">
+											<span className="text-xs font-black text-emerald-950 uppercase tracking-wider">
+												আপনার আনুমানিক নিট লাভ
+											</span>
+											<span className="text-[10px] bg-emerald-600 text-white font-extrabold px-2 py-0.5 rounded-full">
+												NET MARGIN
+											</span>
+										</div>
+										<p className="text-[11px] text-emerald-800 font-semibold mt-0.5">
+											[মোট বিক্রয় মূল্য - ভেন্ডর পাইকারি খরচ]
+										</p>
+									</div>
+
+									<p className="text-2xl font-black text-emerald-700 font-mono tracking-tight">
+										+{money(resellerProfit)}
+									</p>
+								</div>
+							)}
+
+							{/* Grand Total COD Collection */}
+							<div className="mt-2 p-3.5 rounded-2xl bg-indigo-50 border-2 border-indigo-200 flex items-center justify-between">
+								<div>
+									<span className="text-xs font-black text-indigo-950 uppercase tracking-wider block">
+										কাস্টমারের সর্বমোট প্রদেয় টাকা (COD)
+									</span>
+									<span className="text-[10px] text-indigo-700 font-semibold">
+										ডেলিভারি কর্মী এই টাকা সংগ্রহ করবেন
+									</span>
+								</div>
+								<span className="text-xl font-black text-indigo-700 font-mono">
+									{hasCalculatedDelivery ? money(grandTotal) : "ডেলিভারি চার্জের অপেক্ষায়"}
+								</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				{/* ════════ BOTTOM ACTION BAR (CONFIRM BUTTON AT BOTTOM) ════════ */}
+				<div className="bg-slate-100 p-5 sm:p-6 border-t-2 border-slate-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+					<div className="space-y-0.5 text-xs">
+						<p className="font-bold text-slate-800">
+							কাস্টমারের নাম, ফোন নম্বর, ডেলিভারি ঠিকানা ও পণ্য তালিকা মিলিয়ে অর্ডার নিশ্চিত করুন।
+						</p>
+						<p className="text-slate-500 font-medium">
+							অর্ডার জমা হলে অ্যাডমিন যাচাই করবেন। এরপর অর্ডার তালিকা থেকে অগ্রগতি দেখতে পারবেন।
+						</p>
+					</div>
+
+					<div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+						{/* ── BOTTOM CONFIRM BUTTON ── */}
+						<button
+							type="button"
+							disabled={loadingCheckout || !cartItems.length}
+							onClick={handlePlaceOrder}
+							className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:from-blue-800 active:to-indigo-800 text-white font-black text-sm sm:text-base rounded-2xl shadow-xl shadow-indigo-600/30 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+						>
+							{loadingCheckout ? (
+								<>
+									<Loader2 className="w-5 h-5 animate-spin text-white" />
+									<span>অর্ডার জমা হচ্ছে...</span>
+								</>
+							) : (
+								<>
+									<CheckCircle2 className="w-5 h-5 text-white" />
+									<span>অর্ডার নিশ্চিত করুন (Confirm Order)</span>
+								</>
+							)}
+						</button>
+					</div>
+				</div>
+			</div>
 
 			<Snackbar
 				open={!!msg.text}
@@ -1601,7 +1830,7 @@ const StandardCartCheckoutView = ({
 					{msg.text}
 				</Alert>
 			</Snackbar>
-		</Box>
+		</div>
 	);
 };
 

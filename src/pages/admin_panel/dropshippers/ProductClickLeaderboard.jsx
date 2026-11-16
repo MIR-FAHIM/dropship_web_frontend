@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MousePointerClick } from "lucide-react";
 import { useOutletContext } from "react-router-dom";
 import Pagination from "../../../components/shared/Pagination";
+import DropshipperLink from "../../../components/shared/DropshipperLink";
 import { useGetDropshipperProductClickLeaderboardQuery } from "../../../redux/features/report";
 
 const pageSize = 20;
@@ -110,7 +111,7 @@ export default function ProductClickLeaderboard() {
                       <tr key={dropshipper.id}>
                         <td className="px-3 py-3 font-semibold tabular-nums sm:px-4">{countFormatter.format(dropshipper.rank)}</td>
                         <th scope="row" className="px-3 py-3 font-medium text-gray-900 sm:px-4">
-                          {dropshipper.name || `#${dropshipper.id}`}
+                          <DropshipperLink id={dropshipper.id}>{dropshipper.name || `#${dropshipper.id}`}</DropshipperLink>
                         </th>
                         <td className="px-3 py-3 text-right font-semibold tabular-nums sm:px-4">{countFormatter.format(dropshipper.total_clicks)}</td>
                         <td className="px-3 py-3 text-right tabular-nums sm:px-4">{countFormatter.format(dropshipper.unique_products_clicked)}</td>

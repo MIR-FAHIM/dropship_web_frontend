@@ -38,6 +38,16 @@ const accountingApi = baseApi.injectEndpoints({
       }),
       providesTags: ["ResellerTransactions"],
     }),
+    getDropshipperTransactions: builder.query({
+      query: ({ dropshipperId, ...params }) => ({
+        url: API_ENDPOINTS.transactions.dropshipper.path.replace(
+          "{dropshipperId}",
+          dropshipperId
+        ),
+        params,
+      }),
+      providesTags: ["ResellerTransactions"],
+    }),
     getResellerAdvanceHistory: builder.query({
       query: (page = 1) => ({
         url: API_ENDPOINTS.transactions.resellerAdvanceHistory.path,
@@ -120,6 +130,7 @@ export const {
   useGetCreditTransactionsQuery,
   useGetDebitTransactionsQuery,
   useGetResellerTransactionsQuery,
+  useGetDropshipperTransactionsQuery,
   useGetResellerAdvanceHistoryQuery,
   useGetTransactionReportQuery,
   useAddUserBankAccountMutation,

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="850" height="230" viewBox="0 0 850 230" fill="none">
+  <title>AddaBuy — chat, share, shop</title>
+  <desc>Two colorful overlapping conversation bubbles with a friendly shopping bag and the AddaBuy wordmark.</desc>
+  <g transform="translate(18 19)">
+    <!-- Two chat bubbles suggest friends catching up. -->
+    <path d="M28 53c0-24 20-43 45-43h76c25 0 45 19 45 43v31c0 24-20 43-45 43h-39l-28 25 5-27c-34-3-59-20-59-41V53Z" fill="#4285F4"/>
+    <path d="M47 62c0-20 17-36 38-36h65c21 0 38 16 38 36v25c0 20-17 36-38 36h-37l-19 18 3-19c-28-2-50-17-50-36V62Z" fill="#EA4335"/>
+    <!-- Friendly chat dots -->
+    <circle cx="92" cy="75" r="6" fill="#fff"/><circle cx="119" cy="75" r="6" fill="#fff"/><circle cx="146" cy="75" r="6" fill="#fff"/>
+    <!-- Shopping bag tucked into the conversation -->
+    <path d="M105 118h83l8 70a13 13 0 0 1-13 14h-73a13 13 0 0 1-13-14l8-70Z" fill="#FBBC05"/>
+    <path d="M105 118h42v84h-37a13 13 0 0 1-13-14l8-70Z" fill="#34A853"/>
+    <path d="M127 124v-12a20 20 0 0 1 40 0v12" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M146 151c-5-8-17-4-17 5 0 8 17 19 17 19s17-11 17-19c0-9-12-13-17-5Z" fill="#fff"/>
+  </g>
+  <text x="250" y="147" font-family="Trebuchet MS, Arial, Helvetica, sans-serif" font-size="91" font-weight="700" letter-spacing="-4">
+    <tspan fill="#202124">Adda</tspan><tspan fill="#4285F4">B</tspan><tspan fill="#EA4335">u</tspan><tspan fill="#FBBC05">y</tspan>
+  </text>
+  <text x="258" y="187" font-family="Trebuchet MS, Arial, Helvetica, sans-serif" font-size="21" font-weight="600" letter-spacing="1.2" fill="#5F6368">GOOD CHATS. GREAT FINDS.</text>
+</svg>

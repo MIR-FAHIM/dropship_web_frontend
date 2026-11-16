@@ -29,9 +29,12 @@ import {
   useListVendorInvoicesQuery,
   useApproveVendorInvoiceMutation,
   useRejectVendorInvoiceMutation,
+  useAdjustVendorInvoiceMutation,
 } from "../../../redux/features/orderSettlement";
 import { formatBDT } from "../../../utils/orderBreakdown.utils";
 import ShareVendorInvoiceModal from "./ShareVendorInvoiceModal";
+import FinalAmountField, { finalAmountMissingReason, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
+import InvoiceAdjustmentNote from "../../../components/shared/InvoiceAdjustmentNote";
 
 
 const getProductImgUrl = (thumbnail) => {
@@ -211,7 +214,7 @@ export default function AdminVendorInvoices() {
                   </th>
                   <th className="py-3 px-3 text-center">স্ট্যাটাস</th>
                   <th className="py-3 px-3 text-left">Trx ID / পেমেন্ট</th>
-                  <th className="py-3 px-3 text-center">অ্যাকশন</th>
+                  <th className="py-3 px-3 text-center bg-slate-50">অ্যাকশন</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -251,6 +254,7 @@ export default function AdminVendorInvoices() {
 
                       <td className="py-3 px-3 text-right font-mono font-bold text-amber-950 bg-amber-50/30">
                         {formatBDT(inv.total_amount_owed)}
+                        <InvoiceAdjustmentNote invoice={inv} compact />
                       </td>
 
                       <td className="py-3 px-3 text-center">
@@ -272,33 +276,36 @@ export default function AdminVendorInvoices() {
                         )}
                       </td>
 
-                      <td className="py-3 px-3 text-center">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="py-3 px-3 text-center bg-slate-50/60">
+                        <div className="flex min-w-max items-center justify-center gap-2">
                           <button
                             onClick={() => setSelectedInvoice(inv)}
-                            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-indigo-600 transition cursor-pointer"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 cursor-pointer"
                             title="বিস্তারিত দেখুন"
+                            aria-label="ইনভয়েসের বিস্তারিত দেখুন"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-4 h-4" strokeWidth={2.25} />
                           </button>
 
                           <button
                             onClick={() => setShareModalInvoice(inv)}
-                            className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-600 hover:text-indigo-800 transition cursor-pointer"
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100 hover:text-indigo-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-1 cursor-pointer"
                             title="ভেন্ডরের সাথে ইনভয়েস শেয়ার করুন (Share)"
+                            aria-label="ভেন্ডরের সাথে ইনভয়েস শেয়ার করুন"
                           >
-                            <Share2 className="w-4 h-4" />
+                            <Share2 className="w-4 h-4" strokeWidth={2.25} />
                           </button>
 
                           {isPaid && (
                             <button
                               onClick={() => handleApprove(inv)}
                               disabled={isApproving}
-                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-100 px-2.5 py-1.5 text-[11px] font-bold text-emerald-900 shadow-sm transition hover:border-emerald-400 hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                               title="অনুমোদন করুন"
+                              aria-label="ইনভয়েস অনুমোদন করুন"
                             >
-                              <Check className="w-3.5 h-3.5" />
-                              অ্যাপ্রুভ
+                              <Check className="h-4 w-4 shrink-0 text-emerald-800" strokeWidth={2.75} />
+                              <span className="whitespace-nowrap">অনুমোদন করুন</span>
                             </button>
                           )}
 
@@ -308,10 +315,11 @@ export default function AdminVendorInvoices() {
                                 setRejectionModalInvoice(inv);
                                 setRejectionReason("");
                               }}
-                              className="p-1.5 rounded-lg hover:bg-red-50 text-red-500 hover:text-red-700 transition cursor-pointer"
+                              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 bg-red-50 text-red-600 shadow-sm transition hover:border-red-300 hover:bg-red-100 hover:text-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 cursor-pointer"
                               title="প্রত্যাখ্যান করুন"
+                              aria-label="ইনভয়েস প্রত্যাখ্যান করুন"
                             >
-                              <X className="w-4 h-4" />
+                              <X className="w-4 h-4" strokeWidth={2.5} />
                             </button>
                           )}
                         </div>
@@ -336,6 +344,7 @@ export default function AdminVendorInvoices() {
             setSelectedInvoice(null);
           }}
           onShare={(inv) => setShareModalInvoice(inv)}
+          onAdjusted={(updated) => setSelectedInvoice((prev) => ({ ...prev, ...updated }))}
         />
       )}
 
@@ -400,7 +409,52 @@ export default function AdminVendorInvoices() {
   );
 }
 
-function AdminInvoiceDetailsModal({ invoice, onClose, onApprove, onReject, onShare }) {
+/* Admin changes the final amount of an unpaid invoice (reason required if it differs). */
+function AdjustInvoiceAmount({ invoice, onAdjusted }) {
+  const calculated = Number(invoice.calculated_amount ?? invoice.total_amount_owed ?? 0);
+  const hasAdjustment = Math.abs(Number(invoice.adjustment_amount || 0)) >= 0.01;
+  const [value, setValue] = useState(
+    hasAdjustment
+      ? { enabled: true, amount: String(invoice.total_amount_owed), reason: invoice.adjustment_reason || "" }
+      : { enabled: false, amount: "", reason: "" }
+  );
+  const [adjustInvoice, { isLoading }] = useAdjustVendorInvoiceMutation();
+  const final = resolveFinalAmount(calculated, value);
+  const unchanged = Math.abs(final - Number(invoice.total_amount_owed || 0)) < 0.01
+    && (value.reason || "").trim() === (invoice.adjustment_reason || "").trim();
+
+  const save = async () => {
+    try {
+      const res = await adjustInvoice({
+        id: invoice.id,
+        final_amount: final,
+        adjustment_reason: (value.reason || "").trim() || undefined,
+      }).unwrap();
+      toast.success("Invoice amount updated");
+      onAdjusted?.(res?.data);
+    } catch (err) {
+      toast.error(err?.data?.message || "Could not update the amount");
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <FinalAmountField id={`vendor-inv-adjust-${invoice.id}`} calculated={calculated} value={value} onChange={setValue} label="Vendor owes (invoice total)" />
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={save}
+          disabled={isLoading || unchanged || finalAmountMissingReason(calculated, value)}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />} Save amount
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function AdminInvoiceDetailsModal({ invoice, onClose, onApprove, onReject, onShare, onAdjusted }) {
   const statusCfg = STATUS_CONFIG[invoice.status] || STATUS_CONFIG.pending;
   const isPaid = invoice.status === "paid";
   const isPending = invoice.status === "pending";
@@ -471,6 +525,12 @@ function AdminInvoiceDetailsModal({ invoice, onClose, onApprove, onReject, onSha
               <span className="font-mono font-black text-base text-amber-950">{formatBDT(invoice.total_amount_owed)}</span>
             </div>
           </div>
+
+          <InvoiceAdjustmentNote invoice={invoice} />
+
+          {(isPending || invoice.status === "rejected") && (
+            <AdjustInvoiceAmount key={`${invoice.id}-${invoice.total_amount_owed}`} invoice={invoice} onAdjusted={onAdjusted} />
+          )}
 
           {/* Payment Submission Details (if submitted) */}
           {invoice.trx_id && (
@@ -654,9 +714,10 @@ function AdminInvoiceDetailsModal({ invoice, onClose, onApprove, onReject, onSha
               <button
                 type="button"
                 onClick={onApprove}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-indigo-800 bg-indigo-700 px-5 py-2.5 text-xs font-bold text-white shadow-lg transition hover:border-indigo-900 hover:bg-indigo-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 cursor-pointer"
+                aria-label="পেমেন্ট অনুমোদন ও সেটেল করুন"
               >
-                <Check className="w-4 h-4" />
+                <Check className="h-4 w-4 text-indigo-100" />
                 পেমেন্ট অনুমোদন ও সেটেল করুন
               </button>
             )}

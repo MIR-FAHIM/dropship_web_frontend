@@ -35,10 +35,17 @@ const withdrawApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["Request"],
     }),
+
+    // Admin records a wallet payout made by hand (bKash, bank, cash) so the balance drops.
+    adminWalletPayout: builder.mutation({
+      query: (body) => ({ url: "/withdraws/admin-payout", method: "POST", body }),
+      invalidatesTags: ["Request", "ResellerTransactions"],
+    }),
   }),
 });
 
 export const {
+  useAdminWalletPayoutMutation,
   useAddWithdrawRequestMutation,
   useGetUserWithdrawRequestsQuery,
   useGetAllWithdrawsQuery,

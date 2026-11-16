@@ -17,6 +17,7 @@ import CourierIssueBadge from "../../../components/shared/CourierIssueBadge";
 import OrderCompletionModal from "./OrderCompletionModal";
 import DropshipperPayoutModal from "./DropshipperPayoutModal";
 import { ClearFilterChip, DropshipperFilter, OrderDateFilter, describeDateRange } from "./OrderListFilters";
+import DropshipperLink from "../../../components/shared/DropshipperLink";
 
 // Small product thumbnail for the Items column. Same URL pattern as the
 // reseller order details page (imgBaseUrl + primary_image.file_name).
@@ -323,7 +324,15 @@ export const renderOrderPaymentBadge = (order, onManagePayment) => {
   );
 };
 
-const AdminOrders = () => {
+// Cancelled orders (status 7) are excluded from GET /orders/all/orders by default and
+// shown on their own page (/admin-panel/orders/cancelled) via cancelled=only.
+const CANCELLED_STATUS_ID = 7;
+const CANCELLED_ORDERS_PATH = "/admin-panel/orders/cancelled";
+
+// cancelledOnly: the Cancelled Orders page. Same list, but server-side search,
+// no status tabs, no payment filter and no bulk invoice / payout actions.
+const AdminOrders = ({ cancelledOnly = false }) => {
+  const showSelection = !cancelledOnly;
   const [activeTab, setActiveTab] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -396,9 +405,24 @@ const AdminOrders = () => {
     setVendorSearchTerm("");
   };
 
+  // The cancelled page searches on the server (debounced) so results span all pages.
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    if (!cancelledOnly) return undefined;
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [cancelledOnly, searchQuery]);
+
   // Query arguments for /orders/all/orders
   const queryParams = useMemo(() => {
     const params = { page };
+    if (cancelledOnly) {
+      params.cancelled = "only";
+      if (debouncedSearch) params.search = debouncedSearch;
+    }
     if (selectedVendorId) {
       params.vendor_id = selectedVendorId;
     }
@@ -408,14 +432,14 @@ const AdminOrders = () => {
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
     return params;
-  }, [page, selectedVendorId, selectedDropshipper, dateFrom, dateTo]);
+  }, [page, cancelledOnly, debouncedSearch, selectedVendorId, selectedDropshipper, dateFrom, dateTo]);
 
   // Dropshipper payout invoice: { dropshipper, orderIds } while the modal is open.
   const [payoutModal, setPayoutModal] = useState(null);
 
   // From ticked orders: they must all belong to one dropshipper.
   const openPayoutForSelection = () => {
-    const picked = (data?.data?.data || []).filter((o) => selectedOrderIds.includes(o.id));
+    const picked = selectedOrdersList;
     const ids = [...new Set(picked.map((o) => o.user_id).filter(Boolean))];
     if (ids.length !== 1) {
       toast.error(ids.length === 0 ? "These orders have no dropshipper." : "Select orders of one dropshipper only. Use the dropshipper filter first.");
@@ -447,16 +471,26 @@ const AdminOrders = () => {
   const pagination = data?.data || {};
   const statusList = summaryData?.data || [];
 
-  // Build tab data from API summary
+  // Build tab data from API summary. Cancelled orders are not in this list, so they
+  // are left out of the "all" count and get a link to their own page instead of a tab.
   const tabs = useMemo(() => {
-    const totalCount = statusList.reduce((sum, s) => sum + (s.orders_count || 0), 0);
+    const isCancelled = (s) => Number(s.id) === CANCELLED_STATUS_ID;
+    const listed = statusList.filter((s) => !isCancelled(s));
+    const totalCount = listed.reduce((sum, s) => sum + (s.orders_count || 0), 0);
     const allTab = { label: "সকল", value: "all", count: totalCount };
-    const statusTabs = statusList.map((s) => ({
+    const statusTabs = listed.map((s) => ({
       label: s.name,
       value: s.id,
       count: s.orders_count || 0,
     }));
-    return [allTab, ...statusTabs];
+    const cancelled = statusList.find(isCancelled);
+    const cancelledLink = {
+      label: cancelled?.name || "Cancelled",
+      value: "cancelled-link",
+      count: cancelled?.orders_count || 0,
+      href: CANCELLED_ORDERS_PATH,
+    };
+    return [allTab, ...statusTabs, cancelledLink];
   }, [statusList]);
 
   // Helper to get status name from order
@@ -501,7 +535,7 @@ const AdminOrders = () => {
     } else if (paymentFilter === "unpaid") {
       result = result.filter((o) => o.payment_status === "unpaid");
     }
-    if (searchQuery.trim()) {
+    if (!cancelledOnly && searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
         (o) =>
@@ -513,7 +547,7 @@ const AdminOrders = () => {
       );
     }
     return result;
-  }, [orders, activeTab, paymentFilter, searchQuery]);
+  }, [orders, activeTab, paymentFilter, searchQuery, cancelledOnly]);
 
   const handleToggleSelectOrder = (id) => {
     setSelectedOrderIds((prev) =>
@@ -521,17 +555,31 @@ const AdminOrders = () => {
     );
   };
 
+  // "Select all" covers this page only and keeps ticks made on other pages.
+  const allOnPageSelected = filteredOrders.length > 0 && filteredOrders.every((o) => selectedOrderIds.includes(o.id));
   const handleToggleSelectAll = () => {
-    if (selectedOrderIds.length === filteredOrders.length && filteredOrders.length > 0) {
-      setSelectedOrderIds([]);
-    } else {
-      setSelectedOrderIds(filteredOrders.map((o) => o.id));
-    }
+    const pageIds = filteredOrders.map((o) => o.id);
+    setSelectedOrderIds((prev) =>
+      allOnPageSelected ? prev.filter((id) => !pageIds.includes(id)) : [...new Set([...prev, ...pageIds])]
+    );
   };
 
-  const selectedOrdersList = useMemo(() => {
-    return orders.filter((o) => selectedOrderIds.includes(o.id));
-  }, [orders, selectedOrderIds]);
+  // Every order seen on any page, so ticks survive paging: the invoice modals get
+  // the full selection, not just the current page's part of it.
+  const [seenOrders, setSeenOrders] = useState({});
+  useEffect(() => {
+    if (!orders.length) return;
+    setSeenOrders((prev) => {
+      const next = { ...prev };
+      orders.forEach((o) => { next[o.id] = o; });
+      return next;
+    });
+  }, [orders]);
+
+  const selectedOrdersList = useMemo(
+    () => selectedOrderIds.map((id) => seenOrders[id]).filter(Boolean),
+    [seenOrders, selectedOrderIds]
+  );
 
   const handleStatusChange = async (orderId, newStatusId) => {
     // Completed goes through the checklist modal: everything must be done first.
@@ -578,7 +626,14 @@ const AdminOrders = () => {
     <div className="space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-xl font-bold text-gray-800">অর্ডার</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-800">
+            {cancelledOnly ? "বাতিল অর্ডার (Cancelled Orders)" : "অর্ডার"}
+          </h1>
+          {cancelledOnly && pagination?.total != null && (
+            <p className="mt-0.5 text-xs text-gray-500">মোট {pagination.total}টি বাতিল অর্ডার</p>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           {/* Searchable Vendor Filter */}
           <div className="relative flex-1 sm:flex-none" ref={vendorDropdownRef}>
@@ -713,7 +768,7 @@ const AdminOrders = () => {
 
           <DropshipperFilter selected={selectedDropshipper} onSelect={handleSelectDropshipper} />
 
-          {selectedDropshipper && (
+          {showSelection && selectedDropshipper && (
             <button
               type="button"
               onClick={() => setPayoutModal({ dropshipper: selectedDropshipper, orderIds: selectedOrderIds })}
@@ -727,6 +782,7 @@ const AdminOrders = () => {
           <OrderDateFilter dateFrom={dateFrom} dateTo={dateTo} onChange={handleDateChange} />
 
           {/* Payment Status Filter Dropdown */}
+          {!cancelledOnly && (
           <select
             value={paymentFilter}
             onChange={(e) => setPaymentFilter(e.target.value)}
@@ -737,6 +793,7 @@ const AdminOrders = () => {
             <option value="awaiting_carrybee">⏳ Paid (CarryBee বাকি)</option>
             <option value="unpaid">🔴 Unpaid (বাকি)</option>
           </select>
+          )}
 
           {/* Search Input for Orders */}
           <div className="relative flex-1 sm:flex-none">
@@ -789,15 +846,21 @@ const AdminOrders = () => {
         </div>
       )}
 
-      {/* Status Tabs */}
+      {/* Status Tabs (the Cancelled entry opens the Cancelled Orders page) */}
+      {!cancelledOnly && (
       <div className="flex flex-wrap gap-2">
         {tabs.map((tab) => (
           <button
             key={tab.value}
             onClick={() => {
+              if (tab.href) {
+                navigate(tab.href);
+                return;
+              }
               setActiveTab(tab.value);
               setPage(1);
             }}
+            title={tab.href ? "বাতিল অর্ডার আলাদা পেজে দেখুন" : undefined}
             className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
               activeTab === tab.value
                 ? "border-red-500 bg-red-50 text-red-600"
@@ -812,9 +875,11 @@ const AdminOrders = () => {
             >
               ({tab.count})
             </span>
+            {tab.href && <span className="ml-1 text-gray-400">→</span>}
           </button>
         ))}
       </div>
+      )}
 
       {/* Advance payment badge legend */}
       <AdvanceBadgeLegend />
@@ -864,18 +929,17 @@ const AdminOrders = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
+                    {showSelection && (
                     <th className="py-3 px-3 text-center w-10">
                       <input
                         type="checkbox"
-                        checked={
-                          filteredOrders.length > 0 &&
-                          selectedOrderIds.length === filteredOrders.length
-                        }
+                        checked={allOnPageSelected}
                         onChange={handleToggleSelectAll}
                         className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
                         title="সবগুলো নির্বাচন করুন"
                       />
                     </th>
+                    )}
                     <th className="text-left py-3 px-4 font-semibold">
                       অর্ডার নম্বর
                     </th>
@@ -907,6 +971,7 @@ const AdminOrders = () => {
                         selectedOrderIds.includes(order.id) ? "bg-red-50/40" : ""
                       }`}
                     >
+                      {showSelection && (
                       <td className="py-3 px-3 text-center">
                         <input
                           type="checkbox"
@@ -915,6 +980,7 @@ const AdminOrders = () => {
                           className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer"
                         />
                       </td>
+                      )}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium text-gray-800">
@@ -943,7 +1009,7 @@ const AdminOrders = () => {
                             <DropshipperCompletedOrderCount completedCount={order.user.completed_order_count} />
                             <div>
                               <p className="font-medium text-gray-700 text-xs">
-                                {order.user.name}
+                                <DropshipperLink id={order.user.id || order.user_id}>{order.user.name}</DropshipperLink>
                               </p>
                               <p className="text-[11px] text-gray-400">
                                 {renderDropshipperPhone(order.user.phone)}
@@ -1068,12 +1134,14 @@ const AdminOrders = () => {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
+                      {showSelection && (
                       <input
                         type="checkbox"
                         checked={selectedOrderIds.includes(order.id)}
                         onChange={() => handleToggleSelectOrder(order.id)}
                         className="w-4 h-4 rounded text-red-600 focus:ring-red-500 cursor-pointer shrink-0"
                       />
+                      )}
                       <div>
                         <div className="flex items-center gap-1.5">
                           <p className="font-semibold text-gray-800 text-sm">
@@ -1122,7 +1190,7 @@ const AdminOrders = () => {
                     <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
                       <DropshipperCompletedOrderCount completedCount={order.user.completed_order_count} />
                       <span className="text-xs text-gray-600">
-                        {order.user.name} &middot; {renderDropshipperPhone(order.user.phone)}
+                        <DropshipperLink id={order.user.id || order.user_id} className="font-medium">{order.user.name}</DropshipperLink> &middot; {renderDropshipperPhone(order.user.phone)}
                       </span>
                     </div>
                   )}
@@ -1230,7 +1298,7 @@ const AdminOrders = () => {
       )}
 
       {/* Floating Batch Action Bar for Multi-Order Selection */}
-      {selectedOrderIds.length > 0 && (
+      {showSelection && selectedOrderIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-4 border border-gray-700 animate-in fade-in slide-in-from-bottom-4">
           <span className="text-xs font-semibold">
             <strong className="text-amber-400 font-mono text-sm">{selectedOrderIds.length}</strong>টি অর্ডার নির্বাচিত

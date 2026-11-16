@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Navbar, IconButton, Button } from "@material-tailwind/react";
 import { Bars3Icon } from "@heroicons/react/24/outline";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { LuBell } from "react-icons/lu";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
@@ -17,24 +17,6 @@ import {
   useReadUnreadNotificationMutation,
 } from "../../redux/features/notification";
 import { toast } from "sonner";
-
-const navLinks = [
-  { path: "/app/profile", label: "Account" },
-];
-
-function NavList() {
-  return (
-    <ul className="my-2 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6 bg-white text-black px-4 lg:px-0">
-      {navLinks.map((item, index) => {
-        return (
-          <Link key={index} to={item.path} className="p-1">
-            {item.label}
-          </Link>
-        );
-      })}
-    </ul>
-  );
-}
 
 const getNotificationPayload = (response) => response?.data?.data || response?.data || response || {};
 
@@ -174,7 +156,7 @@ const CustomNavbar = ({ onMenuToggle }) => {
 
         {/* Desktop nav items */}
         <div className="hidden lg:flex items-center gap-x-5">
-          <NavList />
+          {/* Account moved to the top of the sidebar (App.jsx SidebarAccount). */}
           <Button onClick={() => handleLogout()}>Logout</Button>
 
           {/* Balance button */}

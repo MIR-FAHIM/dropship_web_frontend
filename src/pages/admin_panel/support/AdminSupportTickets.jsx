@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import DropshipperLink from '../../../components/shared/DropshipperLink';
 import {
   useGetAllSupportTicketsQuery,
   useChangeTicketStatusMutation,
@@ -261,7 +262,11 @@ const AdminSupportTickets = () => {
                     <tr key={ticket.id}>
                       <td className="ast-id">#{ticket.id}</td>
                       <td>
-                        <div className="ast-user">{ticket.user?.name || '—'}</div>
+                        <div className="ast-user">
+                          <DropshipperLink id={ticket.user?.id || ticket.user_id} userType={ticket.user?.user_type}>
+                            {ticket.user?.name || '—'}
+                          </DropshipperLink>
+                        </div>
                         <div className="ast-user-email">{ticket.user?.email || ''}</div>
                       </td>
                       <td className="ast-title-cell">{ticket.title}</td>
@@ -296,7 +301,12 @@ const AdminSupportTickets = () => {
             {/* Ticket details */}
             <div className="ast-detail-row">
               <span className="ast-detail-key">User</span>
-              <span className="ast-detail-val">{selected.user?.name} &mdash; {selected.user?.phone || selected.user?.email}</span>
+              <span className="ast-detail-val">
+                <DropshipperLink id={selected.user?.id || selected.user_id} userType={selected.user?.user_type}>
+                  {selected.user?.name}
+                </DropshipperLink>{" "}
+                &mdash; {selected.user?.phone || selected.user?.email}
+              </span>
             </div>
             <div className="ast-detail-row">
               <span className="ast-detail-key">Title</span>

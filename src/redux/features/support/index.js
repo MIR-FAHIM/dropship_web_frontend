@@ -62,6 +62,15 @@ const supportApi = baseApi.injectEndpoints({
       invalidatesTags: ["SupportTickets"],
     }),
 
+    // Admin: one dropshipper's tickets, paginated. Response: { data: paginator, summary: { total, open, ... } }
+    getAdminUserSupportTickets: builder.query({
+      query: ({ userId, status, page = 1, per_page = 10 }) => ({
+        url: buildEndpointPath(API_ENDPOINTS.supportTickets.adminByUser.path, { userId }),
+        params: { page, per_page, ...(status && status !== "all" ? { status } : {}) },
+      }),
+      providesTags: ["SupportTickets"],
+    }),
+
   }),
 });
 
@@ -71,6 +80,7 @@ export const {
   useEditSupportTicketMutation,
   useGetAllSupportTicketsQuery,
   useChangeTicketStatusMutation,
+  useGetAdminUserSupportTicketsQuery,
 } = supportApi;
 
 export default supportApi;

@@ -49,6 +49,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
     trx_id: "",
     bank_reference: "",
     admin_note: "",
+    amount_reason: "",
   });
 
   // Query server-side breakdown if available
@@ -204,6 +205,12 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
           serverData?.dropshipper?.user_phone || order?.user?.phone || null,
         reseller_price: resellerPrice,
         admin_base_price: adminBasePrice,
+        customer_shipping_fee: Number(
+          serverData?.dropshipper?.customer_shipping_fee ??
+            clientCalc?.dropshipper?.customer_shipping_fee ??
+            order?.shipping_fee ??
+            0
+        ),
         profit: dropshipperProfit,
         is_settled:
           serverData?.dropshipper?.is_settled ??
@@ -242,6 +249,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
     admin_base_price: 0,
     reseller_price: 0,
     collectable_amount: 0,
+    customer_shipping_fee: 0,
     admin_note: "",
   });
 
@@ -255,6 +263,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         admin_base_price: baselineBreakdown.platform?.admin_base_price ?? 0,
         reseller_price: baselineBreakdown.dropshipper?.reseller_price ?? 0,
         collectable_amount: baselineBreakdown.courier?.collectable_amount ?? 0,
+        customer_shipping_fee: baselineBreakdown.dropshipper?.customer_shipping_fee ?? 0,
         admin_note: "",
       });
       setDisburseForm((prev) => ({
@@ -321,6 +330,26 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
     setEditForm((prev) => ({ ...prev, [field]: num }));
   };
 
+  // Editing a margin sets the price behind it: product margin -> admin base price
+  // (vendor price + margin), delivery margin -> customer delivery charge (courier
+  // fee + margin). Margins may be negative (e.g. charge ৳70, courier fee ৳105);
+  // only the resulting price is kept at ৳0 or more.
+  const handlePlatformMarginChange = (field, val) => {
+    const margin = parseFloat(val) || 0;
+    setEditForm((prev) => {
+      if (field === "product") {
+        return {
+          ...prev,
+          admin_base_price: Math.max(0, Math.round((Number(prev.supplier_vendor_price || 0) + margin) * 100) / 100),
+        };
+      }
+      return {
+        ...prev,
+        customer_shipping_fee: Math.max(0, Math.round((Number(prev.courier_delivery_fee || 0) + margin) * 100) / 100),
+      };
+    });
+  };
+
   const handleSetCancelledOrderMode = () => {
     setEditForm((prev) => ({
       ...prev,
@@ -343,6 +372,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         admin_base_price: baselineBreakdown.platform?.admin_base_price ?? 0,
         reseller_price: baselineBreakdown.dropshipper?.reseller_price ?? 0,
         collectable_amount: baselineBreakdown.courier?.collectable_amount ?? 0,
+        customer_shipping_fee: baselineBreakdown.dropshipper?.customer_shipping_fee ?? 0,
         admin_note: "",
       });
       toast.info("ডিফল্ট ব্রেকডাউনে রিসেট করা হয়েছে");
@@ -359,6 +389,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         supplier_vendor_price: editForm.supplier_vendor_price,
         admin_base_price: editForm.admin_base_price,
         reseller_price: editForm.reseller_price,
+        customer_shipping_fee: editForm.customer_shipping_fee,
         dropshipper_profit: b.dropshipper?.profit ?? 0,
         admin_note: editForm.admin_note,
       }).unwrap();
@@ -371,6 +402,9 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
       toast.error(err?.data?.message || "ব্রেকডাউন সংরক্ষণ করতে সমস্যা হয়েছে");
     }
   };
+
+  // Paying more than the calculated profit needs a written reason (enforced by the server too).
+  const payingAboveProfit = Number(disburseForm.amount || 0) > Number(b.dropshipper?.profit || 0) + 0.01;
 
   const handleDisburseProfit = async (e) => {
     e.preventDefault();
@@ -391,6 +425,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         trx_id: disburseForm.trx_id,
         bank_reference: disburseForm.bank_reference,
         note: disburseForm.admin_note,
+        amount_reason: payingAboveProfit ? disburseForm.amount_reason.trim() : undefined,
         payout_review_confirmed: true,
       }).unwrap();
 
@@ -997,18 +1032,40 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
             <div className="space-y-2 text-xs text-gray-600 mt-3">
               <div className="flex justify-between">
                 <span>পণ্য কমিশন মার্জিন:</span>
-                <span className="font-mono font-semibold text-indigo-900">
-                  +{formatBDT(b.platform?.product_margin)}
-                </span>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={b.platform?.product_margin ?? 0}
+                    onChange={(e) => handlePlatformMarginChange("product", e.target.value)}
+                    aria-label="পণ্য কমিশন মার্জিন"
+                    className="w-24 rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-right font-mono font-bold text-indigo-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                ) : (
+                  <span className="font-mono font-semibold text-indigo-900">
+                    {Number(b.platform?.product_margin || 0) < 0 ? "−" : "+"}{formatBDT(Math.abs(Number(b.platform?.product_margin || 0)))}
+                  </span>
+                )}
               </div>
               <div className="flex justify-between">
                 <span>ডেলিভারি চার্জ মার্জিন:</span>
-                <span className="font-mono font-semibold text-indigo-900">
-                  +{formatBDT(b.platform?.shipping_margin)}
-                </span>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={b.platform?.shipping_margin ?? 0}
+                    onChange={(e) => handlePlatformMarginChange("shipping", e.target.value)}
+                    aria-label="ডেলিভারি চার্জ মার্জিন"
+                    className="w-24 rounded border border-indigo-300 bg-white px-1.5 py-0.5 text-right font-mono font-bold text-indigo-900 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                ) : (
+                  <span className="font-mono font-semibold text-indigo-900">
+                    {Number(b.platform?.shipping_margin || 0) < 0 ? "−" : "+"}{formatBDT(Math.abs(Number(b.platform?.shipping_margin || 0)))}
+                  </span>
+                )}
               </div>
               <div className="p-2 bg-indigo-50/70 rounded-lg text-[11px] text-indigo-800 leading-tight">
-                ডেলিভারি চার্জ ১৩০ − কুরিয়ার ফি ১০৫ = ২৫ টাকা প্ল্যাটফর্মের শিপিং লাভ।
+                ডেলিভারি চার্জ {formatBDT(b.dropshipper?.customer_shipping_fee)} − কুরিয়ার ফি {formatBDT(b.courier?.delivery_fee)} = {formatBDT(b.platform?.shipping_margin)} প্ল্যাটফর্মের শিপিং লাভ।
               </div>
             </div>
           </div>
@@ -1094,6 +1151,22 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                   }
                   className="w-full px-3 py-2 border rounded-lg font-mono font-bold text-sm focus:ring-2 focus:ring-emerald-500"
                 />
+                {payingAboveProfit && (
+                  <div className="mt-2 rounded-lg border border-amber-300 bg-amber-50 p-2.5">
+                    <p className="text-[11px] font-semibold text-amber-900">
+                      This is more than the calculated profit ({formatBDT(b.dropshipper?.profit)}). A reason is required and is saved on the settlement.
+                    </p>
+                    <input
+                      id="disburse-amount-reason"
+                      type="text"
+                      aria-label="Reason for paying more than the calculated profit"
+                      value={disburseForm.amount_reason}
+                      onChange={(e) => setDisburseForm((prev) => ({ ...prev, amount_reason: e.target.value }))}
+                      placeholder="e.g. Bonus agreed for bulk sale"
+                      className="mt-1.5 w-full rounded-lg border border-amber-300 bg-white px-2.5 py-1.5 text-xs"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
@@ -1192,7 +1265,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                 </button>
                 <button
                   type="submit"
-                  disabled={isDisbursing || !payoutReviewConfirmed}
+                  disabled={isDisbursing || !payoutReviewConfirmed || (payingAboveProfit && !disburseForm.amount_reason.trim())}
                   title={payoutReviewConfirmed ? undefined : "Tick the review checkbox first"}
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer"
                   style={{ backgroundColor: "#059669", color: "#ffffff" }}

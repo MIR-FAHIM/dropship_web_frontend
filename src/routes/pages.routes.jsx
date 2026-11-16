@@ -39,6 +39,7 @@ import ProductLeaderBoard from "../pages/reseller_panel/product_leaderboard/Prod
 import MyWebsitePage from "../pages/reseller_panel/partner_store/MyWebsitePage";
 import EcommerceWebsitePage from "../pages/reseller_panel/partner_store/EcommerceWebsitePage";
 import MarketerPartnership from "../pages/reseller_panel/partnership/MarketerPartnership";
+import ChangePassword from "../pages/reseller_panel/change_password/ChangePassword";
 
 export const pagePaths = [
   { path: "ecommerce-website",      element: <EcommerceWebsitePage /> },
@@ -83,4 +84,5 @@ export const pagePaths = [
   { path: "all-store",              element: <AllStore /> },
   { path: "store-products/:id",     element: <StoreProducts /> },
   { path: "marketer-partnership",   element: <MarketerPartnership /> },
+  { path: "change-password",        element: <ChangePassword /> },
 ];

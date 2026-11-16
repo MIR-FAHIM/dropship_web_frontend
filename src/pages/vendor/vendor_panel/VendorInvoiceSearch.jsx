@@ -16,6 +16,7 @@ import { useListVendorInvoicesQuery } from "../../../redux/features/orderSettlem
 import { useGetVendorIdQuery } from "../../../redux/features/vendor_api";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { formatBDT } from "../../../utils/orderBreakdown.utils";
+import InvoiceAdjustmentNote from "../../../components/shared/InvoiceAdjustmentNote";
 import { InvoicePaymentModal, STATUS_CONFIG } from "./VendorInvoices";
 
 export default function VendorInvoiceSearch() {
@@ -223,6 +224,7 @@ export default function VendorInvoiceSearch() {
                       <span className="text-sm font-black text-amber-900 font-mono block">
                         {formatBDT(inv.total_amount_owed)}
                       </span>
+                      <InvoiceAdjustmentNote invoice={inv} compact />
                       <span
                         className={`inline-flex items-center gap-1 text-[10px] font-bold mt-0.5 px-2 py-0.5 rounded-full ${
                           isPending

@@ -43,6 +43,8 @@ import {
   BookOpen,
   UserPlus,
   Globe,
+  XCircle,
+  KeyRound,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -104,6 +106,11 @@ const adminMenuLinks = [
         label: "Group-Wise Order History",
         icon: <Package className="w-4 h-4" />,
       },
+      {
+        path: "/admin-panel/orders/cancelled",
+        label: "Cancelled Orders",
+        icon: <XCircle className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -140,6 +147,12 @@ const adminMenuLinks = [
         path: "/admin-panel/dropshippers/click-leaderboard",
         label: "Product Click Leaderboard",
         icon: <MousePointerClick className="w-4 h-4 shrink-0" />,
+        requiresAdminRole: true,
+      },
+      {
+        path: "/admin-panel/dropshippers/password-logs",
+        label: "Password Change Log",
+        icon: <KeyRound className="w-4 h-4 shrink-0" />,
         requiresAdminRole: true,
       },
     ],
@@ -439,7 +452,8 @@ const AdminPanelLayout = () => {
                           const isOrderDetailsMatch =
                             child.path === "/admin-panel/orders" &&
                             location.pathname.startsWith("/admin-panel/orders/") &&
-                            !location.pathname.startsWith("/admin-panel/orders/group-history");
+                            !location.pathname.startsWith("/admin-panel/orders/group-history") &&
+                            !location.pathname.startsWith("/admin-panel/orders/cancelled");
                           const isChildHighlight = isActive || isOrderDetailsMatch;
 
                           return `flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${

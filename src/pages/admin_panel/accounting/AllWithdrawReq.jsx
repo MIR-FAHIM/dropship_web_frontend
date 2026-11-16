@@ -10,8 +10,10 @@ import {
   ArrowUpRight, 
   Building2, 
   Loader2, 
-  AlertCircle 
+  AlertCircle,
+  Wallet
 } from "lucide-react";
+import WalletPayoutModal from "./WalletPayoutModal";
 
 const statusColors = {
   transferred: "bg-green-100 text-green-800 border-green-200",
@@ -28,6 +30,7 @@ const AllWithdrawReq = () => {
   const [bankRef, setBankRef] = useState("");
   const [note, setNote] = useState("");
   const [actionError, setActionError] = useState("");
+  const [showWalletPayout, setShowWalletPayout] = useState(false);
 
   const handleOpenTransferModal = (item) => {
     setActiveModal({ type: 'transferred', item });
@@ -104,6 +107,14 @@ const AllWithdrawReq = () => {
             রিসেলারদের ফান্ড উইথড্রয়াল অনুমোদন ও ব্যাংক ট্রান্সফার সম্পন্ন করুন।
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowWalletPayout(true)}
+          title="You paid a dropshipper's wallet balance by hand: record it so the balance drops"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition"
+        >
+          <Wallet className="w-3.5 h-3.5" /> Record wallet payout
+        </button>
         <button
           onClick={refetch}
           className="px-3 py-1.5 text-xs font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition"
@@ -360,6 +371,10 @@ const AllWithdrawReq = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {showWalletPayout && (
+        <WalletPayoutModal onClose={() => setShowWalletPayout(false)} onPaid={refetch} />
       )}
     </div>
   );

@@ -3,14 +3,8 @@ import API_ENDPOINTS from "../../api/apiEndpoints";
 
 const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    login: builder.mutation({
-      query: (userInfo) => ({
-        url: "/admin/login",
-        method: "POST",
-        body: userInfo,
-      }),
-    }),
-    
+    // No "login" here: features/auth owns it (POST /auth/login). Endpoint names are
+    // shared across baseApi, so a second "login" would replace it depending on import order.
     buttonClick: builder.mutation({
       query: (data) => ({
         url: "/click-button-visit",
@@ -89,12 +83,42 @@ const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["User"],
     }),
+
+    // Logged-in user changes their own password: { current_password, password, password_confirmation }
+    changeOwnPassword: builder.mutation({
+      query: (body) => ({
+        url: API_ENDPOINTS.users.changePassword.path,
+        method: API_ENDPOINTS.users.changePassword.method,
+        body,
+      }),
+      invalidatesTags: ["PasswordLog"],
+    }),
+
+    // Admin sets a new password for a dropshipper: { id, password, password_confirmation, note? }
+    adminResetPassword: builder.mutation({
+      query: ({ id, ...body }) => ({
+        url: API_ENDPOINTS.users.adminResetPassword.path.replace("{id}", id),
+        method: API_ENDPOINTS.users.adminResetPassword.method,
+        body,
+      }),
+      invalidatesTags: ["PasswordLog"],
+    }),
+
+    // Admin password change report. Params: user_id, change_type, search, date_from, date_to, page.
+    getPasswordLogs: builder.query({
+      query: (params = {}) => ({
+        url: API_ENDPOINTS.users.passwordLogs.path,
+        params: Object.fromEntries(
+          Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "")
+        ),
+      }),
+      providesTags: ["PasswordLog"],
+    }),
   }),
 });
 
 
 export const {
-  useLoginMutation,
   useButtonClickMutation,
   useAddContactMutation,
   useGetUserDetailsQuery,
@@ -104,6 +128,9 @@ export const {
   useEditUserProfileMutation,
   useUserBanMutation,
   useUserUnbanMutation,
+  useChangeOwnPasswordMutation,
+  useAdminResetPasswordMutation,
+  useGetPasswordLogsQuery,
 } = userApi;
 
 export default userApi;

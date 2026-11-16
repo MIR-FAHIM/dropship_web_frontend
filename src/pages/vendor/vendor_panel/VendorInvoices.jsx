@@ -33,6 +33,7 @@ import {
 import { useGetVendorIdQuery } from "../../../redux/features/vendor_api";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { formatBDT } from "../../../utils/orderBreakdown.utils";
+import InvoiceAdjustmentNote from "../../../components/shared/InvoiceAdjustmentNote";
 
 
 const getProductImgUrl = (thumbnail) => {
@@ -250,6 +251,7 @@ export default function VendorInvoices() {
                         <span className="text-xs font-extrabold font-mono block mt-1 truncate">
                           {formatBDT(inv.total_amount_owed)}
                         </span>
+                        <InvoiceAdjustmentNote invoice={inv} compact />
                         {!isRejected && <span className="text-[9px] text-amber-800 font-medium block truncate">ResellerBrain-কে</span>}
                       </div>
                     </div>
@@ -477,6 +479,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
                 <span className="text-2xl font-black text-amber-950 font-mono">
                   {formatBDT(invoice.total_amount_owed)}
                 </span>
+                <InvoiceAdjustmentNote invoice={invoice} />
               </div>
             </div>
           </div>

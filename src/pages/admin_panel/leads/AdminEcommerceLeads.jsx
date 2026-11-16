@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
+import DropshipperLink from "../../../components/shared/DropshipperLink";
 import {
   Globe,
   ThumbsUp,
@@ -170,7 +171,9 @@ const AdminEcommerceLeads = () => {
                   return (
                     <tr key={lead.id} className="border-b border-gray-50 hover:bg-indigo-50/20 transition align-top">
                       <td className="px-4 py-3">
-                        <p className="font-bold text-gray-800">{lead.user?.name || "—"}</p>
+                        <p className="font-bold text-gray-800">
+                          <DropshipperLink id={lead.user?.id || lead.user_id}>{lead.user?.name || "—"}</DropshipperLink>
+                        </p>
                         <p className="text-xs text-gray-400">{lead.user?.phone || lead.user?.email || "—"}</p>
                       </td>
                       <td className="px-4 py-3">

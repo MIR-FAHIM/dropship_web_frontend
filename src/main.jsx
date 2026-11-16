@@ -1,4 +1,6 @@
 import "./utils/domPatches";
+// Must run before the store/authSlice read localStorage (see the file for why).
+import "./utils/impersonation";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider } from "react-redux";

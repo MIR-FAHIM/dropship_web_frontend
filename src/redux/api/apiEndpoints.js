@@ -31,6 +31,9 @@ export const API_ENDPOINTS = {
     ban: define("PATCH", "/users/ban/{id}"),
     unban: define("PATCH", "/users/unban/{id}"),
     delete: define("DELETE", "/users/delete/{id}"),
+    changePassword: define("POST", "/users/change-password"),
+    adminResetPassword: define("POST", "/users/{id}/reset-password"),
+    passwordLogs: define("GET", "/users/password-logs"),
   },
 
   dashboard: {
@@ -242,6 +245,7 @@ export const API_ENDPOINTS = {
     credit: define("GET", "/transactions/credit"),
     debit: define("GET", "/transactions/debit"),
     reseller: define("GET", "/transactions/reseller"),
+    dropshipper: define("GET", "/transactions/dropshipper/{dropshipperId}"),
     resellerAdvanceHistory: define("GET", "/transactions/reseller/advance-history"),
     report: define("GET", "/transactions/report"),
   },
@@ -372,6 +376,7 @@ export const API_ENDPOINTS = {
     edit:         define("PUT",  "/support-tickets/edit/{id}"),
     all:          define("GET",  "/support-tickets/all"),
     statusChange: define("POST", "/support-tickets/status-change/{id}"),
+    adminByUser:  define("GET",  "/support-tickets/admin/user/{userId}"),
   },
 
   errorLogs: {

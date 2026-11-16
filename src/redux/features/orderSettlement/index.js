@@ -157,6 +157,16 @@ const orderSettlementApi = baseApi.injectEndpoints({
       ],
     }),
 
+    // Admin sets the real final amount of an unpaid vendor invoice.
+    adjustVendorInvoice: builder.mutation({
+      query: ({ id, final_amount, adjustment_reason }) => ({
+        url: `/order-settlements/vendor-invoices/${id}/adjust`,
+        method: "POST",
+        body: { final_amount, adjustment_reason },
+      }),
+      invalidatesTags: (result, error, { id }) => ["VendorInvoice", { type: "VendorInvoice", id }],
+    }),
+
     rejectVendorInvoice: builder.mutation({
       query: ({ id, ...payload }) => ({
         url: buildEndpointPath(
@@ -194,6 +204,7 @@ export const {
   useGetVendorInvoiceDetailsQuery,
   usePayVendorInvoiceMutation,
   useApproveVendorInvoiceMutation,
+  useAdjustVendorInvoiceMutation,
   useRejectVendorInvoiceMutation,
   useGetAdminPaymentAccountsQuery,
 } = orderSettlementApi;

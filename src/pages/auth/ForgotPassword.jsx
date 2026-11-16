@@ -109,7 +109,7 @@ const ForgotPassword = () => {
   const validateResetForm = () => {
     if (!/^\d{6}$/.test(form.otp)) return "OTP must be exactly 6 digits";
     if (!form.password) return "New password is required";
-    if (form.password.length < 8) return "Password must be at least 8 characters";
+    if (form.password.length < 5) return "Password must be at least 5 characters";
     if (form.password_confirmation !== form.password) return "Confirm password must match new password";
     return "";
   };
@@ -282,7 +282,7 @@ const ForgotPassword = () => {
                     type={showPassword ? "text" : "password"}
                     value={form.password}
                     onChange={(event) => setForm((prev) => ({ ...prev, password: event.target.value }))}
-                    placeholder="Minimum 8 characters"
+                    placeholder="Minimum 5 characters"
                     className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#158E72]"
                   />
                   <button
