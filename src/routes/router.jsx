@@ -41,6 +41,7 @@ import AdminDashboard from "../pages/admin_panel/dashboard/AdminDashboard";
 import AdminDocumentation from "../pages/admin_panel/documentation/AdminDocumentation";
 import AdminCashflowReport from "../pages/admin_panel/cashflow/AdminCashflowReport";
 import AdminEcommerceLeads from "../pages/admin_panel/leads/AdminEcommerceLeads";
+import AdminLeadManager from "../pages/admin_panel/leads/manage/AdminLeadManager";
 import AdminProducts from "../pages/admin_panel/products/AdminProducts";
 import AdminOrders from "../pages/admin_panel/orders/AdminOrders";
 import AdminVendors from "../pages/admin_panel/vendors/AdminVendors";
@@ -53,6 +54,8 @@ import DropshipperLeaderboard from "../pages/admin_panel/dropshippers/Dropshippe
 import ProductClickLeaderboard from "../pages/admin_panel/dropshippers/ProductClickLeaderboard";
 import AdminPasswordLogs from "../pages/admin_panel/dropshippers/AdminPasswordLogs";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
+// Same page as the dropshipper panel's: any signed-in user changes their own password.
+import ChangePassword from "../pages/reseller_panel/change_password/ChangePassword";
 import AdminAccounting from "../pages/admin_panel/accounting/AdminAccounting";
 import AdminAllTransactions from "../pages/admin_panel/accounting/AdminAllTransactions";
 import AdminSettings from "../pages/admin_panel/settings/AdminSettings";
@@ -87,6 +90,7 @@ import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTicket
 import ErrorLog from "../pages/admin_panel/error_logs/ErrorLog";
 import LoginSuccessReport from "../pages/admin_panel/error_logs/LoginSuccessReport";
 import AdminNotices from "../pages/admin_panel/notices/AdminNotices";
+import AdminAppVersions from "../pages/admin_panel/app_versions/AdminAppVersions";
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
 import RouteErrorBoundary from "../components/shared/RouteErrorBoundary";
 import AdminMarketers from "../pages/admin_panel/marketers/AdminMarketers";
@@ -202,6 +206,7 @@ export const router = createBrowserRouter([
       { path: "documentation", element: <AdminDocumentation /> },
       { path: "cashflow", element: <AdminCashflowReport /> },
       { path: "leads/ecommerce", element: <AdminEcommerceLeads /> },
+      { path: "leads/manage", element: <AdminLeadManager /> },
       { path: "products", element: <AdminProducts /> },
       { path: "products/create", element: <AdminProductCreate /> },
       { path: "products/:id", element: <AdminProductDetail /> },
@@ -230,6 +235,7 @@ export const router = createBrowserRouter([
       { path: "dropshippers/leaderboard", element: <DropshipperLeaderboard /> },
       { path: "dropshippers/click-leaderboard", element: <ProductClickLeaderboard /> },
       { path: "employees", element: <AdminEmployees /> },
+      { path: "change-password", element: <ChangePassword /> },
       { path: "accounting", element: <AdminAccounting /> },
       { path: "transactions", element: <AdminAllTransactions /> },
       { path: "tasks", element: <AdminTasks /> },
@@ -241,6 +247,7 @@ export const router = createBrowserRouter([
       { path: "reseller-advance-payment-history", element: <ResellerAdvancePaymentHistory /> },
       { path: "support-tickets", element: <AdminSupportTickets /> },
       { path: "notices", element: <AdminNotices /> },
+      { path: "app-versions", element: <AdminAppVersions /> },
       { path: "error-logs", element: <ErrorLog /> },
       { path: "reports/login-success", element: <LoginSuccessReport /> },
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },

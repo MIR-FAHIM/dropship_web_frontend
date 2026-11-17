@@ -10,11 +10,63 @@ import {
   ShieldCheck,
   ShieldOff,
 } from "lucide-react";
-import { useGetAdminListQuery } from "../../../redux/features/user";
+import { toast } from "sonner";
+import { useGetAdminListQuery, useSetEmployeeStatusMutation } from "../../../redux/features/user";
+import { getFromLocalstorage } from "../../../utils/localstorage.utils";
+
+// Ban / reactivate one employee. Banning signs them out everywhere. The API refuses
+// changing your own status and banning the last active admin.
+const EmployeeStatusButton = ({ admin, isSelf, compact = false }) => {
+  const [setEmployeeStatus, { isLoading }] = useSetEmployeeStatusMutation();
+  const banned = Boolean(Number(admin.banned));
+
+  const handleClick = async () => {
+    const name = admin.name || `#${admin.id}`;
+    const question = banned
+      ? `Reactivate ${name}? They will be able to sign in again.`
+      : `Ban ${name}? They will be signed out of all devices and can't sign in until reactivated.`;
+    if (!window.confirm(question)) return;
+    try {
+      const res = await setEmployeeStatus({ id: admin.id, banned: !banned }).unwrap();
+      toast.success(res?.message || (banned ? "Employee reactivated" : "Employee banned"));
+    } catch (err) {
+      toast.error(err?.data?.message || "Could not update the status");
+    }
+  };
+
+  if (isSelf) {
+    return <span className="text-[11px] text-gray-400" title="You can't change your own status">You</span>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isLoading}
+      className={`inline-flex items-center gap-1 rounded-lg border font-semibold transition disabled:opacity-50 ${
+        compact ? "px-2 py-1 text-[11px]" : "px-3 py-1.5 text-xs"
+      } ${
+        banned
+          ? "border-green-300 bg-green-50 text-green-700 hover:bg-green-100"
+          : "border-red-300 bg-red-50 text-red-700 hover:bg-red-100"
+      }`}
+    >
+      {isLoading ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : banned ? (
+        <ShieldCheck className="h-3.5 w-3.5" />
+      ) : (
+        <ShieldOff className="h-3.5 w-3.5" />
+      )}
+      {banned ? "Activate" : "Ban"}
+    </button>
+  );
+};
 
 const AdminEmployees = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data, isLoading } = useGetAdminListQuery();
+  const myUserId = Number(getFromLocalstorage("userId"));
 
   const admins = data?.data?.data || [];
   const total = data?.data?.total || 0;
@@ -147,6 +199,9 @@ const AdminEmployees = () => {
                     <th className="text-left py-3 px-4 font-medium">
                       যোগদান
                     </th>
+                    <th className="text-center py-3 px-4 font-medium">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -195,6 +250,9 @@ const AdminEmployees = () => {
                       </td>
                       <td className="py-3.5 px-4 text-xs text-gray-500">
                         {formatDate(admin.created_at)}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <EmployeeStatusButton admin={admin} isSelf={Number(admin.id) === myUserId} />
                       </td>
                     </tr>
                   ))}
@@ -257,8 +315,9 @@ const AdminEmployees = () => {
                   )}
                 </div>
 
-                <div className="pt-1 border-t border-gray-100 text-[11px] text-gray-400">
-                  যোগদান: {formatDate(admin.created_at)}
+                <div className="flex items-center justify-between pt-1 border-t border-gray-100 text-[11px] text-gray-400">
+                  <span>যোগদান: {formatDate(admin.created_at)}</span>
+                  <EmployeeStatusButton admin={admin} isSelf={Number(admin.id) === myUserId} compact />
                 </div>
               </div>
             ))}

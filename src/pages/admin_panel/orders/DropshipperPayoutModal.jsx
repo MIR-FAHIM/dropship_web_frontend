@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 import { FileText, Loader2, Send, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { useCreatePayoutInvoiceMutation, useGetPayableOrdersQuery } from "../../../redux/features/dropshipperPayout";
@@ -36,6 +37,19 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
 
   const rows = useMemo(() => data?.data?.rows || [], [data]);
   const payableRows = useMemo(() => rows.filter((r) => r.payable), [rows]);
+
+  // Unpaid invoices that already hold some of these orders (reason "already on unpaid invoice X").
+  const blockingInvoices = useMemo(() => {
+    const byNumber = {};
+    rows.forEach((r) => {
+      const match = /already on unpaid invoice (\S+)/i.exec(r.reason || "");
+      if (!match) return;
+      byNumber[match[1]] ??= { number: match[1], count: 0, total: 0 };
+      byNumber[match[1]].count += 1;
+      byNumber[match[1]].total += Number(r.profit || 0);
+    });
+    return Object.values(byNumber);
+  }, [rows]);
 
   // Default selection: the orders ticked on the list (if payable), else every payable order.
   // Runs once per loaded dropshipper (defaultedFor), never after the admin changes a tick.
@@ -132,6 +146,28 @@ const DropshipperPayoutModal = ({ initialDropshipper = null, preselectedOrderIds
             <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-500">No unpaid profit: every delivered order of this dropshipper is already paid.</p>
           ) : (
             <>
+              {/* Orders already on an unpaid invoice: pay (or cancel) that invoice instead. */}
+              {blockingInvoices.length > 0 && (
+                <div className="space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-amber-900" role="status">
+                  <p className="font-semibold">
+                    {blockingInvoices.reduce((n, b) => n + b.count, 0)} {blockingInvoices.reduce((n, b) => n + b.count, 0) === 1 ? "order is" : "orders are"} already on an unpaid payout invoice.
+                    {payableRows.length === 0 && " There's nothing new to invoice."} To pay {payableRows.length === 0 ? "this dropshipper" : "those orders"}, open that invoice and pay it (or cancel it first).
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {blockingInvoices.map((b) => (
+                      <Link
+                        key={b.number}
+                        to={`/admin-panel/dropshipper-payouts?search=${encodeURIComponent(b.number)}&open=1`}
+                        onClick={onClose}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500 bg-white px-3 py-1.5 font-semibold text-amber-800 hover:bg-amber-100"
+                      >
+                        <FileText className="h-3.5 w-3.5" /> Open invoice {b.number} to pay it · {bdt(b.total)}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 2. Orders */}
               <div className="overflow-x-auto rounded-xl border border-gray-200">
                 <table className="w-full min-w-[620px] text-left tabular-nums">

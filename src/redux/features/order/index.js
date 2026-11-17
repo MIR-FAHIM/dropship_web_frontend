@@ -11,15 +11,27 @@ const orderApi = baseApi.injectEndpoints({
       }),
     }),
     listOrdersByUser: builder.query({
-      query: ({ userId, page }) => ({
+      query: ({ userId, page, search, period, date_from, date_to }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.listByUser.path, { userId }),
-        params: page ? { page } : undefined,
+        params: {
+          ...(page ? { page } : {}),
+          ...(search ? { search } : {}),
+          ...(period && period !== "all" ? { period } : {}),
+          ...(date_from ? { date_from } : {}),
+          ...(date_to ? { date_to } : {}),
+        },
       }),
     }),
     vendorOrders: builder.query({
-      query: ({ vendorId, page }) => ({
+      query: ({ vendorId, page, per_page, period, date_from, date_to }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.vendorOrders.path, { vendorId }),
-        params: page ? { page } : undefined,
+        params: {
+          ...(page ? { page } : {}),
+          ...(per_page ? { per_page } : {}),
+          ...(period && period !== "all" ? { period } : {}),
+          ...(date_from ? { date_from } : {}),
+          ...(date_to ? { date_to } : {}),
+        },
       }),
     }),
 

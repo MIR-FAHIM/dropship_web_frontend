@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ClipboardList,
   Loader2,
@@ -18,6 +18,7 @@ import { useGetVendorIdQuery, useGetVendorProfileQuery } from "../../../redux/fe
 import { useVendorOrdersQuery, useGetOrderStatusSummaryQuery, useUpdateOrderStatusMutation } from "../../../redux/features/order";
 import AssignCarryBeeModal from "../../admin_panel/orders/carrybee_assign";
 import CourierIssueBadge from "../../../components/shared/CourierIssueBadge";
+import ReadyForCarryBeeButton from "./ReadyForCarryBeeButton";
 import { toast } from "react-toastify";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { imgBaseUrl } from "../../../../config";
@@ -167,10 +168,37 @@ const formatDate = (iso) => {
   return `${date}, ${time}`;
 };
 
+const PER_PAGE_OPTIONS = [10, 20, 50, 100];
+
+// Page numbers with gaps: 1 … 4 5 6 … 20
+const pageNumbers = (current, last) => {
+  const set = new Set([1, last, current - 1, current, current + 1].filter((n) => n >= 1 && n <= last));
+  const sorted = [...set].sort((a, b) => a - b);
+  return sorted.flatMap((n, i) => (i > 0 && n - sorted[i - 1] > 1 ? ["…", n] : [n]));
+};
+
 const VendorOrders = () => {
-  const [page, setPage] = useState(1);
+  // Page and page size live in the URL (?page=3&per_page=50), so Back from an
+  // order's details returns to the same page.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(1, Number(searchParams.get("page")) || 1);
+  const perPage = PER_PAGE_OPTIONS.includes(Number(searchParams.get("per_page"))) ? Number(searchParams.get("per_page")) : 20;
+  const setUrl = (patch) =>
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([k, v]) => (v == null ? next.delete(k) : next.set(k, String(v))));
+      return next;
+    }, { replace: true });
+  const setPage = (n) => {
+    setUrl({ page: Number(n) > 1 ? n : null });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const setPerPage = (n) => setUrl({ per_page: n === 20 ? null : n, page: null });
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [carryBeeModalOpen, setCarryBeeModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
@@ -197,7 +225,14 @@ const VendorOrders = () => {
   const [updateStatus, { isLoading: isUpdating }] = useUpdateOrderStatusMutation();
 
   const { data, isLoading, isFetching, refetch } = useVendorOrdersQuery(
-    { vendorId, page },
+    {
+      vendorId,
+      page,
+      per_page: perPage,
+      period: dateFilter,
+      date_from: dateFilter === "custom" ? dateFrom : undefined,
+      date_to: dateFilter === "custom" ? dateTo : undefined,
+    },
     { skip: !vendorId }
   );
 
@@ -306,6 +341,29 @@ const VendorOrders = () => {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        {[['all', 'All'], ['today', 'Today'], ['yesterday', 'Yesterday'], ['custom', 'Date range']].map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => { setDateFilter(value); setPage(1); }}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition ${dateFilter === value ? "border-blue-500 bg-blue-50 text-blue-600 shadow-2xs font-semibold" : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"}`}
+          >
+            {label}
+          </button>
+        ))}
+        {dateFilter === "custom" && (
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <label className="text-xs text-gray-500">From
+              <input type="date" value={dateFrom} onChange={(event) => { setDateFrom(event.target.value); if (dateTo && event.target.value > dateTo) setDateTo(""); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
+            </label>
+            <label className="text-xs text-gray-500">To
+              <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => { setDateTo(event.target.value); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
+            </label>
+          </div>
+        )}
+      </div>
+
       {hasOwnDeliveryAccount && (
         <div className="flex flex-wrap gap-2">
           {tabs.map((tab) => (
@@ -357,6 +415,7 @@ const VendorOrders = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="text-right px-3 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">#</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">অর্ডার</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">কাস্টমার</th>
                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">পণ্য</th>
@@ -369,7 +428,7 @@ const VendorOrders = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {filteredOrders.map((order) => {
+                  {filteredOrders.map((order, index) => {
                     const statusName = getStatusName(order);
                     const statusCfg = getStatusConfig(statusName);
                     const delivery = order.delivery_information;
@@ -379,6 +438,10 @@ const VendorOrders = () => {
                         key={order.id}
                         className={`hover:bg-gray-50 transition-colors ${isFetching ? "opacity-60" : ""}`}
                       >
+                        {/* Row number across pages: page 2 at 100 per page starts at 101 */}
+                        <td className="px-3 py-3 text-right text-xs font-medium tabular-nums text-gray-400 whitespace-nowrap">
+                          {(page - 1) * perPage + index + 1}
+                        </td>
                         {/* Order */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Link
@@ -525,6 +588,8 @@ const VendorOrders = () => {
                                 <span>{delivery.consignment_id}</span>
                               </div>
                             </div>
+                          ) : order.carry_bee_draft ? (
+                            <ReadyForCarryBeeButton order={order} onDone={refetch} compact />
                           ) : (
                           hasOwnDeliveryAccount ? (
                             <button
@@ -560,30 +625,65 @@ const VendorOrders = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            {lastPage > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
-                <p className="text-xs text-gray-500">
-                  পেজ {page} / {lastPage}
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    disabled={page === 1 || isFetching}
-                    className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            {/* Pagination: count, page size and page numbers */}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-200 bg-gray-50">
+              <p className="text-xs text-gray-600">
+                Showing <b>{pagination?.from ?? 0}–{pagination?.to ?? 0}</b> of <b>{total}</b> {total === 1 ? "order" : "orders"}
+                {lastPage > 1 && <> · Page {page} of {lastPage}</>}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <label className="flex items-center gap-1.5 text-xs text-gray-600">
+                  Show
+                  <select
+                    value={perPage}
+                    onChange={(e) => setPerPage(Number(e.target.value))}
+                    className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-semibold text-gray-700"
                   >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-                    disabled={page === lastPage || isFetching}
-                    className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
+                    {PER_PAGE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                  per page
+                </label>
+                {lastPage > 1 && (
+                  <nav className="flex items-center gap-1" aria-label="Order pages">
+                    <button
+                      type="button"
+                      onClick={() => setPage(page - 1)}
+                      disabled={page === 1 || isFetching}
+                      aria-label="Previous page"
+                      className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    {pageNumbers(page, lastPage).map((n, i) =>
+                      n === "…" ? (
+                        <span key={`gap-${i}`} className="px-1 text-xs text-gray-400">…</span>
+                      ) : (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setPage(n)}
+                          aria-current={n === page ? "page" : undefined}
+                          className={`min-w-[30px] rounded-lg border px-2 py-1 text-xs font-semibold ${
+                            n === page ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      )
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setPage(page + 1)}
+                      disabled={page === lastPage || isFetching}
+                      aria-label="Next page"
+                      className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </nav>
+                )}
               </div>
-            )}
+            </div>
           </>
         )}
       </div>

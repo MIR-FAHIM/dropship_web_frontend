@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import PropTypes from "prop-types";
 import { Eye, FilePlus2, Loader2, Receipt, Search, Wallet, X } from "lucide-react";
 import { toast } from "react-toastify";
@@ -193,9 +194,13 @@ InvoiceDialog.propTypes = {
 };
 
 const AdminDropshipperPayouts = () => {
+  // ?search=<invoice no.>&open=1 (from the payout window's "Open invoice" link)
+  // pre-fills the search and opens that invoice's pay screen when it's the only match.
+  const [searchParams] = useSearchParams();
+  const [autoOpen, setAutoOpen] = useState(searchParams.get("open") === "1");
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [dropshipper, setDropshipper] = useState(null);
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -215,6 +220,12 @@ const AdminDropshipperPayouts = () => {
   const invoices = pageData.data || [];
   const summary = data?.data?.summary || {};
   const reset = (fn) => (...args) => { fn(...args); setPage(1); };
+
+  useEffect(() => {
+    if (!autoOpen || isFetching || !data) return;
+    if (invoices.length === 1) setViewId(invoices[0].id);
+    setAutoOpen(false);
+  }, [autoOpen, isFetching, data, invoices]);
 
   return (
     <div className="space-y-5 p-4 sm:p-6">

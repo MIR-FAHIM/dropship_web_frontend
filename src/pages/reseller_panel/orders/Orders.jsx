@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useListOrdersByUserQuery } from "../../../redux/features/order";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import Pagination from "../../../components/shared/Pagination";
-import { FaBoxOpen, FaChevronRight } from "react-icons/fa";
+import { FaBoxOpen, FaChevronRight, FaMicrophone, FaSearch, FaTimes } from "react-icons/fa";
 
 /* ── helpers ── */
 const money = (n) => `৳${Number(n || 0).toLocaleString()}`;
@@ -46,9 +46,50 @@ const Order = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [voiceMessage, setVoiceMessage] = useState("");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const userId = getFromLocalstorage("userId") || 1;
 
-  const { data: ordersData, error, isLoading } = useListOrdersByUserQuery({ userId, page });
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search.trim()), 350);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
+  const { data: ordersData, error, isLoading } = useListOrdersByUserQuery({
+    userId,
+    page,
+    search: debouncedSearch,
+    period: dateFilter,
+    date_from: dateFilter === "custom" ? dateFrom : undefined,
+    date_to: dateFilter === "custom" ? dateTo : undefined,
+  });
+
+  const startVoiceSearch = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setVoiceMessage("Voice search is not supported in this browser. You can type the search instead.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "bn-BD";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    setVoiceMessage("Listeningâ€¦");
+    recognition.onresult = (event) => {
+      const transcript = event.results?.[0]?.[0]?.transcript || "";
+      setSearch(transcript);
+      setPage(1);
+      setVoiceMessage(transcript ? `Searching for â€œ${transcript}â€` : "No speech detected.");
+    };
+    recognition.onerror = () => setVoiceMessage("Could not recognize speech. Try again or type your search.");
+    recognition.onend = () => setVoiceMessage((message) => message === "Listeningâ€¦" ? "" : message);
+    recognition.start();
+  };
 
   const orders = ordersData?.data?.data || [];
   const totalPages = ordersData?.data?.last_page || 1;
@@ -94,6 +135,57 @@ const Order = () => {
           )}
         </div>
 
+        {/* Search across this dropshipper's orders */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 sm:p-4 mb-5">
+          <div className="flex gap-2">
+            <label className="flex-1 flex items-center gap-2 border border-gray-200 rounded-lg px-3 focus-within:border-indigo-400 focus-within:ring-2 focus-within:ring-indigo-100">
+              <FaSearch className="text-gray-400 shrink-0" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => { setSearch(event.target.value); setPage(1); }}
+                placeholder="Search by order number, customer phone, name, productâ€¦"
+                aria-label="Search orders by order number, customer, phone, or product"
+                className="w-full py-2.5 text-sm outline-none"
+              />
+              {search && (
+                <button type="button" onClick={() => { setSearch(""); setPage(1); setVoiceMessage(""); }} aria-label="Clear search" className="text-gray-400 hover:text-gray-700">
+                  <FaTimes />
+                </button>
+              )}
+            </label>
+            <button type="button" onClick={startVoiceSearch} title="Search by voice in Bengali" aria-label="Search by voice" className="px-4 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 transition">
+              <FaMicrophone />
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">Search using an order number, customer name or phone, product, or address. You can type or use the microphone.</p>
+          {voiceMessage && <p role="status" className="text-xs text-indigo-600 mt-1">{voiceMessage}</p>}
+        </div>
+
+        {/* Order date filters */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          {[['all', 'All'], ['today', 'Today'], ['yesterday', 'Yesterday'], ['custom', 'Date range']].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => { setDateFilter(value); setPage(1); }}
+              className={`px-3 py-2 rounded-lg text-xs font-bold transition ${dateFilter === value ? "bg-indigo-600 text-white shadow-sm" : "bg-white border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600"}`}
+            >
+              {label}
+            </button>
+          ))}
+          {dateFilter === "custom" && (
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <label className="text-xs text-gray-500">From
+                <input type="date" value={dateFrom} onChange={(event) => { setDateFrom(event.target.value); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-700" />
+              </label>
+              <label className="text-xs text-gray-500">To
+                <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => { setDateTo(event.target.value); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-2 text-sm text-gray-700" />
+              </label>
+            </div>
+          )}
+        </div>
+
         {/* Status filter tabs */}
         <div className="flex gap-2 flex-wrap mb-5">
           {statuses.map((s) => (
@@ -113,7 +205,7 @@ const Order = () => {
         {filteredOrders.length === 0 ? (
           <div className="bg-white rounded-xl border border-gray-100 p-12 text-center">
             <FaBoxOpen className="text-gray-300 text-5xl mx-auto mb-3" />
-            <p className="text-gray-400 font-semibold">No orders found.</p>
+            <p className="text-gray-400 font-semibold">{debouncedSearch ? `No orders found for â€œ${debouncedSearch}â€.` : "No orders found."}</p>
           </div>
         ) : (
           <>

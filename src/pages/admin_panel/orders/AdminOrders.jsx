@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
 import { ClipboardList, Search, Eye, Loader2, CheckCircle, CheckCircle2, Clock, Lock, Store, ChevronDown, X, Check, FileText, Truck, Package } from "lucide-react";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   useListAllOrdersQuery,
   useUpdateOrderStatusMutation,
@@ -18,6 +18,7 @@ import OrderCompletionModal from "./OrderCompletionModal";
 import DropshipperPayoutModal from "./DropshipperPayoutModal";
 import { ClearFilterChip, DropshipperFilter, OrderDateFilter, describeDateRange } from "./OrderListFilters";
 import DropshipperLink from "../../../components/shared/DropshipperLink";
+import PaymentProgressCell, { PAYMENT_STAGE_FILTERS } from "./PaymentProgressCell";
 
 // Small product thumbnail for the Items column. Same URL pattern as the
 // reseller order details page (imgBaseUrl + primary_image.file_name).
@@ -331,22 +332,52 @@ const CANCELLED_ORDERS_PATH = "/admin-panel/orders/cancelled";
 
 // cancelledOnly: the Cancelled Orders page. Same list, but server-side search,
 // no status tabs, no payment filter and no bulk invoice / payout actions.
+const PER_PAGE_OPTIONS = [20, 50, 100];
+
 const AdminOrders = ({ cancelledOnly = false }) => {
   const showSelection = !cancelledOnly;
-  const [activeTab, setActiveTab] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [selectedVendorId, setSelectedVendorId] = useState("");
+
+  // Page, page size and filters live in the URL (?page=3&per_page=50&status=6...),
+  // so going back from an order's details returns to the same page, and the
+  // view can be shared as a link. replace: true keeps the Back button simple.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlParam = (key, fallback = "") => searchParams.get(key) ?? fallback;
+  const updateUrl = (patch, { resetPage = true } = {}) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === "" || value === "all") next.delete(key);
+        else next.set(key, String(value));
+      });
+      if (resetPage && !("page" in patch)) next.delete("page");
+      return next;
+    }, { replace: true });
+  };
+
+  const page = Math.max(1, Number(urlParam("page", "1")) || 1);
+  const perPage = PER_PAGE_OPTIONS.includes(Number(urlParam("per_page"))) ? Number(urlParam("per_page")) : 20;
+  const activeTab = urlParam("status") ? Number(urlParam("status")) : "all";
+  const paymentFilter = urlParam("payment_stage", "all");
+  const selectedVendorId = urlParam("vendor_id");
+  const dateFrom = urlParam("date_from");
+  const dateTo = urlParam("date_to");
+  const urlSearch = urlParam("q");
+  const selectedDropshipper = urlParam("dropshipper_id")
+    ? { id: Number(urlParam("dropshipper_id")), name: urlParam("dropshipper_name") || undefined, phone: urlParam("dropshipper_phone") || undefined }
+    : null;
+
+  const setPage = (value) => updateUrl({ page: Number(value) > 1 ? value : null }, { resetPage: false });
+  const setActiveTab = (value) => updateUrl({ status: value === "all" ? null : value });
+  const setPaymentFilter = (value) => updateUrl({ payment_stage: value });
+  const setPerPage = (value) => updateUrl({ per_page: Number(value) === 20 ? null : value });
+
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
   const [vendorSearchTerm, setVendorSearchTerm] = useState("");
   const [isVendorDropdownOpen, setIsVendorDropdownOpen] = useState(false);
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [manualPaymentOrder, setManualPaymentOrder] = useState(null);
   const [completionOrder, setCompletionOrder] = useState(null);
-  const [selectedDropshipper, setSelectedDropshipper] = useState(null);
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
   const vendorDropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -399,40 +430,35 @@ const AdminOrders = ({ cancelledOnly = false }) => {
   }, [isVendorDropdownOpen]);
 
   const handleSelectVendor = (vendorId) => {
-    setSelectedVendorId(vendorId ? String(vendorId) : "");
-    setPage(1);
+    updateUrl({ vendor_id: vendorId ? String(vendorId) : null });
     setIsVendorDropdownOpen(false);
     setVendorSearchTerm("");
   };
 
-  // The cancelled page searches on the server (debounced) so results span all pages.
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Search runs on the server (debounced) so results span all pages.
   useEffect(() => {
-    if (!cancelledOnly) return undefined;
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery.trim());
-      setPage(1);
-    }, 400);
+    const term = searchQuery.trim();
+    if (term === urlSearch) return undefined;
+    const timer = setTimeout(() => updateUrl({ q: term }), 400);
     return () => clearTimeout(timer);
-  }, [cancelledOnly, searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, urlSearch]);
 
-  // Query arguments for /orders/all/orders
+  // Query arguments for /orders/all/orders. Every filter is applied on the server,
+  // so the pagination and "x of y" counts match what's on screen.
   const queryParams = useMemo(() => {
-    const params = { page };
-    if (cancelledOnly) {
-      params.cancelled = "only";
-      if (debouncedSearch) params.search = debouncedSearch;
-    }
-    if (selectedVendorId) {
-      params.vendor_id = selectedVendorId;
-    }
-    if (selectedDropshipper?.id) {
-      params.dropshipper_id = selectedDropshipper.id;
-    }
+    const params = { page, per_page: perPage };
+    if (cancelledOnly) params.cancelled = "only";
+    if (urlSearch) params.search = urlSearch;
+    if (!cancelledOnly && activeTab !== "all") params.status = activeTab;
+    if (selectedVendorId) params.vendor_id = selectedVendorId;
+    if (selectedDropshipper?.id) params.dropshipper_id = selectedDropshipper.id;
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
+    if (!cancelledOnly && paymentFilter !== "all") params.payment_stage = paymentFilter;
     return params;
-  }, [page, cancelledOnly, debouncedSearch, selectedVendorId, selectedDropshipper, dateFrom, dateTo]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, perPage, cancelledOnly, urlSearch, activeTab, selectedVendorId, selectedDropshipper?.id, dateFrom, dateTo, paymentFilter]);
 
   // Dropshipper payout invoice: { dropshipper, orderIds } while the modal is open.
   const [payoutModal, setPayoutModal] = useState(null);
@@ -453,14 +479,15 @@ const AdminOrders = ({ cancelledOnly = false }) => {
   };
 
   const handleSelectDropshipper = (user) => {
-    setSelectedDropshipper(user);
-    setPage(1);
+    updateUrl({
+      dropshipper_id: user?.id ?? null,
+      dropshipper_name: user?.name ?? null,
+      dropshipper_phone: user?.phone ?? null,
+    });
   };
 
   const handleDateChange = (from, to) => {
-    setDateFrom(from || "");
-    setDateTo(to || "");
-    setPage(1);
+    updateUrl({ date_from: from || null, date_to: to || null });
   };
 
   const { data, isLoading, isError, refetch } = useListAllOrdersQuery(queryParams);
@@ -497,57 +524,9 @@ const AdminOrders = ({ cancelledOnly = false }) => {
   const getStatusName = (order) => order.status?.name || "Unknown";
   const getStatusId = (order) => order.status?.id;
 
-  // Helper to get vendor / shop name for search
-  const getOrderVendorName = (order) => {
-    if (order.vendor?.shop_name) return order.vendor.shop_name;
-    const firstItemShop = order.items?.find((it) => it.shop?.shop_name)?.shop?.shop_name;
-    return firstItemShop || "";
-  };
-
-  // Filter orders
-  const filteredOrders = useMemo(() => {
-    let result = orders;
-    if (activeTab !== "all") {
-      result = result.filter((o) => getStatusId(o) === activeTab);
-    }
-    if (paymentFilter === "carrybee_paid") {
-      result = result.filter((o) =>
-        Boolean(
-          o.is_carrybee_paid ||
-          o.carrybee_paid_at ||
-          o.carrybee_invoice_id ||
-          o.delivery_information?.carrybee_invoice_id ||
-          o.courier_payout_status === "received"
-        )
-      );
-    } else if (paymentFilter === "awaiting_carrybee") {
-      result = result.filter(
-        (o) =>
-          o.payment_status === "paid" &&
-          !Boolean(
-            o.is_carrybee_paid ||
-            o.carrybee_paid_at ||
-            o.carrybee_invoice_id ||
-            o.delivery_information?.carrybee_invoice_id ||
-            o.courier_payout_status === "received"
-          )
-      );
-    } else if (paymentFilter === "unpaid") {
-      result = result.filter((o) => o.payment_status === "unpaid");
-    }
-    if (!cancelledOnly && searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (o) =>
-          o.order_number?.toLowerCase().includes(q) ||
-          o.customer_name?.toLowerCase().includes(q) ||
-          o.customer_phone?.includes(q) ||
-          o.user?.name?.toLowerCase().includes(q) ||
-          getOrderVendorName(o).toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [orders, activeTab, paymentFilter, searchQuery, cancelledOnly]);
+  // Status tab and search are filtered on the server (see queryParams), so the
+  // page already holds exactly the matching orders.
+  const filteredOrders = orders;
 
   const handleToggleSelectOrder = (id) => {
     setSelectedOrderIds((prev) =>
@@ -786,12 +765,12 @@ const AdminOrders = ({ cancelledOnly = false }) => {
           <select
             value={paymentFilter}
             onChange={(e) => setPaymentFilter(e.target.value)}
+            aria-label="Payment stage"
             className="px-3 py-2.5 rounded-lg border border-gray-300 text-xs font-semibold bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 cursor-pointer shadow-2xs"
           >
-            <option value="all">সব পেমেন্ট স্ট্যাটাস</option>
-            <option value="carrybee_paid">🟢 CarryBee Paid (কুরিয়ার পরিশোধিত)</option>
-            <option value="awaiting_carrybee">⏳ Paid (CarryBee বাকি)</option>
-            <option value="unpaid">🔴 Unpaid (বাকি)</option>
+            {PAYMENT_STAGE_FILTERS.map((f) => (
+              <option key={f.value} value={f.value}>{f.label}</option>
+            ))}
           </select>
           )}
 
@@ -858,7 +837,6 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                 return;
               }
               setActiveTab(tab.value);
-              setPage(1);
             }}
             title={tab.href ? "বাতিল অর্ডার আলাদা পেজে দেখুন" : undefined}
             className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
@@ -883,6 +861,36 @@ const AdminOrders = ({ cancelledOnly = false }) => {
 
       {/* Advance payment badge legend */}
       <AdvanceBadgeLegend />
+
+      {/* Count + page size (server totals for the current filters) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-600">
+        <p aria-live="polite">
+          {isLoading ? (
+            "Loading orders…"
+          ) : pagination.total ? (
+            <>
+              Showing <b className="text-gray-800">{pagination.from}–{pagination.to}</b> of{" "}
+              <b className="text-gray-800">{pagination.total}</b> {pagination.total === 1 ? "order" : "orders"}
+              {pagination.last_page > 1 && <> · Page {pagination.current_page} of {pagination.last_page}</>}
+            </>
+          ) : (
+            "0 orders"
+          )}
+        </p>
+        <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
+          Show
+          <select
+            value={perPage}
+            onChange={(e) => setPerPage(e.target.value)}
+            className="rounded-lg border border-gray-300 bg-white px-2 py-1.5 text-xs font-semibold text-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+          >
+            {PER_PAGE_OPTIONS.map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+          per page
+        </label>
+      </div>
 
       {/* Orders Table / List */}
       <div className="bg-white rounded-xl border border-gray-200">
@@ -953,7 +961,7 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                     <th className="text-left py-3 px-4 font-semibold">Date &amp; Time</th>
                     <th className="text-right py-3 px-4 font-semibold">মোট</th>
                     <th className="text-center py-3 px-4 font-semibold">
-                      পেমেন্ট
+                      Payment
                     </th>
                     <th className="text-center py-3 px-4 font-semibold">
                       স্ট্যাটাস
@@ -1070,7 +1078,16 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        {renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))}
+                        {order.payment_progress ? (
+                          <PaymentProgressCell
+                            progress={order.payment_progress}
+                            onCarrybeeClick={() => setManualPaymentOrder(order)}
+                            onSettlementClick={() => navigate(`/admin-panel/orders/${order.id}`)}
+                          />
+                        ) : (
+                          // Older API without payment_progress.
+                          renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <select
@@ -1233,7 +1250,16 @@ const AdminOrders = ({ cancelledOnly = false }) => {
 
                   <div className="flex items-center justify-between gap-2 pt-1 border-t border-gray-100">
                     <div className="flex flex-wrap items-center gap-2">
-                      {renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))}
+                      {order.payment_progress ? (
+                          <PaymentProgressCell
+                            progress={order.payment_progress}
+                            onCarrybeeClick={() => setManualPaymentOrder(order)}
+                            onSettlementClick={() => navigate(`/admin-panel/orders/${order.id}`)}
+                          />
+                        ) : (
+                          // Older API without payment_progress.
+                          renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))
+                        )}
                       <select
                         value={getStatusId(order) || ""}
                         disabled={isUpdating}
@@ -1269,23 +1295,25 @@ const AdminOrders = ({ cancelledOnly = false }) => {
       {pagination.last_page > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-gray-600">
           <p>
-            মোট {pagination.total} টি অর্ডারের মধ্যে {pagination.from}–
-            {pagination.to} দেখানো হচ্ছে
+            Showing {pagination.from}–{pagination.to} of {pagination.total} {pagination.total === 1 ? "order" : "orders"} · Page {pagination.current_page} of {pagination.last_page}
           </p>
-          <div className="flex gap-1">
+          <nav className="flex flex-wrap gap-1" aria-label="Order pages">
             {pagination.links?.map((link, i) => (
               <button
                 key={i}
+                type="button"
                 disabled={!link.url}
+                aria-current={link.active ? "page" : undefined}
                 onClick={() => {
                   if (link.url) {
                     const pageNum = new URL(link.url).searchParams.get("page");
                     setPage(Number(pageNum));
+                    window.scrollTo({ top: 0, behavior: "smooth" });
                   }
                 }}
                 className={`px-3 py-1 rounded text-sm border transition ${
                   link.active
-                    ? "bg-red-600 text-white border-red-600"
+                    ? "bg-red-50 text-red-700 border-red-500 font-bold"
                     : link.url
                     ? "border-gray-300 hover:bg-gray-50"
                     : "border-gray-200 text-gray-400 cursor-not-allowed"
@@ -1293,7 +1321,7 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                 dangerouslySetInnerHTML={{ __html: link.label }}
               />
             ))}
-          </div>
+          </nav>
         </div>
       )}
 

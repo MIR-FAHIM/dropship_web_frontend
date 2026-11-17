@@ -61,6 +61,7 @@ const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithAuth,
   tagTypes: [
+    "AppVersion",
     "Grid",
     "Request",
     "Payment",
@@ -109,6 +110,8 @@ const baseApi = createApi({
     "AdminMarketers",
     "AdminMarketerClients",
     "PasswordLog",
+    "Lead",
+    "LeadTag",
   ],
   endpoints: () => ({}),
 });

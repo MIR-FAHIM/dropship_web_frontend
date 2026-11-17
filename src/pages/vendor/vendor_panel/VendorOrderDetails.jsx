@@ -865,7 +865,7 @@ const VendorOrderDetails = () => {
                   {readySubmitting
                     ? <Loader2 className="w-4 h-4 animate-spin" />
                     : <Truck className="w-4 h-4" />}
-                  Ready Product For CarryBee
+                  Product is ready for Carrybee
                 </button>
               </div>
             </div>

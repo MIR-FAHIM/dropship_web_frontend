@@ -51,6 +51,8 @@ const userApi = baseApi.injectEndpoints({
     }),
     getUserDetails: builder.query({
       query: (id) => `/users/details/${id}`,
+      // Refreshes after "Convert to lead", ban/unban, profile edits.
+      providesTags: ["User"],
     }),
     getAdminList: builder.query({
       query: (page = 1) => ({
@@ -80,6 +82,16 @@ const userApi = baseApi.injectEndpoints({
       query: (id) => ({
         url: API_ENDPOINTS.users.unban.path.replace('{id}', id),
         method: API_ENDPOINTS.users.unban.method,
+      }),
+      invalidatesTags: ["User"],
+    }),
+
+    // Ban (true) or reactivate (false) an admin employee: { id, banned }
+    setEmployeeStatus: builder.mutation({
+      query: ({ id, banned }) => ({
+        url: `/users/${id}/employee-status`,
+        method: "PATCH",
+        body: { banned },
       }),
       invalidatesTags: ["User"],
     }),
@@ -129,6 +141,7 @@ export const {
   useUserBanMutation,
   useUserUnbanMutation,
   useChangeOwnPasswordMutation,
+  useSetEmployeeStatusMutation,
   useAdminResetPasswordMutation,
   useGetPasswordLogsQuery,
 } = userApi;

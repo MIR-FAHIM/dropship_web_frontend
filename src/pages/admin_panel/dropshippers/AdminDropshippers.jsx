@@ -25,14 +25,17 @@ import {
   LogIn,
   Pencil,
   Eye,
+  MousePointerClick,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   useGetDropshippersQuery,
   useUserBanMutation,
   useUserUnbanMutation,
 } from "../../../redux/features/user";
 import LoginAsDropshipperButton from "./LoginAsDropshipperButton";
+import ProductClicksBadge from "../../../components/shared/ProductClicksBadge";
+import ConvertToLeadButton from "./ConvertToLeadButton";
 import { formatWhatsAppUrl } from "../../../utils/whatsapp.utils";
 import { toast } from "react-toastify";
 import { FaWhatsapp } from "react-icons/fa";
@@ -100,6 +103,9 @@ const AdminDropshippers = () => {
 
   const [page, setPage] = useState(1);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // ?inactive=1 (also linked from the Lead Manager)
+  const [searchParams, setSearchParams] = useSearchParams();
+  const inactiveOnly = searchParams.get("inactive") === "1";
   const [banUserId, setBanUserId] = useState(null);
 
   // Construct active query parameters
@@ -129,9 +135,10 @@ const AdminDropshippers = () => {
       p.mobile = appliedFilters.mobile.trim();
       p.phone = appliedFilters.mobile.trim();
     }
+    if (inactiveOnly) p.inactive = 1;
 
     return p;
-  }, [appliedFilters, page]);
+  }, [appliedFilters, page, inactiveOnly]);
 
   // RTK Query: Filtered list
   const { data, isLoading, isFetching, error, refetch } =
@@ -278,7 +285,28 @@ const AdminDropshippers = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Inactive = no order and no product click in 30 days (Lead Manager candidates). */}
+          <button
+            type="button"
+            onClick={() => {
+              setPage(1);
+              setSearchParams((prev) => {
+                const next = new URLSearchParams(prev);
+                if (inactiveOnly) next.delete("inactive");
+                else next.set("inactive", "1");
+                return next;
+              }, { replace: true });
+            }}
+            aria-pressed={inactiveOnly}
+            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition md:text-sm ${
+              inactiveOnly ? "border-amber-400 bg-amber-50 text-amber-800" : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
+            title="No order and no product click in the last 30 days"
+          >
+            <UserX className="h-4 w-4" />
+            Inactive (30 days)
+          </button>
           <button
             type="button"
             onClick={() => refetch()}
@@ -690,6 +718,10 @@ const AdminDropshippers = () => {
                   <th className="py-3 px-3">লগইন</th>
                   <th className="py-3 px-3">ঠিকানা</th>
                   <th scope="col" className="whitespace-nowrap py-3 px-3 text-right">মোট অর্ডার</th>
+                  <th scope="col" className="py-3 px-3 text-center" title="Product clicks (activity)">
+                    <MousePointerClick className="mx-auto h-4 w-4" aria-hidden="true" />
+                    <span className="sr-only">Product clicks</span>
+                  </th>
                   <th className="py-3 px-3">ব্যালেন্স</th>
                   <th className="py-3 px-3">স্ট্যাটাস</th>
                   <th className="py-3 px-3">রেজিস্ট্রেশন</th>
@@ -816,6 +848,11 @@ const AdminDropshippers = () => {
                         {user.total_order_count?.toLocaleString("en-IN") ?? "—"}
                       </td>
 
+                      {/* Activity: product pages opened */}
+                      <td className="py-3 px-3 text-center">
+                        <ProductClicksBadge count={user.product_clicks_count} lastClickAt={user.last_product_click_at} />
+                      </td>
+
                       {/* Balance: user.balance object from the reseller_transactions ledger */}
                       <td className="py-3 px-3">
                         <DropshipperBalanceCell balance={user.balance} fallbackNet={user.wallet_balance} />
@@ -877,6 +914,7 @@ const AdminDropshippers = () => {
                             <Eye className="h-3.5 w-3.5" /> বিস্তারিত
                           </Link>
                           <button type="button" onClick={() => setEditingUser(user)} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-indigo-200 px-3 py-1.5 text-xs font-medium text-indigo-700 hover:bg-indigo-50"><Pencil className="h-3.5 w-3.5" /> সম্পাদনা</button>
+                          <ConvertToLeadButton user={user} leadId={user.lead_id} leadStatus={user.lead_status} />
                         </div>
                       </td>
                     </tr>

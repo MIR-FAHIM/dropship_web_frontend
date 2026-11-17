@@ -25,6 +25,8 @@ import AdminResetPasswordCard from "./AdminResetPasswordCard";
 import PasswordLogTable from "./PasswordLogTable";
 import LoginAsDropshipperButton from "./LoginAsDropshipperButton";
 import DropshipperSupportTicketsTab from "./DropshipperSupportTicketsTab";
+import ProductClicksBadge from "../../../components/shared/ProductClicksBadge";
+import ConvertToLeadButton from "./ConvertToLeadButton";
 
 const PAGE_SIZE = 20;
 
@@ -112,10 +114,12 @@ const AdminDropshipperDetails = () => {
           <p className="text-xs font-medium text-gray-500">ড্রপশিপার অ্যাকাউন্ট</p>
           <h1 className="text-xl font-bold text-gray-900">{user?.name || `Dropshipper #${id}`}</h1>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          {user && <ProductClicksBadge count={user.product_clicks_count} lastClickAt={user.last_product_click_at} size="md" />}
           <span className="rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 font-mono text-xs font-semibold text-gray-600">
             ID #{id}
           </span>
+          {user && <ConvertToLeadButton user={user} leadId={user.lead_id} leadStatus={user.lead_status} size="md" />}
           <LoginAsDropshipperButton user={user || { id: Number(id) }} size="md" />
         </div>
       </div>

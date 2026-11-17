@@ -45,6 +45,7 @@ import {
   Globe,
   XCircle,
   KeyRound,
+  Smartphone,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -245,6 +246,11 @@ const adminMenuLinks = [
     icon: <Megaphone className="w-5 h-5" />,
   },
   {
+    path: "/admin-panel/app-versions",
+    label: "App Updates",
+    icon: <Smartphone className="w-5 h-5" />,
+  },
+  {
     path: "/admin-panel/error-logs",
     label: "Error Log",
     icon: <AlertTriangle className="w-5 h-5" />,
@@ -258,6 +264,11 @@ const adminMenuLinks = [
     path: "/admin-panel/settings",
     label: "সেটিংস",
     icon: <Settings className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/change-password",
+    label: "Change Password",
+    icon: <KeyRound className="w-5 h-5" />,
   },
   {
     path: "/admin-panel/my-business-info",
@@ -284,6 +295,11 @@ const adminMenuLinks = [
     label: "লিড (Lead)",
     icon: <UserPlus className="w-5 h-5" />,
     children: [
+      {
+        path: "/admin-panel/leads/manage",
+        label: "Lead Manager",
+        icon: <Users className="w-4 h-4" />,
+      },
       {
         path: "/admin-panel/leads/ecommerce",
         label: "ইকমার্স লিড",
@@ -334,6 +350,11 @@ const productManagerMenuLinks = [
     path: "/admin-panel/media",
     label: "মিডিয়া",
     icon: <ImageIcon className="w-5 h-5" />,
+  },
+  {
+    path: "/admin-panel/change-password",
+    label: "Change Password",
+    icon: <KeyRound className="w-5 h-5" />,
   },
 ];
 

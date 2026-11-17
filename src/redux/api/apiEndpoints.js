@@ -329,6 +329,12 @@ export const API_ENDPOINTS = {
     update: define("PUT", "/notices/update/{id}"),
     delete: define("DELETE", "/notices/delete/{id}"),
   },
+  appVersions: {
+    list: define("GET", "/app-version/list"),
+    store: define("POST", "/app-version/store"),
+    update: define("POST", "/app-version/update/{id}"),
+    toggle: define("POST", "/app-version/toggle/{id}"),
+  },
   address: {
     divisions: define("GET", "/address/divisions"),
     districts: define("GET", "/address/districts/{divisionId}"),
