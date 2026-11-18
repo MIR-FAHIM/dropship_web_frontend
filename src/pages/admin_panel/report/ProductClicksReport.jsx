@@ -1,5 +1,7 @@
-import React from "react";
-import { BarChart2, MousePointerClick, TrendingUp, Trophy, Package, Loader2 } from "lucide-react";
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { BarChart2, MousePointerClick, TrendingUp, Trophy, Package, Loader2, ExternalLink } from "lucide-react";
+import { imgBaseUrl } from "../../../../config";
 import {
   useGetProductClicksMonthwiseReportQuery,
   useGetProductClicksLast7DaysReportQuery,
@@ -17,6 +19,38 @@ const formatDay = (key) => {
 };
 
 /* ── Sub-components ── */
+
+// Product photo (same URL rules as the order lists); box icon when there is none.
+const productImageUrl = (product) => {
+  const image = product?.primary_image;
+  if (!image) return null;
+  if (image.external_link) return image.external_link;
+  if (!image.file_name) return null;
+  return /^https?:\/\//i.test(image.file_name) ? image.file_name : `${imgBaseUrl}/${image.file_name}`;
+};
+
+// eslint-disable-next-line react/prop-types
+const ProductThumb = ({ product }) => {
+  const [failed, setFailed] = useState(false);
+  const src = productImageUrl(product);
+  if (!src || failed) {
+    return (
+      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
+        <Package className="w-4 h-4 text-blue-400" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      // eslint-disable-next-line react/prop-types
+      alt={product?.name || "Product"}
+      loading="lazy"
+      onError={() => setFailed(true)}
+      className="w-10 h-10 rounded-lg border border-gray-200 bg-white object-cover shrink-0"
+    />
+  );
+};
 
 const SectionLoader = () => (
   <div className="flex justify-center items-center py-16">
@@ -212,11 +246,15 @@ const Leaderboard = () => {
             const maxClicks = Number(items[0]?.total_clicks ?? items[0]?.clicks ?? 1);
             const pct = Math.round((clicks / maxClicks) * 100);
             const style = RANK_STYLES[idx] ?? { bg: "bg-gray-50", text: "text-gray-500", border: "border-gray-200" };
+            const productId = item.product_id ?? item.product?.id;
+            // Whole row opens the product's admin page.
+            const Row = productId ? Link : "div";
 
             return (
-              <div
+              <Row
                 key={item.product_id ?? item.id ?? idx}
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group"
+                {...(productId ? { to: `/admin-panel/products/${productId}`, title: `Open ${name}` } : {})}
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition group focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
               >
                 {/* Rank badge */}
                 <div
@@ -225,14 +263,14 @@ const Leaderboard = () => {
                   {rank <= 3 ? ["🥇", "🥈", "🥉"][rank - 1] : `#${rank}`}
                 </div>
 
-                {/* Product icon placeholder */}
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-                  <Package className="w-4 h-4 text-blue-400" />
-                </div>
+                <ProductThumb product={item.product} />
 
                 {/* Name + bar */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{name}</p>
+                  <p className={`text-sm font-medium truncate flex items-center gap-1 ${productId ? "text-blue-700 group-hover:underline" : "text-gray-800"}`}>
+                    <span className="truncate">{name}</span>
+                    {productId && <ExternalLink className="w-3 h-3 shrink-0 opacity-0 group-hover:opacity-100" aria-hidden="true" />}
+                  </p>
                   {sku && <p className="text-[10px] text-gray-400">{sku}</p>}
                   <div className="mt-1 bg-gray-100 rounded-full h-1.5 overflow-hidden">
                     <div
@@ -247,7 +285,7 @@ const Leaderboard = () => {
                   <p className="text-sm font-bold text-gray-800">{clicks.toLocaleString()}</p>
                   <p className="text-[10px] text-gray-400">clicks</p>
                 </div>
-              </div>
+              </Row>
             );
           })}
         </div>

@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import OrderJourneyTabs, { journeyStageLabel } from "../../../components/shared/OrderJourneyTabs";
+import useUrlFilters from "../../../hooks/useUrlFilters";
 import {
   ClipboardList,
   Loader2,
@@ -180,25 +182,31 @@ const pageNumbers = (current, last) => {
 const VendorOrders = () => {
   // Page and page size live in the URL (?page=3&per_page=50), so Back from an
   // order's details returns to the same page.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const page = Math.max(1, Number(searchParams.get("page")) || 1);
-  const perPage = PER_PAGE_OPTIONS.includes(Number(searchParams.get("per_page"))) ? Number(searchParams.get("per_page")) : 20;
-  const setUrl = (patch) =>
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      Object.entries(patch).forEach(([k, v]) => (v == null ? next.delete(k) : next.set(k, String(v))));
-      return next;
-    }, { replace: true });
+  // Filters (section, stage, search, dates) are in the URL too, with a Clear filters button.
+  const { get, update, clear, hasAny } = useUrlFilters();
+  const page = Math.max(1, Number(get("page")) || 1);
+  const perPage = PER_PAGE_OPTIONS.includes(Number(get("per_page"))) ? Number(get("per_page")) : 20;
   const setPage = (n) => {
-    setUrl({ page: Number(n) > 1 ? n : null });
+    update({ page: Number(n) > 1 ? n : "" }, { resetPage: false });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const setPerPage = (n) => setUrl({ per_page: n === 20 ? null : n, page: null });
-  const [activeTab, setActiveTab] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState("all");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const setPerPage = (n) => update({ per_page: n === 20 ? "" : n });
+  const section = get("section");
+  const stage = get("stage");
+  const urlSearch = get("q");
+  const dateFilter = get("period", "all");
+  const dateFrom = get("date_from");
+  const dateTo = get("date_to");
+  const [searchQuery, setSearchQuery] = useState(urlSearch);
+  useEffect(() => { setSearchQuery(urlSearch); }, [urlSearch]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (searchQuery.trim() !== urlSearch) update({ q: searchQuery.trim() });
+    }, 350);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+  const clearFilters = () => { clear(["per_page"]); setSearchQuery(""); };
   const [carryBeeModalOpen, setCarryBeeModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const navigate = useNavigate();
@@ -232,6 +240,9 @@ const VendorOrders = () => {
       period: dateFilter,
       date_from: dateFilter === "custom" ? dateFrom : undefined,
       date_to: dateFilter === "custom" ? dateTo : undefined,
+      search: urlSearch || undefined,
+      section: section || undefined,
+      stage: stage || undefined,
     },
     { skip: !vendorId }
   );
@@ -264,37 +275,8 @@ const VendorOrders = () => {
     return found?.id || order.status || "";
   };
 
-  const tabs = useMemo(() => {
-    const allTab = { label: "সকল", value: "all", count: orders.length };
-    const dynamicTabs = statusList.map((s) => {
-      const matchCount = orders.filter(
-        (o) => String(getStatusId(o)) === String(s.id)
-      ).length;
-      return {
-        label: s.bn || s.name,
-        value: s.id,
-        count: s.orders_count !== undefined ? s.orders_count : matchCount,
-      };
-    });
-    return [allTab, ...dynamicTabs];
-  }, [orders, statusList]);
-
-  const filteredOrders = useMemo(() => {
-    let result = orders;
-    if (hasOwnDeliveryAccount && activeTab !== "all") {
-      result = result.filter((o) => String(getStatusId(o)) === String(activeTab));
-    }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        (o) =>
-          o.order_number?.toLowerCase().includes(q) ||
-          o.customer_name?.toLowerCase().includes(q) ||
-          o.customer_phone?.includes(q)
-      );
-    }
-    return result;
-  }, [orders, activeTab, searchQuery, hasOwnDeliveryAccount, statusList]);
+  // Section, stage and search are filtered on the server, across all pages.
+  const filteredOrders = orders;
 
   const handleStatusChange = async (orderId, newStatusId) => {
     try {
@@ -346,7 +328,7 @@ const VendorOrders = () => {
           <button
             key={value}
             type="button"
-            onClick={() => { setDateFilter(value); setPage(1); }}
+            onClick={() => update(value === "custom" ? { period: value } : { period: value, date_from: "", date_to: "" })}
             className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition ${dateFilter === value ? "border-blue-500 bg-blue-50 text-blue-600 shadow-2xs font-semibold" : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"}`}
           >
             {label}
@@ -355,39 +337,31 @@ const VendorOrders = () => {
         {dateFilter === "custom" && (
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <label className="text-xs text-gray-500">From
-              <input type="date" value={dateFrom} onChange={(event) => { setDateFrom(event.target.value); if (dateTo && event.target.value > dateTo) setDateTo(""); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
+              <input type="date" value={dateFrom} onChange={(event) => update({ date_from: event.target.value, ...(dateTo && event.target.value > dateTo ? { date_to: "" } : {}) })} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
             </label>
             <label className="text-xs text-gray-500">To
-              <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => { setDateTo(event.target.value); setPage(1); }} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
+              <input type="date" value={dateTo} min={dateFrom || undefined} onChange={(event) => update({ date_to: event.target.value })} className="ml-2 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-700" />
             </label>
           </div>
         )}
+        {hasAny() && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="ml-auto px-3.5 py-1.5 rounded-lg text-xs font-semibold border border-red-200 bg-white text-red-600 hover:bg-red-50 transition"
+          >
+            ✕ Clear filters
+          </button>
+        )}
       </div>
 
-      {hasOwnDeliveryAccount && (
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
-            <button
-              key={tab.value}
-              onClick={() => setActiveTab(tab.value)}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-medium border transition cursor-pointer ${
-                activeTab === tab.value
-                  ? "border-blue-500 bg-blue-50 text-blue-600 shadow-2xs font-semibold"
-                  : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
-              }`}
-            >
-              {tab.label}{" "}
-              <span
-                className={
-                  activeTab === tab.value ? "text-blue-500" : "text-gray-400"
-                }
-              >
-                ({tab.count})
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+      {/* CarryBee-style sections with stage counts (server side, across all pages) */}
+      <OrderJourneyTabs
+        counts={pagination?.journey_counts}
+        section={section}
+        stage={stage}
+        onChange={({ section: sec, stage: stg }) => update({ section: sec, stage: stg })}
+      />
 
 
 
@@ -544,6 +518,9 @@ const VendorOrders = () => {
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${statusCfg.cls}`}>
                               {statusCfg.label}
                             </span>
+                          )}
+                          {journeyStageLabel(order.journey) && (
+                            <p className="mt-1 text-[11px] text-gray-500">{journeyStageLabel(order.journey)}</p>
                           )}
                           <CourierIssueBadge deliveryInfo={order.delivery_information} />
                         </td>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ShieldCheck, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { useVendorLoginMutation } from "../../redux/features/vendor_api";
@@ -6,6 +6,7 @@ import { saveToLocalstorage } from "../../utils/localstorage.utils";
 import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
+import { clearAuthNotice, readAuthNotice } from "../../utils/authNotice";
 
 const VendorLogin = () => {
   const navigate = useNavigate();
@@ -14,6 +15,9 @@ const VendorLogin = () => {
   const [agreedToPolicy, setAgreedToPolicy] = useState(false);
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [vendorLogin, { isLoading }] = useVendorLoginMutation();
+  // Set when the API signed this vendor out (expired / revoked login).
+  const [authNotice] = useState(() => readAuthNotice());
+  useEffect(() => { clearAuthNotice(); }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,7 +33,7 @@ const VendorLogin = () => {
       saveToLocalstorage("vendorUser", JSON.stringify(res.data.user));
       toast.success(res?.message || "লগইন সফল হয়েছে!");
             if (res.data.user.user_type === "vendor") {
-         navigate("/vendor-panel");
+         navigate(authNotice?.from?.startsWith("/vendor-panel") ? authNotice.from : "/vendor-panel");
       } else {
         navigate("/");
       }
@@ -67,6 +71,11 @@ const VendorLogin = () => {
           </div>
 
           {/* Form */}
+          {authNotice?.message && (
+            <p role="alert" lang="bn" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+              {authNotice.message}
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email */}
             <div>

@@ -8,6 +8,7 @@ import { useDispatch } from "react-redux";
 import { setToken } from "../../redux/slices/authSlice";
 import { toast } from "sonner";
 import AccountActivationModal from "../../components/shared/AccountActivationModal";
+import { clearAuthNotice, readAuthNotice } from "../../utils/authNotice";
 
 const SUPPORT_NUMBER = "01941606310";
 const LOGIN_SUPPORT_URL = `https://wa.me/88${SUPPORT_NUMBER}?text=${encodeURIComponent("আমি ResellerBrain-এ লগইন করতে পারছি না। দয়া করে সাহায্য করবেন?")}`;
@@ -45,6 +46,15 @@ const Login = () => {
   const [loginFunc, { isLoading }] = useLoginMutation();
   const [activationModalOpen, setActivationModalOpen] = useState(false);
   const [activationMessage, setActivationMessage] = useState("");
+  // Set when the API signed this user out (expired / revoked login): show why, and go back after login.
+  const [authNotice] = useState(() => readAuthNotice());
+
+  useEffect(() => {
+    if (authNotice?.message) {
+      toast.error(authNotice.message, { id: "auth-session-expired", duration: 6000 });
+    }
+    clearAuthNotice();
+  }, [authNotice]);
 
   useEffect(() => {
     if (location.state?.email) {
@@ -103,8 +113,11 @@ const Login = () => {
       toast.success(res?.message || "লগইন সফল হয়েছে!");
 
       const isMarketer = user?.user_type === "marketer" || user?.role === "marketer";
+      const backTo = location.state?.from?.pathname
+        ? location.state.from.pathname + (location.state.from.search || "")
+        : authNotice?.from;
       const destination =
-        location.state?.from?.pathname ||
+        (!isMarketer && backTo) ||
         (isMarketer
           ? "/marketer-panel"
           : user?.user_type === "dropshipper"
@@ -152,6 +165,11 @@ const Login = () => {
           </div>
 
           {/* Form */}
+          {authNotice?.message && (
+            <p role="alert" lang="bn" className="mb-5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+              {authNotice.message}
+            </p>
+          )}
           <form onSubmit={handleSubmit} className="space-y-5" autoComplete="on">
             {/* Email */}
             <div>

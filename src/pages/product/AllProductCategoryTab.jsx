@@ -6,8 +6,14 @@ import { useListProductsCategoryWiseQuery } from "../../redux/features/product";
 import ProductCard from "./product_card_component";
 import Pagination from "../../components/shared/Pagination";
 import TabHeading from "../../components/shared/TabHeading";
+import WeeklyProductRecommendation from "../reseller_panel/components/WeeklyProductRecommendation";
 
-const AllProductCategoryTab = () => {
+/**
+ * All products, with search + category chips.
+ * featuredOnly: the "Weekly Top Products" page — only products the admin marked as featured.
+ */
+// eslint-disable-next-line react/prop-types
+const AllProductCategoryTab = ({ featuredOnly = false }) => {
 	const navigate = useNavigate();
 	const [searchParams, setSearchParams] = useSearchParams();
 
@@ -52,8 +58,9 @@ const AllProductCategoryTab = () => {
 		const p = { page };
 		if (selectedCategory) p.category_id = selectedCategory;
 		if (search) p.search = search;
+		if (featuredOnly) p.featured = 1;
 		return p;
-	}, [page, selectedCategory, search]);
+	}, [page, selectedCategory, search, featuredOnly]);
 
 	const {
 		data: products,
@@ -117,7 +124,12 @@ const AllProductCategoryTab = () => {
 	return (
 		<div className="min-h-screen bg-gray-50 px-4 py-8">
 			<div className="max-w-7xl mx-auto">
-			
+				{featuredOnly && (
+					<div className="mb-6">
+						<WeeklyProductRecommendation count={products?.data?.total} />
+					</div>
+				)}
+
 				{/* Search box */}
 			<div className="relative max-w-md mx-auto mb-6">
 				<Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -170,6 +182,13 @@ const AllProductCategoryTab = () => {
 					<div>Error: {productsError?.message || "Failed to load products."}</div>
 				) : (
 					<>
+						{productList.length === 0 && (
+							<div lang="bn" className="rounded-xl border border-gray-200 bg-white p-10 text-center text-sm text-gray-600">
+								{featuredOnly
+									? (search || selectedCategory ? "এই ফিল্টারে এই সপ্তাহের কোনো প্রস্তাবিত পণ্য নেই।" : "এই সপ্তাহের প্রস্তাবিত পণ্য এখনো যোগ করা হয়নি।")
+									: "No products found."}
+							</div>
+						)}
 						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
 							{productList.map((product) => (
 								<ProductCard

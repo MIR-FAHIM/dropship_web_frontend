@@ -11,11 +11,17 @@ const orderApi = baseApi.injectEndpoints({
       }),
     }),
     listOrdersByUser: builder.query({
-      query: ({ userId, page, search, period, date_from, date_to }) => ({
+      query: ({ userId, page, per_page, search, period, date_from, date_to, section, stage, fields = {} }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.listByUser.path, { userId }),
         params: {
+          // Separate field filters from My Orders: consignment_id, order_number,
+          // customer_name, customer_phone, status (empty ones are left out).
+          ...Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")),
           ...(page ? { page } : {}),
+          ...(per_page ? { per_page } : {}),
           ...(search ? { search } : {}),
+          ...(section ? { section } : {}),
+          ...(stage ? { stage } : {}),
           ...(period && period !== "all" ? { period } : {}),
           ...(date_from ? { date_from } : {}),
           ...(date_to ? { date_to } : {}),
@@ -23,11 +29,14 @@ const orderApi = baseApi.injectEndpoints({
       }),
     }),
     vendorOrders: builder.query({
-      query: ({ vendorId, page, per_page, period, date_from, date_to }) => ({
+      query: ({ vendorId, page, per_page, period, date_from, date_to, search, section, stage }) => ({
         url: buildEndpointPath(API_ENDPOINTS.orders.vendorOrders.path, { vendorId }),
         params: {
           ...(page ? { page } : {}),
           ...(per_page ? { per_page } : {}),
+          ...(search ? { search } : {}),
+          ...(section ? { section } : {}),
+          ...(stage ? { stage } : {}),
           ...(period && period !== "all" ? { period } : {}),
           ...(date_from ? { date_from } : {}),
           ...(date_to ? { date_to } : {}),
@@ -200,6 +209,8 @@ export const {
   useCreateContactUsMutation,
   useListOrdersByUserQuery,
   useListAllOrdersQuery,
+  // Download sheet: fetches every page of the current filter on demand.
+  useLazyListAllOrdersQuery,
   useGetOrderStatusSummaryQuery,
   useListCompletedOrdersQuery,
   useListCompletedOrdersByUserQuery,

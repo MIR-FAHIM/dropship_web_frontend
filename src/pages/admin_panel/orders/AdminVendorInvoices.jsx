@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { imgBaseUrl } from "../../../../config";
 import {
   FileText,
@@ -68,7 +68,9 @@ const STATUS_CONFIG = {
 
 export default function AdminVendorInvoices() {
   const [statusFilter, setStatusFilter] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
+  // ?search=<invoice no.> (e.g. from an order's "Supplier invoice" badge) pre-fills the search.
+  const [searchParams] = useSearchParams();
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [shareModalInvoice, setShareModalInvoice] = useState(null);
   const [rejectionModalInvoice, setRejectionModalInvoice] = useState(null);

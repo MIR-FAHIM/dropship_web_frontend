@@ -1,21 +1,23 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { getFromLocalstorage, removeFromLocalstorage } from "../../utils/localstorage.utils";
+import { setAuthNotice } from "../../utils/authNotice";
 import { baseUrl } from '../../../config';
+
+const noAuthEndpoints = [
+  "login",
+  "register",
+  "dropshipperRegister",
+  "vendorRegister",
+  "vendorLogin",
+  "forgotPassword",
+  "resetPassword",
+  "addKycDocument",
+  "getCarryBeeTracking",
+];
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${baseUrl}/api`,
   prepareHeaders: (headers, { endpoint }) => {
-    const noAuthEndpoints = [
-      "login",
-      "register",
-      "dropshipperRegister",
-      "vendorRegister",
-      "vendorLogin",
-      "forgotPassword",
-      "resetPassword",
-      "addKycDocument",
-      "getCarryBeeTracking",
-    ];
     if (noAuthEndpoints.includes(endpoint)) {
       headers.set("Accept", "application/json");
       return headers;
@@ -50,11 +52,45 @@ const baseQueryWithAuth = async (args, api, extraOptions) => {
       removeFromLocalstorage("token");
       removeFromLocalstorage("userId");
       window.location.href = "/admin-login";
+      return result;
+    }
+
+    // Dropshipper / vendor / marketer panels: a token that the API rejects (expired after
+    // 30 days, revoked by a password reset or by an admin, account banned) used to leave
+    // pages stuck on "Error loading ...". Sign out and send them to login with a message.
+    const sentToken = !noAuthEndpoints.includes(api.endpoint) && getFromLocalstorage("token");
+    if (sentToken) {
+      signOutToLogin(errorData?.message);
     }
     return result;
   }
 
   return result;
+};
+
+let signingOut = false;
+
+/** Clear the stored login and go to the right login page (once, even if many requests fail). */
+const signOutToLogin = (serverMessage) => {
+  if (signingOut) return;
+  signingOut = true;
+
+  const path = window.location.pathname;
+  const isVendor = path.startsWith("/vendor-panel") || path.startsWith("/vendor/");
+  const loginPath = isVendor ? "/vendor-login" : "/login";
+  const banned = serverMessage === "Your account is deactivated or banned";
+
+  setAuthNotice({
+    message: banned
+      ? "আপনার অ্যাকাউন্ট নিষ্ক্রিয় বা ব্লক করা হয়েছে। সাহায্যের জন্য সাপোর্টে যোগাযোগ করুন।"
+      : "আপনার লগইনের মেয়াদ শেষ হয়েছে। অনুগ্রহ করে আবার লগইন করুন।",
+    // After logging in again, come back to the same page (with its filters).
+    from: banned || path === loginPath ? null : path + window.location.search,
+  });
+
+  ["token", "userId", "user"].forEach(removeFromLocalstorage);
+  // Full page load: also clears every cached API response of the old login.
+  window.location.replace(loginPath);
 };
 
 const baseApi = createApi({
@@ -112,6 +148,7 @@ const baseApi = createApi({
     "PasswordLog",
     "Lead",
     "LeadTag",
+    "ProductVendorChanges",
   ],
   endpoints: () => ({}),
 });

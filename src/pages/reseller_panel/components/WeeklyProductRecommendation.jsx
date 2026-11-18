@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { ArrowUpRight, Sparkles, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 
-export default function WeeklyProductRecommendation({ to }) {
+export default function WeeklyProductRecommendation({ to, count }) {
   const Card = to ? Link : "aside";
 
   return (
@@ -28,6 +28,11 @@ export default function WeeklyProductRecommendation({ to }) {
         <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-2 text-sm font-bold text-emerald-950">
           পণ্যের তালিকা দেখুন <ArrowUpRight size={16} aria-hidden="true" />
         </span>
+      ) : count != null ? (
+        // On the Weekly Top Products page itself: how many products this week.
+        <span className="rounded-full bg-emerald-100 px-3 py-2 text-sm font-bold text-emerald-950">
+          {count} টি পণ্য
+        </span>
       ) : (
         <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-50">
           পণ্যের তালিকা শিগগিরই আসছে
@@ -39,4 +44,5 @@ export default function WeeklyProductRecommendation({ to }) {
 
 WeeklyProductRecommendation.propTypes = {
   to: PropTypes.string,
+  count: PropTypes.number,
 };

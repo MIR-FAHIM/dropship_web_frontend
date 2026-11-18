@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Pencil, Save, X, Loader2 } from "lucide-react";
+import { Pencil, Save, X, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 import { InfoRow } from "./shared";
 import { useUpdateProductMutation } from "../../../../redux/features/product";
 import { useListCategoriesQuery } from "../../../../redux/features/category";
 import { useListBrandsQuery } from "../../../../redux/features/brand";
-import { useGetVendorListQuery } from "../../../../redux/features/vendor_api";
+import ChangeVendorModal from "./ChangeVendorModal";
 
 const inputCls =
   "w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent";
@@ -18,11 +18,10 @@ const BasicInfoTab = ({ product, productId }) => {
 
   const { data: catData } = useListCategoriesQuery(1);
   const { data: brandData } = useListBrandsQuery(1);
-  const { data: vendorData } = useGetVendorListQuery();
+  const [changingVendor, setChangingVendor] = useState(false);
 
   const categories = catData?.data?.data || [];
   const brands = brandData?.data?.data || [];
-  const vendors = vendorData?.data?.data || vendorData?.data || [];
 
   const startEdit = () => {
     setForm({
@@ -34,7 +33,6 @@ const BasicInfoTab = ({ product, productId }) => {
       description: product.description || "",
       category_id: product.category_id || product.category?.id || "",
       brand_id: product.brand_id || product.brand?.id || "",
-      vendor_id: product.vendor_id || "",
     });
     setEditing(true);
   };
@@ -100,15 +98,7 @@ const BasicInfoTab = ({ product, productId }) => {
               ))}
             </select>
           </div>
-          <div>
-            <label className={labelCls}>ভেন্ডর</label>
-            <select name="vendor_id" value={form.vendor_id} onChange={handleChange} className={inputCls}>
-              <option value="">নির্বাচন করুন</option>
-              {vendors.map((v) => (
-                <option key={v.id} value={v.user_id || v.id}>{v.shop_name || v.user?.email}</option>
-              ))}
-            </select>
-          </div>
+          {/* Vendor is changed with "Change vendor" (it also moves the SKU and open carts). */}
           <div>
             <label className={labelCls}>SKU / বারকোড</label>
             <input name="sku" value={form.sku} onChange={handleChange} className={inputCls} />
@@ -159,13 +149,21 @@ const BasicInfoTab = ({ product, productId }) => {
       <InfoRow label="Total Clicks" value={product.product_clicks?.clicks_count ? `${product.product_clicks.clicks_count}` : null} />
        
       <InfoRow label="ভেন্ডর">
-        {product.vendor ? (
+        <div className="flex flex-wrap items-center gap-2">
           <span>
-            {product.vendor.name}{" "}
-            <span className="text-gray-400 text-xs">({product.vendor.email})</span>
+            {product.vendor?.shop_name || product.vendor?.name || (product.vendor_id ? `Vendor #${product.vendor_id}` : "—")}
+            {product.vendor_id ? <span className="text-gray-500 text-xs"> (#{product.vendor_id})</span> : null}
           </span>
-        ) : "—"}
+          <button
+            type="button"
+            onClick={() => setChangingVendor(true)}
+            className="inline-flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+          >
+            <Store className="h-3.5 w-3.5" aria-hidden="true" /> Change vendor
+          </button>
+        </div>
       </InfoRow>
+      {changingVendor && <ChangeVendorModal product={product} onClose={() => setChangingVendor(false)} />}
       <InfoRow label="ট্যাগ">
         {product.tags ? (
           <div className="flex flex-wrap gap-1.5">

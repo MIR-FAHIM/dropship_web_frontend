@@ -81,6 +81,8 @@ export const pagePaths = [
   { path: "sale-guide-line",        element: <SalesGuidelines /> },
   { path: "add-payment-account",    element: <AddPaymentAccount /> },
   { path: "all-product-category",   element: <AllProductCategoryTab /> },
+  // Weekly Top Products: the admin's featured products (same page, featured only).
+  { path: "weekly-top-products",    element: <AllProductCategoryTab featuredOnly /> },
   { path: "all-store",              element: <AllStore /> },
   { path: "store-products/:id",     element: <StoreProducts /> },
   { path: "marketer-partnership",   element: <MarketerPartnership /> },

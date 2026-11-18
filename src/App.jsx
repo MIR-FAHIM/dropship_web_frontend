@@ -9,7 +9,7 @@ import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { MdOutlineWarehouse } from "react-icons/md";
-import { Bell, ChevronDown, ChevronRight, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, Trophy, Truck } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, TrendingUp, Trophy, Truck } from "lucide-react";
 import { useGetUserDetailsQuery } from "./redux/features/user";
 import { getImpersonation } from "./utils/impersonation";
 import logo from "../src/assets/jayga-logo.png";
@@ -36,6 +36,11 @@ const menuSections = [
         path: "/app/all-product-category",
         label: "All Products",
         icon: <LuArchive />,
+      },
+      {
+        path: "/app/weekly-top-products",
+        label: "Weekly Top Products",
+        icon: <TrendingUp />,
       },
       {
         path: "/app/product-leaderboard",
@@ -85,6 +90,11 @@ const menuSections = [
           {
             path: "/app/billing/payments",
             label: "Payments",
+          },
+          {
+            // Profit payout invoices ResellerBrain paid to this dropshipper.
+            path: "/app/billing/payout-invoices",
+            label: "Profit Payouts",
           },
         ],
       },
@@ -466,7 +476,7 @@ const App = () => {
           <div className="min-h-0 flex-1 overflow-y-auto">
             {weeklyRecommendationPages.some((path) => matchPath(path, location.pathname)) && (
               <div className="mx-3 mt-3 sm:mx-5 sm:mt-5">
-                <WeeklyProductRecommendation />
+                <WeeklyProductRecommendation to="/app/weekly-top-products" />
               </div>
             )}
             <div className="m-3 rounded-2xl bg-white p-0 shadow-sm sm:m-5">

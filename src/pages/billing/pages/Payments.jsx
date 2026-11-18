@@ -191,7 +191,7 @@ const Payments = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/withdraw')}
+            onClick={() => navigate('/app/withdraw')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-sm transition"
           >
             <Wallet className="w-4 h-4" />
@@ -199,7 +199,7 @@ const Payments = () => {
           </button>
           <button
             type="button"
-            onClick={() => navigate('/billing/payout-invoices')}
+            onClick={() => navigate('/app/billing/payout-invoices')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-semibold shadow-sm transition"
           >
             <Receipt className="w-4 h-4" />

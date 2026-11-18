@@ -89,6 +89,20 @@ const productApi = baseApi.injectEndpoints({
       invalidatesTags: (result, error, { id }) => [{ type: "Product", id }],
     }),
 
+    // Change vendor (admin product page): preview the impact, change, and history.
+    previewProductVendorChange: builder.query({
+      query: ({ id, vendorId }) => ({ url: `/products/${id}/vendor-change/preview`, params: { vendor_id: vendorId } }),
+      keepUnusedDataFor: 0,
+    }),
+    changeProductVendor: builder.mutation({
+      query: ({ id, ...body }) => ({ url: `/products/${id}/vendor-change`, method: "POST", body }),
+      invalidatesTags: (result, error, { id }) => [{ type: "Product", id }, "Product", { type: "ProductVendorChanges", id }],
+    }),
+    getProductVendorChanges: builder.query({
+      query: (id) => `/products/${id}/vendor-changes`,
+      providesTags: (result, error, id) => [{ type: "ProductVendorChanges", id }],
+    }),
+
     duplicateProduct: builder.mutation({
       query: (id) => ({
         url: buildEndpointPath(API_ENDPOINTS.products.duplicate.path, { id }),
@@ -198,6 +212,9 @@ export const {
   useListTodayDealProductsQuery,
   useGetProductDetailsQuery,
   useUpdateProductMutation,
+  usePreviewProductVendorChangeQuery,
+  useChangeProductVendorMutation,
+  useGetProductVendorChangesQuery,
   useDuplicateProductMutation,
   useDeleteProductMutation,
   useAddWishListMutation,

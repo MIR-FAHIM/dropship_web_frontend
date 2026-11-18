@@ -19,6 +19,15 @@ import DropshipperPayoutModal from "./DropshipperPayoutModal";
 import { ClearFilterChip, DropshipperFilter, OrderDateFilter, describeDateRange } from "./OrderListFilters";
 import DropshipperLink from "../../../components/shared/DropshipperLink";
 import PaymentProgressCell, { PAYMENT_STAGE_FILTERS } from "./PaymentProgressCell";
+import InvoiceFlags from "../../../components/shared/InvoiceFlags";
+import DownloadOrdersSheetButton from "./DownloadOrdersSheetButton";
+
+// Invoice badges in the Payment column open the matching invoice list.
+const INVOICE_LINKS = {
+  dropshipper: (inv) => `/admin-panel/dropshipper-payouts?search=${encodeURIComponent(inv.invoice_number)}&open=1`,
+  supplier: (inv) => `/admin-panel/vendor-invoices?search=${encodeURIComponent(inv.invoice_number)}`,
+};
+import OrderJourneyTabs, { journeyStageLabel } from "../../../components/shared/OrderJourneyTabs";
 
 // Small product thumbnail for the Items column. Same URL pattern as the
 // reseller order details page (imgBaseUrl + primary_image.file_name).
@@ -366,6 +375,21 @@ const AdminOrders = ({ cancelledOnly = false }) => {
     ? { id: Number(urlParam("dropshipper_id")), name: urlParam("dropshipper_name") || undefined, phone: urlParam("dropshipper_phone") || undefined }
     : null;
 
+  // CarryBee-style section + stage (see OrderJourneyTabs / OrderJourneyService).
+  const journeySection = urlParam("section");
+  const journeyStage = urlParam("stage");
+  const setJourney = ({ section, stage }) => updateUrl({ section: section || null, stage: stage || null, status: null });
+  const filterKeys = ["section", "stage", "status", "payment_stage", "vendor_id", "dropshipper_id", "dropshipper_name", "dropshipper_phone", "date_from", "date_to", "q"];
+  const hasAnyFilter = filterKeys.some((k) => searchParams.get(k));
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSearchParams((prev) => {
+      const next = new URLSearchParams();
+      if (prev.get("per_page")) next.set("per_page", prev.get("per_page"));
+      return next;
+    }, { replace: true });
+  };
+
   const setPage = (value) => updateUrl({ page: Number(value) > 1 ? value : null }, { resetPage: false });
   const setActiveTab = (value) => updateUrl({ status: value === "all" ? null : value });
   const setPaymentFilter = (value) => updateUrl({ payment_stage: value });
@@ -456,9 +480,13 @@ const AdminOrders = ({ cancelledOnly = false }) => {
     if (dateFrom) params.date_from = dateFrom;
     if (dateTo) params.date_to = dateTo;
     if (!cancelledOnly && paymentFilter !== "all") params.payment_stage = paymentFilter;
+    if (!cancelledOnly && journeySection) {
+      params.section = journeySection;
+      if (journeyStage) params.stage = journeyStage;
+    }
     return params;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, perPage, cancelledOnly, urlSearch, activeTab, selectedVendorId, selectedDropshipper?.id, dateFrom, dateTo, paymentFilter]);
+  }, [page, perPage, cancelledOnly, urlSearch, activeTab, selectedVendorId, selectedDropshipper?.id, dateFrom, dateTo, paymentFilter, journeySection, journeyStage]);
 
   // Dropshipper payout invoice: { dropshipper, orderIds } while the modal is open.
   const [payoutModal, setPayoutModal] = useState(null);
@@ -825,39 +853,32 @@ const AdminOrders = ({ cancelledOnly = false }) => {
         </div>
       )}
 
-      {/* Status Tabs (the Cancelled entry opens the Cancelled Orders page) */}
+      {/* CarryBee-style sections and stages (cancelled orders live on their own page) */}
       {!cancelledOnly && (
-      <div className="flex flex-wrap gap-2">
-        {tabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => {
-              if (tab.href) {
-                navigate(tab.href);
-                return;
-              }
-              setActiveTab(tab.value);
-            }}
-            title={tab.href ? "বাতিল অর্ডার আলাদা পেজে দেখুন" : undefined}
-            className={`px-4 py-2 rounded-lg text-sm font-medium border transition ${
-              activeTab === tab.value
-                ? "border-red-500 bg-red-50 text-red-600"
-                : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700"
-            }`}
-          >
-            {tab.label}{" "}
-            <span
-              className={
-                activeTab === tab.value ? "text-red-400" : "text-gray-400"
-              }
-            >
-              ({tab.count})
-            </span>
-            {tab.href && <span className="ml-1 text-gray-400">→</span>}
-          </button>
-        ))}
-      </div>
+        <OrderJourneyTabs
+          counts={data?.data?.journey_counts}
+          section={journeySection}
+          stage={journeyStage}
+          onChange={setJourney}
+          stageLinks={{ "closed.cancelled": CANCELLED_ORDERS_PATH }}
+        />
       )}
+
+      <div className="flex flex-wrap items-center gap-2">
+        {hasAnyFilter && (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+          >
+            <X className="h-3.5 w-3.5" /> Clear all filters
+          </button>
+        )}
+        {/* Every order of the current filters as a sheet (all pages) */}
+        <div className="ml-auto">
+          <DownloadOrdersSheetButton params={queryParams} total={pagination?.total} />
+        </div>
+      </div>
 
       {/* Advance payment badge legend */}
       <AdvanceBadgeLegend />
@@ -1088,6 +1109,7 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                           // Older API without payment_progress.
                           renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))
                         )}
+                        <InvoiceFlags invoices={order.invoices} links={INVOICE_LINKS} />
                       </td>
                       <td className="py-3 px-4 text-center">
                         <select
@@ -1107,6 +1129,9 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                             </option>
                           ))}
                         </select>
+                        {journeyStageLabel(order.journey) && (
+                          <p className="mt-0.5 text-[10px] font-semibold text-gray-500">{journeyStageLabel(order.journey)}</p>
+                        )}
                         <div className="flex justify-center">
                           <CourierIssueBadge deliveryInfo={order.delivery_information} />
                         </div>
@@ -1260,6 +1285,7 @@ const AdminOrders = ({ cancelledOnly = false }) => {
                           // Older API without payment_progress.
                           renderOrderPaymentBadge(order, (o) => setManualPaymentOrder(o))
                         )}
+                      <InvoiceFlags invoices={order.invoices} links={INVOICE_LINKS} />
                       <select
                         value={getStatusId(order) || ""}
                         disabled={isUpdating}

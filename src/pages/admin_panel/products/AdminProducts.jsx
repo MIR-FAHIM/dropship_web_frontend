@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Copy, Package, Plus, Search, Trash2, Eye, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Copy, Package, Plus, Search, Trash2, Eye, Loader2, MousePointerClick } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useListProductsQuery, useDeleteProductMutation, useUpdateProductMutation, useApproveProductMutation, useDuplicateProductMutation } from "../../../redux/features/product";
 import { useGetVendorListQuery } from "../../../redux/features/vendor_api";
@@ -221,8 +221,15 @@ const AdminProducts = () => {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 font-medium text-gray-800 max-w-[200px] truncate">
-                        {product.name}
+                      <td className="py-3 font-medium text-gray-800 max-w-[200px]">
+                        <Link to={`/admin-panel/products/${product.id}`} title={`Open ${product.name}`} className="block truncate text-blue-700 hover:text-blue-900 hover:underline">{product.name}</Link>
+                        {/* How many times dropshippers/visitors opened this product */}
+                        {product.clicks_count !== undefined && (
+                          <p className="mt-0.5 inline-flex items-center gap-1 text-xs font-normal text-gray-500" title="Product clicks (all time)">
+                            <MousePointerClick className="w-3.5 h-3.5 text-blue-500" aria-hidden="true" />
+                            {Number(product.clicks_count).toLocaleString()} {Number(product.clicks_count) === 1 ? "click" : "clicks"}
+                          </p>
+                        )}
                       </td>
                       <td className="py-3 font-medium text-gray-800 max-w-[200px] truncate">
                         {product.sku}

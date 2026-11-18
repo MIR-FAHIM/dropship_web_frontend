@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Eye, Loader2, Receipt, X } from "lucide-react";
+import { ArrowLeft, Eye, Loader2, Receipt, Search, X } from "lucide-react";
+import useUrlFilters from "../../../hooks/useUrlFilters";
 import { useGetPayoutInvoiceQuery, useListPayoutInvoicesQuery } from "../../../redux/features/dropshipperPayout";
 import PayoutInvoiceDocument, { METHOD_LABELS, PayoutStatusPill, bdt, fmtDateTime } from "../../../components/shared/PayoutInvoiceDocument";
 
@@ -34,12 +35,40 @@ const InvoiceDialog = ({ invoiceId, onClose }) => {
  */
 const PayoutInvoices = () => {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
+  // Page and filters live in the URL (?status=paid&search=PAY-…&open=1).
+  const { get, update, clear, hasAny } = useUrlFilters();
+  const page = Number(get("page", "1")) || 1;
+  const setPage = (p) => update({ page: p > 1 ? p : "" }, { resetPage: false });
+  const status = get("status", "all");
+  const urlSearch = get("search");
+  const [search, setSearch] = useState(urlSearch);
   const [viewId, setViewId] = useState(null);
-  const { data, isLoading, isFetching } = useListPayoutInvoicesQuery({ page });
+  const [autoOpen, setAutoOpen] = useState(get("open") === "1");
+
+  useEffect(() => { setSearch(urlSearch); }, [urlSearch]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (search.trim() !== urlSearch) update({ search: search.trim() });
+    }, 350);
+    return () => window.clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  const params = { page };
+  if (status !== "all") params.status = status;
+  if (urlSearch) params.search = urlSearch;
+  const { data, isLoading, isFetching } = useListPayoutInvoicesQuery(params);
   const pageData = data?.data?.invoices || {};
   const invoices = pageData.data || [];
   const summary = data?.data?.summary || {};
+
+  // ?open=1 opens the invoice straight away when the search finds exactly one.
+  useEffect(() => {
+    if (!autoOpen || isFetching || !data) return;
+    if (invoices.length === 1) setViewId(invoices[0].id);
+    setAutoOpen(false);
+    update({ open: "" }, { resetPage: false });
+  }, [autoOpen, isFetching, data, invoices, update]);
 
   return (
     <div className="space-y-5 p-4 sm:p-6">
@@ -64,6 +93,40 @@ const PayoutInvoices = () => {
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          value={status}
+          onChange={(e) => update({ status: e.target.value })}
+          aria-label="পেমেন্ট স্ট্যাটাস"
+          className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700"
+        >
+          <option value="all">সব স্ট্যাটাস</option>
+          <option value="paid">পরিশোধিত</option>
+          <option value="pending">পেমেন্ট বাকি</option>
+          <option value="cancelled">বাতিল</option>
+        </select>
+        <div className="relative w-full sm:w-64">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="ইনভয়েস নং বা ট্রানজেকশন আইডি"
+            aria-label="ইনভয়েস নং বা ট্রানজেকশন আইডি দিয়ে খুঁজুন"
+            className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-800 placeholder:text-gray-500"
+          />
+        </div>
+        {hasAny(["page"]) && (
+          <button
+            type="button"
+            onClick={() => { clear(); setSearch(""); }}
+            className="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50"
+          >
+            <X className="h-3.5 w-3.5" /> Clear filters
+          </button>
+        )}
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
         <table className="w-full min-w-[620px] text-left text-sm tabular-nums">
           <thead className="bg-gray-50 text-xs text-gray-500">
@@ -80,7 +143,7 @@ const PayoutInvoices = () => {
             {isLoading ? (
               <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
             ) : invoices.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-400">এখনো কোনো পেআউট ইনভয়েস নেই। অর্ডার ডেলিভারি ও কুরিয়ার পেমেন্টের পর প্রফিট পরিশোধ হলে এখানে দেখা যাবে।</td></tr>
+              <tr><td colSpan={6} className="px-4 py-10 text-center text-sm text-gray-400">{hasAny(["page"]) ? "এই ফিল্টারে কোনো ইনভয়েস পাওয়া যায়নি।" : "এখনো কোনো পেআউট ইনভয়েস নেই। অর্ডার ডেলিভারি ও কুরিয়ার পেমেন্টের পর প্রফিট পরিশোধ হলে এখানে দেখা যাবে।"}</td></tr>
             ) : (
               invoices.map((inv) => (
                 <tr key={inv.id} className="border-t border-gray-100 hover:bg-gray-50">
@@ -115,8 +178,8 @@ const PayoutInvoices = () => {
         <div className="flex items-center justify-between text-xs text-gray-600">
           <span>Page {pageData.current_page} / {pageData.last_page}</span>
           <div className="flex gap-2">
-            <button type="button" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">আগের</button>
-            <button type="button" disabled={page >= pageData.last_page} onClick={() => setPage((p) => p + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">পরের</button>
+            <button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">আগের</button>
+            <button type="button" disabled={page >= pageData.last_page} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">পরের</button>
           </div>
         </div>
       )}
