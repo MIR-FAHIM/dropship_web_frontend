@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 
 const PrivacyPolicyPage = () => {
   return (
@@ -212,7 +212,7 @@ const PrivacyPolicyPage = () => {
             <div className="text-sm text-gray-600 space-y-1">
               <p>&#128231; Email: <a href="mailto:Support@resellerbrain.com" className="text-blue-600 hover:underline">Support@resellerbrain.com</a></p>
               <p>&#128222; Phone: <a href="tel:+8801941606310" className="text-blue-600 hover:underline">+8801941606310</a></p>
-              <p>&#128205; Address: House 1, Road 13, Sector 13, Garib E Nawaz Avenue, Uttara, Dhaka-1230, Bangladesh</p>
+              <p>&#128205; Address: Garib E Nawaz Avenue, Uttara, Dhaka-1230, Bangladesh</p>
             </div>
           </div>
 

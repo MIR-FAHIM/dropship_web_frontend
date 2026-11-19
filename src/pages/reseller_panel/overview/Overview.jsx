@@ -15,8 +15,8 @@ import {
 const menuItems = [
   { name: "All Products", icon: <FaBoxOpen className="text-blue-600" />, route: "/app/all-product-category" },
   { name: "All Store", icon: <FaStore className="text-indigo-600" />, route: "/app/all-store" },
-  { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/app/product-assistant" },
-  { name: "Boosting Products", icon: <FaRocket className="text-red-500" />, route: "/app/favproducts" },
+  { name: "Winning Products", icon: <FaTrophy className="text-green-500" />, route: "/app/weekly-top-products" },
+  { name: "Facebook Content", icon: <FaRocket className="text-red-500" />, route: "/app/post" },
   { name: "Sales Guideline", icon: <FaBook className="text-green-600" />, route: "/app/sale-guide-line" },
   { name: "Learning Video", icon: <FaVideo className="text-purple-600" />, route: "/app/learning-video" },
   { name: "Ecommerce Website", icon: <FaStore className="text-indigo-600" />, route: "/app/ecommerce-website" },
@@ -376,10 +376,22 @@ const Overview = () => {
         {/* Tips Board */}
         <div className="bg-green-100 p-4 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold mb-2">💡 {t("Tips Board")}</h3>
-          <ul className="text-gray-700 text-sm space-y-2">
-            <li>🎯 Focus on seasonal trends for better conversions.</li>
-            <li>📦 Optimize product descriptions with SEO keywords.</li>
-            <li>📸 High-quality images boost sales by 30%!</li>
+          <ul className="text-gray-700 text-sm space-y-3">
+            <li className="leading-relaxed">
+              <span>📣 কীভাবে ভালো Facebook Content তৈরি করবেন বুঝতে, </span>
+              <Link to="/app/post" className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900">
+                এই Facebook Content-গুলো দেখুন
+              </Link>
+              <span>।</span>
+            </li>
+            <li className="leading-relaxed">
+              <span>🛍️ বিক্রি বাড়াতে ই-কমার্স ওয়েবসাইট অনেক উপকারী, আর দীর্ঘমেয়াদি ব্যবসা গড়তেও সহায়তা করে। অটোমেটেড ই-কমার্স কীভাবে পাবেন জানতে </span>
+              <Link to="/app/ecommerce-website" className="font-semibold text-blue-700 underline decoration-blue-300 underline-offset-2 hover:text-blue-900">
+                এখানে দেখুন
+              </Link>
+              <span>।</span>
+            </li>
+            <li className="leading-relaxed">📞 অর্ডার পেলে কাস্টমারকে ফোন করে অর্ডারটি নিশ্চিত করুন। এতে রিটার্নের ঝুঁকি কমে।</li>
           </ul>
         </div>
 

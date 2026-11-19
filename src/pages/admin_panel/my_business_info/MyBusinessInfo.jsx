@@ -24,7 +24,7 @@ const info = [
       { label: "Country", value: "Bangladesh 🇧🇩" },
       { label: "Support Email", value: "Support@resellerbrain.com", type: "email" },
       { label: "Phone", value: "+8801941606310", type: "phone" },
-      { label: "Address", value: "House 1, Road 13, Sector 13, Garib E Nawaz Avenue, Uttara, Dhaka-1230" },
+      { label: "Address", value: "Garib E Nawaz Avenue, Uttara, Dhaka-1230" },
       { label: "Used In", value: "Privacy Policy + Terms & Conditions", type: "badge" },
     ],
   },
