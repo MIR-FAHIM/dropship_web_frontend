@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import CarrybeeSettlementCard from "../../../../components/shared/CarrybeeSettlementCard";
+import CarrybeeInvoiceDetails, { isManualInvoiceId } from "../../../../components/shared/CarrybeeInvoiceDetails";
 import { carrybeeSettlementLabels, getCarrybeeDetails, getCarrybeeSettlement } from "../../../../utils/carrybeeSettlement";
 import {
   useListCarryBeeStoresQuery,
@@ -22,6 +23,7 @@ import {
   useGetCarryBeeAreaDetailsMutation,
   useCarrybeeOrderDraftCreateMutation,
   useLazyGetCarryBeeOrderDetailsQuery,
+  useGetCarryBeeInvoiceDetailsQuery,
 } from "../../../../redux/features/delivery_company/carrybeeStoreApi";
 import { useUpdateOrderStatusMutation } from "../../../../redux/features/order";
 
@@ -70,7 +72,7 @@ const getOrderProductDescription = (order) =>
 /* ──────────────────────────────────────────
    CarryBee Order Details Panel
 ────────────────────────────────────────── */
-export const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, onRetry }) => {
+export const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, onRetry, invoice = null }) => {
   if (isLoading)
     return (
       <div className="flex items-center gap-2 px-5 py-4 text-sm text-gray-400">
@@ -103,6 +105,8 @@ export const CarryBeeDetailsPanel = ({ details, settlement, isLoading, isError, 
       </div>
 
       <CarrybeeSettlementCard settlement={settlement} />
+
+      {invoice}
 
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-gray-600">
         <div>
@@ -169,6 +173,18 @@ export const CarryBeeInfoCard = ({ deliveryInfo, order }) => {
   const details = getCarrybeeDetails(response);
   const settlement = getCarrybeeSettlement(response, order, deliveryInfo);
   const isPaid = settlement.status === "paid";
+  // Our saved invoice id first, else the one CarryBee reports on the order itself.
+  const invoiceId = isPaid ? settlement.invoice || details?.invoice_id || null : null;
+  const {
+    currentData: invoiceData,
+    isFetching: invoiceLoading,
+    isError: invoiceIsError,
+    error: invoiceError,
+    refetch: refetchInvoice,
+  } = useGetCarryBeeInvoiceDetailsQuery(
+    { vendorId: deliveryInfo?.delivery_company_id, invoiceId },
+    { skip: !showDetails || !invoiceId || isManualInvoiceId(invoiceId) }
+  );
 
   const handleToggle = () => {
     if (!showDetails && deliveryInfo) {
@@ -291,12 +307,23 @@ export const CarryBeeInfoCard = ({ deliveryInfo, order }) => {
           details={details}
           settlement={settlement}
           isLoading={isLoading}
-          isError={isError}     
+          isError={isError}
           onRetry={() => fetchDetails({
             vendorId: deliveryInfo.delivery_company_id,
             consignmentId: deliveryInfo.consignment_id,
           })}
-        /> 
+          invoice={
+            <CarrybeeInvoiceDetails
+              invoiceId={invoiceId}
+              response={invoiceData}
+              isLoading={invoiceLoading}
+              isError={invoiceIsError}
+              error={invoiceError}
+              onRetry={refetchInvoice}
+              consignmentId={deliveryInfo.consignment_id}
+            />
+          }
+        />
       )}
     </div>
   );

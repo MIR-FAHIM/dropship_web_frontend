@@ -366,6 +366,7 @@ export const API_ENDPOINTS = {
     carrybeeOrderCancel:  define("POST", "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/cancel"),
     carrybeeOrderDetails: define("GET",  "/delivery-companies/carrybee/{vendorId}/orders/{consignmentId}/details"),
     carrybeeTracking: define("GET", "/delivery-companies/carrybee/track/{consignmentId}"),
+    carrybeeInvoiceDetails: define("GET", "/delivery-companies/carrybee/{vendorId}/invoices/{invoiceId}"),
     getAssignedOrderOfCompany: define("GET",  "/delivery-companies/assigned-orders/{vendorId}"),
   },
   vendorCarryBeeCredentials: {

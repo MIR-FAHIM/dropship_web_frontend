@@ -73,6 +73,15 @@ const carrybeeStoreApi = baseApi.injectEndpoints({
       keepUnusedDataFor: 30,
     }),
 
+    getCarryBeeInvoiceDetails: builder.query({
+      query: ({ vendorId, invoiceId }) =>
+        buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeInvoiceDetails.path, {
+          vendorId,
+          invoiceId: encodeURIComponent(invoiceId),
+        }),
+      keepUnusedDataFor: 300,
+    }),
+
     getCarryBeeAreaDetails: builder.mutation({
       query: ({ vendorId, query }) => ({
         url: buildEndpointPath(API_ENDPOINTS.deliveryCompanies.carrybeeAreaDetails.path, { vendorId }),
@@ -95,6 +104,7 @@ export const {
   useGetCarryBeeOrderDetailsQuery,
   useLazyGetCarryBeeOrderDetailsQuery,
   useLazyGetCarryBeeTrackingQuery,
+  useGetCarryBeeInvoiceDetailsQuery,
   useGetCarryBeeAreaDetailsMutation,
 } = carrybeeStoreApi;
 
