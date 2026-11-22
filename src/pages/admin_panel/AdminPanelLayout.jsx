@@ -159,9 +159,21 @@ const adminMenuLinks = [
     ],
   },
   {
-    path: "/admin-panel/marketers",
     label: "মার্কেটার (Marketers)",
     icon: <Megaphone className="w-5 h-5" />,
+    children: [
+      {
+        path: "/admin-panel/marketers",
+        label: "Marketers",
+        icon: <Megaphone className="w-4 h-4" />,
+      },
+      {
+        // Partner Portal: commission lines, rates and payouts
+        path: "/admin-panel/marketer-commissions",
+        label: "Marketer Commissions",
+        icon: <Megaphone className="w-4 h-4" />,
+      },
+    ],
   },
   {
     path: "/admin-panel/employees",

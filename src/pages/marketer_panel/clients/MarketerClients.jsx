@@ -74,7 +74,7 @@ export default function MarketerClients() {
     <PageHeading icon={Users} title="My Clients" description="Find linked businesses and review their activity. Pending invitations are tracked separately."
       action={<Link to={invitationsPath} className={mintAction}><UserPlus size={17} aria-hidden="true" /> Invite a client</Link>} />
     <section className={panel} aria-labelledby="partner-client-list">
-      <div className="space-y-4 rounded-t-2xl border-b border-violet-100 bg-violet-50/70 p-4 sm:p-5">
+      <div className="space-y-4 rounded-t-2xl border-b border-teal-100 bg-teal-50/70 p-4 sm:p-5">
         <SectionHeading id="partner-client-list" title="Client directory" icon={Users}
           action={result && <Badge status="planned">{formatCount(result.total)} matching clients</Badge>} />
         <form key={search} className="flex flex-wrap gap-2" onSubmit={(event) => { event.preventDefault(); update({ search: String(new FormData(event.currentTarget).get("search") || "").trim() }); }}>
@@ -92,7 +92,7 @@ export default function MarketerClients() {
             {Object.entries(sorting).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select></label>
         </div>
-        <details className="rounded-xl border border-violet-200 bg-white px-3 py-2">
+        <details className="rounded-xl border border-teal-200 bg-white px-3 py-2">
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">More filters{(minOrders || direction === "asc") && " · applied"}</summary>
           <div className="mt-2 flex flex-wrap items-end gap-3">
             <form key={minOrders} className="flex items-end gap-2" onSubmit={event => { event.preventDefault(); update({ min_orders: new FormData(event.currentTarget).get("min") }); }}>
@@ -109,19 +109,19 @@ export default function MarketerClients() {
         : !clients.length ? <StateMessage title={search || activity !== "all" || minOrders ? "No matching clients" : "No clients on this page"} detail="Clear the filters or send an invitation to link a new business." action={<Link to={invitationsPath} className={secondary}>Open invitations</Link>} />
         : <>
           <div className="hidden overflow-x-auto lg:block"><table className="w-full text-left text-sm">
-            <thead className="bg-violet-100/70 text-xs text-violet-950"><tr>{["Client", "Partnership date", "Clicks", "Placed", "Delivered", "Last activity", "Status"].map(title => <th scope="col" key={title} className="whitespace-nowrap px-3 py-3 first:pl-5">{title}</th>)}</tr></thead>
-            <tbody className="divide-y divide-violet-100">{clients.map(client => {
+            <thead className="bg-teal-100/70 text-xs text-teal-950"><tr>{["Client", "Partnership date", "Clicks", "Placed", "Delivered", "Last activity", "Status"].map(title => <th scope="col" key={title} className="whitespace-nowrap px-3 py-3 first:pl-5">{title}</th>)}</tr></thead>
+            <tbody className="divide-y divide-teal-100">{clients.map(client => {
               const m = client.metrics;
-              return <tr key={client.id} className="hover:bg-violet-50">
-                <th scope="row" className="max-w-52 break-words px-3 py-3 pl-5"><Link to={linkFor(client.id)} className="font-semibold text-violet-800 hover:underline">{clientName(client)}</Link></th>
+              return <tr key={client.id} className="hover:bg-teal-50">
+                <th scope="row" className="max-w-52 break-words px-3 py-3 pl-5"><Link to={linkFor(client.id)} className="font-semibold text-teal-800 hover:underline">{clientName(client)}</Link></th>
                 <td className="whitespace-nowrap px-3 py-3">{formatDate(client.accepted_at)}</td><td className="px-3 py-3 tabular-nums">{formatCount(m?.product_clicks)}</td><td className="px-3 py-3 tabular-nums">{formatCount(m?.placed_orders)}</td><td className="px-3 py-3 tabular-nums">{formatCount(m?.delivered_orders)}</td><td className="whitespace-nowrap px-3 py-3">{formatDate(m?.last_login_at)}</td><td className="px-3 py-3"><Badge status={m?.activity_status}>{activityLabels[m?.activity_status] || "Unknown"}</Badge></td>
               </tr>;
             })}</tbody>
           </table></div>
-          <ul className="divide-y divide-violet-100 lg:hidden">{clients.map(client => {
+          <ul className="divide-y divide-teal-100 lg:hidden">{clients.map(client => {
             const m = client.metrics;
             return <li key={client.id} className="space-y-2 p-4">
-              <div className="flex items-start justify-between gap-3"><Link to={linkFor(client.id)} className="inline-flex min-w-0 items-center gap-1 font-semibold text-violet-800"><span className="min-w-0 break-words">{clientName(client)}</span><ArrowUpRight size={15} className="shrink-0" aria-hidden="true" /></Link><Badge status={m?.activity_status}>{activityLabels[m?.activity_status] || "Unknown"}</Badge></div>
+              <div className="flex items-start justify-between gap-3"><Link to={linkFor(client.id)} className="inline-flex min-w-0 items-center gap-1 font-semibold text-teal-800"><span className="min-w-0 break-words">{clientName(client)}</span><ArrowUpRight size={15} className="shrink-0" aria-hidden="true" /></Link><Badge status={m?.activity_status}>{activityLabels[m?.activity_status] || "Unknown"}</Badge></div>
               <p className="text-xs text-slate-600"><CalendarDays size={13} className="mr-1 inline" aria-hidden="true" /> Linked {formatDate(client.accepted_at)} · Last activity {formatDate(m?.last_login_at)}</p>
               <p className="text-sm text-slate-700">{formatCount(m?.product_clicks)} clicks · {formatCount(m?.placed_orders)} placed · {formatCount(m?.delivered_orders)} delivered</p>
             </li>;

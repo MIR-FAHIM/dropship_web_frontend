@@ -96,8 +96,9 @@ import AdminAppVersions from "../pages/admin_panel/app_versions/AdminAppVersions
 import PublicStoreProductPage from "../pages/public_store/ProductPage";
 import RouteErrorBoundary from "../components/shared/RouteErrorBoundary";
 import AdminMarketers from "../pages/admin_panel/marketers/AdminMarketers";
+import AdminMarketerCommissions from "../pages/admin_panel/marketers/AdminMarketerCommissions";
 import MarketerPanelLayout from "../pages/marketer_panel/MarketerPanelLayout";
-import MarketerDashboard from "../pages/marketer_panel/dashboard/MarketerDashboard";
+import MarketerOverview from "../pages/marketer_panel/dashboard/MarketerOverview";
 import MarketerClients from "../pages/marketer_panel/clients/MarketerClients";
 import MarketerInvitations from "../pages/marketer_panel/invitations/MarketerInvitations";
 import MarketerProfile from "../pages/marketer_panel/MarketerProfile";
@@ -259,6 +260,7 @@ export const router = createBrowserRouter([
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
       { path: "delivery/webhook-tester", element: <CarrybeeWebhookTester /> },
       { path: "marketers", element: <AdminMarketers /> },
+      { path: "marketer-commissions", element: <AdminMarketerCommissions /> },
     ],
   },
   {
@@ -270,7 +272,7 @@ export const router = createBrowserRouter([
     ),
     errorElement: <RouteErrorBoundary />,
     children: [
-      { index: true, element: <MarketerDashboard /> },
+      { index: true, element: <MarketerOverview /> },
       { path: "clients", element: <MarketerClients /> },
       { path: "invitations", element: <MarketerInvitations /> },
       { path: "profile", element: <MarketerProfile /> },

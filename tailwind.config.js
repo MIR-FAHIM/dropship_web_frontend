@@ -3,6 +3,8 @@
 const withMT = require("@material-tailwind/react/utils/withMT");
 export default withMT({
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
+  // Partner Portal (marketer panel) has its own Dark/Light toggle: dark styles apply only under a .dark class.
+  darkMode: "class",
   theme: {
     extend: {
       colors: {

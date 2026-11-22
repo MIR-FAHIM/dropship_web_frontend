@@ -149,6 +149,7 @@ const baseApi = createApi({
     "Lead",
     "LeadTag",
     "ProductVendorChanges",
+    "MarketerCommission",
   ],
   endpoints: () => ({}),
 });

@@ -90,18 +90,18 @@ export default function MarketerInvitations() {
         <p className="mt-3 border-t border-emerald-200 pt-3 text-xs text-slate-700">Acceptance records the client’s consent to connect.</p>
       </aside>
     </div>
-    <section id="invitation-history" tabIndex={-1} className={`${panel} scroll-mt-4 focus-visible:outline-violet-700`} aria-labelledby="partner-invitation-history">
-      <div className="flex flex-wrap items-end justify-between gap-3 rounded-t-2xl border-b border-violet-100 bg-violet-50/70 p-4 sm:p-5">
+    <section id="invitation-history" tabIndex={-1} className={`${panel} scroll-mt-4 focus-visible:outline-teal-700`} aria-labelledby="partner-invitation-history">
+      <div className="flex flex-wrap items-end justify-between gap-3 rounded-t-2xl border-b border-teal-100 bg-teal-50/70 p-4 sm:p-5">
         <SectionHeading id="partner-invitation-history" title="Invitation history" icon={History} tone="peach"
           description="Review invitations you’ve sent and revoke pending ones." />
-        <label className="text-xs font-semibold text-violet-950">Status on this page<select className={`${field} mt-1`} value={statusFilter} onChange={event => updateFilter("status", event.target.value === "all" ? null : event.target.value)}>
+        <label className="text-xs font-semibold text-teal-950">Status on this page<select className={`${field} mt-1`} value={statusFilter} onChange={event => updateFilter("status", event.target.value === "all" ? null : event.target.value)}>
           {Object.entries(filters).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select></label>
       </div>
       {query.isFetching && !result ? <StateMessage loading title="Loading invitations…" />
         : query.isError ? <StateMessage title="Invitations could not be loaded" retry={query.refetch} />
         : !visible.length ? <StateMessage title={statusFilter === "all" ? "No invitations on this page" : "No matching invitations on this page"} detail={statusFilter === "all" ? "Send your first invitation above to get started." : "Change the status filter or view another page."} />
-        : <ul className="divide-y divide-violet-100">{visible.map(({ invite, status }) => <li key={invite.id} className="px-4 py-3 sm:px-5">
+        : <ul className="divide-y divide-teal-100">{visible.map(({ invite, status }) => <li key={invite.id} className="px-4 py-3 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0"><p className="break-all text-sm font-semibold text-slate-900">{invite.email || "Invitation"}</p><p className="mt-1 text-xs text-slate-600">Sent {formatDate(invite.created_at)}{(status === "pending" || status === "expired") && ` · ${status === "expired" ? "Expired" : "Expires"} ${formatDate(invite.expires_at)}`}{status === "accepted" && invite.accepted_at && ` · Accepted ${formatDate(invite.accepted_at)}`}</p></div>
             <div className="flex flex-wrap items-center gap-2"><Badge status={status}>{statuses[status]}</Badge>

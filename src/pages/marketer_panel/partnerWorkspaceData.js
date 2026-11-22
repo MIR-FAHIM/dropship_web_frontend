@@ -1,9 +1,9 @@
 export const workspacePath = "/marketer-panel";
-export const panel = "rounded-2xl border border-violet-100 bg-white shadow-sm shadow-violet-950/5";
-export const field = "min-h-11 w-full min-w-0 rounded-xl border border-violet-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-violet-600 focus:outline-none focus:ring-2 focus:ring-violet-100";
+export const panel = "rounded-2xl border border-teal-100 bg-white shadow-sm shadow-slate-900/5";
+export const field = "min-h-11 w-full min-w-0 rounded-xl border border-teal-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100";
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl text-sm font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
-export const primary = `${button} bg-violet-700 px-4 py-2.5 text-white hover:bg-violet-800 focus-visible:outline-violet-700`;
-export const secondary = `${button} border border-violet-200 bg-white px-3 py-2 text-violet-900 hover:bg-violet-50 focus-visible:outline-violet-700`;
+export const primary = `${button} bg-teal-700 px-4 py-2.5 text-white hover:bg-teal-800 focus-visible:outline-teal-700`;
+export const secondary = `${button} border border-teal-200 bg-white px-3 py-2 text-teal-900 hover:bg-teal-50 focus-visible:outline-teal-700`;
 export const mintAction = `${button} bg-emerald-200 px-4 py-2.5 text-emerald-950 hover:bg-emerald-100 focus-visible:outline-white`;
 export const invitationPageSize = 50;
 export const periods = { "7d": "Last 7 days", "30d": "Last 30 days", "90d": "Last 90 days", all: "All time" };
