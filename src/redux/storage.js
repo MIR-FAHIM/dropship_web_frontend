@@ -1,4 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { setupListeners } from "@reduxjs/toolkit/query";
 import Logger from "./middlewares/logger";
 import baseApi from "./api/baseApi";
 import authReducer from "./slices/authSlice";
@@ -33,6 +34,10 @@ const store = configureStore({
       },
     }).concat(baseApi.middleware, Logger),
 });
+
+// Lets queries opt in to refetchOnFocus / refetchOnReconnect (e.g. the marketer Overview's live sync).
+// Queries that don't opt in behave exactly as before.
+setupListeners(store.dispatch);
 
 export default store;
 export const persistor = persistStore(store);

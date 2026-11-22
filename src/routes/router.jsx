@@ -1,6 +1,7 @@
 import { createBrowserRouter } from "react-router-dom";
 import App from "../App";
 import Login from "../pages/auth/Login";
+import PartnerRegister from "../pages/marketer_panel/PartnerRegister";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import RegisterPage from "../pages/auth/register";
 import PrivateRoute from "./PrivateRoute";
@@ -86,6 +87,8 @@ import ResellerAdvancePaymentHistory from "../pages/admin_panel/accounting/Resel
 import AdminDeliveryCompanies from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanies";
 import AdminDeliveryCompanyDetails from "../pages/admin_panel/delivery/del_company/AdminDeliveryCompanyDetails";
 import CarrybeeWebhookTester from "../pages/admin_panel/delivery/CarrybeeWebhookTester";
+import AdminCarrybeeInvoices from "../pages/admin_panel/delivery/AdminCarrybeeInvoices";
+import AdminCarrybeeReconcile from "../pages/admin_panel/delivery/AdminCarrybeeReconcile";
 import AllProductCategoryTab from "../pages/product/AllProductCategoryTab";
 import ProductAssistantPage from "../pages/reseller_panel/product_assistant/product_assistant";
 import AdminSupportTickets from "../pages/admin_panel/support/AdminSupportTickets";
@@ -97,8 +100,14 @@ import PublicStoreProductPage from "../pages/public_store/ProductPage";
 import RouteErrorBoundary from "../components/shared/RouteErrorBoundary";
 import AdminMarketers from "../pages/admin_panel/marketers/AdminMarketers";
 import AdminMarketerCommissions from "../pages/admin_panel/marketers/AdminMarketerCommissions";
+import AdminSourcingRequests from "../pages/admin_panel/marketers/AdminSourcingRequests";
+import AdminWinningProducts from "../pages/admin_panel/marketers/AdminWinningProducts";
 import MarketerPanelLayout from "../pages/marketer_panel/MarketerPanelLayout";
 import MarketerOverview from "../pages/marketer_panel/dashboard/MarketerOverview";
+import MarketerEarnings from "../pages/marketer_panel/earnings/MarketerEarnings";
+import MarketerSourcing from "../pages/marketer_panel/sourcing/MarketerSourcing";
+import MarketerPitchCalculator from "../pages/marketer_panel/pitch/MarketerPitchCalculator";
+import MarketerWinningProducts from "../pages/marketer_panel/winning/MarketerWinningProducts";
 import MarketerClients from "../pages/marketer_panel/clients/MarketerClients";
 import MarketerInvitations from "../pages/marketer_panel/invitations/MarketerInvitations";
 import MarketerProfile from "../pages/marketer_panel/MarketerProfile";
@@ -259,8 +268,12 @@ export const router = createBrowserRouter([
       { path: "delivery/companies", element: <AdminDeliveryCompanies /> },
       { path: "delivery/companies/:id", element: <AdminDeliveryCompanyDetails /> },
       { path: "delivery/webhook-tester", element: <CarrybeeWebhookTester /> },
+      { path: "delivery/carrybee-invoices", element: <AdminCarrybeeInvoices /> },
+      { path: "delivery/carrybee-reconcile", element: <AdminCarrybeeReconcile /> },
       { path: "marketers", element: <AdminMarketers /> },
       { path: "marketer-commissions", element: <AdminMarketerCommissions /> },
+      { path: "sourcing-requests", element: <AdminSourcingRequests /> },
+      { path: "winning-products", element: <AdminWinningProducts /> },
     ],
   },
   {
@@ -275,6 +288,10 @@ export const router = createBrowserRouter([
       { index: true, element: <MarketerOverview /> },
       { path: "clients", element: <MarketerClients /> },
       { path: "invitations", element: <MarketerInvitations /> },
+      { path: "earnings", element: <MarketerEarnings /> },
+      { path: "sourcing", element: <MarketerSourcing /> },
+      { path: "pitch", element: <MarketerPitchCalculator /> },
+      { path: "winning", element: <MarketerWinningProducts /> },
       { path: "profile", element: <MarketerProfile /> },
     ],
   },
@@ -299,6 +316,11 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    // Partner Portal F8: public partner (marketer) sign-up
+    path: "/partner/register",
+    element: <PartnerRegister />,
   },
   {
     path: "/forgot-password",

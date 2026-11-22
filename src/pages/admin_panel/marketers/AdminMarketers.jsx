@@ -8,6 +8,9 @@ import {
 } from "../../../redux/features/marketer";
 import { Users, PlusCircle, ChevronLeft, ChevronRight, X, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import { imgBaseUrl } from "../../../../config";
+import { useApprovePartnerMutation, useRejectPartnerMutation, useSetPartnerLevelMutation } from "../../../redux/features/partnerProfile";
+import { CAMPAIGN_TYPES, NICHES, labelOf } from "../../marketer_panel/partnerOptions";
 
 const AdminMarketerClientsPanel = ({ marketerId }) => {
   const [page, setPage] = useState(1);
@@ -130,18 +133,115 @@ const AdminMarketerClientsPanel = ({ marketerId }) => {
   );
 };
 
+/* ---------- Partner application + level (Partner Portal F8) ---------- */
+const imgUrl = (p) => (!p ? "" : /^https?:\/\//i.test(p) ? p : `${imgBaseUrl}/${p}`);
+const LEVEL_BADGE = { pro: ["Upper Level (Pro)", "bg-emerald-100 text-emerald-800"], mid: ["Mid Level", "bg-amber-100 text-amber-800"] };
+const APP_BADGE = { pending: ["আবেদন অপেক্ষমান", "bg-amber-100 text-amber-800"], rejected: ["আবেদন বাতিল", "bg-gray-200 text-gray-700"] };
+
+const MarketerApplicationPanel = ({ marketer }) => {
+  const p = marketer.marketer_profile;
+  const [setLevel, { isLoading }] = useSetPartnerLevelMutation();
+  const changeLevel = async (level) => {
+    try {
+      await setLevel({ id: marketer.id, level }).unwrap();
+      toast.success("লেভেল আপডেট হয়েছে — নতুন ডেলিভারড অর্ডারে রেট প্রযোজ্য");
+    } catch (err) {
+      toast.error(err?.data?.message || "লেভেল আপডেট করা যায়নি");
+    }
+  };
+  if (!p) {
+    return (
+      <div className="border-t border-gray-100 bg-gray-50 px-4 py-3 text-xs text-gray-600">
+        অ্যাডমিন তৈরি করা মার্কেটার — আবেদনের তথ্য নেই। লেভেল:{" "}
+        <select disabled={isLoading} defaultValue="" onChange={(e) => e.target.value && changeLevel(e.target.value)} className="rounded border border-gray-300 px-1 py-0.5">
+          <option value="">নির্ধারিত নয়</option><option value="pro">Upper Level (Pro)</option><option value="mid">Mid Level</option>
+        </select>
+      </div>
+    );
+  }
+  const rows = [
+    ["WhatsApp", p.whatsapp],
+    ["Facebook", p.facebook_page && <a href={p.facebook_page} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline break-all">{p.facebook_page}</a>],
+    ["Portfolio", p.portfolio_url ? <a href={p.portfolio_url} target="_blank" rel="noreferrer" className="text-blue-700 hover:underline break-all">{p.portfolio_url}</a> : "—"],
+    ["মোট অ্যাড খরচ", `$${Number(p.ad_spend_usd || 0).toLocaleString("en-US")}`],
+    ["মোট ক্যাম্পেইন", Number(p.campaigns_run || 0).toLocaleString("en-US")],
+    ["নিশ", labelOf(NICHES, p.niche)],
+    ["ক্যাম্পেইনের ধরন", labelOf(CAMPAIGN_TYPES, p.campaign_type)],
+  ];
+  return (
+    <div className="space-y-3 border-t border-gray-100 bg-gray-50/70 px-4 py-4 text-sm">
+      <div className="flex flex-wrap items-start gap-4">
+        <div className="flex gap-2">
+          {p.avatar ? <img src={imgUrl(p.avatar)} alt="" className="h-14 w-14 rounded-full border border-gray-200 object-cover" /> : null}
+          {p.agency_logo ? <img src={imgUrl(p.agency_logo)} alt="" className="h-14 w-14 rounded-lg border border-gray-200 bg-white object-contain" /> : null}
+        </div>
+        <dl className="grid flex-1 grid-cols-1 gap-x-6 gap-y-1 text-xs sm:grid-cols-2">
+          {rows.map(([k, v]) => (<div key={k} className="flex gap-2"><dt className="w-28 shrink-0 text-gray-500">{k}</dt><dd className="font-medium text-gray-800">{v || "—"}</dd></div>))}
+        </dl>
+        {p.campaign_screenshot && (
+          <a href={imgUrl(p.campaign_screenshot)} target="_blank" rel="noreferrer" className="shrink-0 text-center text-[11px] text-gray-600">
+            <img src={imgUrl(p.campaign_screenshot)} alt="Campaign screenshot" className="h-20 w-32 rounded-lg border border-gray-200 object-cover" />ক্যাম্পেইন স্ক্রিনশট
+          </a>
+        )}
+      </div>
+      {p.application_status === "rejected" && p.rejection_reason && <p className="rounded bg-gray-100 px-3 py-2 text-xs text-gray-700">বাতিলের কারণ: {p.rejection_reason}</p>}
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="font-semibold text-gray-700">লেভেল:</span>
+        <select disabled={isLoading} value={p.level_source === "admin" ? p.level : "auto"} onChange={(e) => changeLevel(e.target.value)} className="rounded-lg border border-gray-300 bg-white px-2 py-1">
+          <option value="auto">স্বয়ংক্রিয় ({p.level === "pro" ? "Pro" : "Mid"} — খরচ/ক্যাম্পেইন অনুযায়ী)</option>
+          <option value="pro">Upper Level (Pro) — ২০%</option>
+          <option value="mid">Mid Level — ১৫%</option>
+        </select>
+        <span className="text-gray-500">কাস্টম কমিশন রেট থাকলে সেটিই প্রযোজ্য (Marketer Commissions)।</span>
+      </div>
+    </div>
+  );
+};
+
+const ApplicationActions = ({ marketer }) => {
+  const [approve, { isLoading: approving }] = useApprovePartnerMutation();
+  const [reject, { isLoading: rejecting }] = useRejectPartnerMutation();
+  const onApprove = async () => {
+    try {
+      await approve(marketer.id).unwrap();
+      toast.success("পার্টনার অনুমোদিত — ইমেইল পাঠানো হয়েছে");
+    } catch (err) {
+      toast.error(err?.data?.message || "অনুমোদন করা যায়নি");
+    }
+  };
+  const onReject = async () => {
+    const reason = window.prompt("আবেদন বাতিলের কারণ লিখুন (আবেদনকারী দেখতে পাবেন):", "");
+    if (reason === null) return;
+    if (reason.trim().length < 3) { toast.error("কারণ লিখুন"); return; }
+    try {
+      await reject({ id: marketer.id, reason: reason.trim() }).unwrap();
+      toast.success("আবেদন বাতিল করা হয়েছে");
+    } catch (err) {
+      toast.error(err?.data?.message || "বাতিল করা যায়নি");
+    }
+  };
+  return (
+    <>
+      <button type="button" onClick={onApprove} disabled={approving || rejecting} className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50">অনুমোদন করুন</button>
+      <button type="button" onClick={onReject} disabled={approving || rejecting} className="rounded-lg border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:opacity-50">বাতিল</button>
+    </>
+  );
+};
+
 const AdminMarketers = () => {
   const [page, setPage] = useState(1);
+  const [status, setStatus] = useState("all"); // partner applications (F8)
   const [expandedId, setExpandedId] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", business_name: "" });
   const [formError, setFormError] = useState("");
 
-  const { data, isLoading, isError, refetch } = useGetAdminMarketersQuery({ page, per_page: 20 });
+  const { data, isLoading, isError, refetch } = useGetAdminMarketersQuery({ page, per_page: 20, status });
   const [createMarketer, { isLoading: isCreating }] = useCreateAdminMarketerMutation();
   const [updateSuspension] = useUpdateMarketerSuspensionMutation();
 
   const marketers = data?.data?.data || [];
+  const pendingCount = data?.data?.pending_count || 0;
   const lastPage = data?.data?.last_page || 1;
 
   const handleCreate = async (e) => {
@@ -190,6 +290,15 @@ const AdminMarketers = () => {
         </button>
       </div>
 
+      <div className="mb-3 flex flex-wrap gap-2">
+        {[["all", "সব"], ["pending", "নতুন আবেদন"], ["approved", "অনুমোদিত"], ["rejected", "বাতিল"]].map(([v, l]) => (
+          <button key={v} type="button" onClick={() => { setStatus(v); setPage(1); setExpandedId(null); }}
+            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${status === v ? "border-blue-700 bg-blue-700 text-white" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
+            {l}{v === "pending" && pendingCount > 0 && <span className="ml-1 rounded-full bg-amber-400 px-1.5 text-[10px] font-bold text-amber-950">{pendingCount}</span>}
+          </button>
+        ))}
+      </div>
+
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center text-gray-400">লোড হচ্ছে...</div>
@@ -216,7 +325,16 @@ const AdminMarketers = () => {
                     {marketer.business_name && (
                       <p className="text-xs text-gray-400 truncate">{marketer.business_name}</p>
                     )}
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {LEVEL_BADGE[marketer.marketer_profile?.level] && (
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${LEVEL_BADGE[marketer.marketer_profile.level][1]}`}>{LEVEL_BADGE[marketer.marketer_profile.level][0]}</span>
+                      )}
+                      {marketer.commission_rate != null && <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-800">{marketer.commission_rate}% কমিশন</span>}
+                    </div>
                   </div>
+                  {APP_BADGE[marketer.marketer_profile?.application_status] ? (
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${APP_BADGE[marketer.marketer_profile?.application_status][1]}`}>{APP_BADGE[marketer.marketer_profile?.application_status][0]}</span>
+                  ) : (
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                       marketer.banned
@@ -226,6 +344,8 @@ const AdminMarketers = () => {
                   >
                     {marketer.banned ? "স্থগিত" : "সক্রিয়"}
                   </span>
+                  )}
+                  {marketer.marketer_profile?.application_status === "pending" ? <ApplicationActions marketer={marketer} /> : marketer.marketer_profile?.application_status === "rejected" ? null : (
                   <button
                     onClick={() => handleToggleBan(marketer)}
                     className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition ${
@@ -236,6 +356,7 @@ const AdminMarketers = () => {
                   >
                     {marketer.banned ? "সক্রিয় করুন" : "স্থগিত করুন"}
                   </button>
+                  )}
                   <button
                     onClick={() =>
                       setExpandedId(expandedId === marketer.id ? null : marketer.id)
@@ -251,7 +372,10 @@ const AdminMarketers = () => {
                   </button>
                 </div>
                 {expandedId === marketer.id && (
-                  <AdminMarketerClientsPanel marketerId={marketer.id} />
+                  <>
+                    <MarketerApplicationPanel marketer={marketer} />
+                    {marketer.marketer_profile?.application_status !== "pending" && marketer.marketer_profile?.application_status !== "rejected" && <AdminMarketerClientsPanel marketerId={marketer.id} />}
+                  </>
                 )}
               </div>
             ))}

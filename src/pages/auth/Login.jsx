@@ -323,6 +323,10 @@ const Login = () => {
             >
               এখনই রেজিস্টার করুন <ArrowRight className="w-4 h-4" />
             </button>
+            {/* Partner Portal F8: marketers apply here; admin approves */}
+            <Link to="/partner/register" className="mt-3 block text-center text-xs font-semibold text-[#158E72] hover:underline">
+              মার্কেটিং পার্টনার হতে চান? পার্টনার হিসেবে আবেদন করুন →
+            </Link>
           </div>
         </div>
 

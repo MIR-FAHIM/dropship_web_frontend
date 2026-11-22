@@ -46,6 +46,7 @@ import {
   XCircle,
   KeyRound,
   Smartphone,
+  ReceiptText,
 } from "lucide-react";
 
 const adminMenuLinks = [
@@ -171,6 +172,18 @@ const adminMenuLinks = [
         // Partner Portal: commission lines, rates and payouts
         path: "/admin-panel/marketer-commissions",
         label: "Marketer Commissions",
+        icon: <Megaphone className="w-4 h-4" />,
+      },
+      {
+        // Partner Portal F4: answer marketers' product sourcing requests
+        path: "/admin-panel/sourcing-requests",
+        label: "Sourcing Requests",
+        icon: <Megaphone className="w-4 h-4" />,
+      },
+      {
+        // Partner Portal F6: products marketers pitch, with hook / angle / comparison photos
+        path: "/admin-panel/winning-products",
+        label: "Winning Products",
         icon: <Megaphone className="w-4 h-4" />,
       },
     ],
@@ -300,6 +313,13 @@ const adminMenuLinks = [
         path: "/admin-panel/delivery/webhook-tester",
         label: "CarryBee Webhook টেস্ট",
         icon: <Activity className="w-4 h-4" />,
+      },
+      {
+        // All CarryBee invoices of every account, grouped with sums (admin/superadmin only)
+        path: "/admin-panel/delivery/carrybee-invoices",
+        label: "CarryBee Invoices",
+        icon: <ReceiptText className="w-4 h-4" />,
+        requiresAdminRole: true,
       },
     ],
   },

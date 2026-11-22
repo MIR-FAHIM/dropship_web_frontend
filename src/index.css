@@ -1,6 +1,6 @@
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -12,6 +12,45 @@ body {
 
 .font-supplier-portal {
   font-family: "Inter", "Hind Siliguri", sans-serif;
+}
+
+/* Partner Portal (marketer panel): the demo's type — Inter for English, Hind Siliguri for Bangla. */
+.font-partner {
+  font-family: "Inter", "Hind Siliguri", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01"; /* Inter's clearer 1/l and single-storey a */
+  letter-spacing: -0.005em;
+}
+.font-partner :is(td, .tabular-nums, [data-num]) {
+  font-variant-numeric: tabular-nums;
+}
+/* Bangla letters need a little more height than Latin. */
+.font-partner:lang(bn) p,
+.font-partner:lang(bn) li,
+.font-partner:lang(bn) td,
+.font-partner:lang(bn) dd {
+  line-height: 1.65;
+}
+.partner-soft-shadow {
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.06);
+}
+.partner-fade-in {
+  animation: partnerFadeIn 0.25s ease-out both;
+}
+@keyframes partnerFadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .partner-fade-in { animation: none; }
+}
+/* Commission payout invoice: when it's open, print only the invoice. */
+@media print {
+  body:has(#commission-payout-doc) * { visibility: hidden; }
+  #commission-payout-doc, #commission-payout-doc * { visibility: visible; }
+  #commission-payout-doc { position: absolute; left: 0; top: 0; width: 100%; }
 }
 
 .dm-sans {

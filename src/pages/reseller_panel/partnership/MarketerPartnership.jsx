@@ -1,15 +1,22 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   useGetMarketerRelationshipQuery,
   usePreviewMarketerInvitationMutation,
   useAcceptMarketerInvitationMutation,
   useEndMarketerRelationshipMutation,
 } from "../../../redux/features/marketer";
+import { useAcceptMarketerReferralMutation, usePreviewMarketerReferralMutation } from "../../../redux/features/marketerCommission";
+
+// A marketer's public referral code looks like RB-SCALEUP12; an emailed invitation code is 48 letters/digits.
+const isReferralCode = (value) => /^RB-/i.test(value.trim());
 import { Handshake } from "lucide-react";
 import { toast } from "sonner";
 
 const MarketerPartnership = () => {
-  const [code, setCode] = useState("");
+  const [searchParams] = useSearchParams();
+  const refFromLink = (searchParams.get("ref") || "").trim();
+  const [code, setCode] = useState(refFromLink);
   const [preview, setPreview] = useState(null);
   const [previewError, setPreviewError] = useState("");
   const [consent, setConsent] = useState(false);
@@ -22,17 +29,20 @@ const MarketerPartnership = () => {
   } = useGetMarketerRelationshipQuery();
   const [previewInv, { isLoading: isPreviewing }] = usePreviewMarketerInvitationMutation();
   const [acceptInv, { isLoading: isAccepting }] = useAcceptMarketerInvitationMutation();
+  const [previewRef, { isLoading: isPreviewingRef }] = usePreviewMarketerReferralMutation();
+  const [acceptRef, { isLoading: isAcceptingRef }] = useAcceptMarketerReferralMutation();
   const [endRel, { isLoading: isEnding }] = useEndMarketerRelationshipMutation();
 
   const relationship = relData?.data;
   const hasRelationship = !!relationship;
 
-  const handlePreview = async (e) => {
-    e.preventDefault();
+  const runPreview = async (value) => {
     setPreviewError("");
     setPreview(null);
     try {
-      const res = await previewInv({ code: code.trim() }).unwrap();
+      const res = isReferralCode(value)
+        ? await previewRef({ ref_code: value.trim() }).unwrap()
+        : await previewInv({ code: value.trim() }).unwrap();
       setPreview(res?.data);
     } catch (err) {
       const status = err?.status;
@@ -41,6 +51,20 @@ const MarketerPartnership = () => {
       else setPreviewError(err?.data?.message || "কোড যাচাই করতে সমস্যা হয়েছে।");
     }
   };
+  const handlePreview = (e) => {
+    e.preventDefault();
+    runPreview(code);
+  };
+
+  // Opened from a marketer's link (/app/marketer-partnership?ref=RB-…): check the code right away.
+  const autoChecked = useRef(false);
+  useEffect(() => {
+    if (!autoChecked.current && refFromLink && !relLoading && !hasRelationship) {
+      autoChecked.current = true;
+      runPreview(refFromLink);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refFromLink, relLoading, hasRelationship]);
 
   const handleAccept = async () => {
     if (!consent) {
@@ -48,11 +72,12 @@ const MarketerPartnership = () => {
       return;
     }
     try {
-      await acceptInv({
-        code: code.trim(),
-        consent: true,
-        consent_version: preview?.consent_version || "pilot-v1",
-      }).unwrap();
+      const consentVersion = preview?.consent_version || "pilot-v1";
+      if (isReferralCode(code)) {
+        await acceptRef({ ref_code: code.trim(), consent: true, consent_version: consentVersion }).unwrap();
+      } else {
+        await acceptInv({ code: code.trim(), consent: true, consent_version: consentVersion }).unwrap();
+      }
       toast.success("মার্কেটার পার্টনারশিপ সফলভাবে গ্রহণ করা হয়েছে");
       setPreview(null);
       setCode("");
@@ -135,7 +160,7 @@ const MarketerPartnership = () => {
         /* No relationship — invitation code form */
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
           <p className="text-sm text-gray-600">
-            আপনার মার্কেটারের দেওয়া ইনভাইটেশন কোড দিয়ে সংযুক্ত হন।
+            আপনার মার্কেটারের রেফারেল কোড (যেমন RB-SCALEUP12) বা ইমেইলে পাওয়া ইনভাইটেশন কোড দিয়ে সংযুক্ত হন।
           </p>
 
           <form onSubmit={handlePreview} className="flex gap-3 flex-wrap">
@@ -143,16 +168,16 @@ const MarketerPartnership = () => {
               type="text"
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder="ইনভাইটেশন কোড লিখুন"
+              placeholder="রেফারেল বা ইনভাইটেশন কোড লিখুন"
               required
               className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
             <button
               type="submit"
-              disabled={isPreviewing}
+              disabled={isPreviewing || isPreviewingRef}
               className="bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition"
             >
-              {isPreviewing ? "যাচাই হচ্ছে..." : "যাচাই করুন"}
+              {isPreviewing || isPreviewingRef ? "যাচাই হচ্ছে..." : "যাচাই করুন"}
             </button>
           </form>
 
@@ -189,10 +214,10 @@ const MarketerPartnership = () => {
 
               <button
                 onClick={handleAccept}
-                disabled={isAccepting || !consent}
+                disabled={isAccepting || isAcceptingRef || !consent}
                 className="bg-emerald-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-emerald-700 disabled:opacity-50 transition"
               >
-                {isAccepting ? "গ্রহণ হচ্ছে..." : "পার্টনারশিপ গ্রহণ করুন"}
+                {isAccepting || isAcceptingRef ? "গ্রহণ হচ্ছে..." : "পার্টনারশিপ গ্রহণ করুন"}
               </button>
             </div>
           )}

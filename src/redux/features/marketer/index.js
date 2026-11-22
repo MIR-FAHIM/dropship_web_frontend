@@ -101,8 +101,9 @@ const marketerApi = baseApi.injectEndpoints({
       invalidatesTags: ["MarketerRelationship"],
     }),
     getAdminMarketers: builder.query({
-      query: ({ page = 1, per_page = 20 } = {}) => ({
-        url: `${API_ENDPOINTS.adminMarketers.list.path}?page=${page}&per_page=${per_page}`,
+      // status: all | pending | approved | rejected (partner applications, F8)
+      query: ({ page = 1, per_page = 20, status } = {}) => ({
+        url: `${API_ENDPOINTS.adminMarketers.list.path}?page=${page}&per_page=${per_page}${status && status !== "all" ? `&status=${status}` : ""}`,
         method: "GET",
       }),
       providesTags: ["AdminMarketers"],

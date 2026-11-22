@@ -1,6 +1,8 @@
 /* eslint-disable no-undef */
 /** @type {import('tailwindcss').Config} */
 const withMT = require("@material-tailwind/react/utils/withMT");
+const tailwindColors = require("tailwindcss/colors");
+
 export default withMT({
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   // Partner Portal (marketer panel) has its own Dark/Light toggle: dark styles apply only under a .dark class.
@@ -8,6 +10,15 @@ export default withMT({
   theme: {
     extend: {
       colors: {
+        slate: tailwindColors.slate,
+        emerald: tailwindColors.emerald,
+        sky: tailwindColors.sky,
+        violet: tailwindColors.violet,
+        rose: tailwindColors.rose,
+        zinc: tailwindColors.zinc,
+        neutral: tailwindColors.neutral,
+        stone: tailwindColors.stone,
+        fuchsia: tailwindColors.fuchsia,
         primary: {
           DEFAULT: "#158E72",
           400: "#EAFFFA",

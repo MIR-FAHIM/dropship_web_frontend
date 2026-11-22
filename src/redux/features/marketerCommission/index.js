@@ -4,9 +4,18 @@ import baseApi from "../../api/baseApi";
 const marketerCommissionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     /* ---------- marketer panel ---------- */
+    // params: { period: "7d" | "30d" | "90d" | "all" }
     getMarketerOverview: builder.query({
-      query: () => ({ url: "/marketer/overview" }),
+      query: (params = {}) => ({ url: "/marketer/overview", params }),
       providesTags: ["MarketerCommission"],
+    }),
+    // F3: dropshipper joins a marketer with their public referral code (RB-…)
+    previewMarketerReferral: builder.mutation({
+      query: (body) => ({ url: "/marketer-client/referral/preview", method: "POST", body }),
+    }),
+    acceptMarketerReferral: builder.mutation({
+      query: (body) => ({ url: "/marketer-client/referral/accept", method: "POST", body }),
+      invalidatesTags: ["MarketerRelationship"],
     }),
     getMyCommissions: builder.query({
       query: (params = {}) => ({ url: "/marketer/commissions", params }),
@@ -15,6 +24,23 @@ const marketerCommissionApi = baseApi.injectEndpoints({
     getMyCommissionPayouts: builder.query({
       query: (params = {}) => ({ url: "/marketer/commission-payouts", params }),
       providesTags: ["MarketerCommission"],
+    }),
+    getMyCommissionPayout: builder.query({
+      query: (invoiceId) => ({ url: `/marketer/commission-payouts/${invoiceId}` }),
+      providesTags: ["MarketerCommission"],
+    }),
+    // F2: where the marketer wants to be paid
+    getMyPaymentAccounts: builder.query({
+      query: () => ({ url: "/marketer/payment-accounts" }),
+      providesTags: ["MarketerCommission"],
+    }),
+    addMyPaymentAccount: builder.mutation({
+      query: (body) => ({ url: "/marketer/payment-accounts", method: "POST", body }),
+      invalidatesTags: ["MarketerCommission"],
+    }),
+    deleteMyPaymentAccount: builder.mutation({
+      query: (id) => ({ url: `/marketer/payment-accounts/${id}`, method: "DELETE" }),
+      invalidatesTags: ["MarketerCommission"],
     }),
 
     /* ---------- admin ---------- */
@@ -28,6 +54,10 @@ const marketerCommissionApi = baseApi.injectEndpoints({
     }),
     getAdminCommissionPayouts: builder.query({
       query: (params = {}) => ({ url: "/admin/marketers/commission-payouts", params }),
+      providesTags: ["MarketerCommission"],
+    }),
+    getAdminCommissionPayout: builder.query({
+      query: (invoiceId) => ({ url: `/admin/marketers/commission-payouts/${invoiceId}` }),
       providesTags: ["MarketerCommission"],
     }),
     setMarketerCommissionRate: builder.mutation({
@@ -51,8 +81,15 @@ const marketerCommissionApi = baseApi.injectEndpoints({
 
 export const {
   useGetMarketerOverviewQuery,
+  usePreviewMarketerReferralMutation,
+  useAcceptMarketerReferralMutation,
   useGetMyCommissionsQuery,
   useGetMyCommissionPayoutsQuery,
+  useGetMyCommissionPayoutQuery,
+  useGetMyPaymentAccountsQuery,
+  useAddMyPaymentAccountMutation,
+  useDeleteMyPaymentAccountMutation,
+  useGetAdminCommissionPayoutQuery,
   useGetAdminMarketerCommissionsQuery,
   useGetAdminMarketerCommissionLinesQuery,
   useLazyGetAdminMarketerCommissionLinesQuery,

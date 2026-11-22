@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft, Package, Loader2, Tag, Truck, Image as ImageIcon, DollarSign, Share2, HelpCircle,
+  ArrowLeft, Package, Loader2, Tag, Truck, Image as ImageIcon, DollarSign, Share2, HelpCircle, Trophy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,6 +15,7 @@ import ShippingTab from "./product_detail/ShippingTab";
 import AttributesTab from "./product_detail/AttributesTab";
 import SocialContentTab from "./product_detail/SocialContentTab";
 import ProductQaTab from "./product_detail/ProductQaTab";
+import WinningTab from "./product_detail/WinningTab";
 import { getAdminBasePrice } from "../../../utils/pricing.utils";
 
 const tabs = [
@@ -25,6 +26,8 @@ const tabs = [
   { id: "attributes", label: "Attributes", icon: Tag },
   { id: "social_content", label: "Social Content", icon: Share2 },
   { id: "qa_assistant", label: "Product Q&A", icon: HelpCircle },
+  // Partner Portal F6: marketing content for marketers
+  { id: "winning", label: "Winning Product", icon: Trophy },
 ];
 
 const AdminProductDetail = () => {
@@ -172,6 +175,7 @@ const AdminProductDetail = () => {
           {activeTab === "attributes" && <AttributesTab productId={id} />}
           {activeTab === "social_content" && <SocialContentTab product={product} productId={id} />}
           {activeTab === "qa_assistant" && <ProductQaTab product={product} productId={id} />}
+          {activeTab === "winning" && <WinningTab productId={id} />}
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   useCancelCommissionPayoutMutation,
   useCreateCommissionPayoutMutation,
+  useGetAdminCommissionPayoutQuery,
   useGetAdminCommissionPayoutsQuery,
   useGetAdminMarketerCommissionLinesQuery,
   useGetAdminMarketerCommissionsQuery,
@@ -13,6 +14,7 @@ import {
   usePayCommissionPayoutMutation,
   useSetMarketerCommissionRateMutation,
 } from "../../../redux/features/marketerCommission";
+import CommissionPayoutDocument from "../../../components/shared/CommissionPayoutDocument";
 
 /**
  * Admin → Marketer Commissions (Partner Portal phase 1).
@@ -153,22 +155,40 @@ const LinesModal = ({ marketer, onClose }) => {
 };
 LinesModal.propTypes = { marketer: PropTypes.object.isRequired, onClose: PropTypes.func.isRequired };
 
-/* ---------- Pay a marketer (all payable lines) ---------- */
+/* ---------- Pay a marketer: pick lines, choose their saved account ---------- */
 const PayModal = ({ marketer, onClose }) => {
-  const [method, setMethod] = useState("bkash");
+  const accounts = marketer.payment_accounts || [];
+  const first = accounts[0];
+  const [method, setMethod] = useState(first?.method || "bkash");
   const [trxId, setTrxId] = useState("");
-  const [account, setAccount] = useState(marketer.phone || "");
+  const [account, setAccount] = useState(first?.account_no || marketer.phone || "");
   const [note, setNote] = useState("");
+  const [unticked, setUnticked] = useState(() => new Set());
+  const { data, isFetching } = useGetAdminMarketerCommissionLinesQuery({ id: marketer.id, status: "payable", per_page: 100 });
   const [createPayout, { isLoading }] = useCreateCommissionPayoutMutation();
+  const lines = data?.data?.data || [];
+  const more = (data?.data?.total || 0) > lines.length;
+  const picked = lines.filter((l) => !unticked.has(l.id));
+  const total = Math.round(picked.reduce((s, l) => s + Number(l.amount || 0), 0) * 100) / 100;
   const needsTrx = method !== "cash";
+  const allPicked = picked.length === lines.length;
+
+  const toggle = (id) => setUnticked((prev) => {
+    const next = new Set(prev);
+    next.has(id) ? next.delete(id) : next.add(id);
+    return next;
+  });
+  const pickAccount = (a) => { setMethod(a.method); setAccount(a.account_no); };
 
   const submit = async (status) => {
     try {
       await createPayout({
         id: marketer.id, status, payment_method: method,
+        // All lines: let the server take every payable line (also ones beyond the first 100).
+        commission_ids: allPicked ? undefined : picked.map((l) => l.id),
         trx_id: trxId.trim() || undefined, receiver_account: account.trim() || undefined, note: note.trim() || undefined,
       }).unwrap();
-      toast.success(status === "paid" ? `Paid ${bdt(marketer.payable)} to ${marketer.name}.` : "Unpaid payout created.");
+      toast.success(status === "paid" ? `Paid ${bdt(total)} to ${marketer.name}.` : "Unpaid payout created.");
       onClose();
     } catch (err) {
       toast.error(err?.data?.message || "Could not create the payout.");
@@ -177,35 +197,91 @@ const PayModal = ({ marketer, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3" role="dialog" aria-modal="true">
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl">
+      <div className="relative max-h-[94vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl">
         <button type="button" onClick={onClose} className="absolute right-4 top-4 text-gray-400 hover:text-gray-600" aria-label="Close"><X className="h-5 w-5" /></button>
         <h2 className="text-lg font-bold text-gray-900">Pay commission</h2>
         <p className="mt-1 text-sm text-gray-600">{marketer.business_name || marketer.name}</p>
-        <p className="mt-3 rounded-xl bg-teal-50 px-4 py-3 text-2xl font-extrabold text-teal-800">{bdt(marketer.payable)}</p>
-        <p className="mt-1 text-xs text-gray-500">All payable lines, including amounts taken back for returned orders.</p>
-        <div className="mt-4 grid grid-cols-1 gap-3 text-sm">
+
+        {/* Lines to pay */}
+        <div className="mt-4 rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2 text-xs">
+            <label className="inline-flex items-center gap-2 font-semibold text-gray-700">
+              <input type="checkbox" checked={allPicked && lines.length > 0} onChange={() => setUnticked(allPicked ? new Set(lines.map((l) => l.id)) : new Set())} />
+              {picked.length} of {lines.length}{more ? "+" : ""} lines
+            </label>
+            <span className="text-gray-500">Returned orders show as minus lines and are taken off.</span>
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            {isFetching && !lines.length ? (
+              <p className="p-4 text-center text-xs text-gray-500"><Loader2 className="mx-auto h-4 w-4 animate-spin" /></p>
+            ) : lines.length === 0 ? (
+              <p className="p-4 text-center text-xs text-gray-500">Nothing to pay.</p>
+            ) : (
+              <table className="w-full text-left text-xs">
+                <tbody>
+                  {lines.map((l) => (
+                    <tr key={l.id} className="border-t border-gray-50 first:border-0">
+                      <td className="w-8 px-3 py-1.5"><input type="checkbox" checked={!unticked.has(l.id)} onChange={() => toggle(l.id)} aria-label={`Include ${l.order?.order_number || l.order_id}`} /></td>
+                      <td className="py-1.5 pr-2 font-semibold text-gray-800">{l.order?.order_number || `#${l.order_id}`}{l.type === "clawback" && <span className="ml-1 rounded bg-red-50 px-1 text-[10px] text-red-700">taken back</span>}</td>
+                      <td className="py-1.5 pr-2 text-gray-600">{l.client?.dropshipper?.business_name || l.client?.dropshipper?.name || "—"}</td>
+                      <td className="py-1.5 pr-2 text-gray-500">{fmtDate(l.earned_at)}</td>
+                      <td className={`py-1.5 pr-3 text-right font-bold tabular-nums ${l.amount < 0 ? "text-red-600" : "text-gray-900"}`}>{bdt(l.amount)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+          {more && <p className="border-t border-gray-100 px-3 py-1.5 text-[11px] text-gray-500">Showing the first 100 lines. Keep all ticked to pay every payable line.</p>}
+        </div>
+        <p className="mt-3 flex items-baseline justify-between rounded-xl bg-teal-50 px-4 py-3">
+          <span className="text-sm font-semibold text-teal-900">To pay</span>
+          <span className={`text-2xl font-extrabold ${total > 0 ? "text-teal-800" : "text-red-600"}`}>{bdt(total)}</span>
+        </p>
+
+        {/* Where to send it */}
+        <div className="mt-4">
+          <p className="text-sm font-semibold text-gray-700">Marketer&apos;s payment accounts</p>
+          {accounts.length === 0 ? (
+            <p className="mt-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">No account saved yet. Ask the marketer to add one in their panel (Earnings → Payment accounts), or type it below.</p>
+          ) : (
+            <div className="mt-1 flex flex-wrap gap-2">
+              {accounts.map((a) => {
+                const active = method === a.method && account === a.account_no;
+                return (
+                  <button key={a.id} type="button" onClick={() => pickAccount(a)}
+                    className={`rounded-lg border px-3 py-1.5 text-left text-xs ${active ? "border-teal-600 bg-teal-50 text-teal-900" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"}`}>
+                    <span className="block font-bold">{a.method === "bank_transfer" ? a.bank_name : a.method_label}</span>
+                    <span className="font-mono">{a.account_no}</span>{a.acc_name && <span className="text-gray-500"> · {a.acc_name}</span>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        <div className="mt-3 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
           <label className="font-semibold text-gray-700">Payment method
             <select value={method} onChange={(e) => setMethod(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal">
               {METHODS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select>
+          </label>
+          <label className="font-semibold text-gray-700">Sent to
+            <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Number / account" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono font-normal" />
           </label>
           {needsTrx && (
             <label className="font-semibold text-gray-700">Transaction ID *
               <input value={trxId} onChange={(e) => setTrxId(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono font-normal" />
             </label>
           )}
-          <label className="font-semibold text-gray-700">Sent to
-            <input value={account} onChange={(e) => setAccount(e.target.value)} placeholder="Number / account" className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono font-normal" />
-          </label>
           <label className="font-semibold text-gray-700">Note
             <input value={note} onChange={(e) => setNote(e.target.value)} className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-normal" />
           </label>
         </div>
         <div className="mt-5 flex flex-wrap justify-end gap-2">
-          <button type="button" onClick={() => submit("pending")} disabled={isLoading} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">Create unpaid payout</button>
-          <button type="button" onClick={() => submit("paid")} disabled={isLoading || (needsTrx && !trxId.trim())}
+          <button type="button" onClick={() => submit("pending")} disabled={isLoading || total <= 0} className="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50">Create unpaid payout</button>
+          <button type="button" onClick={() => submit("paid")} disabled={isLoading || total <= 0 || (needsTrx && !trxId.trim())}
             className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-4 py-2 text-sm font-bold text-white hover:bg-teal-700 disabled:cursor-not-allowed disabled:bg-teal-200 disabled:text-teal-900">
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />} Mark as paid
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />} Mark {bdt(total)} as paid
           </button>
         </div>
       </div>
@@ -214,9 +290,26 @@ const PayModal = ({ marketer, onClose }) => {
 };
 PayModal.propTypes = { marketer: PropTypes.object.isRequired, onClose: PropTypes.func.isRequired };
 
+/* ---------- Payout invoice (opened from the payout list) ---------- */
+const PayoutDocModal = ({ invoiceId, onClose }) => {
+  const { data, isFetching, isError } = useGetAdminCommissionPayoutQuery(invoiceId);
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3" role="dialog" aria-modal="true">
+      <div className="relative max-h-[94vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-slate-50 p-4 shadow-2xl">
+        <button type="button" onClick={onClose} className="absolute right-4 top-4 z-10 text-gray-400 hover:text-gray-600 print:hidden" aria-label="Close"><X className="h-5 w-5" /></button>
+        {isFetching && !data ? <p className="p-8 text-center"><Loader2 className="mx-auto h-5 w-5 animate-spin text-gray-400" /></p>
+          : isError ? <p className="p-8 text-center text-sm text-red-600">Could not load the payout.</p>
+          : <CommissionPayoutDocument doc={data?.data} />}
+      </div>
+    </div>
+  );
+};
+PayoutDocModal.propTypes = { invoiceId: PropTypes.number.isRequired, onClose: PropTypes.func.isRequired };
+
 /* ---------- Recent payouts ---------- */
 const PayoutsList = () => {
   const [status, setStatus] = useState("all");
+  const [openId, setOpenId] = useState(null);
   const { data, isFetching } = useGetAdminCommissionPayoutsQuery({ status, per_page: 20 });
   const [pay, { isLoading: paying }] = usePayCommissionPayoutMutation();
   const [cancel] = useCancelCommissionPayoutMutation();
@@ -261,7 +354,7 @@ const PayoutsList = () => {
               <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">No payouts yet.</td></tr>
             ) : rows.map((inv) => (
               <tr key={inv.id} className="border-t border-gray-100">
-                <td className="px-4 py-2"><span className="font-mono font-semibold text-gray-800">{inv.invoice_number}</span><p className="text-[11px] text-gray-500">{fmtDate(inv.paid_at || inv.created_at)}</p></td>
+                <td className="px-4 py-2"><button type="button" onClick={() => setOpenId(inv.id)} className="font-mono font-semibold text-teal-700 hover:underline">{inv.invoice_number}</button><p className="text-[11px] text-gray-500">{fmtDate(inv.paid_at || inv.created_at)}</p></td>
                 <td className="px-4 py-2 text-gray-800">{inv.marketer?.business_name || inv.marketer?.name || `#${inv.marketer_id}`}</td>
                 <td className="px-4 py-2 text-right font-bold tabular-nums">{bdt(inv.total_amount_owed)}</td>
                 <td className="px-4 py-2 text-gray-700">{inv.status === "paid" ? <>{inv.payment_method}{inv.trx_id && <span className="ml-1 font-mono text-[11px] text-gray-500">{inv.trx_id}</span>}</> : "—"}</td>
@@ -279,6 +372,7 @@ const PayoutsList = () => {
           </tbody>
         </table>
       </div>
+      {openId && <PayoutDocModal invoiceId={openId} onClose={() => setOpenId(null)} />}
     </div>
   );
 };
