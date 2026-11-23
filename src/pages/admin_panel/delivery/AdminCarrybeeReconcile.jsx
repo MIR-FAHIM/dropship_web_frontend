@@ -171,8 +171,8 @@ const AdminCarrybeeReconcile = () => {
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
             <Stat label="CarryBee paid (net)" value={tk(t.carrybee_net)} tone="text-teal-700" hint={`${t.orders} orders`} />
             <Stat label="Supplier price (delivered)" value={tk(t.supplier_price)} />
-            {isVendor && <Stat label="Vendor owes (CarryBee check)" value={tk(t.expected_vendor_owes)} tone="text-indigo-700" hint="CarryBee paid − supplier price" />}
-            <Stat label="Vendor owes (by orders)" value={tk(t.vendor_owes)} tone={isVendor && !same(t.vendor_owes, t.expected_vendor_owes) ? "text-rose-700" : "text-gray-900"}
+            {isVendor && <Stat label="Vendor will give to admin (CarryBee check)" value={tk(t.expected_vendor_owes)} tone="text-indigo-700" hint="CarryBee paid − supplier price" />}
+            <Stat label={isVendor ? "Vendor will give to admin (by orders)" : "Vendor will give to admin"} value={tk(t.vendor_owes)} tone={isVendor && !same(t.vendor_owes, t.expected_vendor_owes) ? "text-rose-700" : "text-gray-900"}
               hint={isVendor ? (same(t.vendor_owes, t.expected_vendor_owes) ? "Matches CarryBee" : "Decide return charges to match") : undefined} />
             <Stat label="Return charges" value={tk(t.penalties)} tone="text-rose-700" hint={t.penalties_undecided ? `${t.penalties_undecided} not decided` : "All decided"} />
             <Stat label="Open payout flags" value={t.open_flags} tone={t.open_flags ? "text-rose-700" : "text-gray-900"} />
@@ -190,7 +190,7 @@ const AdminCarrybeeReconcile = () => {
                         <span className="font-mono font-semibold text-gray-900">{inv.number}</span>
                         <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-[11px] capitalize text-gray-700">{inv.status}</span>
                         <span className="ml-2 text-xs text-gray-600">{inv.orders} orders · calculated {tk(inv.calculated)} · final <b>{tk(inv.final)}</b></span>
-                        {wrong && <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-800"><AlertTriangle className="h-3.5 w-3.5" /> CarryBee says the vendor owes {tk(t.expected_vendor_owes)}</div>}
+                        {wrong && <div className="mt-0.5 flex items-center gap-1 text-xs text-amber-800"><AlertTriangle className="h-3.5 w-3.5" /> CarryBee says the vendor will give admin {tk(t.expected_vendor_owes)}</div>}
                       </div>
                       {inv.status === "pending" && (
                         <button type="button" onClick={() => onReissue(inv)} disabled={reissuing}
@@ -212,7 +212,7 @@ const AdminCarrybeeReconcile = () => {
                   <th className="px-3 py-2 text-right">Delivery / COD fee</th>
                   <th className="px-3 py-2 text-right">CarryBee net</th>
                   <th className="px-3 py-2 text-right">{isVendor ? "Vendor keeps" : "Supplier price"}</th>
-                  <th className="px-3 py-2 text-right">Vendor owes</th>
+                  <th className="px-3 py-2 text-right">Vendor ↔ admin</th>
                   <th className="px-3 py-2 text-right">Dropshipper profit</th>
                   <th className="px-3 py-2 text-left">Return charge</th>
                   <th className="px-3 py-2 text-left">Flags</th>
@@ -239,7 +239,8 @@ const AdminCarrybeeReconcile = () => {
                       )}
                     </td>
                     <td className="px-3 py-2 text-right">
-                      <div className="font-semibold text-gray-900">{tk(r.vendor_owes)}</div>
+                      <div className={`font-semibold ${r.vendor_owes < 0 ? "text-rose-700" : "text-gray-900"}`}>{tk(Math.abs(r.vendor_owes))}</div>
+                      <div className="text-[11px] text-gray-500">{r.vendor_owes < 0 ? "admin will give to vendor" : "vendor will give to admin"}</div>
                       <Recorded correct={r.vendor_owes} settlement={r.vendor_settlement} />
                     </td>
                     <td className="px-3 py-2 text-right">
@@ -270,10 +271,10 @@ const AdminCarrybeeReconcile = () => {
 
           <section className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-700">
             <h2 className="mb-1 text-sm font-bold text-gray-900">How it is worked out</h2>
-            <p><b>CarryBee net</b> = collected − delivery fee − COD fee (what CarryBee paid into the account). <b>Vendor keeps</b> = the supplier price of the order. <b>Vendor owes</b> (own CarryBee account) = CarryBee net − what the vendor keeps.
+            <p><b>CarryBee net</b> = collected − delivery fee − COD fee (what CarryBee paid into the account). <b>Vendor keeps</b> = the supplier price of the order. <b>Vendor will give to admin</b> (own CarryBee account) = CarryBee net − what the vendor keeps; if it is below ৳0, the admin will give that much to the vendor.
               <b> Dropshipper profit</b> = collected − admin price − customer delivery charge − COD fee, never below ৳0 (the platform absorbs the rest).</p>
             <p className="mt-1"><b>Return charge</b>: what CarryBee charged for a returned parcel (return delivery + return fee − any cash). Pick who pays: <b>Vendor</b> keeps the loss;
-              <b> Admin</b> or <b>Dropshipper</b> — the vendor is credited, and with Dropshipper the dropshipper owes it (taken from their return deposit).</p>
+              <b> Admin</b> or <b>Dropshipper</b> — the admin will give it to the vendor, and with Dropshipper the dropshipper will give it to the admin (taken from their return deposit).</p>
           </section>
         </>
       ) : null}

@@ -308,7 +308,7 @@ const AdminDashboard = () => {
         )}
       </div>
 
-      {/* Money board: who owes whom + admin's final income */}
+      {/* Money board: who will give money to whom + admin's final income */}
       <MoneyBoard />
 
       {/* Order Summary + Quick Actions */}

@@ -1,6 +1,6 @@
 import baseApi from "../../api/baseApi";
 
-// Admin dashboard money board: who owes whom (CarryBee / vendor / admin / dropshipper) and the admin's final income.
+// Admin dashboard money board: who will give money to whom (CarryBee / vendor / admin / dropshipper) and the admin's final income.
 const moneyBoardApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMoneyBoard: builder.query({

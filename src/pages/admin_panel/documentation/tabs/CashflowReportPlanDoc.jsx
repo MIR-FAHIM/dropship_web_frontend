@@ -20,7 +20,7 @@ const STATES = [
   {
     label: "Settled (Liability)",
     labelBn: "সেটেলড (দায়)",
-    desc: "অর্ডার ডেলিভার হয়েছে, order_settlements রেকর্ড তৈরি হয়েছে। ResellerBrain এখন এই টাকা owe করে — এটি একটি দায় (liability), মুনাফা নয়।",
+    desc: "অর্ডার ডেলিভার হয়েছে, order_settlements রেকর্ড তৈরি হয়েছে। ResellerBrain এখন এই টাকা দেবে (admin will give) — এটি একটি দায় (liability), মুনাফা নয়।",
     color: "bg-amber-100 text-amber-700",
   },
   {
@@ -35,7 +35,7 @@ const ISSUES = [
   {
     severity: "fixed",
     title: "১. ✅ ঠিক হয়েছে — Vendor settlement এর দিক উল্টো ছিল",
-    body: "processOrderDelivery() ভেন্ডরের settlement কে \"platform still owes vendor\" হিসেবে গণনা করত, যেখানে সঠিক হওয়া উচিত ছিল \"vendor owes platform the surplus\" (has_own_delivery_account = true এর ক্ষেত্রে)। এখন calculateOrderStakeBreakdown() এর সূত্র পুনর্ব্যবহার করে ঠিক করা হয়েছে, এবং একটি নতুন direction কলাম যুক্ত হয়েছে। মাল্টি-ভেন্ডর কেস এখনও unresolved (দেখুন #৪)।",
+    body: "processOrderDelivery() ভেন্ডরের settlement কে \"admin will give to vendor\" হিসেবে গণনা করত, যেখানে সঠিক হওয়া উচিত ছিল \"vendor will give the surplus to admin\" (has_own_delivery_account = true এর ক্ষেত্রে)। এখন calculateOrderStakeBreakdown() এর সূত্র পুনর্ব্যবহার করে ঠিক করা হয়েছে, এবং একটি নতুন direction কলাম যুক্ত হয়েছে। মাল্টি-ভেন্ডর কেস এখনও unresolved (দেখুন #৪)।",
   },
   {
     severity: "fixed",

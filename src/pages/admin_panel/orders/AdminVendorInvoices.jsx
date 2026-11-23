@@ -441,7 +441,7 @@ function AdjustInvoiceAmount({ invoice, onAdjusted }) {
 
   return (
     <div className="space-y-2">
-      <FinalAmountField id={`vendor-inv-adjust-${invoice.id}`} calculated={calculated} value={value} onChange={setValue} label="Vendor owes (invoice total)" />
+      <FinalAmountField id={`vendor-inv-adjust-${invoice.id}`} calculated={calculated} value={value} onChange={setValue} label="Vendor will give to admin (invoice total)" />
       <div className="flex justify-end">
         <button
           type="button"

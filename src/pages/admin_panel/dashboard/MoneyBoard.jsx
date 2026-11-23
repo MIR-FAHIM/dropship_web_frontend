@@ -6,7 +6,7 @@ import { useGetMoneyBoardQuery, useLazyGetMoneyBoardQuery } from "../../../redux
 
 /**
  * Admin dashboard → Money board.
- * 1 Waiting for CarryBee → 2 CarryBee paid, settling (everyone owes each other) → 3 Completed (admin income is final).
+ * 1 Waiting for CarryBee → 2 CarryBee paid, settling (everyone still has to give each other money) → 3 Completed (admin income is final).
  * Final income = CarryBee cash − CarryBee fees − supplier price − dropshipper profit, using what was actually paid.
  */
 const tk = (n) => `৳${Number(n || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
@@ -88,7 +88,7 @@ const MoneyBoard = () => {
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800"><HandCoins className="h-5 w-5 text-teal-600" /> Money board — who owes whom</h3>
+          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800"><HandCoins className="h-5 w-5 text-teal-600" /> Money board — who will give money to whom</h3>
           <p className="text-xs text-gray-500">Admin income becomes final only when CarryBee has paid and both the vendor invoice and the dropshipper payout are settled.</p>
         </div>
         <button type="button" onClick={onRefresh} disabled={refreshing}
@@ -106,12 +106,12 @@ const MoneyBoard = () => {
           <Line label="→ CarryBee fees (estimate)" value={tk(w.courier_fees)} />
           <Line label="→ Admin income (expected)" value={tk(w.admin_income)} strong tone="text-teal-700" />
         </StageCard>
-        <StageCard step={2} icon={<Clock className="h-5 w-5" />} title="CarryBee paid — settling" subtitle="Vendor, admin and dropshipper still owe each other" accent="border-indigo-200">
+        <StageCard step={2} icon={<Clock className="h-5 w-5" />} title="CarryBee paid — settling" subtitle="Vendor, admin and dropshipper still have to give each other money" accent="border-indigo-200">
           <Line label="Orders" value={s.orders} />
           <Line label="Cash in platform CarryBee account" value={tk(s.platform_account)} />
           <Line label="Cash in vendors' own accounts" value={tk(s.vendor_accounts)} />
-          <Line label="Owed to admin" value={tk(owes.owed_to_admin)} tone="text-emerald-700" />
-          <Line label="Admin owes" value={tk(owes.admin_owes)} tone="text-rose-700" />
+          <Line label="Admin will get" value={tk(owes.owed_to_admin)} tone="text-emerald-700" />
+          <Line label="Admin will give" value={tk(owes.admin_owes)} tone="text-rose-700" />
           <Line label="Admin income (pending)" value={tk(s.admin_income)} strong tone="text-teal-700" />
         </StageCard>
         <StageCard step={3} icon={<CheckCircle2 className="h-5 w-5" />} title="Completed — final income" subtitle="Vendor invoice and dropshipper payout both settled" accent="border-emerald-300">
@@ -129,16 +129,16 @@ const MoneyBoard = () => {
 
       <div className={`flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 ${owes.net >= 0 ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
         <div className="text-sm text-gray-800">
-          Net position now: owed to admin <b className="text-emerald-700">{tk(owes.owed_to_admin)}</b> − admin owes <b className="text-rose-700">{tk(owes.admin_owes)}</b>
+          Net position now: admin will get <b className="text-emerald-700">{tk(owes.owed_to_admin)}</b> − admin will give <b className="text-rose-700">{tk(owes.admin_owes)}</b>
         </div>
-        <div className={`text-lg font-bold ${owes.net >= 0 ? "text-emerald-800" : "text-rose-800"}`}>{owes.net >= 0 ? "Admin receives " : "Admin pays "}{tk(Math.abs(owes.net))}</div>
+        <div className={`text-lg font-bold ${owes.net >= 0 ? "text-emerald-800" : "text-rose-800"}`}>{owes.net >= 0 ? "Admin will get " : "Admin will give "}{tk(Math.abs(owes.net))}</div>
       </div>
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <PartyList title="Vendors owe admin" rows={owes.vendors_owe_admin} tone="text-emerald-700" empty="Nothing owed (own CarryBee account vendors)" />
-        <PartyList title="Admin owes vendors" rows={owes.admin_owes_vendors} tone="text-rose-700" empty="No supplier payments due" />
-        <PartyList title="Admin owes dropshippers" rows={owes.admin_owes_dropshippers} tone="text-rose-700" empty="No dropshipper profit due" />
-        <PartyList title="Dropshippers owe admin" rows={owes.dropshippers_owe_admin} tone="text-emerald-700" empty="No return charges owed" />
+        <PartyList title="Vendor will give to admin" rows={owes.vendors_owe_admin} tone="text-emerald-700" empty="No vendor has money to give to admin" />
+        <PartyList title="Admin will give to vendor" rows={owes.admin_owes_vendors} tone="text-rose-700" empty="Admin has nothing to give to vendors" />
+        <PartyList title="Admin will give to dropshipper" rows={owes.admin_owes_dropshippers} tone="text-rose-700" empty="Admin has no profit to give to dropshippers" />
+        <PartyList title="Dropshipper will give to admin" rows={owes.dropshippers_owe_admin} tone="text-emerald-700" empty="No dropshipper has a return charge to give" />
       </div>
 
       {alertItems.length > 0 && (

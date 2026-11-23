@@ -212,7 +212,7 @@ const PaymentFlowDoc = () => {
             <p className="text-sm font-bold text-gray-800 mb-1">B. ResellerBrain এর CarryBee অ্যাকাউন্ট</p>
             <p className="text-[11px] text-gray-400 mb-4">has_own_delivery_account = false</p>
             <StepList steps={FLOW_B_STEPS} accent="bg-indigo-500" />
-            <p className="text-[11px] font-semibold text-indigo-600 mt-3">টাকার দিক: ResellerBrain → Vendor (owed cost)</p>
+            <p className="text-[11px] font-semibold text-indigo-600 mt-3">টাকার দিক: ResellerBrain → Vendor (admin will give the product cost to vendor)</p>
           </div>
         </div>
       </div>
@@ -250,10 +250,10 @@ const PaymentFlowDoc = () => {
             </p>
             <p className="text-xs text-amber-800 mt-1.5 leading-relaxed">
               <code className="bg-amber-100 px-1 rounded">calculateOrderStakeBreakdown()</code> (admin যা লাইভ দেখে)
-              সঠিকভাবে ফ্লো A কে &quot;vendor owes platform&quot; হিসেবে গণনা করে। কিন্তু{" "}
+              সঠিকভাবে ফ্লো A কে &quot;vendor will give to admin&quot; হিসেবে গণনা করে। কিন্তু{" "}
               <code className="bg-amber-100 px-1 rounded">processOrderDelivery()</code> — যা ডেলিভারি সম্পন্ন হলে
-              আসল settlement row তৈরি করে — ভেন্ডরের settlement টি উল্টো দিকে (&quot;platform still owes
-              vendor the shortage&quot;) গণনা করে। অর্থাৎ আজকের <code className="bg-amber-100 px-1 rounded">order_settlements</code>{" "}
+              আসল settlement row তৈরি করে — ভেন্ডরের settlement টি উল্টো দিকে (&quot;admin will give
+              the shortage to vendor&quot;) গণনা করে। অর্থাৎ আজকের <code className="bg-amber-100 px-1 rounded">order_settlements</code>{" "}
               টেবিলের আসল ডেটা, ফ্লো A এর জন্য উপরের বর্ণনার সাথে মেলে না। Cashflow রিপোর্ট এই টেবিলের উপর
               বানানোর আগে এটি ঠিক করা জরুরি।
             </p>

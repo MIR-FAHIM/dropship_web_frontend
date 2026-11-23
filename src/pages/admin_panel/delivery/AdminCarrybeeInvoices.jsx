@@ -21,7 +21,7 @@ const MEANINGS = [
   ["Total fee", "total_fee", "Delivery fee + COD fee — everything CarryBee kept as its charge."],
   ["Receivable", "receivable", "Collected − Total fee. The money CarryBee pays out to this account. \"Paid\" means it was sent to the wallet/bank shown; \"Unpaid\" means it is still due to us."],
   ["Compensation", "compensation_amount", "Money CarryBee pays back for lost or damaged parcels."],
-  ["Payable", "payable_amount", "Money this account owes CarryBee — happens when fees are more than the cash collected (for example many returns). \"Unpaid\" means we still owe it."],
+  ["Payable", "payable_amount", "Money this account will give to CarryBee — happens when fees are more than the cash collected (for example many returns). \"Unpaid\" means we still have to give it."],
 ];
 
 const STATUS_STYLE = {

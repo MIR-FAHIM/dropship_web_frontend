@@ -508,7 +508,7 @@ export default function VendorSettlementInvoiceModal({
               calculated={calculatedOwed}
               value={finalAmount}
               onChange={setFinalAmount}
-              label="Vendor owes (invoice total)"
+              label="Vendor will give to admin (invoice total)"
             />
 
             <div>
