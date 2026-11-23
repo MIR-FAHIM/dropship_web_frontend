@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
 import { Calculator, Download, Loader2, Maximize2, RotateCcw, Search, Star, X } from "lucide-react";
 import { toast } from "sonner";
@@ -204,7 +205,7 @@ function ProductPicker({ selectedId, onPick, onCustom }) {
 
 /* ---------- page ---------- */
 export default function MarketerPitchCalculator() {
-  const { t } = usePartnerPrefs();
+  const { t, theme, lang } = usePartnerPrefs();
   const num = useNumber();
   const user = getFromLocalstorage("user");
   const [calc, setCalc] = useState(loadCalc);
@@ -224,12 +225,37 @@ export default function MarketerPitchCalculator() {
   useEffect(() => {
     try { window.localStorage.setItem(STORE_KEY, JSON.stringify(calc)); } catch { /* storage blocked */ }
   }, [calc]);
+  // Full-screen pitch = canvas mode: the browser's real full screen, with nothing but the calculator
+  // (no panel header, tabs or footer). Rendered in a portal on <body>, because the page sits inside an
+  // animated wrapper whose transform would otherwise trap a "fixed" overlay below the panel header.
+  const nativeFull = useRef(false);
+  const openFull = useCallback(() => {
+    setFullScreen(true);
+    const el = document.documentElement;
+    if (el.requestFullscreen && !document.fullscreenElement) {
+      el.requestFullscreen().then(() => { nativeFull.current = true; }).catch(() => { nativeFull.current = false; });
+    }
+  }, []);
+  const closeFull = useCallback(() => {
+    setFullScreen(false);
+    if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+    nativeFull.current = false;
+  }, []);
   useEffect(() => {
     if (!fullScreen) return undefined;
-    const onKey = (e) => e.key === "Escape" && setFullScreen(false);
+    const onKey = (e) => e.key === "Escape" && closeFull();
+    // Leaving the browser's full screen (Esc / F11) also closes the canvas.
+    const onFsChange = () => { if (!document.fullscreenElement && nativeFull.current) closeFull(); };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [fullScreen]);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+      document.removeEventListener("fullscreenchange", onFsChange);
+    };
+  }, [fullScreen, closeFull]);
 
   const set = (k) => (v) => setCalc((c) => ({ ...c, [k]: v }));
   const pick = (p) => setCalc((c) => ({
@@ -307,7 +333,7 @@ export default function MarketerPitchCalculator() {
           "কলে লাইভ দেখান, স্টক ছাড়া ড্রপশিপিংয়ে একই টাকায় কীভাবে বেশি অর্ডার আর বেশি লাভ হয়।")}
         action={
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setFullScreen(true)} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-teal-700 hover:bg-teal-50 sm:text-sm">
+            <button type="button" onClick={openFull} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-extrabold text-teal-700 hover:bg-teal-50 sm:text-sm">
               <Maximize2 size={15} aria-hidden="true" /> {t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}
             </button>
             <button type="button" onClick={download} className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-white/15 px-4 py-2 text-xs font-bold text-white ring-1 ring-white/40 hover:bg-white/25 sm:text-sm">
@@ -318,39 +344,48 @@ export default function MarketerPitchCalculator() {
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
         <div className="space-y-4 lg:col-span-5">
-          <ProductPicker selectedId={calc.productId} onPick={pick} onCustom={custom} />
+          {/* Calculator first; the product list sits below it. */}
           {inputs}
+          <ProductPicker selectedId={calc.productId} onPick={pick} onCustom={custom} />
         </div>
         <div className="space-y-4 lg:col-span-7">
           <Results m={metrics} />
           <div className="flex flex-wrap justify-end gap-2">
             <button type="button" onClick={download} className={secondary}><Download size={15} aria-hidden="true" /> {t("Download as image", "ছবি হিসেবে ডাউনলোড")}</button>
-            <button type="button" onClick={() => setFullScreen(true)} className={primary}><Maximize2 size={15} aria-hidden="true" /> {t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}</button>
+            <button type="button" onClick={openFull} className={primary}><Maximize2 size={15} aria-hidden="true" /> {t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}</button>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("An estimate for discussion — real results depend on ad performance.", "আলোচনার জন্য আনুমানিক হিসাব — আসল ফল অ্যাডের পারফরম্যান্সের উপর নির্ভর করে।")}</p>
         </div>
       </div>
 
-      {fullScreen && (
-        <div className="fixed inset-0 z-[60] overflow-y-auto bg-slate-50 p-4 dark:bg-slate-950 sm:p-8" role="dialog" aria-modal="true" aria-label={t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}>
-          <div className="mx-auto max-w-6xl space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Reseller Brain · {t("Client proposal", "ক্লায়েন্ট প্রস্তাব")}</p>
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">{t("Same money. More orders. Zero stock.", "একই টাকা। বেশি অর্ডার। শূন্য স্টক।")}</h2>
-                <p className="text-sm text-slate-600 dark:text-slate-300">
-                  {calc.productName && <b>{calc.productName} · </b>}
-                  {t("Budget", "বাজেট")} {num(metrics.budget, { money: true })} · CPA ${Number(metrics.cpaUsd).toFixed(2)} · {t("Selling", "বিক্রি")} {num(calc.sellingPrice, { money: true })}
-                </p>
+      {fullScreen && createPortal(
+        // Canvas mode: only the calculation, over the whole screen. The theme/language wrapper is
+        // repeated here because the portal is outside the panel's own wrapper.
+        <div className={theme === "dark" ? "dark" : ""} lang={lang}>
+          <div className="font-partner fixed inset-0 z-[1000] overflow-y-auto bg-slate-50 p-4 text-slate-900 dark:bg-slate-950 dark:text-slate-100 sm:p-6"
+            role="dialog" aria-modal="true" aria-label={t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}>
+            <div className="mx-auto max-w-7xl space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">Reseller Brain · {t("Client proposal", "ক্লায়েন্ট প্রস্তাব")}</p>
+                  <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white sm:text-3xl">{t("Same money. More orders. Zero stock.", "একই টাকা। বেশি অর্ডার। শূন্য স্টক।")}</h2>
+                  {calc.productName && <p className="mt-0.5 truncate text-sm font-semibold text-slate-600 dark:text-slate-300">{calc.productName}</p>}
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" onClick={download} className={secondary}><Download size={15} aria-hidden="true" /> {t("Download", "ডাউনলোড")}</button>
+                  <button type="button" onClick={closeFull} className={primary}><X size={15} aria-hidden="true" /> {t("Exit full screen", "ফুল-স্ক্রিন বন্ধ")}</button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={download} className={secondary}><Download size={15} aria-hidden="true" /> {t("Download", "ডাউনলোড")}</button>
-                <button type="button" onClick={() => setFullScreen(false)} className={primary}><X size={15} aria-hidden="true" /> {t("Close", "বন্ধ করুন")}</button>
+              {/* The calculator itself: change numbers live on the call, results update next to it. */}
+              <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-12">
+                <div className="lg:col-span-4">{inputs}</div>
+                <div className="lg:col-span-8"><Results m={metrics} big /></div>
               </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("An estimate for discussion — real results depend on ad performance.", "আলোচনার জন্য আনুমানিক হিসাব — আসল ফল অ্যাডের পারফরম্যান্সের উপর নির্ভর করে।")}</p>
             </div>
-            <Results m={metrics} big />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
