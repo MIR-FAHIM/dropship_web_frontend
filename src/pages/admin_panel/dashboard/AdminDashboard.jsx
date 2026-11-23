@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useGetAdminDashboardReportQuery } from "../../../redux/features/report";
 import { useGetUnacknowledgedPaidOrdersQuery } from "../../../redux/features/delivery_company/carrybeeWebhookApi";
 import CarrybeePaidOrderModal from "./CarrybeePaidOrderModal";
+import MoneyBoard from "./MoneyBoard";
 import {
   ShoppingBag,
   Package,
@@ -306,6 +307,9 @@ const AdminDashboard = () => {
           ))
         )}
       </div>
+
+      {/* Money board: who owes whom + admin's final income */}
+      <MoneyBoard />
 
       {/* Order Summary + Quick Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
