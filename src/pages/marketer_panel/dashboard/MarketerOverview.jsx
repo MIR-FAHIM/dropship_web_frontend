@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useGetMarketerOverviewQuery, useGetMyCommissionPayoutsQuery } from "../../../redux/features/marketerCommission";
+import { useGetMarketerToursQuery } from "../../../redux/features/marketerTours";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { workspacePath } from "../partnerWorkspaceData";
 import { useNumber, usePartnerPrefs } from "../partnerPrefs";
@@ -56,6 +57,8 @@ export default function MarketerOverview() {
     { period },
     { pollingInterval: 60000, refetchOnFocus: true, refetchOnReconnect: true }
   );
+  // F7: the tour goal comes from the server's milestones (same as the Tour Milestones tab).
+  const { data: toursData } = useGetMarketerToursQuery(undefined, { refetchOnFocus: true });
   const { data: payoutData } = useGetMyCommissionPayoutsQuery({ per_page: 5 }, { pollingInterval: 60000 });
   const o = data?.data;
   const totals = o?.totals || {};
@@ -78,8 +81,10 @@ export default function MarketerOverview() {
 
   const delivered = totals.orders_delivered || 0;
   // The tour goal always counts every delivered order, whatever period is selected.
-  const tourDelivered = totals.orders_delivered_all_time ?? delivered;
-  const tour = TOURS.find((x) => tourDelivered < x.target) || TOURS[TOURS.length - 1];
+  const tourApi = toursData?.data;
+  const tourDelivered = tourApi?.delivered_orders ?? totals.orders_delivered_all_time ?? delivered;
+  const tourList = tourApi?.milestones?.length ? tourApi.milestones : TOURS;
+  const tour = tourApi?.current || tourList.find((x) => tourDelivered < x.target) || tourList[tourList.length - 1];
   const tourPct = Math.min(100, Math.round((tourDelivered / tour.target) * 100));
   const name = o?.marketer?.business_name || o?.marketer?.name || user?.name || "Partner";
   const initials = (o?.marketer?.name || user?.name || "RB").trim().split(/\s+/).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
@@ -186,6 +191,9 @@ export default function MarketerOverview() {
             <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500" style={{ width: `${tourPct}%` }} />
           </div>
           <span className="mt-1 inline-block text-[11px] text-slate-500 dark:text-slate-400">{t(tour.en, tour.bn)}</span>
+          <Link to={`${workspacePath}/tours`} className="mt-1 block text-[11px] font-bold text-amber-700 hover:underline dark:text-amber-400">
+            {t("See all tour milestones →", "সব ট্যুর মাইলস্টোন দেখুন →")}
+          </Link>
         </Kpi>
       </div>
 

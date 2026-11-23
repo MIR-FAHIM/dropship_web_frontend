@@ -19,7 +19,7 @@ const tabs = [
   { to: `${workspacePath}/earnings`, icon: "💸", en: "Earnings", bn: "আয়" },
   { to: `${workspacePath}/pitch`, icon: "🧮", en: "Client Pitch Calculator", bn: "পিচ ক্যালকুলেটর" },
   { to: `${workspacePath}/sourcing`, icon: "📦", en: "Product Sourcing Request", bn: "প্রোডাক্ট সোর্সিং" },
-  { soon: true, icon: "✈️", en: "Tour Milestones", bn: "ট্যুর মাইলস্টোন" },
+  { to: `${workspacePath}/tours`, icon: "✈️", en: "Tour Milestones", bn: "ট্যুর মাইলস্টোন" },
   { to: `${workspacePath}/winning`, icon: "🔥", en: "Winning Products", bn: "উইনিং প্রোডাক্ট" },
   { to: `${workspacePath}/profile`, icon: "👤", en: "Profile", bn: "প্রোফাইল" },
 ];

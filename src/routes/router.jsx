@@ -108,6 +108,7 @@ import MarketerEarnings from "../pages/marketer_panel/earnings/MarketerEarnings"
 import MarketerSourcing from "../pages/marketer_panel/sourcing/MarketerSourcing";
 import MarketerPitchCalculator from "../pages/marketer_panel/pitch/MarketerPitchCalculator";
 import MarketerWinningProducts from "../pages/marketer_panel/winning/MarketerWinningProducts";
+import MarketerTours from "../pages/marketer_panel/tours/MarketerTours";
 import MarketerClients from "../pages/marketer_panel/clients/MarketerClients";
 import MarketerInvitations from "../pages/marketer_panel/invitations/MarketerInvitations";
 import MarketerProfile from "../pages/marketer_panel/MarketerProfile";
@@ -292,6 +293,7 @@ export const router = createBrowserRouter([
       { path: "sourcing", element: <MarketerSourcing /> },
       { path: "pitch", element: <MarketerPitchCalculator /> },
       { path: "winning", element: <MarketerWinningProducts /> },
+      { path: "tours", element: <MarketerTours /> },
       { path: "profile", element: <MarketerProfile /> },
     ],
   },
