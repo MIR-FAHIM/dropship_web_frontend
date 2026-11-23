@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import DropshipperPayoutReview from "./DropshipperPayoutReview";
+import OrderMoneyStory from "./OrderMoneyStory";
 import {
   calculateOrderStakeBreakdown,
   formatBDT,
@@ -80,18 +81,21 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         0
     );
 
+    // The server's figures come first: once synced they are CarryBee's final invoice line.
     const deliveryFee = Number(
-      del?.delivery_fee !== undefined &&
-        del?.delivery_fee !== null &&
-        Number(del.delivery_fee) > 0
-        ? del.delivery_fee
-        : (serverData?.courier?.delivery_fee ??
-            clientCalc?.courier?.delivery_fee ??
-            0)
+      serverData?.courier?.delivery_fee !== undefined && serverData?.courier?.delivery_fee !== null
+        ? serverData.courier.delivery_fee
+        : del?.delivery_fee !== undefined &&
+          del?.delivery_fee !== null &&
+          Number(del.delivery_fee) > 0
+          ? del.delivery_fee
+          : (clientCalc?.courier?.delivery_fee ?? 0)
     );
 
     let codFee = 0;
-    if (
+    if (serverData?.courier?.cod_fee !== undefined && serverData?.courier?.cod_fee !== null) {
+      codFee = Number(serverData.courier.cod_fee);
+    } else if (
       del?.total_fee &&
       del?.delivery_fee &&
       Number(del.total_fee) > Number(del.delivery_fee)
@@ -99,12 +103,6 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
       codFee =
         Math.round((Number(del.total_fee) - Number(del.delivery_fee)) * 100) /
         100;
-    } else if (
-      serverData?.courier?.cod_fee !== undefined &&
-      serverData?.courier?.cod_fee !== null &&
-      Number(serverData.courier.cod_fee) > 0
-    ) {
-      codFee = Number(serverData.courier.cod_fee);
     } else if (
       clientCalc?.courier?.cod_fee !== undefined &&
       clientCalc?.courier?.cod_fee !== null &&
@@ -132,9 +130,12 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         0
     );
 
-    const supplierOwesPlatform = hasOwnDeliveryAccount
-      ? Math.max(0, Math.round((netDisbursed - vendorPrice) * 100) / 100)
-      : 0;
+    // Server value can be below 0 (e.g. a return charge the admin carries → admin will give to vendor).
+    const supplierOwesPlatform = serverData?.supplier?.supplier_owes_platform !== undefined
+      ? Number(serverData.supplier.supplier_owes_platform)
+      : hasOwnDeliveryAccount
+        ? Math.max(0, Math.round((netDisbursed - vendorPrice) * 100) / 100)
+        : 0;
     const platformOwesSupplier = !hasOwnDeliveryAccount
       ? Math.max(0, Math.round(vendorPrice * 100) / 100)
       : 0;
@@ -316,6 +317,9 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
   const isSettled = Boolean(
     b.supplier?.is_settled && b.dropshipper?.is_settled
   );
+  // Has CarryBee actually paid this order out yet? Until then the cash is with CarryBee.
+  const carrybeePaid = Boolean(order?.is_carrybee_paid || order?.carrybee_paid_at || order?.carrybee_invoice_id);
+  const vendorGives = Number(b.supplier?.supplier_owes_platform || 0);
 
   const handleCopyConsignment = (consignmentId) => {
     if (!consignmentId) return;
@@ -518,124 +522,8 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         </div>
       </div>
 
-      {/* Cash Flow Pipeline: Crystal Clear 4-Step Visual Flow for Admin */}
-      <div className="p-4 mx-5 my-4 rounded-xl bg-slate-50/80 border border-slate-200">
-        <div className="flex items-center justify-between mb-2.5">
-          <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-            <TrendingUp className="w-4 h-4 text-indigo-600" />
-            অর্ডারের টাকার গতিপ্রবাহ ও ক্যাশ ট্র্যাকিং (Cash Flow Pipeline)
-          </span>
-          <span className="text-[11px] font-semibold text-slate-600">
-            {b.supplier?.has_own_delivery_account ? (
-              <span className="text-amber-800 bg-amber-100 px-2 py-0.5 rounded font-mono border border-amber-300">
-                Vendor Own Courier Account (সরাসরি ভেন্ডরে জমা)
-              </span>
-            ) : (
-              <span className="text-blue-800 bg-blue-100 px-2 py-0.5 rounded font-mono border border-blue-300">
-                Platform Courier Account (প্ল্যাটফর্মে জমা)
-              </span>
-            )}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 text-xs">
-          {/* Step 1: Customer COD */}
-          <div className="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
-            <div className="flex items-center justify-between text-[11px] text-slate-500 mb-1">
-              <span className="font-semibold text-slate-700">১. সংগৃহীত COD</span>
-              <Check className="w-3.5 h-3.5 text-blue-500" />
-            </div>
-            <div className="text-sm font-bold font-mono text-slate-900">
-              {formatBDT(b.courier?.collectable_amount)}
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1">
-              কাস্টমার কর্তৃক কুরিয়ারে পরিশোধিত
-            </p>
-          </div>
-
-          {/* Step 2: Courier Auto Cut */}
-          <div className="p-3 bg-white rounded-lg border border-rose-200 shadow-2xs">
-            <div className="flex items-center justify-between text-[11px] text-rose-600 mb-1">
-              <span className="font-semibold">২. CarryBee ফি কাটতি</span>
-              <span className="text-[9px] bg-rose-50 text-rose-700 font-bold px-1 rounded border border-rose-200">
-                স্বয়ংক্রিয়
-              </span>
-            </div>
-            <div className="text-sm font-bold font-mono text-rose-600">
-              −{formatBDT(b.courier?.total_fee)}
-            </div>
-            <p className="text-[10px] text-slate-500 mt-1">
-              ডেলিভারি {formatBDT(b.courier?.delivery_fee)} + COD {formatBDT(b.courier?.cod_fee)} (উৎসস্থলেই নিষ্পন্ন)
-            </p>
-          </div>
-
-          {/* Step 3: Courier Net Payout */}
-          <div className="p-3 bg-white rounded-lg border border-emerald-300 shadow-2xs">
-            <div className="flex items-center justify-between text-[11px] text-emerald-800 mb-1">
-              <span className="font-bold">৩. অ্যাকাউন্টে জমাকৃত নিট ক্যাশ</span>
-              <span className="text-[9px] bg-emerald-50 text-emerald-800 font-bold px-1.5 py-0.2 rounded border border-emerald-300">
-                Disbursed
-              </span>
-            </div>
-            <div className="text-sm font-extrabold font-mono text-emerald-700">
-              {formatBDT(b.courier?.net_to_supplier)}
-            </div>
-            <p className="text-[10px] text-emerald-900 font-medium mt-1">
-              {b.supplier?.has_own_delivery_account
-                ? `👉 সরাসরি ${b.supplier?.shop_name}-এর CarryBee অ্যাকাউন্টে জমা`
-                : "👉 প্ল্যাটফর্মের সেন্ট্রাল CarryBee অ্যাকাউন্টে জমা"}
-            </p>
-          </div>
-
-          {/* Step 4: Net Invoiced / Settled */}
-          <div className="p-3 bg-white rounded-lg border border-amber-300 shadow-2xs bg-amber-50/20">
-            <div className="flex items-center justify-between text-[11px] text-amber-900 font-bold mb-1">
-              <span>৪. চূড়ান্ত সেটেলমেন্ট</span>
-              <span className="text-[9px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded border border-amber-300">
-                অ্যাডমিন করণীয়
-              </span>
-            </div>
-            <div className="text-sm font-extrabold font-mono text-amber-950">
-              {b.supplier?.has_own_delivery_account
-                ? formatBDT(b.supplier?.supplier_owes_platform)
-                : formatBDT(b.supplier?.platform_owes_supplier)}
-            </div>
-            <p className="text-[10px] text-amber-900 mt-1">
-              {b.supplier?.has_own_delivery_account
-                ? "ভেন্ডর থেকে আদায়/ইনভয়েস করুন"
-                : "ভেন্ডরকে পাইকারি মূল্য পরিশোধ করুন"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Vendor Own Delivery Account Alert */}
-      <div
-        className={`mx-5 mb-4 p-3.5 rounded-xl border text-xs flex items-start gap-3 ${
-          b.supplier?.has_own_delivery_account
-            ? "bg-amber-50/90 border-amber-300 text-amber-950"
-            : "bg-blue-50/90 border-blue-300 text-blue-950"
-        }`}
-      >
-        <Store className="w-4 h-4 shrink-0 mt-0.5 text-amber-700" />
-        <div className="flex-1">
-          {b.supplier?.has_own_delivery_account ? (
-            <p>
-              <span className="font-bold">
-                ⚠️ Supplier V{b.supplier?.vendor_id} ({b.supplier?.shop_name})-এর নিজস্ব CarryBee ডেলিভারি অ্যাকাউন্ট রয়েছে (has_own_delivery_account: true)।
-              </span>{" "}
-              CarryBee কুরিয়ার থেকে কাস্টমারের সম্পূর্ণ ক্যাশ সরাসরি ভেন্ডরের ব্যাংক/ওয়ালেটে জমা হয়েছে (প্ল্যাটফর্মে আসেনি)। ভেন্ডর তার পণ্যের পাইকারি দাম (<strong>{formatBDT(b.supplier?.vendor_price)}</strong>) রেখে বাকি অতিরিক্ত <strong>{formatBDT(b.supplier?.supplier_owes_platform)}</strong> টাকা প্ল্যাটফর্মকে ফেরত দেবে। এর বিপরীতে ইনভয়েস তৈরি করতে হবে।
-            </p>
-          ) : (
-            <p>
-              <span className="font-bold">
-                প্ল্যাটফর্মের সেন্ট্রাল ডেলিভারি অ্যাকাউন্ট:
-              </span>{" "}
-              কুরিয়ারের সম্পূর্ণ ক্যাশ প্ল্যাটফর্মের সেন্ট্রাল অ্যাকাউন্টে জমা হয়েছে। প্ল্যাটফর্ম ভেন্ডরকে পণ্যের পাইকারি মূল্য <strong>{formatBDT(b.supplier?.platform_owes_supplier)}</strong> প্রদান করবে।
-            </p>
-          )}
-        </div>
-      </div>
+      {/* The order's money story, step by step, following CarryBee's settlement */}
+      <OrderMoneyStory order={order} b={b} server={serverBreakdownData?.data} />
 
       {/* Auto-balancing dynamic status banner */}
       <div
@@ -660,7 +548,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
             ) : b.balance?.is_balanced ? (
               <>
                 <strong className="font-bold">১০০% সমন্বিত ও ব্যালেন্সড:</strong>{" "}
-                সাপ্লায়ার দেবে ({formatBDT(b.supplier?.supplier_owes_platform)}) ={" "}
+                ভেন্ডর অ্যাডমিনকে দেবে ({formatBDT(b.supplier?.supplier_owes_platform)}) ={" "}
                 ড্রপশিপার প্রফিট ({formatBDT(b.dropshipper?.profit)}) + প্ল্যাটফর্ম
                 লাভ ({formatBDT(b.platform?.net_profit)})
               </>
@@ -695,6 +583,7 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
         </div>
       )}
 
+      <div className="mx-5 mb-2 text-xs font-bold text-gray-700">বিস্তারিত হিসাব — প্রতিটি পক্ষের অংশ</div>
       {/* 4-Stakes Detailed Grid */}
       <div className="p-5 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Stake 1: Courier CarryBee */}
@@ -812,17 +701,22 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
           <div className="pt-3 mt-3 border-t border-gray-200 bg-gray-50/70 -mx-4 -mb-4 p-3.5 rounded-b-xl">
             <div className="flex items-center justify-between mb-1">
               <span className="text-[11px] font-bold text-gray-700">
-                কুরিয়ার থেকে নিট জমাকৃত ক্যাশ:
+                {carrybeePaid ? "CarryBee নিট জমা দিয়েছে:" : "CarryBee নিট জমা দেবে (আনুমানিক):"}
               </span>
-              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-                ✓ Disbursed
-              </span>
+              {carrybeePaid ? (
+                <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">✓ CarryBee দিয়েছে</span>
+              ) : (
+                <span className="text-[10px] font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-300">⏳ CarryBee এখনো দেয়নি</span>
+              )}
             </div>
-            <span className="text-base font-extrabold text-emerald-700 font-mono block">
+            <span className={`text-base font-extrabold font-mono block ${carrybeePaid ? "text-emerald-700" : "text-amber-800"}`}>
               {formatBDT(b.courier?.net_to_supplier)}
             </span>
             <p className="text-[10px] text-gray-600 mt-1.5 leading-normal">
-              * CarryBee মোট <strong>{formatBDT(b.courier?.total_fee)}</strong> টাকা চার্জ স্বয়ংক্রিয়ভাবে পূর্বেই কেটে রেখে অবশিষ্ট এই <strong>{formatBDT(b.courier?.net_to_supplier)}</strong> টাকা সরাসরি {b.supplier?.has_own_delivery_account ? `সাপ্লায়ার (${b.supplier?.shop_name})-এর অ্যাকাউন্টে` : "প্ল্যাটফর্ম অ্যাকাউন্টে"} জমা করেছে।
+              {carrybeePaid ? "* CarryBee মোট " : "* টাকা এখন CarryBee-র কাছে। CarryBee আনুমানিক "}
+              <strong>{formatBDT(b.courier?.total_fee)}</strong> চার্জ কেটে <strong>{formatBDT(b.courier?.net_to_supplier)}</strong>{" "}
+              {b.supplier?.has_own_delivery_account ? `ভেন্ডর (${b.supplier?.shop_name})-এর CarryBee অ্যাকাউন্টে` : "প্ল্যাটফর্মের CarryBee অ্যাকাউন্টে"}
+              {carrybeePaid ? " দিয়েছে।" : " দেবে।"}
             </p>
           </div>
         </div>
@@ -872,15 +766,13 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
                 )}
               </div>
               <div className="p-2 bg-amber-50 rounded-lg text-[11px] text-amber-900 leading-tight">
-                {b.supplier?.has_own_delivery_account ? (
-                  <span>
-                    ভেন্ডর কাস্টমারের পুরো টাকা পেয়েছে। পণ্যের দাম রেখে বাকি টাকা প্ল্যাটফর্মকে ফেরত দেবে।
-                  </span>
-                ) : (
-                  <span>
-                    টাকা প্ল্যাটফর্মে এসেছে। প্ল্যাটফর্ম ভেন্ডরকে পণ্যের দাম পরিশোধ করবে।
-                  </span>
-                )}
+                {b.supplier?.has_own_delivery_account
+                  ? carrybeePaid
+                    ? "CarryBee টাকা ভেন্ডরের নিজস্ব অ্যাকাউন্টে দিয়েছে। ভেন্ডর পাইকারি দাম রেখে বাকিটা অ্যাডমিনকে দেবে।"
+                    : "CarryBee টাকা দিলে তা ভেন্ডরের নিজস্ব অ্যাকাউন্টে যাবে। তখন ভেন্ডর পাইকারি দাম রেখে বাকিটা অ্যাডমিনকে দেবে।"
+                  : carrybeePaid
+                    ? "CarryBee টাকা প্ল্যাটফর্মের অ্যাকাউন্টে দিয়েছে। অ্যাডমিন ভেন্ডরকে পাইকারি দাম দেবে।"
+                    : "CarryBee টাকা দিলে তা প্ল্যাটফর্মের অ্যাকাউন্টে আসবে। তখন অ্যাডমিন ভেন্ডরকে পাইকারি দাম দেবে।"}
               </div>
             </div>
           </div>
@@ -889,13 +781,15 @@ export default function FinancialStakeBreakdownCard({ order, refetchOrder }) {
           <div className="pt-3 mt-3 border-t border-amber-200 bg-amber-50/60 -mx-4 -mb-4 p-3.5 rounded-b-xl">
             <span className="text-[11px] text-amber-900 block font-bold">
               {b.supplier?.has_own_delivery_account
-                ? "সাপ্লায়ার প্ল্যাটফর্মকে ফেরত দেবে (Invoiced):"
-                : "প্ল্যাটফর্ম সাপ্লায়ারকে প্রদান করবে:"}
+                ? vendorGives < 0
+                  ? "অ্যাডমিন ভেন্ডরকে দেবে:"
+                  : "ভেন্ডর অ্যাডমিনকে দেবে (ইনভয়েস):"
+                : "অ্যাডমিন ভেন্ডরকে দেবে:"}
             </span>
             <span className="text-base font-extrabold text-amber-950 font-mono block mt-0.5">
               {formatBDT(
                 b.supplier?.has_own_delivery_account
-                  ? b.supplier?.supplier_owes_platform
+                  ? Math.abs(vendorGives)
                   : b.supplier?.platform_owes_supplier
               )}
             </span>
