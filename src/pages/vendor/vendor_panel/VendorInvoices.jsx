@@ -34,6 +34,7 @@ import { useGetVendorIdQuery } from "../../../redux/features/vendor_api";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
 import { formatBDT } from "../../../utils/orderBreakdown.utils";
 import InvoiceAdjustmentNote from "../../../components/shared/InvoiceAdjustmentNote";
+import { GiveCell, PenaltyBadge, PenaltySummary, courierNet } from "../../../components/shared/InvoiceGiveParts";
 
 
 const getProductImgUrl = (thumbnail) => {
@@ -684,7 +685,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
                       <th className="py-2 px-3 text-left">অর্ডার নম্বর</th>
                       <th className="py-2 px-3 text-right">কুরিয়ার জমা (নিট)</th>
                       <th className="py-2 px-3 text-right">পণ্যের পাইকারি মূল্য</th>
-                      <th className="py-2 px-3 text-right font-bold text-amber-900">প্ল্যাটফর্মকে প্রদেয়</th>
+                      <th className="py-2 px-3 text-right font-bold text-amber-900">আপনি ↔ অ্যাডমিন</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -738,6 +739,7 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
                               <div className="font-mono font-semibold text-gray-800 leading-tight">
                                 {b.order_number || `#${invoice.order_ids?.[idx] || ""}`}
                               </div>
+                              <PenaltyBadge penalty={b.return_penalty} />
                               {Array.isArray(b.items) && b.items.length > 0 && (
                                 <div className="flex flex-col gap-0.5 mt-0.5">
                                   {b.items.map((item, iIdx) => (
@@ -760,19 +762,22 @@ export function InvoicePaymentModal({ invoice, onClose, onSuccess }) {
                             </div>
                           </div>
                         </td>
-                        <td className="py-2 px-3 text-right font-mono">
-                          {formatBDT(b.courier?.net_received_by_supplier || b.courier?.net_to_supplier)}
+                        <td className={`py-2 px-3 text-right font-mono ${courierNet(b) < 0 ? "text-rose-700" : ""}`}>
+                          {courierNet(b) < 0 ? `−${formatBDT(-courierNet(b))}` : formatBDT(courierNet(b))}
                         </td>
                         <td className="py-2 px-3 text-right font-mono text-blue-700">
                           {formatBDT(b.supplier?.vendor_price)}
                         </td>
-                        <td className="py-2 px-3 text-right font-mono font-bold text-amber-900">
-                          {formatBDT(b.supplier?.supplier_owes_platform)}
+                        <td className="py-2 px-3">
+                          <GiveCell amount={b.supplier?.supplier_owes_platform} vendorView />
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                <div className="mt-2">
+                  <PenaltySummary breakdowns={invoice.orders_breakdown} vendorView />
+                </div>
               </div>
             )}
           </div>

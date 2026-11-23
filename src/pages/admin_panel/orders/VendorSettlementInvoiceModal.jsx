@@ -19,6 +19,7 @@ import {
 } from "../../../utils/orderBreakdown.utils";
 import { useCreateVendorInvoiceMutation, useGetAdminPaymentAccountsQuery } from "../../../redux/features/orderSettlement";
 import FinalAmountField, { finalAmountMissingReason, finalAmountPayload, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
+import { GiveCell, PenaltyBadge, PenaltySummary } from "../../../components/shared/InvoiceGiveParts";
 
 const getOrderStatusName = (order) => {
   const status = order?.status ?? order?.order_status;
@@ -284,10 +285,10 @@ export default function VendorSettlementInvoiceModal({
             </div>
             <div className="text-right">
               <span className="text-[11px] text-amber-700 block">
-                সাপ্লায়ার প্ল্যাটফর্মকে দেবে (Invoiced Amount):
+                {totals.supplier_owes < 0 ? "অ্যাডমিন ভেন্ডরকে দেবে" : "ভেন্ডর অ্যাডমিনকে দেবে"} (Invoiced Amount):
               </span>
               <span className="text-base font-extrabold text-amber-950 font-mono">
-                {formatBDT(totals.supplier_owes)}
+                {formatBDT(Math.abs(totals.supplier_owes))}
               </span>
             </div>
           </div>
@@ -334,7 +335,7 @@ export default function VendorSettlementInvoiceModal({
                     </th>
                     <th className="py-2.5 px-3 text-right">পাইকারি মূল্য</th>
                     <th className="py-2.5 px-3 text-right font-bold text-amber-900 bg-amber-50/60">
-                      সাপ্লায়ার দেবে
+                      ভেন্ডর ↔ অ্যাডমিন
                     </th>
                     <th className="py-2.5 px-3 text-right text-emerald-800">
                       ড্রপশিপার লাভ
@@ -358,6 +359,7 @@ export default function VendorSettlementInvoiceModal({
                             {b.consignment_id}
                           </div>
                         )}
+                        <PenaltyBadge penalty={b?.return_penalty} />
                       </td>
                       <td className="py-2 px-3 text-left">
                         <span className={`inline-flex whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold ${isRedMarked ? "border-red-300 bg-red-100 text-red-800" : "border-gray-200 bg-gray-100 text-gray-700"}`}>
@@ -385,8 +387,8 @@ export default function VendorSettlementInvoiceModal({
                       <td className="py-2 px-3 text-right font-mono">
                         {formatBDT(b?.supplier?.vendor_price)}
                       </td>
-                      <td className="py-2 px-3 text-right font-mono font-bold text-amber-900 bg-amber-50/40">
-                        {formatBDT(b?.supplier?.supplier_owes_platform)}
+                      <td className="py-2 px-3 bg-amber-50/40">
+                        <GiveCell amount={b?.supplier?.supplier_owes_platform} />
                       </td>
                       <td className="py-2 px-3 text-right font-mono text-emerald-700">
                         {formatBDT(b?.dropshipper?.profit)}
@@ -418,8 +420,8 @@ export default function VendorSettlementInvoiceModal({
                     <td className="py-2.5 px-3 text-right font-mono">
                       {formatBDT(totals.vendor_price)}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-extrabold text-amber-950 bg-amber-100">
-                      {formatBDT(totals.supplier_owes)}
+                    <td className="py-2.5 px-3 bg-amber-100">
+                      <GiveCell amount={totals.supplier_owes} />
                     </td>
                     <td className="py-2.5 px-3 text-right font-mono text-emerald-800 bg-emerald-50">
                       {formatBDT(totals.dropshipper_profit)}
@@ -432,6 +434,8 @@ export default function VendorSettlementInvoiceModal({
               </table>
             </div>
           </div>
+
+          <PenaltySummary breakdowns={orderBreakdowns.map(({ breakdown }) => breakdown)} />
 
           {/* Form for Settlement Record */}
           <form id="vendor-settlement-form" onSubmit={handleSubmit} className="space-y-4 pt-2">
