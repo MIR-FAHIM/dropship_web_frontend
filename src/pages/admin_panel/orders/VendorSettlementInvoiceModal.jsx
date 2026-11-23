@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   X,
   FileText,
@@ -17,9 +17,17 @@ import {
   calculateOrderStakeBreakdown,
   formatBDT,
 } from "../../../utils/orderBreakdown.utils";
-import { useCreateVendorInvoiceMutation, useGetAdminPaymentAccountsQuery } from "../../../redux/features/orderSettlement";
+import { useCreateVendorInvoiceMutation, useGetAdminPaymentAccountsQuery, useLazyGetOrderBreakdownQuery } from "../../../redux/features/orderSettlement";
 import FinalAmountField, { finalAmountMissingReason, finalAmountPayload, resolveFinalAmount } from "../../../components/shared/FinalAmountField";
-import { GiveCell, PenaltyBadge, PenaltySummary } from "../../../components/shared/InvoiceGiveParts";
+import { GiveCell, PenaltyBadge, PenaltySummary, courierNet } from "../../../components/shared/InvoiceGiveParts";
+import CarrybeeInvoiceCheck from "./CarrybeeInvoiceCheck";
+
+// Server breakdown (the one the invoice is really built from: CarryBee-matched, with return penalties)
+// in the field names this modal's table uses.
+const fromServerBreakdown = (s) => ({
+  ...s,
+  courier: { ...s.courier, total_fee: s.courier?.total_courier_fee, net_to_supplier: courierNet(s) },
+});
 
 const getOrderStatusName = (order) => {
   const status = order?.status ?? order?.order_status;
@@ -117,13 +125,35 @@ export default function VendorSettlementInvoiceModal({
     };
   }, [selectedOrders]);
 
-  // Compute breakdown for each selected order using enriched data
+  // Server figures for each order: the invoice is created from these, so the preview must show them.
+  const [fetchBreakdown] = useLazyGetOrderBreakdownQuery();
+  const [serverBreakdowns, setServerBreakdowns] = useState({});
+  const [breakdownVersion, setBreakdownVersion] = useState(0);
+  useEffect(() => {
+    let alive = true;
+    Promise.all(
+      selectedOrders.map((o) =>
+        fetchBreakdown(o.id, false).unwrap().then((r) => [o.id, r?.data || null]).catch(() => [o.id, null])
+      )
+    ).then((pairs) => alive && setServerBreakdowns(Object.fromEntries(pairs)));
+    return () => {
+      alive = false;
+    };
+  }, [selectedOrders, breakdownVersion, fetchBreakdown]);
+
+  // CarryBee check result (blockers stop a wrong invoice from being created).
+  const [cbStatus, setCbStatus] = useState({ loading: true, blockers: [] });
+  const onCbStatus = useCallback((s) => setCbStatus(s), []);
+  const cbBlocked = cbStatus.loading || cbStatus.blockers.length > 0;
+
+  // Breakdown per order: server figures when loaded, the browser estimate until then.
   const orderBreakdowns = useMemo(() => {
     return enrichedOrders.map((order) => ({
       order,
-      breakdown: calculateOrderStakeBreakdown(order),
+      breakdown: serverBreakdowns[order.id] ? fromServerBreakdown(serverBreakdowns[order.id]) : calculateOrderStakeBreakdown(order),
     }));
-  }, [enrichedOrders]);
+  }, [enrichedOrders, serverBreakdowns]);
+  const serverLoaded = enrichedOrders.every((o) => serverBreakdowns[o.id]);
 
   // Aggregate sums matching Google Doc "Sum — Supplier V41"
   const totals = useMemo(() => {
@@ -181,6 +211,11 @@ export default function VendorSettlementInvoiceModal({
 
     if (missingReason) {
       toast.error("চূড়ান্ত পরিমাণ পরিবর্তনের কারণ লিখুন (Reason required)");
+      return;
+    }
+
+    if (cbBlocked) {
+      toast.error(cbStatus.blockers[0] || "CarryBee যাচাই শেষ হওয়া পর্যন্ত অপেক্ষা করুন");
       return;
     }
 
@@ -292,6 +327,18 @@ export default function VendorSettlementInvoiceModal({
               </span>
             </div>
           </div>
+
+          {/* CarryBee invoice check: every order matched to CarryBee's final invoice before invoicing */}
+          <CarrybeeInvoiceCheck
+            vendor={vendor}
+            orders={enrichedOrders}
+            invoiceAmount={calculatedOwed}
+            onStatus={onCbStatus}
+            onChanged={() => setBreakdownVersion((v) => v + 1)}
+          />
+          {!serverLoaded && (
+            <p className="text-[11px] text-gray-500">সার্ভার থেকে চূড়ান্ত হিসাব লোড হচ্ছে… (ততক্ষণ আনুমানিক হিসাব দেখানো হচ্ছে)</p>
+          )}
 
           {/* Courier Deduction Pre-settled Notice */}
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-xs text-blue-900 flex items-start gap-2.5">
@@ -551,7 +598,8 @@ export default function VendorSettlementInvoiceModal({
             <button
               type="submit"
               form="vendor-settlement-form"
-              disabled={isSubmitting || (isPaidDirectly && !form.trx_id.trim()) || missingReason}
+              disabled={isSubmitting || (isPaidDirectly && !form.trx_id.trim()) || missingReason || cbBlocked}
+              title={cbBlocked ? (cbStatus.blockers[0] || "CarryBee যাচাই চলছে…") : undefined}
               className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
               style={{ backgroundColor: "#dc2626", color: "#ffffff" }}
             >

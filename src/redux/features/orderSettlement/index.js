@@ -197,6 +197,7 @@ export const {
   useSettleNowOrderSettlementMutation,
   useAddSettledTrxIdOrderSettlementMutation,
   useGetOrderBreakdownQuery,
+  useLazyGetOrderBreakdownQuery,
   useUpdateOrderBreakdownMutation,
   useDisburseResellerProfitMutation,
   useCreateVendorInvoiceMutation,
