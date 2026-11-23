@@ -211,6 +211,7 @@ const AdminCarrybeeReconcile = () => {
                   <th className="px-3 py-2 text-right">CarryBee collected</th>
                   <th className="px-3 py-2 text-right">Delivery / COD fee</th>
                   <th className="px-3 py-2 text-right">CarryBee net</th>
+                  <th className="px-3 py-2 text-right">{isVendor ? "Vendor keeps" : "Supplier price"}</th>
                   <th className="px-3 py-2 text-right">Vendor owes</th>
                   <th className="px-3 py-2 text-right">Dropshipper profit</th>
                   <th className="px-3 py-2 text-left">Return charge</th>
@@ -229,6 +230,14 @@ const AdminCarrybeeReconcile = () => {
                     <td className="px-3 py-2 text-right">{tk(r.collected)}</td>
                     <td className="px-3 py-2 text-right text-gray-700">{tk(r.delivery_fee)}<div className="text-[11px]">COD {tk(r.cod_fee)}</div></td>
                     <td className="px-3 py-2 text-right font-semibold">{tk(r.carrybee_net)}</td>
+                    <td className="px-3 py-2 text-right">
+                      {r.returned ? <span className="text-gray-400">—</span> : (
+                        <>
+                          <div className="font-semibold text-gray-900">{tk(r.supplier_price)}</div>
+                          <div className="text-[11px] text-gray-500">{isVendor ? "supplier price" : "admin pays vendor"}</div>
+                        </>
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-right">
                       <div className="font-semibold text-gray-900">{tk(r.vendor_owes)}</div>
                       <Recorded correct={r.vendor_owes} settlement={r.vendor_settlement} />
@@ -261,7 +270,7 @@ const AdminCarrybeeReconcile = () => {
 
           <section className="rounded-xl border border-gray-200 bg-white p-4 text-xs text-gray-700">
             <h2 className="mb-1 text-sm font-bold text-gray-900">How it is worked out</h2>
-            <p><b>CarryBee net</b> = collected − delivery fee − COD fee (what CarryBee paid into the account). <b>Vendor owes</b> (own CarryBee account) = CarryBee net − supplier price.
+            <p><b>CarryBee net</b> = collected − delivery fee − COD fee (what CarryBee paid into the account). <b>Vendor keeps</b> = the supplier price of the order. <b>Vendor owes</b> (own CarryBee account) = CarryBee net − what the vendor keeps.
               <b> Dropshipper profit</b> = collected − admin price − customer delivery charge − COD fee, never below ৳0 (the platform absorbs the rest).</p>
             <p className="mt-1"><b>Return charge</b>: what CarryBee charged for a returned parcel (return delivery + return fee − any cash). Pick who pays: <b>Vendor</b> keeps the loss;
               <b> Admin</b> or <b>Dropshipper</b> — the vendor is credited, and with Dropshipper the dropshipper owes it (taken from their return deposit).</p>
