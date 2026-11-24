@@ -156,6 +156,11 @@ const AdminCarrybeeReconcile = () => {
       {lastSync && (
         <div className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-gray-800">
           Last sync: {lastSync.invoices} CarryBee invoices, {lastSync.lines} parcel lines read, {lastSync.orders.length} orders checked, <b>{lastSync.changed} corrected</b>, <b>{lastSync.flags} flagged</b>.
+          {lastSync.recovered_paid?.length > 0 && (
+            <span className="ml-1 font-semibold text-emerald-800">
+              CarryBee had already paid {lastSync.recovered_paid.join(", ")} but we never got the &quot;paid&quot; message — now marked paid and settlement started.
+            </span>
+          )}
           {lastSync.error && <span className="ml-1 text-rose-700">{lastSync.error}</span>}
         </div>
       )}
