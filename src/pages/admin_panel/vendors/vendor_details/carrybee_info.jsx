@@ -152,8 +152,13 @@ const CredentialModal = ({ vendorId, initial, onClose, onSaved }) => {
               checked={form.is_active}
               onChange={set("is_active")}
             />
-            <span className="text-sm text-gray-700">Active</span>
+            <span className="text-sm text-gray-700">Active (current account for new parcels)</span>
           </label>
+          <p className="-mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            Vendor moved to a new CarryBee account? Save the <b>old</b> account here with <b>Active unticked</b> and a note
+            like &quot;Old account, until Nov 2026&quot;. It is never used for new parcels; Sync with CarryBee reads its past invoices
+            so old orders can still be matched. Keep only one account Active.
+          </p>
 
           <div className="flex justify-end gap-3 pt-2">
             <button
@@ -269,7 +274,7 @@ const CarryBeeInfo = ({ vendorId }) => {
                   ) : (
                     <XCircle className="w-3 h-3" />
                   )}
-                  {cred.is_active ? "Active" : "Inactive"}
+                  {cred.is_active ? "Active — current account" : "Old account — history only"}
                 </span>
               </div>
 
