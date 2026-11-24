@@ -22,8 +22,10 @@ import {
 import { toast } from "sonner";
 import {
   useCreateLeadMutation,
+  useCreateLeadRoleMutation,
   useCreateLeadTagMutation,
   useDeleteLeadMutation,
+  useGetLeadRolesQuery,
   useGetLeadStatsQuery,
   useGetLeadTagsQuery,
   useGetLeadsQuery,
@@ -37,7 +39,7 @@ import LeadEditModal from "./LeadEditModal";
 import {
   FOLLOWUP_TAGS,
   LEAD_STATUSES,
-  ROLES,
+  buildRoleOptions,
   findOption,
   formatDateTime,
   isOverdue,
@@ -68,13 +70,15 @@ const StatCard = ({ label, value, className, active, onClick }) => (
 );
 
 /** Quick "New lead" form (top of the page, like the demo). */
-const QuickAddLead = ({ tags }) => {
+const QuickAddLead = ({ tags, roles }) => {
   const empty = { role: "dropshipper", name: "", phone: "", page_link: "", product_tag_id: "", note: "" };
   const [form, setForm] = useState(empty);
   const [newTag, setNewTag] = useState(null);
+  const [newRole, setNewRole] = useState(null); // null = dropdown, string = typing a new role
   const [error, setError] = useState("");
   const [createLead, { isLoading }] = useCreateLeadMutation();
   const [createTag, { isLoading: savingTag }] = useCreateLeadTagMutation();
+  const [createRole, { isLoading: savingRole }] = useCreateLeadRoleMutation();
   const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
 
   const submit = async (e) => {
@@ -104,6 +108,18 @@ const QuickAddLead = ({ tags }) => {
     }
   };
 
+  const addRole = async () => {
+    if (!newRole?.trim()) return;
+    try {
+      const res = await createRole(newRole.trim()).unwrap();
+      setForm((f) => ({ ...f, role: res?.data?.value || f.role }));
+      setNewRole(null);
+      toast.success(`Role "${res?.data?.label || newRole.trim()}" added`);
+    } catch (err) {
+      toast.error(err?.data?.errors?.label?.[0] || "Could not add the role");
+    }
+  };
+
   const addTag = async () => {
     if (!newTag?.trim()) return;
     try {
@@ -122,12 +138,42 @@ const QuickAddLead = ({ tags }) => {
         <UserPlus className="h-4 w-4 text-indigo-600" /> New lead
       </h2>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 lg:items-end 2xl:grid-cols-[160px_1fr_1fr_1.2fr_1fr_1.3fr_auto]">
-        <label className="text-xs font-semibold text-gray-600">
+        <div className="text-xs font-semibold text-gray-600">
           Role
-          <select className={`${input} mt-1 w-full`} value={form.role} onChange={set("role")}>
-            {ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-          </select>
-        </label>
+          {newRole === null ? (
+            <div className="mt-1 flex gap-1">
+              <select className={`${input} w-full min-w-0`} value={form.role} onChange={set("role")} aria-label="Role">
+                {roles.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+              <button type="button" onClick={() => setNewRole("")} title="Add a new role" aria-label="Add a new role"
+                className="inline-flex w-9 shrink-0 items-center justify-center rounded-lg border border-indigo-400 bg-indigo-50 text-indigo-800 hover:bg-indigo-100">
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="mt-1 flex gap-1">
+              <input
+                className={`${input} w-full min-w-0`}
+                value={newRole}
+                onChange={(e) => setNewRole(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") { e.preventDefault(); addRole(); }
+                  if (e.key === "Escape") setNewRole(null);
+                }}
+                placeholder="New role, e.g. Marketer"
+                aria-label="New role name"
+                maxLength={60}
+                autoFocus
+              />
+              <button type="button" onClick={addRole} disabled={savingRole} className="rounded-lg border border-indigo-400 bg-indigo-50 px-2 text-xs font-bold text-indigo-800 disabled:opacity-60">
+                Add
+              </button>
+              <button type="button" onClick={() => setNewRole(null)} aria-label="Cancel" className="rounded-lg border border-gray-300 px-2 text-gray-500 hover:bg-gray-50">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
         <label className="text-xs font-semibold text-gray-600">
           Name
           <input className={`${input} mt-1 w-full`} value={form.name} onChange={set("name")} placeholder="Optional" />
@@ -252,6 +298,8 @@ const AdminLeadManager = () => {
   const lastPage = Number(pagination.last_page || 1);
   const stats = statsData?.data || {};
   const tags = Array.isArray(tagsData?.data) ? tagsData.data : [];
+  const { data: rolesData } = useGetLeadRolesQuery();
+  const ROLES = useMemo(() => buildRoleOptions(rolesData?.data), [rolesData]);
   const tagName = (id) => tags.find((t) => Number(t.id) === Number(id))?.name;
 
   const [noteLead, setNoteLead] = useState(null);
@@ -382,7 +430,7 @@ const AdminLeadManager = () => {
         </button>
       </div>
 
-      <QuickAddLead tags={tags} />
+      <QuickAddLead tags={tags} roles={ROLES} />
 
       {/* Leads & follow-up */}
       <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -559,7 +607,7 @@ const AdminLeadManager = () => {
       </div>
 
       {noteLead && <LeadNoteModal lead={noteLead} onClose={() => setNoteLead(null)} />}
-      {editLead && <LeadEditModal lead={editLead} tags={tags} onClose={() => setEditLead(null)} />}
+      {editLead && <LeadEditModal lead={editLead} tags={tags} roles={ROLES} onClose={() => setEditLead(null)} />}
     </div>
   );
 };

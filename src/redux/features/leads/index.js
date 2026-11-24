@@ -5,7 +5,7 @@ import baseApi from "../../api/baseApi";
 const clean = (params = {}) =>
   Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== "" && v !== "all"));
 
-const leadsApi = baseApi.injectEndpoints({
+const leadsApi = baseApi.enhanceEndpoints({ addTagTypes: ["LeadRole"] }).injectEndpoints({
   endpoints: (builder) => ({
     getLeads: builder.query({
       query: (params = {}) => ({ url: "/leads", params: clean(params) }),
@@ -47,6 +47,15 @@ const leadsApi = baseApi.injectEndpoints({
       query: (name) => ({ url: "/leads/tags", method: "POST", body: { name } }),
       invalidatesTags: ["LeadTag"],
     }),
+    // Lead roles: built-in dropshipper / supplier + the ones admins add with the "+" button.
+    getLeadRoles: builder.query({
+      query: () => "/leads/roles",
+      providesTags: ["LeadRole"],
+    }),
+    createLeadRole: builder.mutation({
+      query: (label) => ({ url: "/leads/roles", method: "POST", body: { label } }),
+      invalidatesTags: ["LeadRole"],
+    }),
   }),
 });
 
@@ -61,6 +70,8 @@ export const {
   useLeadFromDropshipperMutation,
   useGetLeadTagsQuery,
   useCreateLeadTagMutation,
+  useGetLeadRolesQuery,
+  useCreateLeadRoleMutation,
 } = leadsApi;
 
 export default leadsApi;

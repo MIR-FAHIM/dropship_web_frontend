@@ -21,6 +21,27 @@ export const ROLES = [
   { value: "supplier", label: "Supplier (S)", short: "S", className: "border-purple-200 bg-purple-50 text-purple-700" },
 ];
 
+// Colours for roles admins add (cycled), so each new role still gets a readable badge.
+const CUSTOM_ROLE_STYLES = [
+  "border-emerald-200 bg-emerald-50 text-emerald-700",
+  "border-sky-200 bg-sky-50 text-sky-700",
+  "border-amber-200 bg-amber-50 text-amber-800",
+  "border-rose-200 bg-rose-50 text-rose-700",
+  "border-teal-200 bg-teal-50 text-teal-700",
+];
+
+/** Role options from GET /leads/roles: built-in ones keep their look, added ones get a letter + colour. */
+export const buildRoleOptions = (apiRoles) => {
+  if (!Array.isArray(apiRoles) || apiRoles.length === 0) return ROLES;
+  let i = 0;
+  return apiRoles.map((r) => {
+    const builtIn = ROLES.find((b) => b.value === r.value);
+    if (builtIn) return builtIn;
+    const short = (r.label || r.value).trim().charAt(0).toUpperCase() || "?";
+    return { value: r.value, label: `${r.label} (${short})`, short, className: CUSTOM_ROLE_STYLES[i++ % CUSTOM_ROLE_STYLES.length] };
+  });
+};
+
 export const findOption = (list, value) => list.find((o) => o.value === value);
 
 /** 01XXXXXXXXX -> 8801XXXXXXXXX for wa.me links. */

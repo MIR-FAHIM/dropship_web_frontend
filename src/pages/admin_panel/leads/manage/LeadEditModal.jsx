@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useUpdateLeadMutation } from "../../../../redux/features/leads";
-import { FOLLOWUP_TAGS, LEAD_STATUSES, ROLES, fromLocalInput, toLocalInput } from "./leadConstants";
+import { FOLLOWUP_TAGS, LEAD_STATUSES, ROLES as DEFAULT_ROLES, fromLocalInput, toLocalInput } from "./leadConstants";
 
 const field = "w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300";
 
 /** Edit every field of a lead. */
-const LeadEditModal = ({ lead, tags, onClose }) => {
+const LeadEditModal = ({ lead, tags, roles, onClose }) => {
+  const ROLES = roles?.length ? roles : DEFAULT_ROLES;
   const [form, setForm] = useState({
     name: lead.name || "",
     phone: lead.phone || "",
