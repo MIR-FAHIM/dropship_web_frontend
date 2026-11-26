@@ -8,6 +8,7 @@ import PrivateRoute from "./PrivateRoute";
 import MarketerRoute from "./MarketerRoute";
 import { pagePaths } from "./pages.routes";
 import FacebookPages from "../pages/reseller_panel/facebook_pages/FacebookPages";
+import MyTeam from "../pages/reseller_panel/my_team/MyTeam";
 import HomePage from "../pages/home_page/home_page";
 import PrivacyPolicyPage from "../pages/privacy_policy/privacy_policy";
 import TermsAndConditions from "../pages/terms/TermsAndConditions";
@@ -55,6 +56,7 @@ import AdminKycDocuments from "../pages/admin_panel/kyc/AdminKycDocuments";
 import AdminDropshippers from "../pages/admin_panel/dropshippers/AdminDropshippers";
 import AdminDropshipperDetails from "../pages/admin_panel/dropshippers/AdminDropshipperDetails";
 import DropshipperLeaderboard from "../pages/admin_panel/dropshippers/DropshipperLeaderboard";
+import SellerTeamAdmin from "../pages/admin_panel/dropshippers/SellerTeamAdmin";
 import ProductClickLeaderboard from "../pages/admin_panel/dropshippers/ProductClickLeaderboard";
 import AdminPasswordLogs from "../pages/admin_panel/dropshippers/AdminPasswordLogs";
 import AdminEmployees from "../pages/admin_panel/employees/AdminEmployees";
@@ -250,6 +252,7 @@ export const router = createBrowserRouter([
       { path: "dropshippers/password-logs", element: <AdminPasswordLogs /> },
       { path: "dropshippers/:id", element: <AdminDropshipperDetails /> },
       { path: "dropshippers/leaderboard", element: <DropshipperLeaderboard /> },
+      { path: "dropshippers/seller-team", element: <SellerTeamAdmin /> },
       { path: "dropshippers/click-leaderboard", element: <ProductClickLeaderboard /> },
       { path: "employees", element: <AdminEmployees /> },
       { path: "change-password", element: <ChangePassword /> },
@@ -318,6 +321,7 @@ export const router = createBrowserRouter([
       ...pagePaths,
       // One-click Facebook page connect (Facebook sends dropshippers back here after login).
       { path: "facebook-pages", element: <FacebookPages /> },
+      { path: "my-team", element: <MyTeam /> },
     ]),
   },
   {

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   UserPlus,
   Eye,
@@ -19,8 +19,9 @@ import {
   X,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useDropshipperRegisterMutation } from "../../redux/features/auth";
+import { useLazyCheckSellerCodeQuery } from "../../redux/features/sellerTeam";
 import {
   useGetDivisionsQuery,
   useGetDistrictsQuery,
@@ -40,8 +41,11 @@ const getCollection = (response) => {
 
 const RegisterPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   // Form inputs
   const [formData, setFormData] = useState({
+    // Passive Income: a seller's code (from a share link ?ref=RS-XXXXXX, or typed) puts you in their team.
+    seller_code: (searchParams.get("ref") || "").toUpperCase(),
     name: "",
     business_name: "",
     email: "",
@@ -65,6 +69,17 @@ const RegisterPage = () => {
 
   // RTK Query: Register mutation
   const [register, { isLoading }] = useDropshipperRegisterMutation();
+
+  // Live check of the seller code (shows whose team you join).
+  const [checkCode, { data: codeCheck, isFetching: codeChecking }] = useLazyCheckSellerCodeQuery();
+  const sellerCode = formData.seller_code.trim().toUpperCase();
+  const codeLooksComplete = /^RS-[A-Z0-9]{6}$/.test(sellerCode);
+  useEffect(() => {
+    if (!codeLooksComplete) return undefined;
+    const t = setTimeout(() => checkCode(sellerCode, true), 300);
+    return () => clearTimeout(t);
+  }, [sellerCode, codeLooksComplete, checkCode]);
+  const codeResult = codeLooksComplete ? codeCheck?.data : null;
 
   // RTK Query: Cascading address dropdowns
   const { data: divisionsData, isLoading: divisionsLoading } = useGetDivisionsQuery();
@@ -232,6 +247,10 @@ const RegisterPage = () => {
 
     if (formData.upazila_id) {
       payload.upazila_id = Number(formData.upazila_id);
+    }
+
+    if (sellerCode) {
+      payload.seller_code = sellerCode;
     }
 
     try {
@@ -560,6 +579,41 @@ const RegisterPage = () => {
                   </p>
                 )}
               </div>
+            </div>
+
+            {/* Seller code (optional): join a verified seller's team */}
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                সেলার কোড (Seller Code)
+                <span className="text-gray-400 font-normal ml-1 text-[11px]">(ঐচ্ছিক)</span>
+              </label>
+              <input
+                type="text"
+                name="seller_code"
+                value={formData.seller_code}
+                onChange={(e) => handleChange({ target: { name: "seller_code", value: e.target.value.toUpperCase() } })}
+                placeholder="যেমন: RS-AB12CD"
+                maxLength={12}
+                autoComplete="off"
+                className={`w-full px-3.5 py-2.5 rounded-xl border text-sm uppercase tracking-wider transition focus:outline-none focus:ring-2 ${
+                  fieldErrors.seller_code || codeResult?.valid === false
+                    ? "border-red-400 focus:ring-red-300 bg-red-50/20"
+                    : codeResult?.valid
+                      ? "border-emerald-400 focus:ring-emerald-200"
+                      : "border-gray-300 focus:border-[#158E72] focus:ring-emerald-200"
+                }`}
+              />
+              {fieldErrors.seller_code ? (
+                <p className="text-[11px] text-red-600 mt-1 font-medium">{fieldErrors.seller_code}</p>
+              ) : codeChecking ? (
+                <p className="text-[11px] text-gray-500 mt-1 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> কোড যাচাই হচ্ছে…</p>
+              ) : codeResult?.valid ? (
+                <p className="text-[11px] text-emerald-700 mt-1 font-semibold flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> আপনি {codeResult.seller_name}-এর টিমে যোগ দিচ্ছেন</p>
+              ) : codeResult?.valid === false ? (
+                <p className="text-[11px] text-red-600 mt-1 font-medium">এই সেলার কোডটি সঠিক নয় বা এখন সক্রিয় নেই।</p>
+              ) : (
+                <p className="text-[11px] text-gray-400 mt-1">কোনো সেলার আপনাকে আমন্ত্রণ জানালে তার কোডটি দিন। পরে আর যোগ করা যাবে না।</p>
+              )}
             </div>
 
             {/* Row 3: Password & Confirm Password */}

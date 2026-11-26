@@ -146,6 +146,13 @@ const adminMenuLinks = [
         icon: <Trophy className="w-4 h-4" />,
       },
       {
+        // Passive Income: seller codes, teams (4 levels), upline changes.
+        path: "/admin-panel/dropshippers/seller-team",
+        label: "Seller Team (Referral)",
+        icon: <Users className="w-4 h-4" />,
+        requiresAdminRole: true,
+      },
+      {
         path: "/admin-panel/dropshippers/click-leaderboard",
         label: "Product Click Leaderboard",
         icon: <MousePointerClick className="w-4 h-4 shrink-0" />,

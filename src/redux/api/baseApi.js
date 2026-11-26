@@ -13,6 +13,7 @@ const noAuthEndpoints = [
   "resetPassword",
   "addKycDocument",
   "getCarryBeeTracking",
+  "checkSellerCode",
 ];
 
 const rawBaseQuery = fetchBaseQuery({

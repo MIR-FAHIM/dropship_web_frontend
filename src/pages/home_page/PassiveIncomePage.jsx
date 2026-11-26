@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, BadgeCheck, HandCoins, Network, ShieldCheck, Users } from "lucide-react";
 import FooterHome from "./FooterHome";
 
@@ -21,8 +21,14 @@ const steps = [
   { number: "০৩", title: "টিমের বিক্রয় থেকে কমিশন", text: "আপনার টিমের যোগ্য অর্ডার হলে প্রোডাক্টের অ্যাডমিন প্রাইসের নির্ধারিত কমিশন তৈরি হবে।" },
 ];
 
-const PassiveIncomePage = () => (
-  <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+// Same page in two places: the public landing page (/passive-income) and inside the dropshipper
+// panel (/app/passive-income). Inside the panel there is no site header/footer and no sign-up buttons.
+const PassiveIncomePage = () => {
+  const embedded = useLocation().pathname.startsWith("/app");
+
+  return (
+  <div className={`${embedded ? "" : "min-h-screen"} bg-slate-50 font-sans text-slate-800`}>
+    {!embedded && (
     <header className="border-b border-slate-100 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2 font-black tracking-tight text-slate-900" aria-label="হোম পেজ">
@@ -35,6 +41,7 @@ const PassiveIncomePage = () => (
         </div>
       </div>
     </header>
+    )}
 
     <main>
       <section className="border-b border-slate-200 bg-blue-50 text-slate-900">
@@ -48,7 +55,7 @@ const PassiveIncomePage = () => (
               কোনো পুঁজি বা ইনভেস্টমেন্ট ছাড়াই সেলস টিম গড়ে ResellerBrain থেকে প্রফিট অর্জনের সুযোগ নিন।
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/register" className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white transition hover:bg-blue-800">শুরু করুন <ArrowRight className="h-4 w-4" /></Link>
+              {!embedded && <Link to="/register" className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-3 font-semibold text-white transition hover:bg-blue-800">শুরু করুন <ArrowRight className="h-4 w-4" /></Link>}
               <a href="#commission" className="rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 transition hover:bg-slate-100">কমিশন রেট দেখুন</a>
             </div>
           </div>
@@ -77,7 +84,7 @@ const PassiveIncomePage = () => (
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-5px-4 py-14 sm:px-6 lg:grid-cols-2 lg:py-20">
+      <section className="mx-auto grid max-w-7xl gap-5 px-4 py-14 sm:px-6 lg:grid-cols-2 lg:py-20">
         <article className="rounded-xl border border-slate-200 bg-white p-7 sm:p-8">
           <p className="text-sm font-bold uppercase tracking-wider text-blue-600">ধারণাটি জানুন</p>
           <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-3xl">প্যাসিভ ইনকাম কী?</h2>
@@ -106,7 +113,7 @@ const PassiveIncomePage = () => (
               </article>
             ))}
           </div>
-          <div className="mt-5 flex gap-4 rounded-xl border border-amber-200 bg-amber-50 p-5text-amber-950">
+          <div className="mt-5 flex gap-4 rounded-xl border border-amber-200 bg-amber-50 p-5 text-amber-950">
             <BadgeCheck className="mt-0.5 h-6 w-6 shrink-0 text-amber-600" />
             <p className="leading-7"><strong>সেলার কোড কীভাবে পাবেন?</strong> আপনার অ্যাকাউন্ট থেকে ১০টি অর্ডার সম্পূর্ণভাবে ডেলিভারি হলে আপনি ভেরিফাইড সেলার হবেন এবং একটি সেলার কোড পাবেন।</p>
           </div>
@@ -155,7 +162,7 @@ const PassiveIncomePage = () => (
             </div>
             <p className="mt-4 text-xs leading-6 text-slate-500">এই পরিমাণগুলো প্রচারমূলক উদাহরণ, আয়ের নিশ্চয়তা নয়। প্রকৃত কমিশন টিমের কার্যক্রম, যোগ্য অর্ডার এবং প্রযোজ্য কমিশন নীতির ওপর নির্ভর করে। ৪ লেভেলে টিমের সদস্যসংখ্যাও নিশ্চিত নয়।</p>
           </div>
-          <Link to="/register" className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-blue-800 transition hover:bg-blue-50">ফ্রি রেজিস্ট্রেশন <ArrowRight className="h-4 w-4" /></Link>
+          {!embedded && <Link to="/register" className="inline-flex w-fit items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 font-semibold text-blue-800 transition hover:bg-blue-50">ফ্রি রেজিস্ট্রেশন <ArrowRight className="h-4 w-4" /></Link>}
         </div>
       </section>
 
@@ -180,8 +187,9 @@ const PassiveIncomePage = () => (
       </section>
     </main>
 
-    <FooterHome />
+    {!embedded && <FooterHome />}
   </div>
-);
+  );
+};
 
 export default PassiveIncomePage;

@@ -9,7 +9,7 @@ import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { MdOutlineWarehouse } from "react-icons/md";
-import { Bell, ChevronDown, ChevronRight, Facebook, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, TrendingUp, Trophy, Truck } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Facebook, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, TrendingUp, Trophy, Truck, Users } from "lucide-react";
 import { useGetUserDetailsQuery } from "./redux/features/user";
 import { getImpersonation } from "./utils/impersonation";
 import logo from "../src/assets/jayga-logo.png";
@@ -97,6 +97,12 @@ const menuSections = [
             label: "Profit Payouts",
           },
         ],
+      },
+      {
+        // Passive Income: seller code after 10 deliveries, 4-level team.
+        path: "/app/my-team",
+        label: "My Team",
+        icon: <Users />,
       },
       {
         path: "/app/withdraw",
