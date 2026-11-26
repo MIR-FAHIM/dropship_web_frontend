@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { saveAs } from "file-saver";
-import { Calculator, Download, Loader2, Maximize2, RotateCcw, Search, Star, X } from "lucide-react";
+import { Calculator, ChevronDown, Download, Loader2, Maximize2, RotateCcw, Search, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { imgBaseUrl } from "../../../../config";
 import { getFromLocalstorage } from "../../../utils/localstorage.utils";
@@ -16,6 +16,7 @@ import { PageHeading } from "../partnerWorkspace";
 import { field, panel, primary, secondary } from "../partnerWorkspaceData";
 import { useNumber, usePartnerPrefs } from "../partnerPrefs";
 import { DEFAULTS, calculatePitch, drawProposalCard } from "./pitchMath";
+import WhyResellerBrain from "./WhyResellerBrain";
 
 /**
  * Partner Portal F5 — Client Pitch Calculator ("Self-Stocking vs Reseller Brain").
@@ -89,7 +90,7 @@ function Results({ m, big = false }) {
           <span className="absolute -top-3 right-4 rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 px-3 py-1 text-xs font-extrabold text-white shadow">
             {num(m.orderMultiplier.toFixed(1))}× {t("Orders", "বেশি অর্ডার")}
           </span>
-          <h3 className="text-sm font-extrabold text-teal-700 dark:text-teal-300">🚀 {t("Model B: Reseller Brain", "মডেল-খ: Reseller Brain")}</h3>
+          <h3 className="text-sm font-extrabold text-teal-700 dark:text-teal-300">🚀 {t("Model B: Automatic Dropshipping", "মডেল-খ: Automatic Dropshipping")}</h3>
           <p className={`mt-2 font-extrabold tabular-nums text-slate-900 dark:text-white ${size}`}>{num(Math.round(m.rbWeeklyOrders))} <span className="text-sm font-bold text-slate-500">{t("orders / week", "অর্ডার / সপ্তাহ")}</span></p>
           <div className="mt-3 space-y-1.5">
             <Row l={t("Daily orders", "প্রতিদিন অর্ডার")} v={num(m.rbDailyOrders.toFixed(1))} />
@@ -131,9 +132,10 @@ function Results({ m, big = false }) {
 }
 
 /* ---------- product picker ---------- */
-function ProductPicker({ selectedId, onPick, onCustom }) {
+function ProductPicker({ selectedId, selectedName, onPick, onCustom }) {
   const { t } = usePartnerPrefs();
   const num = useNumber();
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [query, setQuery] = useState("");
   const [onlyStarred, setOnlyStarred] = useState(false);
@@ -155,10 +157,31 @@ function ProductPicker({ selectedId, onPick, onCustom }) {
     }
   };
 
+  // Shutter: closed by default so the results follow the calculator; picking a product closes it.
+  const pickAndClose = (p) => {
+    onPick(p);
+    setOpen(false);
+  };
+
   return (
-    <div className={`${panel} p-4`}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">🛍️ {t("Pick a product", "প্রোডাক্ট বাছাই করুন")}</h2>
+    <div className={`${panel} overflow-hidden`}>
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open}
+        className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/60">
+        <span className="min-w-0">
+          <span className="block text-sm font-extrabold text-slate-900 dark:text-white">🛍️ {t("Pick a product", "প্রোডাক্ট বাছাই করুন")}</span>
+          <span className="block truncate text-[11px] text-slate-500 dark:text-slate-400">
+            {selectedName
+              ? <>{t("Selected:", "বাছাই করা:")} <b className="text-teal-700 dark:text-teal-300">{selectedName}</b></>
+              : t("Custom numbers — tap to choose a product", "কাস্টম হিসাব — প্রোডাক্ট বাছাই করতে চাপুন")}
+          </span>
+        </span>
+        <ChevronDown size={18} aria-hidden="true" className={`shrink-0 text-teal-600 transition-transform duration-300 dark:text-teal-400 ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      <div className={`grid transition-[grid-template-rows] duration-300 ease-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+      <div className="overflow-hidden">
+      <div className="border-t border-slate-100 p-4 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-end gap-2">
         <div className="flex gap-1.5">
           <button type="button" onClick={() => setOnlyStarred((v) => !v)} aria-pressed={onlyStarred}
             className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-xs font-bold ${onlyStarred ? "bg-amber-400 text-amber-950" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}>
@@ -179,7 +202,7 @@ function ProductPicker({ selectedId, onPick, onCustom }) {
           : rows.length === 0 ? <li className="py-6 text-center text-xs text-slate-500 dark:text-slate-400">{onlyStarred ? t("No starred products yet. Tap ☆ to star one.", "এখনো কোনো স্টার করা প্রোডাক্ট নেই। ☆ চেপে স্টার করুন।") : t("No products found.", "কোনো প্রোডাক্ট পাওয়া যায়নি।")}</li>
           : rows.map((p) => (
             <li key={p.id}>
-              <div role="button" tabIndex={0} onClick={() => onPick(p)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onPick(p)}
+              <div role="button" tabIndex={0} onClick={() => pickAndClose(p)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && pickAndClose(p)}
                 className={`flex cursor-pointer items-center gap-3 rounded-xl border p-2 transition-colors ${selectedId === p.id ? "border-teal-500 bg-teal-50 dark:border-teal-600 dark:bg-teal-950/50" : "border-slate-200 bg-white hover:border-teal-300 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-teal-700"}`}>
                 {p.image ? <img src={imageUrl(p.image)} alt="" loading="lazy" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
                   : <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-400 dark:bg-slate-700">📦</span>}
@@ -199,6 +222,9 @@ function ProductPicker({ selectedId, onPick, onCustom }) {
             </li>
           ))}
       </ul>
+      </div>
+      </div>
+      </div>
     </div>
   );
 }
@@ -342,21 +368,28 @@ export default function MarketerPitchCalculator() {
           </div>
         } />
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-5 sm:gap-6 lg:grid-cols-12">
         <div className="space-y-4 lg:col-span-5">
-          {/* Calculator first; the product list sits below it. */}
+          {/* Calculator first; the product list sits below it as a closed shutter. */}
           {inputs}
-          <ProductPicker selectedId={calc.productId} onPick={pick} onCustom={custom} />
+          <ProductPicker selectedId={calc.productId} selectedName={calc.productName} onPick={pick} onCustom={custom} />
         </div>
         <div className="space-y-4 lg:col-span-7">
+          {/* On phones this heading marks where the pitch story starts (Model A → Model B → extra profit). */}
+          <h2 className="flex items-center gap-2 text-sm font-extrabold text-slate-900 dark:text-white lg:hidden">
+            📊 {t("Results for your client", "ক্লায়েন্টের জন্য ফলাফল")}
+          </h2>
           <Results m={metrics} />
-          <div className="flex flex-wrap justify-end gap-2">
-            <button type="button" onClick={download} className={secondary}><Download size={15} aria-hidden="true" /> {t("Download as image", "ছবি হিসেবে ডাউনলোড")}</button>
-            <button type="button" onClick={openFull} className={primary}><Maximize2 size={15} aria-hidden="true" /> {t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}</button>
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+            <button type="button" onClick={download} className={`${secondary} justify-center`}><Download size={15} aria-hidden="true" /> {t("Download as image", "ছবি হিসেবে ডাউনলোড")}</button>
+            <button type="button" onClick={openFull} className={`${primary} justify-center`}><Maximize2 size={15} aria-hidden="true" /> {t("Full-Screen Pitch", "ফুল-স্ক্রিন পিচ")}</button>
           </div>
           <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("An estimate for discussion — real results depend on ad performance.", "আলোচনার জন্য আনুমানিক হিসাব — আসল ফল অ্যাডের পারফরম্যান্সের উপর নির্ভর করে।")}</p>
         </div>
       </div>
+
+      {/* Why Reseller Brain: comparison shutter the marketer opens while talking to a client. */}
+      <WhyResellerBrain />
 
       {fullScreen && createPortal(
         // Canvas mode: only the calculation, over the whole screen. The theme/language wrapper is
@@ -381,6 +414,7 @@ export default function MarketerPitchCalculator() {
                 <div className="lg:col-span-4">{inputs}</div>
                 <div className="lg:col-span-8"><Results m={metrics} big /></div>
               </div>
+              <WhyResellerBrain big />
               <p className="text-[11px] text-slate-500 dark:text-slate-400">{t("An estimate for discussion — real results depend on ad performance.", "আলোচনার জন্য আনুমানিক হিসাব — আসল ফল অ্যাডের পারফরম্যান্সের উপর নির্ভর করে।")}</p>
             </div>
           </div>

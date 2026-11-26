@@ -125,7 +125,7 @@ export function drawProposalCard(canvas, { calc, metrics: m, partnerName, produc
     ["Landed cost / unit", money(m.selfLandedCost)],
     ["Profit / order", money(m.selfProfitPerOrder)],
   ], m.selfWeeklyProfit, `30-day est. ${money(m.selfMonthlyProfit)}`);
-  col(615, "Model B: Reseller Brain", "#0F766E", "#F0FDFA", [
+  col(615, "Model B: Automatic Dropshipping", "#0F766E", "#F0FDFA", [
     ["Weekly orders", Math.round(m.rbWeeklyOrders).toLocaleString("en-BD")],
     ["Capital locked in stock", money(0)],
     ["Full ad budget", money(m.totalWeeklyCapital)],

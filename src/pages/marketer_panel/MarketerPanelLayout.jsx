@@ -51,6 +51,16 @@ function PanelShell() {
     }
   }, [pathname, hash, client]);
 
+  // Phones: the tab bar scrolls sideways — keep the active tab in view so the marketer sees where they are.
+  const tabsRef = useRef(null);
+  useLayoutEffect(() => {
+    const bar = tabsRef.current;
+    const active = bar?.querySelector('[aria-current="page"]');
+    if (bar && active) {
+      bar.scrollTo({ left: active.offsetLeft - (bar.clientWidth - active.offsetWidth) / 2 });
+    }
+  }, [pathname]);
+
   const handleLogout = () => {
     dispatch(logout());
     ["token", "userId", "user"].forEach((key) => removeFromLocalstorage(key));
@@ -75,13 +85,16 @@ function PanelShell() {
                 <span className="-mt-1 hidden text-[10px] font-semibold text-slate-500 dark:text-slate-400 sm:block">{t("Partner Portal", "পার্টনার পোর্টাল")}</span>
               </span>
             </Link>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <button type="button" onClick={toggleTheme} className={pill} aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}>
                 <span aria-hidden="true">{theme === "dark" ? "☀️" : "🌙"}</span>
                 <span className="hidden md:inline">{theme === "dark" ? t("Light", "লাইট") : t("Dark", "ডার্ক")}</span>
               </button>
               <button type="button" onClick={toggleLang} className={pill} aria-label="Change language">
-                <span aria-hidden="true">🌐</span><span>{lang === "bn" ? "English" : "বাংলা"}</span>
+                <span aria-hidden="true">🌐</span>
+                {/* Short on phones so the Logout button fits */}
+                <span className="sm:hidden">{lang === "bn" ? "EN" : "বাং"}</span>
+                <span className="hidden sm:inline">{lang === "bn" ? "English" : "বাংলা"}</span>
               </button>
               <Link to={`${workspacePath}/profile`} className="hidden items-center gap-2 rounded-xl px-1.5 py-1 hover:bg-slate-100 dark:hover:bg-slate-800 sm:flex">
                 <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 text-[11px] font-extrabold text-white ring-2 ring-white dark:ring-slate-900">{initials}</span>
@@ -97,7 +110,7 @@ function PanelShell() {
           </div>
           {/* Sub-navigation tabs */}
           <nav aria-label="Partner Portal" className="border-t border-slate-100 dark:border-slate-800">
-            <div className="mx-auto flex max-w-7xl items-center gap-1.5 overflow-x-auto px-4 py-2.5 sm:px-6 lg:px-8">
+            <div ref={tabsRef} className="relative mx-auto flex max-w-7xl items-center gap-1.5 overflow-x-auto px-4 py-2.5 sm:px-6 lg:px-8">
               {tabs.map((tab) => tab.soon ? (
                 <span key={tab.en} title={t("Coming soon", "শিগগিরই আসছে")}
                   className="inline-flex cursor-not-allowed items-center gap-1.5 whitespace-nowrap rounded-xl px-3.5 py-2 text-xs font-bold text-slate-400 dark:text-slate-500">
