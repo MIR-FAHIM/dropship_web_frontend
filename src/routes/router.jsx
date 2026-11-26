@@ -7,6 +7,7 @@ import RegisterPage from "../pages/auth/register";
 import PrivateRoute from "./PrivateRoute";
 import MarketerRoute from "./MarketerRoute";
 import { pagePaths } from "./pages.routes";
+import FacebookPages from "../pages/reseller_panel/facebook_pages/FacebookPages";
 import HomePage from "../pages/home_page/home_page";
 import PrivacyPolicyPage from "../pages/privacy_policy/privacy_policy";
 import TermsAndConditions from "../pages/terms/TermsAndConditions";
@@ -313,7 +314,11 @@ export const router = createBrowserRouter([
       </PrivateRoute>
     ),
     errorElement: <RouteErrorBoundary />,
-    children: routeGenerator(pagePaths),
+    children: routeGenerator([
+      ...pagePaths,
+      // One-click Facebook page connect (Facebook sends dropshippers back here after login).
+      { path: "facebook-pages", element: <FacebookPages /> },
+    ]),
   },
   {
     path: "/login",

@@ -9,7 +9,7 @@ import { HiOutlineClipboardDocumentCheck } from "react-icons/hi2";
 import { IoCalendarOutline, IoCloseOutline } from "react-icons/io5";
 import { LuArchive } from "react-icons/lu";
 import { MdOutlineWarehouse } from "react-icons/md";
-import { Bell, ChevronDown, ChevronRight, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, TrendingUp, Trophy, Truck } from "lucide-react";
+import { Bell, ChevronDown, ChevronRight, Facebook, Globe, Handshake, Heart, HomeIcon, KeyRound, Megaphone, PanelLeftClose, PanelLeftOpen, Phone, ShoppingBag, Store, TrendingUp, Trophy, Truck } from "lucide-react";
 import { useGetUserDetailsQuery } from "./redux/features/user";
 import { getImpersonation } from "./utils/impersonation";
 import logo from "../src/assets/jayga-logo.png";
@@ -122,6 +122,11 @@ const menuSections = [
         path: "/app/store-profile",
         label: "My Store",
         icon: <Store />,
+      },
+      {
+        path: "/app/facebook-pages",
+        label: "Facebook Page",
+        icon: <Facebook />,
       },
       {
         path: "/app/my-website",
