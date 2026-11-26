@@ -11,6 +11,7 @@ import {
   useGetPendingFacebookPagesQuery,
   useStartFacebookConnectMutation,
 } from "../../../redux/features/facebookConnect";
+import FacebookPostHistory from "./FacebookPostHistory";
 
 /**
  * Dropshipper panel → Facebook পেজ: connect a page with one click (Facebook login), choose pages,
@@ -181,8 +182,11 @@ export default function FacebookPages() {
   const [start, { isLoading: starting }] = useStartFacebookConnectMutation();
   const pages = data?.data?.pages || [];
   const configured = data?.data?.configured !== false;
+  const brokenPages = pages.filter((p) => p.status === "needs_reconnect");
+  const tab = params.get("tab") === "history" ? "history" : "pages";
 
   const clearParams = () => setParams({}, { replace: true });
+  const setTab = (t) => setParams(t === "history" ? { tab: "history" } : {}, { replace: true });
 
   const connect = async () => {
     try {
@@ -218,8 +222,37 @@ export default function FacebookPages() {
         <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700">Facebook কানেক্ট এখনো চালু হয়নি। শিগগিরই চালু হবে।</div>
       )}
 
+      {/* Reconnect alert: Facebook stopped accepting one of the pages (daily check or a failed post found it). */}
+      {!connectKey && brokenPages.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-start gap-2 text-sm text-amber-900">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+            <span>
+              <b>{brokenPages.map((p) => p.name).join(", ")}</b> পেজে এখন পোস্ট করা যাচ্ছে না। এক ক্লিকে আবার কানেক্ট করুন — আগের পোস্ট ও সেটিং সব থাকবে।
+            </span>
+          </p>
+          <button type="button" onClick={connect} disabled={starting || !configured}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60" style={{ backgroundColor: FB_BLUE }}>
+            {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FbIcon className="h-4 w-4" />} আবার কানেক্ট করুন
+          </button>
+        </div>
+      )}
+
+      {!connectKey && pages.length > 0 && (
+        <div className="flex gap-1 rounded-xl bg-gray-100 p-1">
+          {[["pages", `আমার পেজ (${pages.length})`], ["history", "পোস্ট হিস্টোরি"]].map(([k, l]) => (
+            <button key={k} type="button" onClick={() => setTab(k)}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${tab === k ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"}`}>
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+
       {connectKey ? (
         <PagePicker connectKey={connectKey} onDone={clearParams} />
+      ) : !isLoading && pages.length > 0 && tab === "history" ? (
+        <FacebookPostHistory />
       ) : isLoading ? (
         <div className="flex items-center gap-2 py-10 text-sm text-gray-500"><Loader2 className="h-4 w-4 animate-spin" /> লোড হচ্ছে…</div>
       ) : pages.length === 0 ? (

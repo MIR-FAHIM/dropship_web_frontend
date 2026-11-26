@@ -2,7 +2,7 @@ import baseApi from "../../api/baseApi";
 
 // Dropshipper → Facebook page connect (one click). Tokens never reach the browser:
 // the backend keeps them encrypted; these endpoints only return page names, photos and status.
-const facebookConnectApi = baseApi.enhanceEndpoints({ addTagTypes: ["MyFacebookPages"] }).injectEndpoints({
+const facebookConnectApi = baseApi.enhanceEndpoints({ addTagTypes: ["MyFacebookPages", "MyFacebookPosts"] }).injectEndpoints({
   endpoints: (builder) => ({
     getMyFacebookPages: builder.query({
       query: () => "/facebook/my-pages",
@@ -35,7 +35,20 @@ const facebookConnectApi = baseApi.enhanceEndpoints({ addTagTypes: ["MyFacebookP
     // body: { page_ids, caption, image_indexes, scheduled_at? }
     publishProductToFacebook: builder.mutation({
       query: ({ productId, body }) => ({ url: `/facebook/products/${productId}/publish`, method: "POST", body }),
-      invalidatesTags: ["MyFacebookPages"],
+      invalidatesTags: ["MyFacebookPages", "MyFacebookPosts"],
+    }),
+    // Phase 3: my post history, fresh numbers from Facebook, cancel a scheduled post
+    getMyFacebookPosts: builder.query({
+      query: ({ status = "", page = 1 } = {}) => `/facebook/my-posts?per_page=15&page=${page}${status ? `&status=${status}` : ""}`,
+      providesTags: ["MyFacebookPosts"],
+    }),
+    refreshFacebookPostStats: builder.mutation({
+      query: (ids = []) => ({ url: "/facebook/my-posts/refresh-stats", method: "POST", body: { ids } }),
+      invalidatesTags: ["MyFacebookPosts", "MyFacebookPages"],
+    }),
+    cancelFacebookPost: builder.mutation({
+      query: (id) => ({ url: `/facebook/my-posts/${id}`, method: "DELETE" }),
+      invalidatesTags: ["MyFacebookPosts", "MyFacebookPages"],
     }),
   }),
 });
@@ -49,4 +62,7 @@ export const {
   useDisconnectFacebookPageMutation,
   useGetFacebookPostDraftQuery,
   usePublishProductToFacebookMutation,
+  useGetMyFacebookPostsQuery,
+  useRefreshFacebookPostStatsMutation,
+  useCancelFacebookPostMutation,
 } = facebookConnectApi;
