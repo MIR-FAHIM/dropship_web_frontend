@@ -27,6 +27,16 @@ const facebookConnectApi = baseApi.enhanceEndpoints({ addTagTypes: ["MyFacebookP
       query: (id) => ({ url: `/facebook/my-pages/${id}`, method: "DELETE" }),
       invalidatesTags: ["MyFacebookPages"],
     }),
+    // Phase 2: post a product to my page(s)
+    getFacebookPostDraft: builder.query({
+      query: (productId) => `/facebook/products/${productId}/draft`,
+      providesTags: ["MyFacebookPages"],
+    }),
+    // body: { page_ids, caption, image_indexes, scheduled_at? }
+    publishProductToFacebook: builder.mutation({
+      query: ({ productId, body }) => ({ url: `/facebook/products/${productId}/publish`, method: "POST", body }),
+      invalidatesTags: ["MyFacebookPages"],
+    }),
   }),
 });
 
@@ -37,4 +47,6 @@ export const {
   useChooseFacebookPagesMutation,
   useCheckFacebookPageMutation,
   useDisconnectFacebookPageMutation,
+  useGetFacebookPostDraftQuery,
+  usePublishProductToFacebookMutation,
 } = facebookConnectApi;
